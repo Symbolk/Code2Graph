@@ -1,0 +1,5 @@
+description = 'Code2Graph core module.'
+
+dependencies {
+    implementation 'org.jgrapht:jgrapht-core:1.5.0'
+}

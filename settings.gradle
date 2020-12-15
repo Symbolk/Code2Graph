@@ -1,2 +1,3 @@
 rootProject.name = 'Code2Graph'
 
+include 'core'
