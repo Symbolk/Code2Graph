@@ -20,6 +20,7 @@ subprojects {
     targetCompatibility = '11'
 
     dependencies {
+        implementation 'org.jgrapht:jgrapht-core:1.5.0'
         implementation 'org.apache.logging.log4j:log4j-core:2.14.0'
 
         testImplementation 'org.assertj:assertj-core:3.18.1'
@@ -33,5 +34,11 @@ subprojects {
             exceptionFormat = 'full'
             events "passed", "skipped", "failed"
         }
+    }
+}
+
+configure(subprojects.findAll { it.name != 'core' }) {
+    dependencies {
+        implementation project(':core')
     }
 }

@@ -1,3 +1,4 @@
 rootProject.name = 'Code2Graph'
 
-include 'core'
+include 'core',
+        'gen.jdt'
