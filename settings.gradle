@@ -1,4 +1,5 @@
 rootProject.name = 'Code2Graph'
 
 include 'core',
+        'dist',
         'gen.jdt'

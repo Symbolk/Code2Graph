@@ -1,0 +1,22 @@
+apply plugin: 'application'
+
+mainClassName = 'edu.pku.code2graph.io.Main'
+applicationName = 'Code2Graph'
+archivesBaseName = 'Code2Graph'
+jar.enabled = false
+uploadArchives.enabled = false
+distTar.enabled = false
+
+description = 'Code2Graph distribution.'
+
+dependencies {
+    implementation project(':gen.jdt')
+}
+
+build.finalizedBy(installDist)
+
+run {
+    if (project.hasProperty("params")) {
+        args Eval.me(params)
+    }
+}
