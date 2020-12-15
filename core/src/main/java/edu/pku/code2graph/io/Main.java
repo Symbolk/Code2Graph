@@ -1,8 +1,7 @@
 package edu.pku.code2graph.io;
 
 import edu.pku.code2graph.Code2Graph;
-import edu.pku.code2graph.gen.Generator;
-import edu.pku.code2graph.gen.jdt.JdtGenerator;
+import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import org.jgrapht.Graph;
@@ -14,12 +13,13 @@ public class Main {
     // create
     Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"));
     // analyze a single file
-    //    Generators generator = Generators.getInstance();
-    Generator generator = new JdtGenerator();
+    Generators generator = Generators.getInstance();
+    //    Generator generator = new JdtGenerator();
 
     try {
       Graph<Node, Edge> graph =
-          generator.generateFrom().file("core/src/main/java/edu/pku/code2graph/Code2Graph.java");
+          generator.generateFrom("core/src/main/java/edu/pku/code2graph/Code2Graph.java");
+      System.out.println("Got");
     } catch (IOException e) {
       e.printStackTrace();
     }
