@@ -1,15 +1,14 @@
-package edu.pku.code2graph;
+package edu.pku.code2graph.gen;
 
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import org.jgrapht.Graph;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.nio.charset.Charset;
 
 public abstract class Generator {
-  protected abstract Graph<Node, Edge> generate(Reader r) throws IOException;
+  protected abstract Graph<Node, Edge> generate() throws IOException;
 
   public Configuarator generateFrom() {
     return new Configuarator();
@@ -24,9 +23,8 @@ public abstract class Generator {
      * @param filePath
      * @return
      */
-    public Graph<Node, Edge> file(String filePath) {
-
-      return null;
+    public Graph<Node, Edge> file(String filePath) throws IOException {
+      return generate();
     }
 
     public Graph<Node, Edge> commit(String commitID) {

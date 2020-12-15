@@ -1,13 +1,11 @@
 package edu.pku.code2graph;
 
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.gen.Generator;
+import edu.pku.code2graph.gen.Generators;
+import edu.pku.code2graph.gen.Register;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jgrapht.Graph;
-
-import java.nio.charset.Charset;
+import org.atteo.classindex.ClassIndex;
 
 public class Code2Graph {
   private static final Logger LOGGER = LogManager.getLogger();
@@ -19,8 +17,16 @@ public class Code2Graph {
     this.repoPath = repoPath;
   }
 
-  public Generator getGenerator(Language language) {
-//    return new JdtGenerator();
-    return null;
+  static {
+    initGenerators();
+  }
+
+  public static void initGenerators() {
+    ClassIndex.getSubclasses(Generator.class)
+        .forEach(
+            gen -> {
+              Register a = gen.getAnnotation(Register.class);
+              if (a != null) Generators.getInstance().install(gen, a);
+            });
   }
 }
