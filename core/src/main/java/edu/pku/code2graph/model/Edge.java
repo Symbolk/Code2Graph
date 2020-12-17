@@ -1,4 +1,4 @@
 package edu.pku.code2graph.model;
 
-public class Edge {
+public abstract class Edge {
 }
