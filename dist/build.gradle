@@ -10,7 +10,7 @@ distTar.enabled = false
 description = 'Code2Graph distribution.'
 
 dependencies {
-    implementation project(':gen.jdt')
+    implementation project(':gen.java')
 }
 
 build.finalizedBy(installDist)
