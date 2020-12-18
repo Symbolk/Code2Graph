@@ -6,6 +6,7 @@ import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import org.jgrapht.Graph;
 
+import java.io.File;
 import java.io.IOException;
 
 public class Main {
@@ -18,8 +19,11 @@ public class Main {
 
     try {
       Graph<Node, Edge> graph =
-          generator.generateFrom("core/src/main/java/edu/pku/code2graph/Code2Graph.java");
-      System.out.println("Got");
+          generator.generateFrom(
+              client.getRepoPath()
+                  + File.separator
+                  + "core/src/main/java/edu/pku/code2graph/Code2Graph.java");
+      System.out.println(graph);
     } catch (IOException e) {
       e.printStackTrace();
     }

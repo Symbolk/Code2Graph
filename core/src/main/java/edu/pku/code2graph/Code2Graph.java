@@ -29,4 +29,12 @@ public class Code2Graph {
               if (a != null) Generators.getInstance().install(gen, a);
             });
   }
+
+  public String getRepoName() {
+    return repoName;
+  }
+
+  public String getRepoPath() {
+    return repoPath;
+  }
 }

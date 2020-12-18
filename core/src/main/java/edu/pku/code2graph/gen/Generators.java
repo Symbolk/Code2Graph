@@ -26,6 +26,7 @@ import org.jgrapht.Graph;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /** Registry of tree generators, using a singleton pattern. */
@@ -42,16 +43,36 @@ public class Generators extends Registry<String, Generator, Register> {
   /**
    * Automatically search a tree generator for the given file path, and use it to parse it
    *
-   * @param filePath the file path
+   * @param filePath the absolute file path
    * @return the TreeContext of the file
    * @throws UnsupportedOperationException if no suitable generator is found
    */
   public Graph<Node, Edge> generateFrom(String filePath)
       throws UnsupportedOperationException, IOException {
     Generator p = get(filePath);
-    if (p == null)
+    if (p == null) {
       throw new UnsupportedOperationException("No generator found for file: " + filePath);
+    }
     return p.generateFrom().file(filePath);
+  }
+
+  /**
+   * Notice that currently only files in a same and single language are supported
+   * @param filePaths
+   * @return
+   * @throws UnsupportedOperationException
+   * @throws IOException
+   */
+  public Graph<Node, Edge> generateFrom(List<String> filePaths)
+      throws UnsupportedOperationException, IOException {
+    if (filePaths.size() == 0) {
+      throw new UnsupportedOperationException("The given file paths are empty");
+    }
+    Generator p = get(filePaths.get(0));
+    if (p == null) {
+      throw new UnsupportedOperationException("No generator found for file: " + filePaths.get(0));
+    }
+    return p.generateFrom().files(filePaths);
   }
 
   /**
