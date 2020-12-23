@@ -5,14 +5,79 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
+import org.apache.logging.log4j.core.util.FileUtils;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.jgrapht.Graph;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.*;
 
 @Register(id = "java-jdt", accept = "\\.java$", priority = Registry.Priority.MAXIMUM)
 public class JdtGenerator extends Generator {
+
+  private static final String JRE_PATH =
+      System.getProperty("java.home") + File.separator + "lib/rt.jar";
+
   @Override
-  protected Graph<Node, Edge> generate() throws IOException {
+  protected Graph<Node, Edge> generate(List<String> filePaths) throws IOException {
+    // the absolute file path of the compilation units to create ASTs for
+    String[] srcPaths = new String[filePaths.size()];
+    filePaths.toArray(srcPaths);
+    //    NameResolver.setSrcPathSet(srcPathSet);
+
+    // the absolute sourcepath entries to be used to resolve bindings
+    Set<String> srcFolderSet = new HashSet<>();
+    for (String path : filePaths) {
+      File file = new File(path);
+      if (file.exists() && file.isFile()) {
+        srcFolderSet.add(file.getParentFile().getAbsolutePath());
+      }
+    }
+    String[] srcFolderPaths = new String[srcFolderSet.size()];
+    srcFolderSet.toArray(srcFolderPaths);
+
+    //
+    String[] encodings = new String[srcFolderPaths.length];
+    Arrays.fill(encodings, "UTF-8");
+
+    ASTParser parser = ASTParser.newParser(AST.JLS14);
+    Map<String, String> options = JavaCore.getOptions();
+    options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_11);
+    options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_11);
+    options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_11);
+    options.put(JavaCore.COMPILER_DOC_COMMENT_SUPPORT, JavaCore.ENABLED);
+    JavaCore.setComplianceOptions(JavaCore.VERSION_11, options);
+    parser.setCompilerOptions(options);
+
+    //        parser.setProject(WorkspaceUtilities.javaProject);
+    parser.setKind(ASTParser.K_COMPILATION_UNIT);
+    parser.setEnvironment(new String[] {JRE_PATH}, srcFolderPaths, encodings, true);
+    parser.setResolveBindings(true);
+    parser.setBindingsRecovery(true);
+
+    AbstractJdtVisitor visitor = new JdtVisitor();
+    // create nodes and nesting edges while visiting the ASTs
+    encodings = new String[srcPaths.length];
+    Arrays.fill(encodings, "UTF-8");
+    parser.createASTs(
+        srcPaths,
+        encodings,
+        new String[] {},
+        new FileASTRequestor() {
+          @Override
+          public void acceptAST(String sourceFilePath, CompilationUnit cu) {
+            // collect type/field/method infos and create nodes
+            JDTService jdtService =
+                new JDTService(FileUtils.readFileToString(new File(sourceFilePath)));
+            cu.accept(new MemberVisitor(diffFile.getIndex(), entityPool, graph, jdtService));
+          }
+        },
+        null);
     return null;
   }
 }
