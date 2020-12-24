@@ -1,6 +1,5 @@
 package edu.pku.code2graph.client;
 
-import edu.pku.code2graph.Code2Graph;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
@@ -22,7 +21,7 @@ public class Main {
           generator.generateFrom(
               client.getRepoPath()
                   + File.separator
-                  + "core/src/main/java/edu/pku/code2graph/Code2Graph.java");
+                  + "client/src/main/java/edu/pku/code2graph/client/Code2Graph.java");
       System.out.println(graph);
     } catch (IOException e) {
       e.printStackTrace();

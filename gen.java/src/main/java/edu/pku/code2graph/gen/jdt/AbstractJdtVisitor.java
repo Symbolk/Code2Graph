@@ -6,18 +6,33 @@ import edu.pku.code2graph.model.Type;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.jgrapht.Graph;
+import org.jgrapht.graph.builder.GraphTypeBuilder;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
-public class AbstractJdtVisitor extends ASTVisitor {
+public abstract class AbstractJdtVisitor extends ASTVisitor {
   // final constructed graph instance
-  private Graph<Node, Edge> graph;
+  protected Graph<Node, Edge> graph = initGraph();
 
   // index nodes by qualified name Trie to speed up matching
   // or simply use hash?
 
   public AbstractJdtVisitor() {
     super(true);
+  }
+
+  /**
+   * Initialize an empty Graph
+   *
+   * @return
+   */
+  public Graph<Node, Edge> initGraph() {
+    return GraphTypeBuilder.<Node, Edge>directed()
+        .allowingMultipleEdges(true) // allow multiple edges with different types
+        .allowingSelfLoops(true) // allow recursion
+        .edgeClass(Edge.class)
+        .weighted(true)
+        .buildGraph();
   }
 
   public Graph<Node, Edge> getGraph() {
@@ -30,13 +45,5 @@ public class AbstractJdtVisitor extends ASTVisitor {
 
   protected static Type nodeAsSymbol(int id) {
     return type(ASTNode.nodeClassForType(id).getSimpleName());
-  }
-
-  protected void addNode(Node n) {
-    this.graph.addVertex(n);
-  }
-
-  protected void addEdge(Node src, Node tgt, Type t) {
-    this.graph.addEdge(src, tgt, new Edge(t));
   }
 }

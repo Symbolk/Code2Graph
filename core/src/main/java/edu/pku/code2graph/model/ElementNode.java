@@ -1,7 +1,6 @@
 package edu.pku.code2graph.model;
 
-public class ElementNode implements Node{
-    protected Type type;
-    protected String name;
-    protected String qualifiedName;
+public class ElementNode extends Node {
+  protected String name;
+  protected String qualifiedName;
 }

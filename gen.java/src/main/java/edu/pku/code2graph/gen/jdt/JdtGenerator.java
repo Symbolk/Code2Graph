@@ -13,7 +13,6 @@ import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.jgrapht.Graph;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 @Register(id = "java-jdt", accept = "\\.java$", priority = Registry.Priority.MAXIMUM)
@@ -23,7 +22,7 @@ public class JdtGenerator extends Generator {
       System.getProperty("java.home") + File.separator + "lib/rt.jar";
 
   @Override
-  protected Graph<Node, Edge> generate(List<String> filePaths) throws IOException {
+  protected Graph<Node, Edge> generate(List<String> filePaths) {
     // the absolute file path of the compilation units to create ASTs for
     String[] srcPaths = new String[filePaths.size()];
     filePaths.toArray(srcPaths);
