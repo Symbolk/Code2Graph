@@ -10,7 +10,11 @@ import org.jgrapht.Graph;
 import static edu.pku.code2graph.model.TypeSet.type;
 
 public class AbstractJdtVisitor extends ASTVisitor {
+  // final constructed graph instance
   private Graph<Node, Edge> graph;
+
+  // index nodes by qualified name Trie to speed up matching
+  // or simply use hash?
 
   public AbstractJdtVisitor() {
     super(true);
@@ -26,5 +30,13 @@ public class AbstractJdtVisitor extends ASTVisitor {
 
   protected static Type nodeAsSymbol(int id) {
     return type(ASTNode.nodeClassForType(id).getSimpleName());
+  }
+
+  protected void addNode(Node n) {
+    this.graph.addVertex(n);
+  }
+
+  protected void addEdge(Node src, Node tgt, Type t) {
+    this.graph.addEdge(src, tgt, new Edge(t));
   }
 }

@@ -24,8 +24,8 @@ import java.util.Map;
 public class TypeSet {
   private static final TypeFactoryImplementation implementation = new TypeFactoryImplementation();
 
-  public static Type type(String value) {
-    return implementation.makeOrGetType(value);
+  public static Type type(String name) {
+    return implementation.makeOrGetType(name);
   }
 
   private static class TypeFactoryImplementation extends Type.TypeFactory {

@@ -5,7 +5,6 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
-import org.apache.logging.log4j.core.util.FileUtils;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -64,6 +63,7 @@ public class JdtGenerator extends Generator {
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");
+
     parser.createASTs(
         srcPaths,
         encodings,
@@ -71,13 +71,10 @@ public class JdtGenerator extends Generator {
         new FileASTRequestor() {
           @Override
           public void acceptAST(String sourceFilePath, CompilationUnit cu) {
-            // collect type/field/method infos and create nodes
-            JDTService jdtService =
-                new JDTService(FileUtils.readFileToString(new File(sourceFilePath)));
-            cu.accept(new MemberVisitor(diffFile.getIndex(), entityPool, graph, jdtService));
+            cu.accept(visitor);
           }
         },
         null);
-    return null;
+    return visitor.getGraph();
   }
 }

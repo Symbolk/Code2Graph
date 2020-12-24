@@ -1,5 +1,9 @@
 package edu.pku.code2graph.model;
 
+/**
+ * Type which contains label for node and edge
+ * Produce for concrete languages.
+ */
 public class Type {
   public final String name;
 
