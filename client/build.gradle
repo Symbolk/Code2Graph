@@ -1,0 +1,5 @@
+description = 'Code2Graph client module.'
+
+dependencies {
+    implementation project(':gen.java')
+}

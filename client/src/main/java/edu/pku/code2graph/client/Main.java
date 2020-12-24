@@ -1,4 +1,4 @@
-package edu.pku.code2graph.io;
+package edu.pku.code2graph.client;
 
 import edu.pku.code2graph.Code2Graph;
 import edu.pku.code2graph.gen.Generators;

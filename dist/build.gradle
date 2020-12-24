@@ -10,6 +10,7 @@ distTar.enabled = false
 description = 'Code2Graph distribution.'
 
 dependencies {
+    implementation project(':client')
     implementation project(':gen.java')
 }
 
