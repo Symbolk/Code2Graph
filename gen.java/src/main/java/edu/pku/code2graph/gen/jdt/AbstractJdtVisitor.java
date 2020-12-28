@@ -1,7 +1,8 @@
 package edu.pku.code2graph.gen.jdt;
 
-import edu.pku.code2graph.gen.jdt.model.EdgeType;
-import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.Type;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.jgrapht.Graph;
@@ -21,9 +22,8 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   // TODO include external type declaration or not?
   // intermediate cache to build nodes and edges
   // basic assumption: qualified name is unique in one project
-  // A binding represents a named entity in the Java language
-  protected Map<String, ElementNode> elementPool = new HashMap<>();
-  protected Map<OperationNode, Pair<EdgeType, String>> operationPool = new HashMap<>();
+  protected Map<String, Node> defPool = new HashMap<>();
+  protected Map<Node, Pair<Type, String>> usePool = new HashMap<>();
 
   public AbstractJdtVisitor() {
     super(true);
@@ -43,6 +43,23 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
         .buildGraph();
   }
 
+  /** Build edges with cached data pool */
+  public void buildEdges() {
+    for (Map.Entry entry : usePool.entrySet()) {
+      Node src = (Node) entry.getKey();
+      Pair<Type, String> use = (Pair<Type, String>) entry.getValue();
+      Node tgt = defPool.get(use.getSecond());
+      if (tgt != null) {
+        graph.addEdge(src, tgt, new Edge(use.getFirst()));
+      }
+    }
+  }
+
+  /**
+   * Just a getter for the graph at present
+   *
+   * @return
+   */
   public Graph<Node, Edge> getGraph() {
     return graph;
   }
