@@ -2,7 +2,6 @@
 .idea/
 *.iml
 *.ipr
-logs/
 
 ### Gradle ###
 .gradle/
@@ -19,6 +18,7 @@ out/
 build/
 
 # Log file
+logs/
 *.log
 
 # BlueJ files
