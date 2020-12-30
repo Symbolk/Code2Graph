@@ -5,6 +5,7 @@ import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.FileUtil;
 import org.jgrapht.Graph;
 import org.jgrapht.nio.Attribute;
+import org.jgrapht.nio.AttributeType;
 import org.jgrapht.nio.DefaultAttribute;
 import org.jgrapht.nio.dot.DOTExporter;
 
@@ -13,9 +14,7 @@ import java.io.Writer;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Convert graph to dot format of GraphViz
- */
+/** Convert graph to dot format of GraphViz */
 public class GraphVizExporter {
 
   public static String exportAsDot(Graph<Node, Edge> graph) {
@@ -23,12 +22,27 @@ public class GraphVizExporter {
 
     exporter.setVertexIdProvider(v -> v.getId().toString());
     exporter.setVertexAttributeProvider(
-        (v) -> {
+        v -> {
           Map<String, Attribute> map = new LinkedHashMap<>();
+          // new jgrapht API has no dedicated label provider setter
           map.put("type", DefaultAttribute.createAttribute(v.getType().toString()));
-          //          map.put("label", DefaultAttribute.createAttribute(v.getSnippet().toString()));
+          map.put("label", DefaultAttribute.createAttribute(v.getType().name));
+          map.put("shape", new NodeShapeAttribute(v));
+
           return map;
         });
+
+    exporter.setEdgeIdProvider(e -> e.getId().toString());
+    exporter.setEdgeAttributeProvider(
+        e -> {
+          Map<String, Attribute> map = new LinkedHashMap<>();
+          map.put("type", DefaultAttribute.createAttribute(e.getType().toString()));
+          map.put("label", DefaultAttribute.createAttribute(e.getType().name));
+          //            map.put("color", new EdgeColorAttribute(edge));
+          //            map.put("style", new EdgeStyleAttribute(edge));
+          return map;
+        });
+
     Writer writer = new StringWriter();
     exporter.exportGraph(graph, writer);
     return writer.toString();
@@ -50,5 +64,38 @@ public class GraphVizExporter {
    */
   public static void saveAsDot(Graph<Node, Edge> graph, String filePath) {
     FileUtil.writeStringToFile(exportAsDot(graph), filePath);
+  }
+
+  static class NodeShapeAttribute implements Attribute {
+    private Node node;
+
+    public NodeShapeAttribute(Node node) {
+      this.node = node;
+    }
+
+    @Override
+    public String getValue() {
+      switch (node.getClass().getSimpleName()) {
+        case "ElementNode":
+          return "folder";
+        case "OperationNode":
+          return "component";
+        case "BlockNode":
+          return "polygon";
+        case "ControlNode":
+          return "septagon";
+          //                    return "cds";
+          //                    return "ellipse";
+          //                    return "box";
+          //                    return "diamond";
+        default:
+          return "";
+      }
+    }
+
+    @Override
+    public AttributeType getType() {
+      return AttributeType.STRING;
+    }
   }
 }
