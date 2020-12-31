@@ -33,6 +33,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
   public boolean visit(TypeDeclaration td) {
     Type type = td.isInterface() ? NodeType.INTERFACE_DECLARATION : NodeType.CLASS_DECLARATION;
     ITypeBinding tdBinding = td.resolveBinding();
+    // isFromSource
     String qname = tdBinding.getQualifiedName();
     DeclarationNode n =
         new DeclarationNode(
@@ -56,6 +57,32 @@ public class JdtVisitor extends AbstractJdtVisitor {
   }
 
   public boolean visit(FieldDeclaration fd) {
+    List<VariableDeclarationFragment> fragments = fd.fragments();
+    for (VariableDeclarationFragment fragment : fragments) {
+      String qname = fragment.getName().getFullyQualifiedName();
+      IVariableBinding b = fragment.resolveBinding();
+      if (b != null && b.getDeclaringClass() != null) {
+        qname = b.getDeclaringClass().getQualifiedName() + ":" + qname;
+      }
+      DeclarationNode n =
+          new DeclarationNode(
+              GraphUtil.popNodeID(graph),
+              NodeType.FIELD_DECLARATION,
+              fragment.toString(),
+              fragment.getName().getFullyQualifiedName(),
+              qname);
+      graph.addVertex(n);
+      defPool.put(qname, n);
+
+      if (b != null && b.getType().isFromSource()) {
+        usePool.add(Triple.of(n, EdgeType.DATA_TYPE, b.getType().getQualifiedName()));
+      }
+    }
+    return false;
+  }
+
+  public boolean visit(VariableDeclarationStatement vd) {
+    List fragments = vd.fragments();
     return false;
   }
 

@@ -8,6 +8,9 @@ public class EdgeType {
     // type declaration
     public static final Type CONTAIN = type("contain");
 
+    // field and variable declaration
+    public static final Type DATA_TYPE = type("data_type");
+
     // method declaration
     public static final Type METHOD_PARAMETER = type("parameter");
     public static final Type METHOD_RETURN = type("return");
