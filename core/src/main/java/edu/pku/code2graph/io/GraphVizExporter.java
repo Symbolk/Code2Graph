@@ -1,6 +1,7 @@
 package edu.pku.code2graph.io;
 
 import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.FileUtil;
 import org.jgrapht.Graph;
@@ -26,7 +27,12 @@ public class GraphVizExporter {
           Map<String, Attribute> map = new LinkedHashMap<>();
           // new jgrapht API has no dedicated label provider setter
           map.put("type", DefaultAttribute.createAttribute(v.getType().toString()));
-          map.put("label", DefaultAttribute.createAttribute(v.getType().name));
+          map.put(
+              "label",
+              DefaultAttribute.createAttribute(
+                  v instanceof ElementNode
+                      ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
+                      : v.getType().name));
           map.put("shape", new NodeShapeAttribute(v));
 
           return map;
@@ -76,18 +82,16 @@ public class GraphVizExporter {
     @Override
     public String getValue() {
       switch (node.getClass().getSimpleName()) {
-        case "ElementNode":
+        case "DeclarationNode":
           return "folder";
+        case "DataNode":
+          return "note";
         case "OperationNode":
-          return "component";
+          return "cds";
         case "BlockNode":
-          return "polygon";
+          return "component";
         case "ControlNode":
-          return "septagon";
-          //                    return "cds";
-          //                    return "ellipse";
-          //                    return "box";
-          //                    return "diamond";
+          return "diamond";
         default:
           return "";
       }

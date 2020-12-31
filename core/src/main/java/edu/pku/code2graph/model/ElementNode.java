@@ -9,4 +9,12 @@ public class ElementNode extends Node {
     this.name = name;
     this.qualifiedName = qualifiedName;
   }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getQualifiedName() {
+    return qualifiedName;
+  }
 }
