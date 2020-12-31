@@ -4,9 +4,12 @@ import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
 import edu.pku.code2graph.model.DeclarationNode;
 import edu.pku.code2graph.model.OperationNode;
+import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.*;
-import org.jgrapht.alg.util.Pair;
+import org.jgrapht.alg.util.Triple;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -28,8 +31,32 @@ public class JdtVisitor extends AbstractJdtVisitor {
   public void preVisit(ASTNode n) {}
 
   public boolean visit(TypeDeclaration td) {
+    Type type = td.isInterface() ? NodeType.INTERFACE_DECLARATION : NodeType.CLASS_DECLARATION;
+    ITypeBinding tdBinding = td.resolveBinding();
+    String qname = tdBinding.getQualifiedName();
+    DeclarationNode n =
+        new DeclarationNode(
+            GraphUtil.popNodeID(graph), type, td.toString(), td.getName().toString(), qname);
+    graph.addVertex(n);
+    defPool.put(qname, n);
+
+    IVariableBinding[] fdBindings = tdBinding.getDeclaredFields();
+    IMethodBinding[] mdBindings = tdBinding.getDeclaredMethods();
+    for (IVariableBinding b : fdBindings) {
+      usePool.add(Triple.of(n, EdgeType.CONTAIN, qname + ":" + b.getName()));
+    }
+    for (IMethodBinding b : mdBindings) {
+      if (b.isDefaultConstructor()) {
+        continue;
+      }
+      usePool.add(Triple.of(n, EdgeType.CONTAIN, getMethodQNameFromBinding(b)));
+    }
 
     return true;
+  }
+
+  public boolean visit(FieldDeclaration fd) {
+    return false;
   }
 
   public boolean visit(MethodDeclaration md) {
@@ -39,22 +66,25 @@ public class JdtVisitor extends AbstractJdtVisitor {
     String qname = getMethodQNameFromBinding(mdBinding);
     DeclarationNode n =
         new DeclarationNode(
-            NodeType.METHOD_DECLARATION, md.toString(), md.getName().toString(), qname);
+            GraphUtil.popNodeID(graph),
+            NodeType.METHOD_DECLARATION,
+            md.toString(),
+            md.getName().toString(),
+            qname);
     graph.addVertex(n);
-
     defPool.put(qname, n);
 
     // return type
     ITypeBinding tpBinding = mdBinding.getReturnType();
     if (tpBinding != null) {
-      usePool.put(n, Pair.of(EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
+      usePool.add(Triple.of(n, EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
     }
 
     // para types
     ITypeBinding[] paraBindings = mdBinding.getParameterTypes();
     if (paraBindings != null) {
       for (ITypeBinding p : paraBindings) {
-        usePool.put(n, Pair.of(EdgeType.METHOD_PARAMETER, p.getQualifiedName()));
+        usePool.add(Triple.of(n, EdgeType.METHOD_PARAMETER, p.getQualifiedName()));
       }
     }
 
@@ -69,21 +99,27 @@ public class JdtVisitor extends AbstractJdtVisitor {
     IMethodBinding mdBinding = mi.resolveMethodBinding();
     // only internal invocation (or consider types, fields and local?)
     if (mdBinding != null) {
-      OperationNode n = new OperationNode(NodeType.METHOD_INVOCATION, mi.toString());
+      OperationNode n =
+          new OperationNode(GraphUtil.popNodeID(graph), NodeType.METHOD_INVOCATION, mi.toString());
       graph.addVertex(n);
 
       // called method
-      usePool.put(n, Pair.of(EdgeType.METHOD_CALLEE, getMethodQNameFromBinding(mdBinding)));
+      usePool.add(Triple.of(n, EdgeType.METHOD_CALLEE, getMethodQNameFromBinding(mdBinding)));
     }
 
     return false;
   }
 
   private String getMethodQNameFromBinding(IMethodBinding binding) {
-    String qname = binding.getName().toString();
-    // TODO add para types for overload
+    ITypeBinding[] paraBindings = binding.getParameterTypes();
+    List<String> paraTypes = new ArrayList<>();
+    for (ITypeBinding b : paraBindings) {
+      paraTypes.add(b.getQualifiedName());
+    }
+
+    String qname = binding.getName() + "(" + String.join(",", paraTypes).trim() + ")";
     if (binding != null) {
-      qname = binding.getDeclaringClass().getQualifiedName() + "." + qname;
+      qname = binding.getDeclaringClass().getQualifiedName() + ":" + qname;
     }
     return qname;
   }

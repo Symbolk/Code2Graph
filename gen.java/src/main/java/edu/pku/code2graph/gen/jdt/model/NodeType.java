@@ -15,7 +15,10 @@ public class NodeType {
   public static final Type TYPE_INSTANTIATION = type("type_instantiation");
 
   // DeclarationNode
-  public static final Type TYPE_DECLARATION = type("type_declaration");
+  public static final Type CLASS_DECLARATION = type("class_declaration");
+  public static final Type INTERFACE_DECLARATION = type("interface_declaration");
+  public static final Type ENUM_DECLARATION = type("enum_declaration");
+  public static final Type FIELD_DECLARATION = type("field_declaration");
   public static final Type METHOD_DECLARATION = type("method_declaration");
 
   // BlockNode
