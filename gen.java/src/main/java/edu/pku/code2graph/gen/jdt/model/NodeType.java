@@ -20,6 +20,7 @@ public class NodeType {
   public static final Type ENUM_DECLARATION = type("enum_declaration");
   public static final Type FIELD_DECLARATION = type("field_declaration");
   public static final Type METHOD_DECLARATION = type("method_declaration");
+  public static final Type VAR_DECLARATION = type("variable_declaration");
 
   // BlockNode
   public static final Type BLOCK = type("block");

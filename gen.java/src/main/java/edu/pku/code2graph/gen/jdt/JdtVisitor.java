@@ -2,6 +2,7 @@ package edu.pku.code2graph.gen.jdt;
 
 import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
+import edu.pku.code2graph.model.DataNode;
 import edu.pku.code2graph.model.DeclarationNode;
 import edu.pku.code2graph.model.OperationNode;
 import edu.pku.code2graph.model.Type;
@@ -10,6 +11,7 @@ import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -59,30 +61,51 @@ public class JdtVisitor extends AbstractJdtVisitor {
   public boolean visit(FieldDeclaration fd) {
     List<VariableDeclarationFragment> fragments = fd.fragments();
     for (VariableDeclarationFragment fragment : fragments) {
-      String qname = fragment.getName().getFullyQualifiedName();
-      IVariableBinding b = fragment.resolveBinding();
-      if (b != null && b.getDeclaringClass() != null) {
-        qname = b.getDeclaringClass().getQualifiedName() + ":" + qname;
+      String name = fragment.getName().getFullyQualifiedName();
+      String qname = name;
+      IVariableBinding binding = fragment.resolveBinding();
+      if (binding != null && binding.getDeclaringClass() != null) {
+        qname = binding.getDeclaringClass().getQualifiedName() + ":" + name;
       }
       DeclarationNode n =
           new DeclarationNode(
               GraphUtil.popNodeID(graph),
               NodeType.FIELD_DECLARATION,
               fragment.toString(),
-              fragment.getName().getFullyQualifiedName(),
+              name,
               qname);
       graph.addVertex(n);
       defPool.put(qname, n);
 
-      if (b != null && b.getType().isFromSource()) {
-        usePool.add(Triple.of(n, EdgeType.DATA_TYPE, b.getType().getQualifiedName()));
+      if (binding != null && binding.getType().isFromSource()) {
+        usePool.add(Triple.of(n, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
       }
     }
     return false;
   }
 
   public boolean visit(VariableDeclarationStatement vd) {
-    List fragments = vd.fragments();
+    for (Iterator iter = vd.fragments().iterator(); iter.hasNext(); ) {
+      VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
+      IVariableBinding binding = fragment.resolveBinding();
+      String name = fragment.getName().getFullyQualifiedName();
+      String qname = name;
+      if (binding != null && binding.getType().isFromSource()) {
+        String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
+        qname = binding.getType().getQualifiedName() + ":" + parentMethodName + ":" + name;
+        DataNode n =
+            new DataNode(
+                GraphUtil.popNodeID(graph),
+                NodeType.VAR_DECLARATION,
+                fragment.toString(),
+                name,
+                qname);
+        graph.addVertex(n);
+
+        usePool.add(Triple.of(n, EdgeType.PARENT, parentMethodName));
+        usePool.add(Triple.of(n, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+      }
+    }
     return false;
   }
 
@@ -90,14 +113,11 @@ public class JdtVisitor extends AbstractJdtVisitor {
     // A binding represents a named entity in the Java language
     // for internal, should never be null
     IMethodBinding mdBinding = md.resolveBinding();
-    String qname = getMethodQNameFromBinding(mdBinding);
+    String name = getMethodQNameFromBinding(mdBinding);
+    String qname = name;
     DeclarationNode n =
         new DeclarationNode(
-            GraphUtil.popNodeID(graph),
-            NodeType.METHOD_DECLARATION,
-            md.toString(),
-            md.getName().toString(),
-            qname);
+            GraphUtil.popNodeID(graph), NodeType.METHOD_DECLARATION, md.toString(), name, qname);
     graph.addVertex(n);
     defPool.put(qname, n);
 
