@@ -17,13 +17,11 @@ import java.util.List;
 /**
  * Visitor to create nodes and collect info to create edges
  *
- * <p>1. visit, store and index all element nodes
+ * <p>1. visit, store and index all concerned nodes
  *
- * <p>2. create nodes
+ * <p>2. create nodes with qualified name, and cache a mapping between qname and node
  *
- * <p>3. cache bindings for visited nodes
- *
- * <p>4. for all bindings, create or get decl node
+ * <p>3. cache role and target node with triple of <node, role, qname>
  *
  * <p>5. create edges
  */
@@ -135,6 +133,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
       }
     }
 
+    // TODO: process body here or else where?
     return true;
   }
 
