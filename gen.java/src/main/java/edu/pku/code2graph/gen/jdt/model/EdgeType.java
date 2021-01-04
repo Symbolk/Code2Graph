@@ -6,8 +6,9 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 public class EdgeType {
     // type declaration
-    public static final Type PARENT = type("parent");
-    public static final Type CHILD = type("child");
+    public static final Type PARENT_CLASS = type("parent_class");
+    public static final Type CHILD_CLASS = type("child_class");
+    public static final Type IMPLEMENT_INTERFACE = type("implement_interface");
 
     // field and variable declaration
     public static final Type DATA_TYPE = type("data_type");
@@ -21,5 +22,8 @@ public class EdgeType {
     public static final Type METHOD_CALLER = type("caller");
     public static final Type METHOD_CALLEE = type("callee");
     public static final Type METHOD_ARGUMENT = type("argument");
+
+    public static final Type BODY = type("body");
+    public static final Type CHILD = type("child");
 
 }
