@@ -82,15 +82,15 @@ public class GraphVizExporter {
     @Override
     public String getValue() {
       switch (node.getClass().getSimpleName()) {
-        case "DeclarationNode":
+        case "ElementNode":
           return "folder";
-        case "DataNode":
-          return "note";
-        case "OperationNode":
-          return "cds";
-        case "BlockNode":
-          return "component";
-        case "ControlNode":
+//        case "DataNode":
+//          return "note";
+//        case "OperationNode":
+//          return "cds";
+//        case "BlockNode":
+//          return "component";
+        case "RelationNode":
           return "diamond";
         default:
           return "";

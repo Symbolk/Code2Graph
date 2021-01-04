@@ -2,9 +2,8 @@ package edu.pku.code2graph.gen.jdt;
 
 import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
-import edu.pku.code2graph.model.DataNode;
-import edu.pku.code2graph.model.DeclarationNode;
-import edu.pku.code2graph.model.OperationNode;
+import edu.pku.code2graph.model.ElementNode;
+import edu.pku.code2graph.model.RelationNode;
 import edu.pku.code2graph.model.Type;
 import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.*;
@@ -35,8 +34,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
     ITypeBinding tdBinding = td.resolveBinding();
     // isFromSource
     String qname = tdBinding.getQualifiedName();
-    DeclarationNode n =
-        new DeclarationNode(
+    ElementNode n =
+        new ElementNode(
             GraphUtil.popNodeID(graph), type, td.toString(), td.getName().toString(), qname);
     graph.addVertex(n);
     defPool.put(qname, n);
@@ -44,13 +43,13 @@ public class JdtVisitor extends AbstractJdtVisitor {
     IVariableBinding[] fdBindings = tdBinding.getDeclaredFields();
     IMethodBinding[] mdBindings = tdBinding.getDeclaredMethods();
     for (IVariableBinding b : fdBindings) {
-      usePool.add(Triple.of(n, EdgeType.CONTAIN, qname + ":" + b.getName()));
+      usePool.add(Triple.of(n, EdgeType.CHILD, qname + ":" + b.getName()));
     }
     for (IMethodBinding b : mdBindings) {
       if (b.isDefaultConstructor()) {
         continue;
       }
-      usePool.add(Triple.of(n, EdgeType.CONTAIN, getMethodQNameFromBinding(b)));
+      usePool.add(Triple.of(n, EdgeType.CHILD, getMethodQNameFromBinding(b)));
     }
 
     return true;
@@ -65,8 +64,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
       if (binding != null && binding.getDeclaringClass() != null) {
         qname = binding.getDeclaringClass().getQualifiedName() + ":" + name;
       }
-      DeclarationNode n =
-          new DeclarationNode(
+      ElementNode n =
+          new ElementNode(
               GraphUtil.popNodeID(graph),
               NodeType.FIELD_DECLARATION,
               fragment.toString(),
@@ -91,8 +90,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
       if (binding != null && binding.getType().isFromSource()) {
         String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
         qname = binding.getType().getQualifiedName() + ":" + parentMethodName + ":" + name;
-        DataNode n =
-            new DataNode(
+        ElementNode n =
+            new ElementNode(
                 GraphUtil.popNodeID(graph),
                 NodeType.VAR_DECLARATION,
                 fragment.toString(),
@@ -113,8 +112,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
     IMethodBinding mdBinding = md.resolveBinding();
     String name = getMethodQNameFromBinding(mdBinding);
     String qname = name;
-    DeclarationNode n =
-        new DeclarationNode(
+    ElementNode n =
+        new ElementNode(
             GraphUtil.popNodeID(graph), NodeType.METHOD_DECLARATION, md.toString(), name, qname);
     graph.addVertex(n);
     defPool.put(qname, n);
@@ -145,8 +144,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
     IMethodBinding mdBinding = mi.resolveMethodBinding();
     // only internal invocation (or consider types, fields and local?)
     if (mdBinding != null) {
-      OperationNode n =
-          new OperationNode(GraphUtil.popNodeID(graph), NodeType.METHOD_INVOCATION, mi.toString());
+      RelationNode n =
+          new RelationNode(GraphUtil.popNodeID(graph), NodeType.METHOD_INVOCATION, mi.toString());
       graph.addVertex(n);
 
       // called method

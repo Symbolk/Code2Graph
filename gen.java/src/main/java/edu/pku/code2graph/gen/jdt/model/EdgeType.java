@@ -6,8 +6,8 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 public class EdgeType {
     // type declaration
-    public static final Type CONTAIN = type("contain");
     public static final Type PARENT = type("parent");
+    public static final Type CHILD = type("child");
 
     // field and variable declaration
     public static final Type DATA_TYPE = type("data_type");
