@@ -24,7 +24,7 @@ public abstract class Node {
 
   public Type getType() {
     if(type == null) {
-      return type("NONE");
+      return type("OTHER");
     }
     return type;
   }

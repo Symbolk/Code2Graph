@@ -5,26 +5,31 @@ import edu.pku.code2graph.model.Type;
 import static edu.pku.code2graph.model.TypeSet.type;
 
 public class EdgeType {
-    // type declaration
+    // type hierarchy
     public static final Type PARENT_CLASS = type("parent_class");
     public static final Type CHILD_CLASS = type("child_class");
-    public static final Type IMPLEMENT_INTERFACE = type("implement_interface");
+    public static final Type IMPLEMENTATION = type("implementation");
 
-    // field and variable declaration
+    // type and source
     public static final Type DATA_TYPE = type("data_type");
+    public static final Type REFERENCE = type("reference");
 
-    // method declaration
+    // roles for method declaration
     public static final Type METHOD_PARAMETER = type("parameter");
     public static final Type METHOD_RETURN = type("return_type");
     public static final Type METHOD_EXCEPTION = type("exception");
 
-    // method invocation
+    // roles for method invocation
     public static final Type METHOD_CALLER = type("caller");
     public static final Type METHOD_CALLEE = type("callee");
     public static final Type METHOD_ARGUMENT = type("argument");
 
+    // nesting
     public static final Type BODY = type("body");
     public static final Type CHILD = type("child");
-    public static final Type PARENT = type("parent");
+
+    // operand
+    public static final Type LEFT = type("left");
+    public static final Type RIGHT = type("right");
 
 }

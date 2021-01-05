@@ -25,7 +25,9 @@ public class NodeType {
   public static final Type PREFIX_EXPRESSION_OPERATOR = type("prefix");
   public static final Type POSTFIX_EXPRESSION_OPERATOR = type("posfix");
 
+  public static final Type FIELD_ACCESS = type("field_access");
   public static final Type METHOD_INVOCATION = type("method_invocation");
+  public static final Type PARAMETER_ACCESS = type("parameter_access");
   public static final Type TYPE_INSTANTIATION = type("type_instantiation");
 
   // control relations
