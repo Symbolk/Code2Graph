@@ -4,6 +4,10 @@ public class RelationNode extends Node {
   public String symbol;
   public Integer arity;
 
+  public RelationNode(Integer id) {
+    super(id);
+  }
+
   public RelationNode(Integer id, Type type, String snippet) {
     super(id, type, snippet);
   }

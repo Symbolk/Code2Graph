@@ -13,6 +13,7 @@ import org.jgrapht.alg.util.Triple;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -202,9 +203,9 @@ public class JdtVisitor extends AbstractJdtVisitor {
    * @return
    */
   private RelationNode parseBodyBlock(Block body, String rootName) {
-    RelationNode blockNode = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
-    graph.addVertex(blockNode);
-    defPool.put(rootName, blockNode);
+    RelationNode b = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
+    graph.addVertex(b);
+    defPool.put(rootName, b);
 
     List<Statement> statementList = body.statements();
     List<Statement> statements = new ArrayList<>();
@@ -216,18 +217,18 @@ public class JdtVisitor extends AbstractJdtVisitor {
       Statement stmt = statements.get(i);
 
       // TODO: for nested block/statements, how to connect to parent?
+      // iteration, use line number to uniquely identify
       if (stmt.getNodeType() == ASTNode.BLOCK) {
-        List<Statement> blockStatements = ((Block) stmt).statements();
-        for (int j = 0; j < blockStatements.size(); j++) {
-          statements.add(i + j + 1, blockStatements.get(j));
-        }
+        //        parseBodyBlock((Block)stmt, )
         continue;
       }
 
       if (stmt.getNodeType() == ASTNode.RETURN_STATEMENT) {
         Expression expression = ((ReturnStatement) stmt).getExpression();
         if (expression != null) {
-          parseExpression(expression);
+          RelationNode n = parseExpression(expression);
+          graph.addVertex(n);
+          graph.addEdge(b, n, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
         }
       }
 
@@ -267,34 +268,65 @@ public class JdtVisitor extends AbstractJdtVisitor {
 
       if (stmt.getNodeType() == ASTNode.EXPRESSION_STATEMENT) {}
     }
-    return blockNode;
+    return b;
   }
 
-  private void parseExpression(Expression exp) {
+  /**
+   * Expression at the leaf level, modeled as relation
+   *
+   * @param exp
+   * @return
+   */
+  private RelationNode parseExpression(Expression exp) {
+    RelationNode n = new RelationNode(GraphUtil.popNodeID(graph));
+    n.setSnippet(exp.toString());
+
     if (exp.getNodeType() == ASTNode.FIELD_ACCESS) {}
     if (exp.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION) {}
-    if (exp.getNodeType() == ASTNode.METHOD_INVOCATION) {
-      // get caller qname
-      MethodInvocation mi = (MethodInvocation) exp;
-      List<Expression> arguments = mi.arguments();
 
-      // get callee qname
+    if (exp.getNodeType() == ASTNode.METHOD_INVOCATION) {
+      MethodInvocation mi = (MethodInvocation) exp;
+      n.setType(NodeType.METHOD_INVOCATION);
+
+      // TODO: link arg use to its declaration (local, field, or external)
+      List<Expression> arguments = mi.arguments();
+      for (Expression arg : arguments) {}
+
       IMethodBinding mdBinding = mi.resolveMethodBinding();
       // only internal invocation (or consider types, fields and local?)
       if (mdBinding != null) {
-        RelationNode n =
-            new RelationNode(GraphUtil.popNodeID(graph), NodeType.METHOD_INVOCATION, mi.toString());
         graph.addVertex(n);
 
-        // called method
-        mdBinding.getMethodDeclaration();
-        //        usePool.add(Triple.of(n, EdgeType.METHOD_CALLER, findParentByType(mi,
-        // ASTNode.METHOD_DECLARATION)));
+        // get caller qname
+        findWrappedMethod(mi)
+            .ifPresent(
+                name -> {
+                  usePool.add(Triple.of(n, EdgeType.METHOD_CALLER, name));
+                });
+        // get callee qname
         usePool.add(Triple.of(n, EdgeType.METHOD_CALLEE, getMethodQNameFromBinding(mdBinding)));
       }
     }
     if (exp.getNodeType() == ASTNode.ASSIGNMENT) {}
     if (exp.getNodeType() == ASTNode.CAST_EXPRESSION) {}
+    return n;
+  }
+
+  /**
+   * Find the nearest ancestor of a specific type, return its qname
+   *
+   * @return
+   */
+  private Optional<String> findWrappedMethod(ASTNode node) {
+    ASTNode parent = node.getParent();
+    while (parent != null) {
+      if (parent.getNodeType() == ASTNode.METHOD_DECLARATION) {
+        return Optional.of(
+            getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
+      }
+      parent = parent.getParent();
+    }
+    return Optional.empty();
   }
 
   private String getMethodQNameFromBinding(IMethodBinding binding) {
