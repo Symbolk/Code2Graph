@@ -9,10 +9,10 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
@@ -20,12 +20,12 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   // final constructed graph instance
   protected Graph<Node, Edge> graph = GraphUtil.initGraph();
 
-  // TODO index nodes by qualified name as Trie to speed up matching
+  // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
   // TODO include external type declaration or not?
   // intermediate cache to build nodes and edges
   // basic assumption: qualified name is unique in one project
   protected Map<String, Node> defPool = new HashMap<>();
-  protected Set<Triple<Node, Type, String>> usePool = new HashSet<>();
+  protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
 
   public AbstractJdtVisitor() {
     super(true);
