@@ -3,6 +3,7 @@ package edu.pku.code2graph.io;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.RelationNode;
 import edu.pku.code2graph.util.FileUtil;
 import org.jgrapht.Graph;
 import org.jgrapht.nio.Attribute;
@@ -10,6 +11,10 @@ import org.jgrapht.nio.AttributeType;
 import org.jgrapht.nio.DefaultAttribute;
 import org.jgrapht.nio.dot.DOTExporter;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.LinkedHashMap;
@@ -32,7 +37,7 @@ public class GraphVizExporter {
               DefaultAttribute.createAttribute(
                   v instanceof ElementNode
                       ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
-                      : v.getType().name));
+                      : v.getType().name + "(" + ((RelationNode) v).getSymbol() + ")"));
           map.put("shape", new NodeShapeAttribute(v));
 
           return map;
@@ -64,6 +69,20 @@ public class GraphVizExporter {
   }
 
   /**
+   * Copy the dot into the system clipboard
+   *
+   * @param graph
+   * @return
+   */
+  public static String copyAsDot(Graph<Node, Edge> graph) {
+    String dot = exportAsDot(graph);
+    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+    Transferable transferable = new StringSelection(dot);
+    clipboard.setContents(transferable, null);
+    return dot;
+  }
+
+  /**
    * Save the exported dot to file
    *
    * @param graph
@@ -84,12 +103,12 @@ public class GraphVizExporter {
       switch (node.getClass().getSimpleName()) {
         case "ElementNode":
           return "folder";
-//        case "DataNode":
-//          return "note";
-//        case "OperationNode":
-//          return "cds";
-//        case "BlockNode":
-//          return "component";
+          //        case "DataNode":
+          //          return "note";
+          //        case "OperationNode":
+          //          return "cds";
+          //        case "BlockNode":
+          //          return "component";
         case "RelationNode":
           return "diamond";
         default:
