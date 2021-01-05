@@ -164,8 +164,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
         String para_name = p.getName().getFullyQualifiedName();
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
-        if (b != null && b.getDeclaringClass() != null) {
-          para_qname = b.getDeclaringClass().getQualifiedName() + "." + para_name;
+        if (b != null && b.getVariableDeclaration() != null) {
+          para_qname = getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
         }
         ElementNode pn =
             new ElementNode(
@@ -243,7 +243,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               String qname = name;
               if (binding != null && binding.getType().isFromSource()) {
                 String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
-                qname = binding.getType().getQualifiedName() + "." + parentMethodName + "." + name;
+                qname = parentMethodName + "." + name;
                 ElementNode en =
                     new ElementNode(
                         GraphUtil.popNodeID(graph),
@@ -324,6 +324,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.THIS_EXPRESSION:
         {
+          //          root.setType(NodeType.);
           ThisExpression te = (ThisExpression) exp;
           te.getQualifier();
           break;
@@ -384,21 +385,51 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.ASSIGNMENT:
         {
+          Assignment asg = (Assignment) exp;
+
           root.setType(NodeType.ASSIGNMENT_OPERATOR);
+          root.setSymbol(asg.getOperator().toString());
+          root.setArity(2);
+
           graph.addEdge(
               root,
-              parseExpression(((Assignment) exp).getLeftHandSide()),
+              parseExpression(asg.getLeftHandSide()),
               new Edge(GraphUtil.popEdgeID(graph), EdgeType.LEFT));
           graph.addEdge(
               root,
-              parseExpression(((Assignment) exp).getRightHandSide()),
+              parseExpression(asg.getRightHandSide()),
               new Edge(GraphUtil.popEdgeID(graph), EdgeType.RIGHT));
           break;
         }
       case ASTNode.CAST_EXPRESSION:
-        break;
+        {
+          break;
+        }
       case ASTNode.INFIX_EXPRESSION:
-        break;
+        {
+          InfixExpression iex = (InfixExpression) exp;
+          root.setType(NodeType.INFIX_OPERATOR);
+          root.setSymbol(iex.getOperator().toString());
+          root.setArity(2);
+
+          graph.addEdge(
+              root,
+              parseExpression(iex.getLeftOperand()),
+              new Edge(GraphUtil.popEdgeID(graph), EdgeType.LEFT));
+          graph.addEdge(
+              root,
+              parseExpression(iex.getRightOperand()),
+              new Edge(GraphUtil.popEdgeID(graph), EdgeType.RIGHT));
+          break;
+        }
+      case ASTNode.PREFIX_EXPRESSION:
+        {
+          break;
+        }
+      case ASTNode.POSTFIX_EXPRESSION:
+        {
+          break;
+        }
     }
 
     return root;

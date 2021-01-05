@@ -21,9 +21,9 @@ public class NodeType {
 
   // expression
   public static final Type ASSIGNMENT_OPERATOR = type("assign");
-  public static final Type INFIX_EXPRESSION_OPERATOR = type("infix");
-  public static final Type PREFIX_EXPRESSION_OPERATOR = type("prefix");
-  public static final Type POSTFIX_EXPRESSION_OPERATOR = type("posfix");
+  public static final Type INFIX_OPERATOR = type("infix");
+  public static final Type PREFIX_OPERATOR = type("prefix");
+  public static final Type POSTFIX_OPERATOR = type("posfix");
 
   public static final Type FIELD_ACCESS = type("field_access");
   public static final Type METHOD_INVOCATION = type("method_invocation");

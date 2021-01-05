@@ -23,10 +23,7 @@ public abstract class Node {
   }
 
   public Type getType() {
-    if(type == null) {
-      return type("OTHER");
-    }
-    return type;
+    return type == null ? type("OTHER") : type;
   }
 
   public void setType(Type type) {

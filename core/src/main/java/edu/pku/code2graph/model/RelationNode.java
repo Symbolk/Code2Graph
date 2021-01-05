@@ -17,4 +17,20 @@ public class RelationNode extends Node {
     this.symbol = symbol;
     this.arity = arity;
   }
+
+  public String getSymbol() {
+    return symbol == null ? "" : symbol;
+  }
+
+  public void setSymbol(String symbol) {
+    this.symbol = symbol;
+  }
+
+  public Integer getArity() {
+    return arity;
+  }
+
+  public void setArity(Integer arity) {
+    this.arity = arity;
+  }
 }
