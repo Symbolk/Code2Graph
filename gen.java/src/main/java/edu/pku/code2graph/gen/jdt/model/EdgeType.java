@@ -15,7 +15,7 @@ public class EdgeType {
 
     // method declaration
     public static final Type METHOD_PARAMETER = type("parameter");
-    public static final Type METHOD_RETURN = type("return");
+    public static final Type METHOD_RETURN = type("return_type");
     public static final Type METHOD_EXCEPTION = type("exception");
 
     // method invocation
@@ -25,5 +25,6 @@ public class EdgeType {
 
     public static final Type BODY = type("body");
     public static final Type CHILD = type("child");
+    public static final Type PARENT = type("parent");
 
 }
