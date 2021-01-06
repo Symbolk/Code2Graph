@@ -15,6 +15,7 @@ public class NodeType {
   public static final Type ENUM_CONSTANT_DECLARATION = type("enum_const_declaration");
   public static final Type METHOD_DECLARATION = type("method_declaration");
   public static final Type VAR_DECLARATION = type("variable_declaration");
+  public static final Type LITERAL = type("literal");
 
   // Relations
   // block

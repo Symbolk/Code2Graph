@@ -363,6 +363,17 @@ public class JdtVisitor extends AbstractJdtVisitor {
 
     // simple name may be self-field access
     switch (exp.getNodeType()) {
+      case ASTNode.NUMBER_LITERAL:
+      case ASTNode.STRING_LITERAL:
+      case ASTNode.CHARACTER_LITERAL:
+      case ASTNode.BOOLEAN_LITERAL:
+      case ASTNode.NULL_LITERAL:
+      case ASTNode.TYPE_LITERAL:
+        {
+          root.setSymbol(exp.toString());
+          root.setType(NodeType.LITERAL);
+          break;
+        }
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
