@@ -2,10 +2,8 @@ package edu.pku.code2graph.gen.jdt;
 
 import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
-import edu.pku.code2graph.model.RelationNode;
 import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
@@ -203,6 +201,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
    * @return
    */
   private RelationNode parseBodyBlock(Block body, String rootName) {
+    // the node of the current block node
     RelationNode root = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
     graph.addVertex(root);
     defPool.put(rootName, root);
@@ -223,64 +222,90 @@ public class JdtVisitor extends AbstractJdtVisitor {
         continue;
       }
 
-      switch (stmt.getNodeType()) {
-        case ASTNode.RETURN_STATEMENT:
-          {
-            Expression expression = ((ReturnStatement) stmt).getExpression();
-            if (expression != null) {
-              RelationNode e = parseExpression(expression);
-              graph.addEdge(root, e, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
-            }
-            break;
-          }
-        case ASTNode.VARIABLE_DECLARATION_STATEMENT:
-          {
-            VariableDeclarationStatement vd = (VariableDeclarationStatement) stmt;
-            for (Iterator iter = vd.fragments().iterator(); iter.hasNext(); ) {
-              VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
-              IVariableBinding binding = fragment.resolveBinding();
-              String name = fragment.getName().getFullyQualifiedName();
-              String qname = name;
-              if (binding != null && binding.getType().isFromSource()) {
-                String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
-                qname = parentMethodName + "." + name;
-                ElementNode en =
-                    new ElementNode(
-                        GraphUtil.popNodeID(graph),
-                        NodeType.VAR_DECLARATION,
-                        fragment.toString(),
-                        name,
-                        qname);
-                graph.addVertex(en);
-                defPool.put(qname, en);
-
-                graph.addEdge(root, en, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
-                usePool.add(
-                    Triple.of(en, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
-              }
-            }
-            break;
-          }
-        case ASTNode.EXPRESSION_STATEMENT:
-          {
-            Expression exp = ((ExpressionStatement) stmt).getExpression();
-            if (exp != null) {
-              RelationNode e = parseExpression(exp);
-              graph.addEdge(root, e, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
-            }
-            break;
-          }
+      Node node = parseStatement(stmt);
+      if (node != null) {
+        graph.addEdge(root, node, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
       }
-
-      // control
-      if (stmt.getNodeType() == ASTNode.IF_STATEMENT) {}
-      if (stmt.getNodeType() == ASTNode.DO_STATEMENT) {}
-      if (stmt.getNodeType() == ASTNode.FOR_STATEMENT) {}
-      if (stmt.getNodeType() == ASTNode.ENHANCED_FOR_STATEMENT) {}
-      if (stmt.getNodeType() == ASTNode.SWITCH_STATEMENT) {}
-      if (stmt.getNodeType() == ASTNode.TRY_STATEMENT) {}
     }
+
     return root;
+  }
+
+  private Node parseStatement(Statement stmt) {
+    switch (stmt.getNodeType()) {
+      case ASTNode.RETURN_STATEMENT:
+        {
+          Expression expression = ((ReturnStatement) stmt).getExpression();
+          if (expression != null) {
+            RelationNode node = parseExpression(expression);
+            return node;
+          }
+          break;
+        }
+      case ASTNode.VARIABLE_DECLARATION_STATEMENT:
+        {
+          VariableDeclarationStatement vd = (VariableDeclarationStatement) stmt;
+          for (Iterator iter = vd.fragments().iterator(); iter.hasNext(); ) {
+            VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
+            IVariableBinding binding = fragment.resolveBinding();
+            String name = fragment.getName().getFullyQualifiedName();
+            String qname = name;
+            if (binding != null && binding.getType().isFromSource()) {
+              String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
+              qname = parentMethodName + "." + name;
+              ElementNode en =
+                  new ElementNode(
+                      GraphUtil.popNodeID(graph),
+                      NodeType.VAR_DECLARATION,
+                      fragment.toString(),
+                      name,
+                      qname);
+              graph.addVertex(en);
+              defPool.put(qname, en);
+
+              usePool.add(Triple.of(en, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+              return en;
+            }
+          }
+          break;
+        }
+      case ASTNode.EXPRESSION_STATEMENT:
+        {
+          Expression exp = ((ExpressionStatement) stmt).getExpression();
+          if (exp != null) {
+            RelationNode node = parseExpression(exp);
+            return node;
+          }
+          break;
+        }
+    }
+
+    // control
+    if (stmt.getNodeType() == ASTNode.IF_STATEMENT) {
+//      IfStatement ifStatement = (IfStatement) stmt;
+//      ifStatement.getStartPosition();
+//      RelationNode node =
+//          new RelationNode(
+//              GraphUtil.popNodeID(graph), NodeType.IF_STATEMENT, ifStatement.toString());
+//      graph.addVertex(node);
+//
+//      if (ifStatement.getExpression() != null) {
+//        RelationNode cond = parseExpression(ifStatement.getExpression());
+//        graph.addEdge(node, cond, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
+//      }
+//      if (ifStatement.getThenStatement() != null) {
+////        RelationNode then = parseBodyBlock(ifStatement.getThenStatement(), +".BLOCK");
+////        graph.addEdge(initNode, then, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
+//      }
+//      return node;
+    }
+
+    if (stmt.getNodeType() == ASTNode.DO_STATEMENT) {}
+    if (stmt.getNodeType() == ASTNode.FOR_STATEMENT) {}
+    if (stmt.getNodeType() == ASTNode.ENHANCED_FOR_STATEMENT) {}
+    if (stmt.getNodeType() == ASTNode.SWITCH_STATEMENT) {}
+    if (stmt.getNodeType() == ASTNode.TRY_STATEMENT) {}
+    return null;
   }
 
   /**
