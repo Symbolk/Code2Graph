@@ -12,6 +12,7 @@ public class NodeType {
 
   public static final Type INIT_BLOCK_DECLARATION = type("init_block_declaration");
   public static final Type FIELD_DECLARATION = type("field_declaration");
+  public static final Type ENUM_CONSTANT_DECLARATION = type("enum_const_declaration");
   public static final Type METHOD_DECLARATION = type("method_declaration");
   public static final Type VAR_DECLARATION = type("variable_declaration");
 
@@ -28,6 +29,8 @@ public class NodeType {
   public static final Type FIELD_ACCESS = type("field_access");
   public static final Type METHOD_INVOCATION = type("method_invocation");
   public static final Type PARAMETER_ACCESS = type("parameter_access");
+  public static final Type CONSTANT_ACCESS = type("constant_access");
+  public static final Type LOCAL_VAR_ACCESS = type("local_var_access");
   public static final Type TYPE_INSTANTIATION = type("type_instantiation");
 
   // control relations

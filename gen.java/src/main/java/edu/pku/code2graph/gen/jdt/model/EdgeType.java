@@ -32,4 +32,9 @@ public class EdgeType {
     public static final Type LEFT = type("left");
     public static final Type RIGHT = type("right");
 
+    // control
+    public static final Type CONDITION = type("condition");
+    public static final Type THEN = type("then");
+    public static final Type ELSE = type("else");
+
 }

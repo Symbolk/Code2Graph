@@ -201,6 +201,9 @@ public class JdtVisitor extends AbstractJdtVisitor {
    * @return
    */
   private RelationNode parseBodyBlock(Block body, String rootName) {
+    //    if(body.statements().isEmpty()){
+    //      return null;
+    //    }
     // the node of the current block node
     RelationNode root = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
     graph.addVertex(root);
@@ -222,49 +225,78 @@ public class JdtVisitor extends AbstractJdtVisitor {
         continue;
       }
 
-      Node node = parseStatement(stmt);
-      if (node != null) {
-        graph.addEdge(root, node, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
-      }
+      parseStatement(stmt)
+          .ifPresent(
+              node ->
+                  graph.addEdge(root, node, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
     }
 
     return root;
   }
 
-  private Node parseStatement(Statement stmt) {
+  /**
+   * Parse statement and return the created node
+   *
+   * @param stmt
+   * @return
+   */
+  private Optional<Node> parseStatement(Statement stmt) {
     switch (stmt.getNodeType()) {
+      case ASTNode.BLOCK:
+        {
+          Block block = (Block) stmt;
+          if (block.statements().isEmpty()) {
+            return Optional.empty();
+          } else {
+            RelationNode node = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
+            graph.addVertex(node);
+            for (Object st : block.statements()) {
+              parseStatement((Statement) st)
+                  .ifPresent(
+                      snode ->
+                          graph.addEdge(
+                              node, snode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
+            }
+            return Optional.of(node);
+          }
+        }
       case ASTNode.RETURN_STATEMENT:
         {
           Expression expression = ((ReturnStatement) stmt).getExpression();
           if (expression != null) {
             RelationNode node = parseExpression(expression);
-            return node;
+            graph.addVertex(node);
+            return Optional.of(node);
           }
           break;
         }
       case ASTNode.VARIABLE_DECLARATION_STATEMENT:
         {
+          // local var declaration
           VariableDeclarationStatement vd = (VariableDeclarationStatement) stmt;
           for (Iterator iter = vd.fragments().iterator(); iter.hasNext(); ) {
             VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
             IVariableBinding binding = fragment.resolveBinding();
             String name = fragment.getName().getFullyQualifiedName();
             String qname = name;
-            if (binding != null && binding.getType().isFromSource()) {
+            if (binding != null) {
               String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
               qname = parentMethodName + "." + name;
-              ElementNode en =
+              ElementNode node =
                   new ElementNode(
                       GraphUtil.popNodeID(graph),
                       NodeType.VAR_DECLARATION,
                       fragment.toString(),
                       name,
                       qname);
-              graph.addVertex(en);
-              defPool.put(qname, en);
+              graph.addVertex(node);
+              defPool.put(qname, node);
 
-              usePool.add(Triple.of(en, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
-              return en;
+              if (binding.getType().isFromSource()) {
+                usePool.add(
+                    Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+              }
+              return Optional.of(node);
             }
           }
           break;
@@ -274,7 +306,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           Expression exp = ((ExpressionStatement) stmt).getExpression();
           if (exp != null) {
             RelationNode node = parseExpression(exp);
-            return node;
+            return Optional.of(node);
           }
           break;
         }
@@ -282,22 +314,30 @@ public class JdtVisitor extends AbstractJdtVisitor {
 
     // control
     if (stmt.getNodeType() == ASTNode.IF_STATEMENT) {
-//      IfStatement ifStatement = (IfStatement) stmt;
-//      ifStatement.getStartPosition();
-//      RelationNode node =
-//          new RelationNode(
-//              GraphUtil.popNodeID(graph), NodeType.IF_STATEMENT, ifStatement.toString());
-//      graph.addVertex(node);
-//
-//      if (ifStatement.getExpression() != null) {
-//        RelationNode cond = parseExpression(ifStatement.getExpression());
-//        graph.addEdge(node, cond, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
-//      }
-//      if (ifStatement.getThenStatement() != null) {
-////        RelationNode then = parseBodyBlock(ifStatement.getThenStatement(), +".BLOCK");
-////        graph.addEdge(initNode, then, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
-//      }
-//      return node;
+      IfStatement ifStatement = (IfStatement) stmt;
+      ifStatement.getStartPosition();
+      RelationNode node =
+          new RelationNode(
+              GraphUtil.popNodeID(graph), NodeType.IF_STATEMENT, ifStatement.toString());
+      graph.addVertex(node);
+
+      if (ifStatement.getExpression() != null) {
+        RelationNode cond = parseExpression(ifStatement.getExpression());
+        graph.addEdge(node, cond, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
+      }
+      if (ifStatement.getThenStatement() != null) {
+        parseStatement(ifStatement.getThenStatement())
+            .ifPresent(
+                then ->
+                    graph.addEdge(node, then, new Edge(GraphUtil.popEdgeID(graph), EdgeType.THEN)));
+      }
+      if (ifStatement.getElseStatement() != null) {
+        parseStatement(ifStatement.getThenStatement())
+            .ifPresent(
+                els ->
+                    graph.addEdge(node, els, new Edge(GraphUtil.popEdgeID(graph), EdgeType.ELSE)));
+      }
+      return Optional.of(node);
     }
 
     if (stmt.getNodeType() == ASTNode.DO_STATEMENT) {}
@@ -305,7 +345,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
     if (stmt.getNodeType() == ASTNode.ENHANCED_FOR_STATEMENT) {}
     if (stmt.getNodeType() == ASTNode.SWITCH_STATEMENT) {}
     if (stmt.getNodeType() == ASTNode.TRY_STATEMENT) {}
-    return null;
+
+    return Optional.empty();
   }
 
   /**
@@ -333,9 +374,30 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   Triple.of(
                       root,
                       EdgeType.REFERENCE,
-                      varBinding.getDeclaringClass().getQualifiedName() + "." + binding.getName()));
+                      varBinding.getDeclaringClass().getQualifiedName()
+                          + "."
+                          + varBinding.getName()));
             } else if (varBinding.isParameter()) {
               root.setType(NodeType.PARAMETER_ACCESS);
+              usePool.add(
+                  Triple.of(
+                      root,
+                      EdgeType.REFERENCE,
+                      getMethodQNameFromBinding(varBinding.getDeclaringMethod())
+                          + "."
+                          + varBinding.getName()));
+            } else if (varBinding.isEnumConstant()) {
+              root.setType(NodeType.CONSTANT_ACCESS);
+              usePool.add(
+                  Triple.of(
+                      root,
+                      EdgeType.REFERENCE,
+                      varBinding.getDeclaringClass().getQualifiedName()
+                          + "."
+                          + varBinding.getName()));
+            } else {
+              // if not the above 3, then must be a local variable
+              root.setType(NodeType.LOCAL_VAR_ACCESS);
               usePool.add(
                   Triple.of(
                       root,
