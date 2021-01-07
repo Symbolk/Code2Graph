@@ -587,7 +587,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
         {
           Assignment asg = (Assignment) exp;
 
-          root.setType(NodeType.ASSIGNMENT_OPERATOR);
+          root.setType(NodeType.ASSIGNMENT);
           root.setSymbol(asg.getOperator().toString());
           root.setArity(2);
 
@@ -608,7 +608,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
       case ASTNode.INFIX_EXPRESSION:
         {
           InfixExpression iex = (InfixExpression) exp;
-          root.setType(NodeType.INFIX_OPERATOR);
+          root.setType(NodeType.INFIX);
           root.setSymbol(iex.getOperator().toString());
           root.setArity(2);
 
