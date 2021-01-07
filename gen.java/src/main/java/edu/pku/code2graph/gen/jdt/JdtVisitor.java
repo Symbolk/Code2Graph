@@ -83,9 +83,13 @@ public class JdtVisitor extends AbstractJdtVisitor {
             graph.addVertex(initNode);
             graph.addEdge(body, initNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
 
-            RelationNode initBlock = parseBodyBlock(initializer.getBody(), qname + ".BLOCK");
-            graph.addEdge(
-                initNode, initBlock, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
+            parseBodyBlock(initializer.getBody(), qname + ".BLOCK")
+                .ifPresent(
+                    initBlock ->
+                        graph.addEdge(
+                            initNode,
+                            initBlock,
+                            new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
           }
         }
       }
@@ -187,9 +191,14 @@ public class JdtVisitor extends AbstractJdtVisitor {
     if (!md.thrownExceptionTypes().isEmpty()) {}
 
     // TODO: process body here or else where?
-    if (!md.getBody().statements().isEmpty()) {
-      RelationNode blockNode = parseBodyBlock(md.getBody(), qname + ".BLOCK");
-      graph.addEdge(n, blockNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY));
+    if (md.getBody() != null) {
+      if (!md.getBody().statements().isEmpty()) {
+        parseBodyBlock(md.getBody(), qname + ".BLOCK")
+            .ifPresent(
+                blockNode ->
+                    graph.addEdge(
+                        n, blockNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
+      }
     }
     return true;
   }
@@ -200,10 +209,11 @@ public class JdtVisitor extends AbstractJdtVisitor {
    * @param body
    * @return
    */
-  private RelationNode parseBodyBlock(Block body, String rootName) {
-    //    if(body.statements().isEmpty()){
-    //      return null;
-    //    }
+  private Optional<RelationNode> parseBodyBlock(Block body, String rootName) {
+    if (body == null || body.statements().isEmpty()) {
+      return Optional.empty();
+    }
+
     // the node of the current block node
     RelationNode root = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
     graph.addVertex(root);
@@ -231,7 +241,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   graph.addEdge(root, node, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
     }
 
-    return root;
+    return Optional.of(root);
   }
 
   /**
