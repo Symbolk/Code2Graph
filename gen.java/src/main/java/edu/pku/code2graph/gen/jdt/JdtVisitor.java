@@ -320,41 +320,101 @@ public class JdtVisitor extends AbstractJdtVisitor {
           }
           break;
         }
+
+        // control
+      case ASTNode.IF_STATEMENT:
+        {
+          IfStatement ifStatement = (IfStatement) stmt;
+          //      ifStatement.getStartPosition();
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.popNodeID(graph), NodeType.IF_STATEMENT, ifStatement.toString());
+          graph.addVertex(node);
+
+          if (ifStatement.getExpression() != null) {
+            RelationNode cond = parseExpression(ifStatement.getExpression());
+            graph.addEdge(node, cond, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
+          }
+          if (ifStatement.getThenStatement() != null) {
+            parseStatement(ifStatement.getThenStatement())
+                .ifPresent(
+                    then ->
+                        graph.addEdge(
+                            node, then, new Edge(GraphUtil.popEdgeID(graph), EdgeType.THEN)));
+          }
+          if (ifStatement.getElseStatement() != null) {
+            parseStatement(ifStatement.getThenStatement())
+                .ifPresent(
+                    els ->
+                        graph.addEdge(
+                            node, els, new Edge(GraphUtil.popEdgeID(graph), EdgeType.ELSE)));
+          }
+          return Optional.of(node);
+        }
+      case ASTNode.FOR_STATEMENT:
+        {
+          ForStatement forStatement = (ForStatement) stmt;
+          forStatement.getExpression();
+        }
+
+      case ASTNode.ENHANCED_FOR_STATEMENT:
+        {
+          EnhancedForStatement eForStatement = (EnhancedForStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.popNodeID(graph),
+                  NodeType.ENHANCED_FOR_STATEMENT,
+                  eForStatement.toString());
+          graph.addVertex(node);
+
+          SingleVariableDeclaration p = eForStatement.getParameter();
+          String para_name = p.getName().getFullyQualifiedName();
+          String para_qname = para_name;
+          IVariableBinding b = p.resolveBinding();
+          if (b != null && b.getVariableDeclaration() != null) {
+            para_qname = getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+          }
+          ElementNode pn =
+              new ElementNode(
+                  GraphUtil.popNodeID(graph),
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname);
+          graph.addVertex(pn);
+          graph.addEdge(node, pn, new Edge(GraphUtil.popEdgeID(graph), EdgeType.ELEMENT));
+          defPool.put(para_qname, pn);
+
+          ITypeBinding paraBinding = p.getType().resolveBinding();
+          if (paraBinding != null) {
+            usePool.add(Triple.of(pn, EdgeType.DATA_TYPE, paraBinding.getQualifiedName()));
+          }
+
+          graph.addEdge(
+              node,
+              parseExpression(eForStatement.getExpression()),
+              new Edge(GraphUtil.popEdgeID(graph), EdgeType.VALUES));
+          parseStatement(eForStatement.getBody())
+              .ifPresent(
+                  body ->
+                      graph.addEdge(
+                          node, body, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
+
+          return Optional.of(node);
+        }
+      case ASTNode.DO_STATEMENT:
+        {
+        }
+      case ASTNode.WHILE_STATEMENT:
+        {
+        }
+      case ASTNode.SWITCH_STATEMENT:
+        {
+        }
+      case ASTNode.TRY_STATEMENT:
+        {
+        }
     }
-
-    // control
-    if (stmt.getNodeType() == ASTNode.IF_STATEMENT) {
-      IfStatement ifStatement = (IfStatement) stmt;
-      ifStatement.getStartPosition();
-      RelationNode node =
-          new RelationNode(
-              GraphUtil.popNodeID(graph), NodeType.IF_STATEMENT, ifStatement.toString());
-      graph.addVertex(node);
-
-      if (ifStatement.getExpression() != null) {
-        RelationNode cond = parseExpression(ifStatement.getExpression());
-        graph.addEdge(node, cond, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
-      }
-      if (ifStatement.getThenStatement() != null) {
-        parseStatement(ifStatement.getThenStatement())
-            .ifPresent(
-                then ->
-                    graph.addEdge(node, then, new Edge(GraphUtil.popEdgeID(graph), EdgeType.THEN)));
-      }
-      if (ifStatement.getElseStatement() != null) {
-        parseStatement(ifStatement.getThenStatement())
-            .ifPresent(
-                els ->
-                    graph.addEdge(node, els, new Edge(GraphUtil.popEdgeID(graph), EdgeType.ELSE)));
-      }
-      return Optional.of(node);
-    }
-
-    if (stmt.getNodeType() == ASTNode.DO_STATEMENT) {}
-    if (stmt.getNodeType() == ASTNode.FOR_STATEMENT) {}
-    if (stmt.getNodeType() == ASTNode.ENHANCED_FOR_STATEMENT) {}
-    if (stmt.getNodeType() == ASTNode.SWITCH_STATEMENT) {}
-    if (stmt.getNodeType() == ASTNode.TRY_STATEMENT) {}
 
     return Optional.empty();
   }

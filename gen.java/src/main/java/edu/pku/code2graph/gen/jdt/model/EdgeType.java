@@ -33,8 +33,13 @@ public class EdgeType {
     public static final Type RIGHT = type("right");
 
     // control
+    // if
     public static final Type CONDITION = type("condition");
     public static final Type THEN = type("then");
     public static final Type ELSE = type("else");
+
+    // enhanced for/for-each
+    public static final Type ELEMENT = type("element");
+    public static final Type VALUES = type("values");
 
 }

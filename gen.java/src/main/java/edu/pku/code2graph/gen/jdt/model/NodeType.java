@@ -37,6 +37,7 @@ public class NodeType {
   // control relations
   public static final Type IF_STATEMENT = type("if_statement");
   public static final Type FOR_STATEMENT = type("for_statement");
+  public static final Type ENHANCED_FOR_STATEMENT = type("enhanced_for_statement");
   public static final Type WHILE_STATEMENT = type("while_statement");
   public static final Type SWITCH_STATEMENT = type("switch_statement");
   public static final Type TRY_STATEMENT = type("try_statement");
