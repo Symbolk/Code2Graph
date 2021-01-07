@@ -529,6 +529,34 @@ public class JdtVisitor extends AbstractJdtVisitor {
           te.getQualifier();
           break;
         }
+      case ASTNode.VARIABLE_DECLARATION_EXPRESSION:
+        {
+          root.setType(NodeType.VAR_DECLARATION);
+          List<VariableDeclarationFragment> fragments =
+              ((VariableDeclarationExpression) exp).fragments();
+          for (VariableDeclarationFragment fragment : fragments) {
+            String name = fragment.getName().getFullyQualifiedName();
+            String qname = name;
+            IVariableBinding binding = fragment.resolveBinding();
+            if (binding != null && binding.getDeclaringMethod() != null) {
+              qname = getMethodQNameFromBinding(binding.getDeclaringMethod()) + "." + name;
+            }
+            ElementNode n =
+                new ElementNode(
+                    GraphUtil.popNodeID(graph),
+                    NodeType.VAR_DECLARATION,
+                    fragment.toString(),
+                    name,
+                    qname);
+            graph.addVertex(n);
+            defPool.put(qname, n);
+
+            if (binding != null && binding.getType().isFromSource()) {
+              usePool.add(Triple.of(n, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+            }
+          }
+          break;
+        }
       case ASTNode.FIELD_ACCESS:
         {
           root.setType(NodeType.FIELD_ACCESS);
@@ -563,6 +591,14 @@ public class JdtVisitor extends AbstractJdtVisitor {
         {
           MethodInvocation mi = (MethodInvocation) exp;
           root.setType(NodeType.METHOD_INVOCATION);
+
+          // accessor
+          if (mi.getExpression() != null) {
+            graph.addEdge(
+                root,
+                parseExpression(mi.getExpression()),
+                new Edge(GraphUtil.popEdgeID(graph), EdgeType.ACCESSOR));
+          }
 
           // TODO: link arg use to its declaration (local, field, or external)
           List<Expression> arguments = mi.arguments();
@@ -624,11 +660,28 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.PREFIX_EXPRESSION:
         {
+          PrefixExpression pex = (PrefixExpression) exp;
+          root.setType(NodeType.PREFIX);
+          root.setSymbol(pex.getOperator().toString());
+          root.setArity(1);
+
+          graph.addEdge(
+              root,
+              parseExpression(pex.getOperand()),
+              new Edge(GraphUtil.popEdgeID(graph), EdgeType.LEFT));
           break;
         }
       case ASTNode.POSTFIX_EXPRESSION:
         {
-          break;
+          PostfixExpression pex = (PostfixExpression) exp;
+          root.setType(NodeType.POSTFIX);
+          root.setSymbol(pex.getOperator().toString());
+          root.setArity(1);
+
+          graph.addEdge(
+              root,
+              parseExpression(pex.getOperand()),
+              new Edge(GraphUtil.popEdgeID(graph), EdgeType.RIGHT));
         }
     }
 
