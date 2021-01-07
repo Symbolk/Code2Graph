@@ -354,7 +354,39 @@ public class JdtVisitor extends AbstractJdtVisitor {
       case ASTNode.FOR_STATEMENT:
         {
           ForStatement forStatement = (ForStatement) stmt;
-          forStatement.getExpression();
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.popNodeID(graph), NodeType.FOR_STATEMENT, forStatement.toString());
+          graph.addVertex(node);
+
+          forStatement
+              .initializers()
+              .forEach(
+                  init ->
+                      graph.addEdge(
+                          node,
+                          parseExpression((Expression) init),
+                          new Edge(GraphUtil.popEdgeID(graph), EdgeType.INITIALIZER)));
+          forStatement
+              .updaters()
+              .forEach(
+                  upd ->
+                      graph.addEdge(
+                          node,
+                          parseExpression((Expression) upd),
+                          new Edge(GraphUtil.popEdgeID(graph), EdgeType.UPDATER)));
+
+          graph.addEdge(
+              node,
+              parseExpression(forStatement.getExpression()),
+              new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
+          parseStatement(forStatement.getBody())
+              .ifPresent(
+                  body ->
+                      graph.addEdge(
+                          node, body, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
+
+          return Optional.of(node);
         }
 
       case ASTNode.ENHANCED_FOR_STATEMENT:
