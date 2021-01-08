@@ -549,6 +549,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
                     name,
                     qname);
             graph.addVertex(n);
+            graph.addEdge(root, n, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
             defPool.put(qname, n);
 
             if (binding != null && binding.getType().isFromSource()) {
