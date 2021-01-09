@@ -51,6 +51,38 @@ public class JdtVisitor extends AbstractJdtVisitor {
     return true;
   }
 
+  public boolean visit(EnumDeclaration ed) {
+    ITypeBinding edBinding = ed.resolveBinding();
+    assert edBinding != null;
+    String qname = edBinding.getQualifiedName();
+    ElementNode node =
+        new ElementNode(
+            GraphUtil.popNodeID(graph),
+            NodeType.ENUM_DECLARATION,
+            ed.toString(),
+            ed.getName().toString(),
+            qname);
+    graph.addVertex(node);
+    defPool.put(qname, node);
+
+    for (Iterator<EnumConstantDeclaration> iter = ed.enumConstants().iterator(); iter.hasNext(); ) {
+      EnumConstantDeclaration cst = iter.next();
+      qname = qname + "." + cst.getName().toString();
+      ElementNode cstNode =
+          new ElementNode(
+              GraphUtil.popNodeID(graph),
+              NodeType.ENUM_CONSTANT_DECLARATION,
+              cst.toString(),
+              cst.getName().toString(),
+              qname);
+      graph.addVertex(cstNode);
+      graph.addEdge(node, cstNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
+      defPool.put(qname, cstNode);
+    }
+    parseExtendsAndImplements(edBinding, node);
+    parseMembers(edBinding, node, ed.bodyDeclarations());
+    return true;
+  }
 
   /**
    * Parse super class and interfaces for enum, type and interface declaration
