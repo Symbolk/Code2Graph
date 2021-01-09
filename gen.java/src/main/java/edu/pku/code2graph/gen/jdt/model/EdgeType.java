@@ -8,7 +8,7 @@ public class EdgeType {
   // type hierarchy
   public static final Type PARENT_CLASS = type("parent_class");
   public static final Type CHILD_CLASS = type("child_class");
-  public static final Type IMPLEMENTATION = type("implementation");
+  public static final Type INTERFACE = type("interface");
 
   // type and source
   public static final Type DATA_TYPE = type("data_type");

@@ -39,79 +39,99 @@ public class JdtVisitor extends AbstractJdtVisitor {
     ITypeBinding tdBinding = td.resolveBinding();
     // isFromSource
     String qname = tdBinding.getQualifiedName();
-    ElementNode n =
+    ElementNode node =
         new ElementNode(
             GraphUtil.popNodeID(graph), type, td.toString(), td.getName().toString(), qname);
-    graph.addVertex(n);
-    defPool.put(qname, n);
+    graph.addVertex(node);
+    defPool.put(qname, node);
 
-    ITypeBinding parentType = tdBinding.getSuperclass();
-    if (parentType != null && parentType.isFromSource()) {
-      usePool.add(Triple.of(n, EdgeType.PARENT_CLASS, parentType.getQualifiedName()));
-    }
-    ITypeBinding[] interfaces = tdBinding.getInterfaces();
-    if (interfaces != null && interfaces.length > 0) {
-      for (int i = 0; i < interfaces.length; ++i) {
-        if (interfaces[i].isFromSource()) {
-          usePool.add(Triple.of(n, EdgeType.IMPLEMENTATION, interfaces[i].getQualifiedName()));
-        }
-      }
-    }
-
-    if (!td.bodyDeclarations().isEmpty()) {
-      RelationNode body = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
-      graph.addVertex(body);
-      defPool.put(qname + ".BLOCK", body);
-      graph.addEdge(n, body, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY));
-
-      List<Initializer> initializers =
-          ((List<?>) td.bodyDeclarations())
-              .stream()
-                  .filter(Initializer.class::isInstance)
-                  .map(Initializer.class::cast)
-                  .collect(Collectors.toList());
-      if (!initializers.isEmpty()) {
-        for (Initializer initializer : initializers) {
-          if (!initializer.getBody().statements().isEmpty()) {
-            ElementNode initNode =
-                new ElementNode(
-                    GraphUtil.popNodeID(graph),
-                    NodeType.INIT_BLOCK_DECLARATION,
-                    initializer.toString(),
-                    td.getName().toString() + ".INIT",
-                    qname + ".INIT");
-            graph.addVertex(initNode);
-            graph.addEdge(body, initNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
-
-            parseBodyBlock(initializer.getBody(), qname + ".BLOCK")
-                .ifPresent(
-                    initBlock ->
-                        graph.addEdge(
-                            initNode,
-                            initBlock,
-                            new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
-          }
-        }
-      }
-
-      IVariableBinding[] fdBindings = tdBinding.getDeclaredFields();
-      IMethodBinding[] mdBindings = tdBinding.getDeclaredMethods();
-      for (IVariableBinding b : fdBindings) {
-        usePool.add(Triple.of(body, EdgeType.CHILD, qname + "." + b.getName()));
-      }
-      for (IMethodBinding b : mdBindings) {
-        if (b.isDefaultConstructor()) {
-          continue;
-        }
-        usePool.add(Triple.of(body, EdgeType.CHILD, getMethodQNameFromBinding(b)));
-      }
-    }
+    parseExtendsAndImplements(tdBinding, node);
+    parseMembers(tdBinding, node, td.bodyDeclarations());
 
     return true;
   }
 
-  public boolean visit(EnumDeclaration ed) {
-    return true;
+
+  /**
+   * Parse super class and interfaces for enum, type and interface declaration
+   *
+   * @param binding
+   * @param node
+   */
+  private void parseExtendsAndImplements(ITypeBinding binding, ElementNode node) {
+    ITypeBinding parentType = binding.getSuperclass();
+    if (parentType != null && parentType.isFromSource()) {
+      usePool.add(Triple.of(node, EdgeType.PARENT_CLASS, parentType.getQualifiedName()));
+    }
+    ITypeBinding[] interfaces = binding.getInterfaces();
+    if (interfaces != null && interfaces.length > 0) {
+      for (int i = 0; i < interfaces.length; ++i) {
+        if (interfaces[i].isFromSource()) {
+          usePool.add(Triple.of(node, EdgeType.INTERFACE, interfaces[i].getQualifiedName()));
+        }
+      }
+    }
+  }
+
+  /**
+   * Parse the members of body declarations, just the declaration signature, visit body block in
+   * other visitors
+   *
+   * @param binding
+   * @param node
+   */
+  private void parseMembers(
+      ITypeBinding binding, ElementNode node, List<BodyDeclaration> bodyDeclarations) {
+    if (bodyDeclarations.isEmpty()) {
+      return;
+    }
+    String parentQName = node.getQualifiedName();
+    RelationNode body = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
+    graph.addVertex(body);
+    defPool.put(parentQName + ".BLOCK", body);
+    graph.addEdge(node, body, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY));
+
+    List<Initializer> initializers =
+        bodyDeclarations.stream()
+            .filter(Initializer.class::isInstance)
+            .map(Initializer.class::cast)
+            .collect(Collectors.toList());
+    if (!initializers.isEmpty()) {
+      for (Initializer initializer : initializers) {
+        if (!initializer.getBody().statements().isEmpty()) {
+          ElementNode initNode =
+              new ElementNode(
+                  GraphUtil.popNodeID(graph),
+                  NodeType.INIT_BLOCK_DECLARATION,
+                  initializer.toString(),
+                  node.getName() + ".INIT",
+                  parentQName + ".INIT");
+          graph.addVertex(initNode);
+          graph.addEdge(body, initNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD));
+
+          parseBodyBlock(initializer.getBody(), parentQName + ".BLOCK")
+              .ifPresent(
+                  initBlock ->
+                      graph.addEdge(
+                          initNode,
+                          initBlock,
+                          new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
+        }
+      }
+    }
+
+    IVariableBinding[] fdBindings = binding.getDeclaredFields();
+    for (IVariableBinding b : fdBindings) {
+      usePool.add(Triple.of(body, EdgeType.CHILD, parentQName + "." + b.getName()));
+    }
+
+    IMethodBinding[] mdBindings = binding.getDeclaredMethods();
+    for (IMethodBinding b : mdBindings) {
+      if (b.isDefaultConstructor()) {
+        continue;
+      }
+      usePool.add(Triple.of(body, EdgeType.CHILD, getMethodQNameFromBinding(b)));
+    }
   }
 
   public boolean visit(FieldDeclaration fd) {
@@ -146,16 +166,16 @@ public class JdtVisitor extends AbstractJdtVisitor {
     IMethodBinding mdBinding = md.resolveBinding();
     String name = getMethodQNameFromBinding(mdBinding);
     String qname = name;
-    ElementNode n =
+    ElementNode node =
         new ElementNode(
             GraphUtil.popNodeID(graph), NodeType.METHOD_DECLARATION, md.toString(), name, qname);
-    graph.addVertex(n);
-    defPool.put(qname, n);
+    graph.addVertex(node);
+    defPool.put(qname, node);
 
     // return type
     ITypeBinding tpBinding = mdBinding.getReturnType();
     if (tpBinding != null && tpBinding.isFromSource()) {
-      usePool.add(Triple.of(n, EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
+      usePool.add(Triple.of(node, EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
     }
 
     // para decl and type
@@ -177,7 +197,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
                 para_name,
                 para_qname);
         graph.addVertex(pn);
-        graph.addEdge(n, pn, new Edge(GraphUtil.popEdgeID(graph), EdgeType.METHOD_PARAMETER));
+        graph.addEdge(node, pn, new Edge(GraphUtil.popEdgeID(graph), EdgeType.METHOD_PARAMETER));
         defPool.put(para_qname, pn);
 
         ITypeBinding paraBinding = p.getType().resolveBinding();
@@ -197,7 +217,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
             .ifPresent(
                 blockNode ->
                     graph.addEdge(
-                        n, blockNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
+                        node, blockNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
       }
     }
     return true;
@@ -531,6 +551,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.VARIABLE_DECLARATION_EXPRESSION:
         {
+          // TODO use another type for relation node
           root.setType(NodeType.VAR_DECLARATION);
           List<VariableDeclarationFragment> fragments =
               ((VariableDeclarationExpression) exp).fragments();
