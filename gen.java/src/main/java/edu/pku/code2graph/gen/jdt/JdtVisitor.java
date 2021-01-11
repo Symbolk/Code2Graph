@@ -488,9 +488,51 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.DO_STATEMENT:
         {
+          DoStatement doStatement = ((DoStatement) stmt);
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.popNodeID(graph), NodeType.DO_STATEMENT, doStatement.toString());
+          graph.addVertex(node);
+
+          Expression expression = doStatement.getExpression();
+          if (expression != null) {
+            RelationNode cond = parseExpression(expression);
+            graph.addEdge(node, cond, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
+          }
+
+          Statement doBody = doStatement.getBody();
+          if (doBody != null) {
+            parseStatement(doBody)
+                .ifPresent(
+                    body ->
+                        graph.addEdge(
+                            node, body, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
+          }
+          return Optional.of(node);
         }
       case ASTNode.WHILE_STATEMENT:
         {
+          WhileStatement whileStatement = (WhileStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.popNodeID(graph), NodeType.WHILE_STATEMENT, whileStatement.toString());
+          graph.addVertex(node);
+
+          Expression expression = whileStatement.getExpression();
+          if (expression != null) {
+            RelationNode cond = parseExpression(expression);
+            graph.addEdge(node, cond, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CONDITION));
+          }
+
+          Statement whileBody = whileStatement.getBody();
+          if (whileBody != null) {
+            parseStatement(whileBody)
+                .ifPresent(
+                    body ->
+                        graph.addEdge(
+                            node, body, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
+          }
+          return Optional.of(node);
         }
       case ASTNode.SWITCH_STATEMENT:
         {

@@ -39,6 +39,7 @@ public class NodeType {
   public static final Type FOR_STATEMENT = type("for_statement");
   public static final Type ENHANCED_FOR_STATEMENT = type("enhanced_for_statement");
   public static final Type WHILE_STATEMENT = type("while_statement");
+  public static final Type DO_STATEMENT = type("do_statement");
   public static final Type SWITCH_STATEMENT = type("switch_statement");
   public static final Type TRY_STATEMENT = type("try_statement");
 }
