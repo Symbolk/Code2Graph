@@ -175,18 +175,25 @@ public class JdtVisitor extends AbstractJdtVisitor {
       if (binding != null && binding.getDeclaringClass() != null) {
         qname = binding.getDeclaringClass().getQualifiedName() + "." + name;
       }
-      ElementNode n =
+      ElementNode node =
           new ElementNode(
               GraphUtil.popNodeID(graph),
               NodeType.FIELD_DECLARATION,
               fragment.toString(),
               name,
               qname);
-      graph.addVertex(n);
-      defPool.put(qname, n);
+      graph.addVertex(node);
+      defPool.put(qname, node);
 
       if (binding != null && binding.getType().isFromSource()) {
-        usePool.add(Triple.of(n, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+        usePool.add(Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+      }
+
+      if (fragment.getInitializer() != null) {
+        graph.addEdge(
+            node,
+            parseExpression(fragment.getInitializer()),
+            new Edge(GraphUtil.popEdgeID(graph), EdgeType.INITIALIZER));
       }
     }
     return false;
@@ -341,7 +348,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
             IVariableBinding binding = fragment.resolveBinding();
             String name = fragment.getName().getFullyQualifiedName();
             String qname = name;
-            if (binding != null) {
+            if (binding != null) { // since it is declaration, binding should never be null
               String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
               qname = parentMethodName + "." + name;
               ElementNode node =
@@ -358,6 +365,14 @@ public class JdtVisitor extends AbstractJdtVisitor {
                 usePool.add(
                     Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
               }
+
+              if (fragment.getInitializer() != null) {
+                graph.addEdge(
+                    node,
+                    parseExpression(fragment.getInitializer()),
+                    new Edge(GraphUtil.popEdgeID(graph), EdgeType.INITIALIZER));
+              }
+
               return Optional.of(node);
             }
           }
