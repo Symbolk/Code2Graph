@@ -735,6 +735,22 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.CAST_EXPRESSION:
         {
+          CastExpression castExpression = (CastExpression) exp;
+
+          root.setType(NodeType.CAST_EXPRESSION);
+          root.setSymbol("()");
+          root.setArity(2);
+
+          ITypeBinding typeBinding = castExpression.getType().resolveBinding();
+          if (typeBinding != null && typeBinding.isFromSource()) {
+            usePool.add(Triple.of(root, EdgeType.TARGET_TYPE, typeBinding.getQualifiedName()));
+          }
+
+          graph.addEdge(
+              root,
+              parseExpression(castExpression.getExpression()),
+              new Edge(GraphUtil.popEdgeID(graph), EdgeType.CASTED_OBJECT));
+
           break;
         }
       case ASTNode.INFIX_EXPRESSION:

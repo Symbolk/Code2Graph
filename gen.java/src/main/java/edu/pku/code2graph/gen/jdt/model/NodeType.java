@@ -33,6 +33,7 @@ public class NodeType {
   public static final Type CONSTANT_ACCESS = type("constant_access");
   public static final Type LOCAL_VAR_ACCESS = type("local_var_access");
   public static final Type TYPE_INSTANTIATION = type("type_instantiation");
+  public static final Type CAST_EXPRESSION = type("cast_expression");
 
   // control relations
   public static final Type IF_STATEMENT = type("if_statement");

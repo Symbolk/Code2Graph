@@ -46,4 +46,9 @@ public class EdgeType {
   // enhanced for/for-each
   public static final Type ELEMENT = type("element");
   public static final Type VALUES = type("values");
+
+  // cast expression
+  public static final Type TARGET_TYPE = type("target_type");
+  public static final Type CASTED_OBJECT = type("casted_object");
+
 }
