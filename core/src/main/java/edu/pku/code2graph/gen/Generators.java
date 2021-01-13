@@ -22,11 +22,12 @@ package edu.pku.code2graph.gen;
 
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /** Registry of tree generators, using a singleton pattern. */
@@ -41,54 +42,47 @@ public class Generators extends Registry<String, Generator, Register> {
   }
 
   /**
-   * Automatically search a tree generator for the given file path, and use it to parse it
+   * Dynamically assign generator according to the file type, and generate a single graph if null,
+   * fallbacks to default generator
    *
-   * @param filePath the absolute file path
-   * @return the TreeContext of the file
-   * @throws UnsupportedOperationException if no suitable generator is found
-   */
-  public Graph<Node, Edge> generateFrom(String filePath)
-      throws UnsupportedOperationException, IOException {
-    Generator p = get(filePath);
-    if (p == null) {
-      throw new UnsupportedOperationException("No generator found for file: " + filePath);
-    }
-    return p.generateFrom().file(filePath);
-  }
-
-  /**
-   * Notice that currently only files in a same and single language are supported
    * @param filePaths
    * @return
    * @throws UnsupportedOperationException
    * @throws IOException
    */
-  public Graph<Node, Edge> generateFrom(List<String> filePaths)
+  public Graph<Node, Edge> generateFromFiles(List<String> filePaths)
       throws UnsupportedOperationException, IOException {
-    if (filePaths.size() == 0) {
+    if (filePaths.isEmpty()) {
       throw new UnsupportedOperationException("The given file paths are empty");
     }
-    Generator p = get(filePaths.get(0));
-    if (p == null) {
-      throw new UnsupportedOperationException("No generator found for file: " + filePaths.get(0));
+    Graph<Node, Edge> graph = GraphUtil.initGraph();
+
+    // a map from generator to file paths
+    Map<Generator, List<String>> g2f = new HashMap<>();
+
+    for (String filePath : filePaths) {
+      Generator generator = get(filePath);
+
+      if (generator == null) {
+        throw new UnsupportedOperationException("No generator found for file: " + filePaths.get(0));
+      }
+
+      if (g2f.containsKey(generator)) {
+        g2f.get(generator).add(filePath);
+      } else {
+        List<String> temp = new ArrayList<>();
+        temp.add(filePath);
+        g2f.put(generator, temp);
+      }
     }
-    return p.generateFrom().files(filePaths);
-  }
 
-  /**
-   * Use the tree generator with the supplied name to parse the file at the given path to parse it
-   *
-   * @param generator the tree generator's name. if null, fallbacks to @see getTree(String)
-   * @throws UnsupportedOperationException if no suitable generator is found
-   */
-  public Graph<Node, Edge> generateFrom(String filePath, String generator)
-      throws UnsupportedOperationException, IOException {
-    if (generator == null) return generateFrom(filePath);
+    for (Map.Entry<Generator, List<String>> entry : g2f.entrySet()) {
+      // TODO how to link the graphs from different generators together as one? (use placeholder
+      // nodes in each graph?, id should be unique)
+      Graphs.addGraph(graph, entry.getKey().generateFrom().files(entry.getValue()));
+    }
 
-    for (Entry e : entries)
-      if (e.id.equals(generator)) return e.instantiate(null).generateFrom().file(filePath);
-
-    throw new UnsupportedOperationException("No generator \"" + generator + "\" found.");
+    return graph;
   }
 
   public boolean has(String generator) {

@@ -26,71 +26,12 @@ public abstract class Generator {
     private Charset charset = Charset.defaultCharset();
 
     /**
-     * Convert a single source file into a graph
-     *
-     * @param filePath the absolute file path
-     * @return
-     */
-    public Graph<Node, Edge> file(String filePath) throws IOException {
-      return generate(Arrays.asList(filePath));
-    }
-
-//    public Graph<Node, Edge> folder(String folderPath) throws IOException {
-//      Collection<File> javaFiles = FileUtils.listFiles(new File(srcDir), new String[] {"java"}, true);
-//      return generate();
-//    }
-
-    /**
      * Generate graph from a set of files
      * @param filePaths
      * @return
      * @throws IOException
      */
     public Graph<Node, Edge> files(List<String> filePaths) throws IOException {
-      return generate(filePaths);
-    }
-
-    /**
-     * Generate the change graph between a commit and its parent (maybe in another subproject?)
-     * @param commitID
-     * @return
-     * @throws IOException
-     */
-    public Graph<Node, Edge> commit(String commitID) throws IOException {
-      // compare the commit with its parent
-
-      // get the diff files and old/new versions
-
-      // collect the content and saves to temp dir (optional)
-      List<String> filePaths = new ArrayList<>();
-      // pass the file paths/content to the generator
-
-      return generate(filePaths);
-    }
-
-    public Graph<Node, Edge> commits(String startCommitID, String endCommitID) throws IOException {
-      // extract changed/diff files in the working directory
-
-      // collect the content and saves to temp dir
-
-      // pass the file paths/content to the generator
-
-      List<String> filePaths = new ArrayList<>();
-      // pass the file paths/content to the generator
-
-      return generate(filePaths);
-    }
-
-    public Graph<Node, Edge> workingTree() throws IOException {
-      // extract changed/diff files in the working directory
-
-      // collect the content and saves to temp dir
-
-      // pass the file paths/content to the generator
-
-      List<String> filePaths = new ArrayList<>();
-      // pass the file paths/content to the generator
-
       return generate(filePaths);
     }
   }
