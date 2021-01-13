@@ -13,10 +13,9 @@ import java.util.List;
 
 public class Main {
   public static void main(String[] args) {
-    // create
     Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"));
-    // analyze a single file
     Generators generator = Generators.getInstance();
+    // specify
     //    Generator generator = new JdtGenerator();
 
     try {
@@ -30,15 +29,7 @@ public class Main {
       GraphVizExporter.printAsDot(graph);
 
       // TODO: create a root project node if necessary
-      // from working tree: 2 graphs: old and new
 
-      // from one commit: 2 graphs: left and right
-
-      // extract changed/diff files and involved ones (optional)
-
-      // collect the content and saves to a temp dir (optional)
-
-      // pass the file paths (on disk)/content (in memory) to the generator
 
     } catch (IOException e) {
       e.printStackTrace();

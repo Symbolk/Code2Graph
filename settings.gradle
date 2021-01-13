@@ -3,5 +3,6 @@ rootProject.name = 'Code2Graph'
 include 'core',
         'dist',
         'gen.java',
-        'client'
+        'client',
+        'diff'
 

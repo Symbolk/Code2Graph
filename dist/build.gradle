@@ -11,6 +11,7 @@ description = 'Code2Graph distribution.'
 
 dependencies {
     implementation project(':client')
+    implementation project(':diff')
     implementation project(':gen.java')
 }
 

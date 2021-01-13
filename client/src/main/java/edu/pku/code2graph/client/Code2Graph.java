@@ -1,5 +1,6 @@
 package edu.pku.code2graph.client;
 
+import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -9,12 +10,15 @@ import org.atteo.classindex.ClassIndex;
 
 public class Code2Graph {
   private static final Logger LOGGER = LogManager.getLogger();
+  // meta info
   private String repoName;
   private String repoPath;
+  private Differ differ;
 
   public Code2Graph(String repoName, String repoPath) {
     this.repoName = repoName;
     this.repoPath = repoPath;
+    this.differ = new Differ(repoPath);
   }
 
   static {
