@@ -35,6 +35,8 @@ public class NodeType {
   public static final Type TYPE_INSTANTIATION = type("type_instantiation");
   public static final Type CAST_EXPRESSION = type("cast_expression");
 
+  public static final Type CATCH_CLAUSE = type("catch_clause");
+
   // control relations
   public static final Type IF_STATEMENT = type("if_statement");
   public static final Type FOR_STATEMENT = type("for_statement");

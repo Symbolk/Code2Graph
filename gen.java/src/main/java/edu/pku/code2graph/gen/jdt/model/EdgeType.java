@@ -51,4 +51,7 @@ public class EdgeType {
   public static final Type TARGET_TYPE = type("target_type");
   public static final Type CASTED_OBJECT = type("casted_object");
 
+  // try-catch
+  public static final Type CATCH = type("catch");
+  public static final Type FINALLY = type("finally");
 }

@@ -263,7 +263,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
   }
 
   /**
-   * Parse the body for method/constructor, initializer block, and nested block
+   * Parse the body of element node, e.g. method/constructor, initializer block, and nested block
    *
    * @param body
    * @return
@@ -274,9 +274,24 @@ public class JdtVisitor extends AbstractJdtVisitor {
     }
 
     // the node of the current block node
+    Optional<RelationNode> rootOpt = parseBodyBlock(body);
+    if (rootOpt.isPresent()) {
+      defPool.put(rootName, rootOpt.get());
+      return rootOpt;
+    } else {
+      return Optional.empty();
+    }
+  }
+
+  /**
+   * Parse the body of relation node, e.g. finally, catch
+   *
+   * @param body
+   * @return
+   */
+  private Optional<RelationNode> parseBodyBlock(Block body) {
     RelationNode root = new RelationNode(GraphUtil.popNodeID(graph), NodeType.BLOCK, "{}");
     graph.addVertex(root);
-    defPool.put(rootName, root);
 
     List<Statement> statementList = body.statements();
     List<Statement> statements = new ArrayList<>();
@@ -299,7 +314,6 @@ public class JdtVisitor extends AbstractJdtVisitor {
               node ->
                   graph.addEdge(root, node, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
     }
-
     return Optional.of(root);
   }
 
@@ -322,9 +336,9 @@ public class JdtVisitor extends AbstractJdtVisitor {
             for (Object st : block.statements()) {
               parseStatement((Statement) st)
                   .ifPresent(
-                      snode ->
+                      child ->
                           graph.addEdge(
-                              node, snode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
+                              node, child, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
             }
             return Optional.of(node);
           }
@@ -553,6 +567,57 @@ public class JdtVisitor extends AbstractJdtVisitor {
         {
         }
       case ASTNode.TRY_STATEMENT:
+        {
+          TryStatement tryStatement = (TryStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.popNodeID(graph), NodeType.TRY_STATEMENT, tryStatement.toString());
+          graph.addVertex(node);
+
+          Statement tryBody = tryStatement.getBody();
+          if (tryBody != null) {
+            parseStatement(tryBody)
+                .ifPresent(
+                    body ->
+                        graph.addEdge(
+                            node, body, new Edge(GraphUtil.popEdgeID(graph), EdgeType.BODY)));
+
+            List<CatchClause> catchClauses = tryStatement.catchClauses();
+            if (catchClauses != null && !catchClauses.isEmpty()) {
+              for (CatchClause catchClause : catchClauses) {
+                ITypeBinding binding = catchClause.getException().getType().resolveBinding();
+                RelationNode catchNode =
+                    new RelationNode(
+                        GraphUtil.popNodeID(graph), NodeType.CATCH_CLAUSE, catchClause.toString());
+                graph.addVertex(catchNode);
+                graph.addEdge(
+                    node, catchNode, new Edge(GraphUtil.popEdgeID(graph), EdgeType.CATCH));
+
+                if (binding != null && binding.isFromSource()) {
+                  usePool.add(Triple.of(node, EdgeType.TARGET_TYPE, binding.getQualifiedName()));
+                }
+                if (catchClause.getBody() != null) {
+                  parseBodyBlock(catchClause.getBody())
+                      .ifPresent(
+                          block ->
+                              graph.addEdge(
+                                  catchNode,
+                                  block,
+                                  new Edge(GraphUtil.popEdgeID(graph), EdgeType.CHILD)));
+                }
+              }
+            }
+            if (tryStatement.getFinally() != null) {
+              parseBodyBlock(tryStatement.getFinally())
+                  .ifPresent(
+                      block ->
+                          graph.addEdge(
+                              node, block, new Edge(GraphUtil.popEdgeID(graph), EdgeType.FINALLY)));
+            }
+          }
+          return Optional.of(node);
+        }
+      case ASTNode.THROW_STATEMENT:
         {
         }
     }
