@@ -563,9 +563,6 @@ public class JdtVisitor extends AbstractJdtVisitor {
           }
           return Optional.of(node);
         }
-      case ASTNode.SWITCH_STATEMENT:
-        {
-        }
       case ASTNode.TRY_STATEMENT:
         {
           TryStatement tryStatement = (TryStatement) stmt;
@@ -618,6 +615,21 @@ public class JdtVisitor extends AbstractJdtVisitor {
           return Optional.of(node);
         }
       case ASTNode.THROW_STATEMENT:
+        {
+          ThrowStatement throwStatement = (ThrowStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.popNodeID(graph), NodeType.THROW_STATEMENT, throwStatement.toString());
+          graph.addVertex(node);
+
+          if (throwStatement.getExpression() != null) {
+            RelationNode thr = parseExpression(throwStatement.getExpression());
+            graph.addEdge(node, thr, new Edge(GraphUtil.popEdgeID(graph), EdgeType.THROW));
+          }
+
+          return Optional.of(node);
+        }
+      case ASTNode.SWITCH_STATEMENT:
         {
         }
     }

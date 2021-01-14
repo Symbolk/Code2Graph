@@ -45,4 +45,5 @@ public class NodeType {
   public static final Type DO_STATEMENT = type("do_statement");
   public static final Type SWITCH_STATEMENT = type("switch_statement");
   public static final Type TRY_STATEMENT = type("try_statement");
+  public static final Type THROW_STATEMENT = type("throw_statement");
 }

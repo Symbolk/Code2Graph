@@ -54,4 +54,7 @@ public class EdgeType {
   // try-catch
   public static final Type CATCH = type("catch");
   public static final Type FINALLY = type("finally");
+
+  // throw
+  public static final Type THROW = type("throw");
 }
