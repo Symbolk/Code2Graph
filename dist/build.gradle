@@ -13,6 +13,7 @@ dependencies {
     implementation project(':client')
     implementation project(':diff')
     implementation project(':gen.java')
+    implementation project(':gen.xml')
 }
 
 build.finalizedBy(installDist)
