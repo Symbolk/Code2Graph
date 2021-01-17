@@ -1,5 +1,8 @@
 package edu.pku.code2graph.diff;
 
+/**
+ * Outermost API provider for diff module
+ */
 public class Differ {
   // meta info
   private String repoPath;

@@ -30,7 +30,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
-/** Registry of tree generators, using a singleton pattern. */
+/**
+ * Registry of tree generators, using a singleton pattern.
+ *
+ * <p>Outermost API provider for graph generator module
+ */
 public class Generators extends Registry<String, Generator, Register> {
 
   private static Generators registry;

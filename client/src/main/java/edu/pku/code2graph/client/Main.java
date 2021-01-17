@@ -1,6 +1,5 @@
 package edu.pku.code2graph.client;
 
-import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
@@ -14,7 +13,6 @@ import java.util.List;
 public class Main {
   public static void main(String[] args) {
     Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"));
-    Generators generator = Generators.getInstance();
     // specify
     //    Generator generator = new JdtGenerator();
 
@@ -25,11 +23,11 @@ public class Main {
           client.getRepoPath()
               + File.separator
               + "client/src/main/java/edu/pku/code2graph/client/Code2Graph.java");
-      Graph<Node, Edge> graph = generator.generateFromFiles(filePaths);
+      Graph<Node, Edge> graph = client.getGenerator().generateFromFiles(filePaths);
       GraphVizExporter.printAsDot(graph);
 
       // TODO: create a root project node if necessary
-
+      client.getDiffer().computeDiff();
 
     } catch (IOException e) {
       e.printStackTrace();

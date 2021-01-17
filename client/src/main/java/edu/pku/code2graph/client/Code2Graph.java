@@ -8,17 +8,25 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.atteo.classindex.ClassIndex;
 
+/** Java API client */
 public class Code2Graph {
   private static final Logger LOGGER = LogManager.getLogger();
   // meta info
   private String repoName;
   private String repoPath;
+
+  // components
+  private Generators generator;
   private Differ differ;
+
+  // options
+  private boolean limitToSource = true;
 
   public Code2Graph(String repoName, String repoPath) {
     this.repoName = repoName;
     this.repoPath = repoPath;
     this.differ = new Differ(repoPath);
+    this.generator = Generators.getInstance();
   }
 
   static {
@@ -40,5 +48,13 @@ public class Code2Graph {
 
   public String getRepoPath() {
     return repoPath;
+  }
+
+  public Generators getGenerator() {
+    return generator;
+  }
+
+  public Differ getDiffer() {
+    return differ;
   }
 }
