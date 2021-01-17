@@ -24,7 +24,7 @@ public class FileUtil {
   }
   /**
    * Read the content of a file into string
-   *
+   * Actually wraps commons io API
    * @return
    */
   public static String readFileToString(String filePath) {
