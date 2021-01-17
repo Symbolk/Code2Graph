@@ -1,8 +1,9 @@
 package edu.pku.code2graph.diff.model;
 
 public enum Version {
-  LEFT(0, "left"),
-  RIGHT(1, "right");
+  // use a/b to indicate old/new, left/right, base/current versions, just like Git
+  A(0, "old"),
+  B(1, "new");
 
   private int index;
   private String label;

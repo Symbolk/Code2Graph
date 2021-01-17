@@ -14,8 +14,8 @@ public class DiffHunk {
 
   private Integer fileIndex; // the index of the diff file
   private Integer index; // the index of the diff hunk in the current file diff, start from 0
-  private Hunk baseHunk;
-  private Hunk currentHunk;
+  private Hunk aHunk;
+  private Hunk bHunk;
   private FileType fileType;
   private ChangeType changeType;
   private transient List<Action> astActions = new ArrayList<>();
@@ -26,11 +26,11 @@ public class DiffHunk {
   private List<String> rawDiffs = new ArrayList<>();
 
   public DiffHunk(
-      Integer index, FileType fileType, ChangeType changeType, Hunk baseHunk, Hunk currentHunk) {
+      Integer index, FileType fileType, ChangeType changeType, Hunk aHunk, Hunk bHunk) {
     this.index = index;
     this.fileType = fileType;
-    this.baseHunk = baseHunk;
-    this.currentHunk = currentHunk;
+    this.aHunk = aHunk;
+    this.bHunk = bHunk;
     this.changeType = changeType;
   }
 
@@ -38,13 +38,13 @@ public class DiffHunk {
       Integer index,
       FileType fileType,
       ChangeType changeType,
-      Hunk baseHunk,
-      Hunk currentHunk,
+      Hunk aHunk,
+      Hunk bHunk,
       String description) {
     this.index = index;
     this.fileType = fileType;
-    this.baseHunk = baseHunk;
-    this.currentHunk = currentHunk;
+    this.aHunk = aHunk;
+    this.bHunk = bHunk;
     this.changeType = changeType;
     this.description = description;
   }
@@ -53,12 +53,12 @@ public class DiffHunk {
     return index;
   }
 
-  public Hunk getBaseHunk() {
-    return baseHunk;
+  public Hunk getaHunk() {
+    return aHunk;
   }
 
-  public Hunk getCurrentHunk() {
-    return currentHunk;
+  public Hunk getbHunk() {
+    return bHunk;
   }
 
   public String getRepoID() {
@@ -101,27 +101,27 @@ public class DiffHunk {
     this.commitID = commitID;
   }
 
-  public Integer getBaseStartLine() {
-    return baseHunk.getStartLine();
+  public Integer getAStartLine() {
+    return aHunk.getStartLine();
   }
 
-  public Integer getBaseEndLine() {
-    return baseHunk.getEndLine();
+  public Integer getAEndLine() {
+    return aHunk.getEndLine();
   }
 
-  public Integer getCurrentStartLine() {
-    return currentHunk.getStartLine();
+  public Integer getBStartLine() {
+    return bHunk.getStartLine();
   }
 
-  public Integer getCurrentEndLine() {
-    return currentHunk.getEndLine();
+  public Integer getBEndLine() {
+    return bHunk.getEndLine();
   }
 
   public Pair<Integer, Integer> getCodeRangeOf(Version version) {
-    if (version.equals(Version.LEFT)) {
-      return Pair.of(getBaseStartLine(), getBaseEndLine());
-    } else if (version.equals(Version.RIGHT)) {
-      return Pair.of(getCurrentStartLine(), getCurrentEndLine());
+    if (version.equals(Version.A)) {
+      return Pair.of(getAStartLine(), getAEndLine());
+    } else if (version.equals(Version.B)) {
+      return Pair.of(getBStartLine(), getBEndLine());
     }
     return Pair.of(-1, -1);
   }
@@ -187,8 +187,8 @@ public class DiffHunk {
   }
 
   public boolean containsCode() {
-    return baseHunk.getContentType().equals(ContentType.CODE)
-        || currentHunk.getContentType().equals(ContentType.CODE);
+    return aHunk.getContentType().equals(ContentType.CODE)
+        || bHunk.getContentType().equals(ContentType.CODE);
   }
 
   /**

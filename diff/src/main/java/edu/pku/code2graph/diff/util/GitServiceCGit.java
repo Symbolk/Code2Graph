@@ -295,7 +295,7 @@ public class GitServiceCGit implements GitService {
     List<DiffHunk> binaryDiffHunks = new ArrayList<>();
     StringBuilder diffOutput = new StringBuilder();
     for (DiffFile diffFile : diffFiles) {
-      if (null != diffFile.getBaseRelativePath() && !"".equals(diffFile.getBaseRelativePath())) {
+      if (null != diffFile.getaRelativePath() && !"".equals(diffFile.getaRelativePath())) {
         // generate diff hunks for modified or deleted binary files (that cannot be parsed)
         if (diffFile.getFileType().equals(FileType.BIN)) {
           DiffHunk diffHunk = createDiffHunkForBinaryFile(diffFile);
@@ -313,7 +313,7 @@ public class GitServiceCGit implements GitService {
                 "diff",
                 "-U0",
                 "--",
-                diffFile.getBaseRelativePath()));
+                diffFile.getaRelativePath()));
       }
     }
     List<Diff> diffs = new ArrayList<>();
@@ -335,15 +335,15 @@ public class GitServiceCGit implements GitService {
             diffFile.getFileType(),
             changeType,
             new Hunk(
-                Version.LEFT,
-                diffFile.getBaseRelativePath(),
+                Version.A,
+                diffFile.getaRelativePath(),
                 0,
                 0,
                 ContentType.BINARY,
                 new ArrayList<>()),
             new Hunk(
-                Version.RIGHT,
-                diffFile.getCurrentRelativePath(),
+                Version.B,
+                diffFile.getbRelativePath(),
                 0,
                 0,
                 ContentType.BINARY,
@@ -352,14 +352,14 @@ public class GitServiceCGit implements GitService {
                 + " "
                 + diffFile.getFileType().label
                 + " File:"
-                + diffFile.getBaseRelativePath());
+                + diffFile.getaRelativePath());
     diffHunk.addASTAction(
         new Action(
             (changeType.equals(ChangeType.DELETED) ? Operation.DEL : Operation.UPD),
             "Binary",
             "",
             "File",
-            diffFile.getCurrentRelativePath()));
+            diffFile.getbRelativePath()));
     return diffHunk;
   }
 
@@ -377,16 +377,16 @@ public class GitServiceCGit implements GitService {
     for (DiffFile diffFile : diffFiles) {
       if (diffFile.getStatus().equals(FileStatus.ADDED)
           || diffFile.getStatus().equals(FileStatus.UNTRACKED)) {
-        List<String> lines = Utils.convertStringToList(diffFile.getCurrentContent());
+        List<String> lines = Utils.convertStringToList(diffFile.getbContent());
         DiffHunk diffHunk =
             new DiffHunk(
                 0,
-                Utils.checkFileType(repoPath, diffFile.getCurrentRelativePath()),
+                Utils.checkFileType(repoPath, diffFile.getbRelativePath()),
                 ChangeType.ADDED,
-                new Hunk(Version.LEFT, "", 0, -1, ContentType.EMPTY, new ArrayList<>()),
+                new Hunk(Version.A, "", 0, -1, ContentType.EMPTY, new ArrayList<>()),
                 new Hunk(
-                    Version.RIGHT,
-                    diffFile.getCurrentRelativePath(),
+                    Version.B,
+                    diffFile.getbRelativePath(),
                     1,
                     lines.size(),
                     Utils.checkContentType(lines),
@@ -394,9 +394,9 @@ public class GitServiceCGit implements GitService {
                 "Add "
                     + diffFile.getFileType().label
                     + " File:"
-                    + diffFile.getCurrentRelativePath());
+                    + diffFile.getbRelativePath());
         diffHunk.addASTAction(
-            new Action(Operation.ADD, "", "", "File", diffFile.getCurrentRelativePath()));
+            new Action(Operation.ADD, "", "", "File", diffFile.getbRelativePath()));
 
         // bidirectional binding
         diffHunk.setFileIndex(diffFile.getIndex());
@@ -411,31 +411,31 @@ public class GitServiceCGit implements GitService {
       // the hunkIndex of the diff hunk in the current file diff, start from 0
       Integer hunkIndex = 0;
 
-      String baseFilePath = diff.getFromFileName();
-      String currentFilePath = diff.getToFileName();
+      String aFilePath = diff.getFromFileName();
+      String bFilePath = diff.getToFileName();
 
       List<String> headers = diff.getHeaderLines();
-      headers.add("--- " + baseFilePath);
-      headers.add("+++ " + currentFilePath);
+      headers.add("--- " + aFilePath);
+      headers.add("+++ " + bFilePath);
 
       // currently we only process Java files
       FileType fileType =
-          baseFilePath.contains("/dev/null")
-              ? Utils.checkFileType(repoPath, currentFilePath) // ADDED/UNTRACKED
-              : Utils.checkFileType(repoPath, baseFilePath);
+          aFilePath.contains("/dev/null")
+              ? Utils.checkFileType(repoPath, bFilePath) // ADDED/UNTRACKED
+              : Utils.checkFileType(repoPath, aFilePath);
 
       // collect and save diff hunks into diff files
       List<DiffHunk> diffHunksInFile = new ArrayList<>();
       for (edu.pku.code2graph.diff.textualdiffparser.api.model.Hunk hunk : diff.getHunks()) {
         List<List<String>> hunkLines = splitHunkLines(hunk.getLines());
-        List<String> baseCodeLines = hunkLines.get(1);
-        List<String> currentCodeLines = hunkLines.get(2);
+        List<String> aCodeLines = hunkLines.get(1);
+        List<String> bCodeLines = hunkLines.get(2);
         int leadingNeutral = hunkLines.get(0).size();
         int trailingNeutral = hunkLines.get(3).size();
-        Hunk baseHunk =
+        Hunk aHunk =
             new Hunk(
-                Version.LEFT,
-                removeVersionLabel(baseFilePath),
+                Version.A,
+                removeVersionLabel(aFilePath),
                 // with -U0, leadingNeutral = 0 = trailingNeutral
                 hunk.getFromFileRange().getLineStart() + leadingNeutral,
                 hunk.getFromFileRange().getLineStart()
@@ -444,12 +444,12 @@ public class GitServiceCGit implements GitService {
                     - leadingNeutral
                     - trailingNeutral
                     - 1,
-                Utils.checkContentType(baseCodeLines),
-                baseCodeLines);
-        Hunk currentHunk =
+                Utils.checkContentType(aCodeLines),
+                aCodeLines);
+        Hunk bHunk =
             new Hunk(
-                Version.RIGHT,
-                removeVersionLabel(currentFilePath),
+                Version.B,
+                removeVersionLabel(bFilePath),
                 hunk.getToFileRange().getLineStart() + leadingNeutral,
                 hunk.getToFileRange().getLineStart()
                     + leadingNeutral
@@ -457,16 +457,16 @@ public class GitServiceCGit implements GitService {
                     - leadingNeutral
                     - trailingNeutral
                     - 1,
-                Utils.checkContentType(currentCodeLines),
-                currentCodeLines);
+                Utils.checkContentType(bCodeLines),
+                bCodeLines);
         ChangeType changeType = ChangeType.MODIFIED;
-        if (baseCodeLines.isEmpty()) {
+        if (aCodeLines.isEmpty()) {
           changeType = ChangeType.ADDED;
         }
-        if (currentCodeLines.isEmpty()) {
+        if (bCodeLines.isEmpty()) {
           changeType = ChangeType.DELETED;
         }
-        DiffHunk diffHunk = new DiffHunk(hunkIndex, fileType, changeType, baseHunk, currentHunk);
+        DiffHunk diffHunk = new DiffHunk(hunkIndex, fileType, changeType, aHunk, bHunk);
         diffHunk.setRawDiffs(hunk.getRawLines());
         diffHunksInFile.add(diffHunk);
         allDiffHunks.add(diffHunk);
@@ -475,8 +475,8 @@ public class GitServiceCGit implements GitService {
 
       // bidirectional binding
       for (DiffFile diffFile : diffFiles) {
-        if (removeVersionLabel(baseFilePath).equals(diffFile.getBaseRelativePath())
-            && removeVersionLabel(currentFilePath).equals(diffFile.getCurrentRelativePath())) {
+        if (removeVersionLabel(aFilePath).equals(diffFile.getaRelativePath())
+            && removeVersionLabel(bFilePath).equals(diffFile.getbRelativePath())) {
           diffHunksInFile.forEach(diffHunk -> diffHunk.setFileIndex(diffFile.getIndex()));
           diffFile.setDiffHunks(diffHunksInFile);
           diffFile.setRawHeaders(headers);

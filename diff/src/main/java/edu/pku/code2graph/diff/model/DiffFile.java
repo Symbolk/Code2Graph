@@ -14,10 +14,10 @@ public class DiffFile {
   private Integer index; // the index of the diff file in the current repo, start from 0
   private FileStatus status;
   private FileType fileType;
-  private String baseRelativePath;
-  private String currentRelativePath;
-  private String baseContent;
-  private String currentContent;
+  private String aRelativePath;
+  private String bRelativePath;
+  private String aContent;
+  private String bContent;
   private String description;
   private Map<String, DiffHunk> diffHunksMap;
   private transient List<DiffHunk> diffHunks;
@@ -29,18 +29,18 @@ public class DiffFile {
       FileStatus status,
       FileType fileType,
       Charset charset,
-      String baseRelativePath,
-      String currentRelativePath,
-      String baseContent,
-      String currentContent) {
+      String aRelativePath,
+      String bRelativePath,
+      String aContent,
+      String bContent) {
     this.index = index;
     this.status = status;
     this.fileType = fileType;
     this.charset = charset;
-    this.baseRelativePath = baseRelativePath;
-    this.currentRelativePath = currentRelativePath;
-    this.baseContent = baseContent;
-    this.currentContent = currentContent;
+    this.aRelativePath = aRelativePath;
+    this.bRelativePath = bRelativePath;
+    this.aContent = aContent;
+    this.bContent = bContent;
     this.description = status.label;
     this.diffHunks = new ArrayList<>();
     this.diffHunksMap = new HashMap<>();
@@ -54,10 +54,10 @@ public class DiffFile {
       Integer index,
       FileStatus status,
       FileType fileType,
-      String baseRelativePath,
-      String currentRelativePath,
-      String baseContent,
-      String currentContent,
+      String aRelativePath,
+      String bRelativePath,
+      String aContent,
+      String bContent,
       Map<String, DiffHunk> diffHunksMap) {
     this.repoID = repoID;
     this.repoName = repoName;
@@ -66,10 +66,10 @@ public class DiffFile {
     this.status = status;
     this.description = status.label;
     this.fileType = fileType;
-    this.baseRelativePath = baseRelativePath;
-    this.currentRelativePath = currentRelativePath;
-    this.baseContent = baseContent;
-    this.currentContent = currentContent;
+    this.aRelativePath = aRelativePath;
+    this.bRelativePath = bRelativePath;
+    this.aContent = aContent;
+    this.bContent = bContent;
     this.diffHunksMap = diffHunksMap;
   }
 
@@ -117,29 +117,29 @@ public class DiffFile {
     return fileType;
   }
 
-  public String getBaseRelativePath() {
-    return baseRelativePath;
+  public String getaRelativePath() {
+    return aRelativePath;
   }
 
-  public String getCurrentRelativePath() {
-    return currentRelativePath;
+  public String getbRelativePath() {
+    return bRelativePath;
   }
 
   public String getRelativePathOf(Version version) {
-    if (version.equals(Version.LEFT)) {
-      return getBaseRelativePath();
-    } else if (version.equals(Version.RIGHT)) {
-      return getCurrentRelativePath();
+    if (version.equals(Version.A)) {
+      return getaRelativePath();
+    } else if (version.equals(Version.B)) {
+      return getbRelativePath();
     }
     return "";
   }
 
-  public String getBaseContent() {
-    return baseContent;
+  public String getaContent() {
+    return aContent;
   }
 
-  public String getCurrentContent() {
-    return currentContent;
+  public String getbContent() {
+    return bContent;
   }
 
   public void setIndex(Integer index) {
@@ -180,8 +180,8 @@ public class DiffFile {
             index,
             status,
             fileType,
-            baseRelativePath,
-            currentRelativePath,
+                aRelativePath,
+                bRelativePath,
             "",
             "",
             diffHunksMap);
