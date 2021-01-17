@@ -4,13 +4,10 @@ import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.atteo.classindex.ClassIndex;
 
 /** Java API client */
 public class Code2Graph {
-  private static final Logger LOGGER = LogManager.getLogger();
   // meta info
   private String repoName;
   private String repoPath;
@@ -20,12 +17,13 @@ public class Code2Graph {
   private Differ differ;
 
   // options
-  private boolean limitToSource = true;
+  private boolean involveImported = false; // consider files imported by diff files or not
+  private boolean limitToSource = true; // limit the node inside collected source files or not
 
   public Code2Graph(String repoName, String repoPath) {
     this.repoName = repoName;
     this.repoPath = repoPath;
-    this.differ = new Differ(repoPath);
+    this.differ = new Differ(repoName, repoPath);
     this.generator = Generators.getInstance();
   }
 

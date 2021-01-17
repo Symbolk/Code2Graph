@@ -13,8 +13,8 @@
  */
 package edu.pku.code2graph.diff.textualdiffparser.unified;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static edu.pku.code2graph.diff.textualdiffparser.api.UnifiedDiffParser.LINE_RANGE_PATTERN;
 
@@ -229,7 +229,7 @@ public enum ParserState {
     }
   };
 
-  private static final Logger logger = LogManager.getLogger();
+  Logger logger = LoggerFactory.getLogger(ParserState.class);
 
   /**
    * Returns the next state of the state machine depending on the current state and the content of a
