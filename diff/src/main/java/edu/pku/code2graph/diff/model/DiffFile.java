@@ -117,28 +117,28 @@ public class DiffFile {
     return fileType;
   }
 
-  public String getaRelativePath() {
+  public String getARelativePath() {
     return aRelativePath;
   }
 
-  public String getbRelativePath() {
+  public String getBRelativePath() {
     return bRelativePath;
   }
 
   public String getRelativePathOf(Version version) {
     if (version.equals(Version.A)) {
-      return getaRelativePath();
+      return getARelativePath();
     } else if (version.equals(Version.B)) {
-      return getbRelativePath();
+      return getBRelativePath();
     }
     return "";
   }
 
-  public String getaContent() {
+  public String getAContent() {
     return aContent;
   }
 
-  public String getbContent() {
+  public String getBContent() {
     return bContent;
   }
 
@@ -180,8 +180,8 @@ public class DiffFile {
             index,
             status,
             fileType,
-                aRelativePath,
-                bRelativePath,
+            aRelativePath,
+            bRelativePath,
             "",
             "",
             diffHunksMap);
