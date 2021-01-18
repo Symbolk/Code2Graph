@@ -25,6 +25,8 @@ import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,6 +38,8 @@ import java.util.regex.Pattern;
  * <p>Outermost API provider for graph generator module
  */
 public class Generators extends Registry<String, Generator, Register> {
+
+  Logger logger = LoggerFactory.getLogger(Generators.class);
 
   private static Generators registry;
 
@@ -68,7 +72,7 @@ public class Generators extends Registry<String, Generator, Register> {
       Generator generator = get(filePath);
 
       if (generator == null) {
-        throw new UnsupportedOperationException("No generator found for file: " + filePaths.get(0));
+        logger.warn("No generator found for file:{}", filePath);
       }
 
       if (g2f.containsKey(generator)) {

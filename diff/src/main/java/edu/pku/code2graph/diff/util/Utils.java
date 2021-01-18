@@ -122,20 +122,6 @@ public class Utils {
     }
     return StandardCharsets.UTF_8;
   }
-  /**
-   * Read the content of a file into string
-   *
-   * @return
-   */
-  public static String readFileToString(String filePath) {
-    String content = "";
-    try {
-      content = FileUtils.readFileToString(new File(filePath), "UTF-8");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return content;
-  }
 
   /**
    * Convert string to a list of lines
@@ -164,9 +150,7 @@ public class Utils {
       String trimmedLine = codeLines.get(i).trim();
       if (trimmedLine.length() > 0) {
         isAllEmpty = false;
-        if (trimmedLine.startsWith("import")) {
-          lineTypes.add("IMPORT");
-        } else if (trimmedLine.startsWith("//")
+        if (trimmedLine.startsWith("//")
             || trimmedLine.startsWith("/*")
             || trimmedLine.startsWith("/**")
             || trimmedLine.startsWith("*")) {
@@ -186,5 +170,52 @@ public class Utils {
       return ContentType.COMMENT;
     }
     return ContentType.CODE;
+  }
+
+  /**
+   * Create a folder if not exists
+   *
+   * @param dir abs path
+   * @return
+   */
+  public static String createDir(String dir) {
+    File directory = new File(dir);
+    if (!directory.exists()) {
+      // create the entire directory path including parents
+      directory.mkdirs();
+    }
+    return directory.getAbsolutePath();
+  }
+
+  /**
+   * Read the content of a file into string
+   *
+   * @return
+   */
+  public static String readFileToString(String filePath) {
+    String content = "";
+    try {
+      content = FileUtils.readFileToString(new File(filePath), "UTF-8");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return content;
+  }
+
+  /**
+   * Write the given content in the file of the given file path.
+   *
+   * @param content
+   * @param filePath
+   * @return boolean indicating the success of the write operation.
+   */
+  public static boolean writeStringToFile(String content, String filePath) {
+    try {
+      FileUtils.writeStringToFile(new File(filePath), content, "UTF-8");
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+    return true;
   }
 }

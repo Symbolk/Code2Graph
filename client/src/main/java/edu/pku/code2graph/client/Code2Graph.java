@@ -11,6 +11,7 @@ public class Code2Graph {
   // meta info
   private String repoName;
   private String repoPath;
+  private String tempDir;
 
   // components
   private Generators generator;
@@ -24,6 +25,13 @@ public class Code2Graph {
     this.repoName = repoName;
     this.repoPath = repoPath;
     this.differ = new Differ(repoName, repoPath);
+    this.generator = Generators.getInstance();
+  }
+
+  public Code2Graph(String repoName, String repoPath, String tempDir) {
+    this.repoName = repoName;
+    this.repoPath = repoPath;
+    this.differ = new Differ(repoName, repoPath, tempDir);
     this.generator = Generators.getInstance();
   }
 

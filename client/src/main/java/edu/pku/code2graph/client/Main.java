@@ -14,13 +14,14 @@ import java.util.List;
 public class Main {
   public static void main(String[] args) {
     // config the logger with log4j
-//    System.setProperty("logs.dir", System.getProperty("user.dir"));
+    //    System.setProperty("logs.dir", System.getProperty("user.dir"));
     PropertyConfigurator.configure("log4j.properties");
     //    // use basic configuration when packaging
     //    BasicConfigurator.configure();
     //    org.apache.log4j.Logger.getRootLogger().setLevel(Level.ERROR);
 
-    Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"));
+    String tempDir = "/Users/symbolk/coding/data/temp/c2g_temp";
+    Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"), tempDir);
     // specify
     //    Generator generator = new JdtGenerator();
 
