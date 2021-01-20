@@ -25,7 +25,7 @@ public class Differ {
   // meta info
   private String repoName;
   private String repoPath;
-  private String tempPath;
+  private String tempPath; // specifically for this repo
 
   // options
 
@@ -102,7 +102,7 @@ public class Differ {
 
     DataCollector dataCollector = new DataCollector(tempPath);
     Pair<List<String>, List<String>> tempFilePaths =
-        dataCollector.collectForWorkingTree(allDiffFiles);
+        dataCollector.collectForCommit(commitID, allDiffFiles);
     // 1. generate 2 graphs for working tree: 2 graphs: left and right
     Generators generator = Generators.getInstance();
 

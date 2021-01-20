@@ -17,10 +17,10 @@ public class DataCollector {
 
   Logger logger = LoggerFactory.getLogger(DataCollector.class);
 
-  private String tempDir;
+  private String tempPath;
 
   public DataCollector(String tempDir) {
-    this.tempDir = tempDir;
+    this.tempPath = tempDir;
   }
 
   /**
@@ -29,8 +29,8 @@ public class DataCollector {
    * @return
    */
   public Pair<List<String>, List<String>> collectForWorkingTree(List<DiffFile> diffFiles) {
-    String aDir = tempDir + File.separator + Version.A.asString() + File.separator;
-    String bDir = tempDir + File.separator + Version.B.asString() + File.separator;
+    String aDir = tempPath + File.separator + Version.A.asString() + File.separator;
+    String bDir = tempPath + File.separator + Version.B.asString() + File.separator;
 
     return collect(aDir, bDir, diffFiles);
   }
@@ -44,14 +44,14 @@ public class DataCollector {
   public Pair<List<String>, List<String>> collectForCommit(
       String commitID, List<DiffFile> diffFiles) {
     String aDir =
-        tempDir
+        tempPath
             + File.separator
             + commitID
             + File.separator
             + Version.A.asString()
             + File.separator;
     String bDir =
-        tempDir
+        tempPath
             + File.separator
             + commitID
             + File.separator

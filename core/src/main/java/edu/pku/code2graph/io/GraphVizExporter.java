@@ -31,6 +31,7 @@ public class GraphVizExporter {
         v -> {
           Map<String, Attribute> map = new LinkedHashMap<>();
           // new jgrapht API has no dedicated label provider setter
+          map.put("id", DefaultAttribute.createAttribute(v.getId().toString()));
           map.put("type", DefaultAttribute.createAttribute(v.getType().toString()));
           map.put(
               "label",
