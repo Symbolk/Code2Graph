@@ -72,7 +72,9 @@ public class Generators extends Registry<String, Generator, Register> {
       Generator generator = get(filePath);
 
       if (generator == null) {
+        // for now just skip the file that cannot handle
         logger.warn("No generator found for file:{}", filePath);
+        continue;
       }
 
       if (g2f.containsKey(generator)) {
