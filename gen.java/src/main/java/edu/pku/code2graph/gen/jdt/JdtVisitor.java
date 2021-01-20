@@ -357,14 +357,14 @@ public class JdtVisitor extends AbstractJdtVisitor {
         {
           // local var declaration
           VariableDeclarationStatement vd = (VariableDeclarationStatement) stmt;
+
           for (Iterator iter = vd.fragments().iterator(); iter.hasNext(); ) {
             VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
             IVariableBinding binding = fragment.resolveBinding();
             String name = fragment.getName().getFullyQualifiedName();
             String qname = name;
             if (binding != null) { // since it is declaration, binding should never be null
-              String parentMethodName = getMethodQNameFromBinding(binding.getDeclaringMethod());
-              qname = parentMethodName + "." + name;
+              qname = getVariableQNameFromBinding(binding, stmt);
               ElementNode node =
                   new ElementNode(
                       GraphUtil.popNodeID(graph),
@@ -637,6 +637,30 @@ public class JdtVisitor extends AbstractJdtVisitor {
     return Optional.empty();
   }
 
+  private String getParentInitBlockName(ASTNode node) {
+    ASTNode parent = node.getParent();
+    while (parent != null && parent.getNodeType() != ASTNode.TYPE_DECLARATION) {
+      parent = parent.getParent();
+    }
+    if (parent.getNodeType() == ASTNode.TYPE_DECLARATION) {
+      TypeDeclaration typeDeclaration = (TypeDeclaration) parent;
+      return typeDeclaration.resolveBinding().getQualifiedName();
+    }
+    return "";
+  }
+
+  private boolean isInsideInitBlock(ASTNode node) {
+    ASTNode parent = node.getParent();
+    while (parent != null && parent.getNodeType() != ASTNode.TYPE_DECLARATION) {
+      if (parent.getNodeType() == ASTNode.INITIALIZER) {
+        return true;
+      } else {
+        parent = parent.getParent();
+      }
+    }
+    return false;
+  }
+
   /**
    * Expression at the leaf level, modeled as relation Link used vars and methods into its def, if
    * exists
@@ -680,11 +704,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               root.setType(NodeType.PARAMETER_ACCESS);
               usePool.add(
                   Triple.of(
-                      root,
-                      EdgeType.REFERENCE,
-                      getMethodQNameFromBinding(varBinding.getDeclaringMethod())
-                          + "."
-                          + varBinding.getName()));
+                      root, EdgeType.REFERENCE, getVariableQNameFromBinding(varBinding, exp)));
             } else if (varBinding.isEnumConstant()) {
               root.setType(NodeType.CONSTANT_ACCESS);
               usePool.add(
@@ -699,11 +719,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               root.setType(NodeType.LOCAL_VAR_ACCESS);
               usePool.add(
                   Triple.of(
-                      root,
-                      EdgeType.REFERENCE,
-                      getMethodQNameFromBinding(varBinding.getDeclaringMethod())
-                          + "."
-                          + varBinding.getName()));
+                      root, EdgeType.REFERENCE, getVariableQNameFromBinding(varBinding, exp)));
             }
           }
           break;
@@ -725,8 +741,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
             String name = fragment.getName().getFullyQualifiedName();
             String qname = name;
             IVariableBinding binding = fragment.resolveBinding();
-            if (binding != null && binding.getDeclaringMethod() != null) {
-              qname = getMethodQNameFromBinding(binding.getDeclaringMethod()) + "." + name;
+            if (binding != null) {
+              qname = getVariableQNameFromBinding(binding, exp);
             }
             ElementNode n =
                 new ElementNode(
@@ -893,7 +909,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
   }
 
   /**
-   * Find the nearest ancestor of a specific type, return its qname
+   * Find the parent method, return its qname
    *
    * @return
    */
@@ -909,6 +925,29 @@ public class JdtVisitor extends AbstractJdtVisitor {
     return Optional.empty();
   }
 
+  /**
+   * Get the qname for var declaration, which can be inside a method or init block
+   *
+   * @param binding
+   * @param node
+   * @return
+   */
+  private String getVariableQNameFromBinding(IVariableBinding binding, ASTNode node) {
+    String qname = binding.getName();
+    if (binding.getDeclaringMethod() != null) {
+      qname = getMethodQNameFromBinding(binding.getDeclaringMethod()) + "." + qname;
+    } else if (isInsideInitBlock(node)) {
+      qname = getParentInitBlockName(node) + ".INIT." + qname;
+    }
+    return qname;
+  }
+
+  /**
+   * Get the qname of a method from binding
+   *
+   * @param binding
+   * @return
+   */
   private String getMethodQNameFromBinding(IMethodBinding binding) {
     ITypeBinding[] paraBindings = binding.getParameterTypes();
     List<String> paraTypes = new ArrayList<>();
