@@ -13,6 +13,7 @@ import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -24,20 +25,20 @@ public class Differ {
   // meta info
   private String repoName;
   private String repoPath;
-  private String tempDir;
+  private String tempPath;
 
   // options
 
   public Differ(String repoName, String repoPath) {
     this.repoName = repoName;
     this.repoPath = repoPath;
-    this.tempDir = System.getProperty("java.io.tmpdir");
+    this.tempPath = System.getProperty("java.io.tmpdir") + File.separator + repoName;
   }
 
   public Differ(String repoName, String repoPath, String tempDir) {
     this.repoName = repoName;
     this.repoPath = repoPath;
-    this.tempDir = tempDir;
+    this.tempPath = tempDir + File.separator + repoName;
   }
 
   static {
@@ -61,7 +62,7 @@ public class Differ {
     List<DiffHunk> allDiffHunks = repoAnalyzer.getDiffHunks();
 
     if (allDiffFiles.isEmpty()) {
-      logger.warn("Nothing to commit, working tree clean.");
+      logger.warn("No changes, working tree clean.");
       return;
     }
     if (allDiffHunks.isEmpty()) {
@@ -69,7 +70,7 @@ public class Differ {
       return;
     }
 
-    DataCollector dataCollector = new DataCollector(tempDir);
+    DataCollector dataCollector = new DataCollector(tempPath);
 
     Pair<List<String>, List<String>> tempFilePaths =
         dataCollector.collectForWorkingTree(allDiffFiles);
@@ -89,8 +90,28 @@ public class Differ {
    *
    * @param commitID
    */
-  public void computeDiff(String commitID) {
-    // for one commit: 2 graphs: left and right
+  public void computeDiff(String commitID) throws IOException {
+    RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+    List<DiffFile> allDiffFiles = repoAnalyzer.analyzeCommit(commitID);
+    List<DiffHunk> allDiffHunks = repoAnalyzer.getDiffHunks();
+
+    if (allDiffFiles.isEmpty() || allDiffHunks.isEmpty()) {
+      logger.info("No changes at commit: " + commitID);
+      return;
+    }
+
+    DataCollector dataCollector = new DataCollector(tempPath);
+    Pair<List<String>, List<String>> tempFilePaths =
+        dataCollector.collectForWorkingTree(allDiffFiles);
+    // 1. generate 2 graphs for working tree: 2 graphs: left and right
+    Generators generator = Generators.getInstance();
+
+    Graph<Node, Edge> aGraph = generator.generateFromFiles(tempFilePaths.getLeft());
+    Graph<Node, Edge> bGraph = generator.generateFromFiles(tempFilePaths.getRight());
+
+    // 2. compare graphs and compute diffs
+    compare(aGraph, bGraph);
+    // return graph-patch
 
   }
 
