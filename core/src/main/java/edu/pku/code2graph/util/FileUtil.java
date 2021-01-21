@@ -1,8 +1,13 @@
 package edu.pku.code2graph.util;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FileUtil {
   /**
@@ -76,5 +81,20 @@ public class FileUtil {
       // e.printStackTrace();
       return null;
     }
+  }
+
+  public static Map<String, List<String>> categorizeFilesByExtension(List<String> filePaths) {
+    Map<String, List<String>> result = new LinkedHashMap<>();
+    for (String path : filePaths) {
+      String extension = FilenameUtils.getExtension(path);
+      if (!result.containsKey(extension)) {
+        List<String> temp = new ArrayList<>();
+        temp.add(path);
+        result.put(extension, temp);
+      } else {
+        result.get(extension).add(path);
+      }
+    }
+    return result;
   }
 }

@@ -20,16 +20,18 @@
 
 package edu.pku.code2graph.gen;
 
-import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
@@ -65,43 +67,25 @@ public class Generators extends Registry<String, Generator, Register> {
     }
 
     // a map from generator to file paths
-    Map<Generator, List<String>> g2f = new HashMap<>();
+    Map<String, List<String>> filesMap = FileUtil.categorizeFilesByExtension(filePaths);
 
-    for (String filePath : filePaths) {
-      Generator generator = get(filePath);
-
+    for (Map.Entry<String, List<String>> entry : filesMap.entrySet()) {
+      Generator generator = get(entry.getValue().get(0));
       if (generator == null) {
         // for now just skip the file that cannot handle
-        logger.warn("No generator found for file:{}", filePath);
+        logger.warn("No generator found for file type:{}", entry.getKey());
         continue;
       }
-
-      if (g2f.containsKey(generator)) { // FIX: check same generator instead of hash
-        g2f.get(generator).add(filePath);
-      } else {
-        List<String> temp = new ArrayList<>();
-        temp.add(filePath);
-        g2f.put(generator, temp);
-      }
-    }
-
-    for (Map.Entry<Generator, List<String>> entry : g2f.entrySet()) {
-      //      Graphs.addGraph(graph, entry.getKey().generateFrom().files(entry.getValue()));
-      entry.getKey().generateFrom().files(entry.getValue());
+      generator.generateFrom().files(entry.getValue());
       // TODO link cached cross-lang edges if not yet
     }
 
-//    GraphVizExporter.printAsDot(GraphUtil.getGraph());
+    //    GraphVizExporter.printAsDot(GraphUtil.getGraph());
     return GraphUtil.getGraph();
   }
 
   public boolean has(String generator) {
     return this.findById(generator) != null;
-  }
-
-  /** Indicate whether or not the given file path has a related tree generator */
-  public boolean hasGeneratorForFile(String file) {
-    return get(file) != null;
   }
 
   @Override
