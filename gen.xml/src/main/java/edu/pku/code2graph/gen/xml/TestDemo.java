@@ -1,6 +1,5 @@
 package edu.pku.code2graph.gen.xml;
 
-import edu.pku.code2graph.gen.xml.SaxHandler;
 import edu.pku.code2graph.util.FileUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -8,8 +7,6 @@ import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
@@ -19,14 +16,8 @@ import java.io.File;
 public class TestDemo {
 
   public static void main(String[] args) throws Exception {
-    // SAX way
-    SAXParserFactory factory = SAXParserFactory.newInstance();
-    SAXParser parser = factory.newSAXParser();
-    String path = "gen.xml/src/test/resources/layout.xml";
-    File f = new File(path);
-    SaxHandler dh = new SaxHandler();
-    parser.parse(f, dh);
 
+    String path = "gen.xml/src/test/resources/layout.xml";
     System.out.println("-----------------------");
 
     // DOM way
@@ -76,6 +67,5 @@ public class TestDemo {
       }
       xr.next();
     }
-
   }
 }

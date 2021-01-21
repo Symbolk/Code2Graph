@@ -17,4 +17,12 @@ public class ElementNode extends Node {
   public String getQualifiedName() {
     return qualifiedName;
   }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public void setQualifiedName(String qualifiedName) {
+    this.qualifiedName = qualifiedName;
+  }
 }

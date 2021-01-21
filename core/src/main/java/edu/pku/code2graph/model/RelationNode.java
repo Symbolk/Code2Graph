@@ -12,10 +12,10 @@ public class RelationNode extends Node {
     super(id, type, snippet);
   }
 
-  public RelationNode(Integer id, Type type, String snippet, String symbol, Integer arity) {
+  public RelationNode(Integer id, Type type, String snippet, String symbol) {
     super(id, type, snippet);
     this.symbol = symbol;
-    this.arity = arity;
+    this.arity = 2;
   }
 
   public String getSymbol() {
