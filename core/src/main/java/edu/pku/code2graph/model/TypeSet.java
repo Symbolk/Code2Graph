@@ -18,10 +18,13 @@
  */
 package edu.pku.code2graph.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TypeSet {
+public class TypeSet implements Serializable {
+  private static final long serialVersionUID = -1614103266188826641L;
+
   private static final TypeFactoryImplementation implementation = new TypeFactoryImplementation();
 
   public static Type type(String name) {

@@ -5,6 +5,7 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.RelationNode;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;

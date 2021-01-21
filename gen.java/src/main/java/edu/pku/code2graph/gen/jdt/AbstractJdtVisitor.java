@@ -18,7 +18,7 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 public abstract class AbstractJdtVisitor extends ASTVisitor {
   // final constructed graph instance
-  protected Graph<Node, Edge> graph = GraphUtil.initGraph();
+  protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 
   // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
   // TODO include external type declaration or not?
@@ -37,7 +37,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
       Node src = entry.getFirst();
       Node tgt = defPool.get(entry.getThird());
       if (tgt != null) {
-        graph.addEdge(src, tgt, new Edge(GraphUtil.popEdgeID(graph), entry.getSecond()));
+        graph.addEdge(src, tgt, new Edge(GraphUtil.eid(), entry.getSecond()));
       }
     }
   }

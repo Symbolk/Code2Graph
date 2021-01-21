@@ -1,11 +1,16 @@
 package edu.pku.code2graph.model;
 
+import java.io.Serializable;
+
 import static edu.pku.code2graph.model.TypeSet.type;
 
-public abstract class Node {
+public abstract class Node implements Serializable {
+  private static final long serialVersionUID = -4685691468295743770L;
+
   private Integer id;
   protected Type type;
   protected String snippet;
+  protected Language language;
   //    protected Range range;
 
   public Node(Integer id) {
@@ -36,5 +41,13 @@ public abstract class Node {
 
   public String getSnippet() {
     return snippet;
+  }
+
+  public Language getLanguage() {
+    return language;
+  }
+
+  public void setLanguage(Language language) {
+    this.language = language;
   }
 }

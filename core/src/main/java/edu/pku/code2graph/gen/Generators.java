@@ -20,11 +20,11 @@
 
 package edu.pku.code2graph.gen;
 
+import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
-import org.jgrapht.Graphs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +63,6 @@ public class Generators extends Registry<String, Generator, Register> {
     if (filePaths.isEmpty()) {
       throw new UnsupportedOperationException("The given file paths are empty");
     }
-    Graph<Node, Edge> graph = GraphUtil.initGraph();
 
     // a map from generator to file paths
     Map<Generator, List<String>> g2f = new HashMap<>();
@@ -77,7 +76,7 @@ public class Generators extends Registry<String, Generator, Register> {
         continue;
       }
 
-      if (g2f.containsKey(generator)) {
+      if (g2f.containsKey(generator)) { // FIX: check same generator instead of hash
         g2f.get(generator).add(filePath);
       } else {
         List<String> temp = new ArrayList<>();
@@ -87,12 +86,13 @@ public class Generators extends Registry<String, Generator, Register> {
     }
 
     for (Map.Entry<Generator, List<String>> entry : g2f.entrySet()) {
-      // TODO how to link the graphs from different generators together as one? (use placeholder
-      // nodes in each graph?, id should be unique)
-      Graphs.addGraph(graph, entry.getKey().generateFrom().files(entry.getValue()));
+      //      Graphs.addGraph(graph, entry.getKey().generateFrom().files(entry.getValue()));
+      entry.getKey().generateFrom().files(entry.getValue());
+      // TODO link cached cross-lang edges if not yet
     }
 
-    return graph;
+//    GraphVizExporter.printAsDot(GraphUtil.getGraph());
+    return GraphUtil.getGraph();
   }
 
   public boolean has(String generator) {

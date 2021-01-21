@@ -2,11 +2,14 @@ package edu.pku.code2graph.diff;
 
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.DiffHunk;
+import edu.pku.code2graph.diff.model.Version;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
+import edu.pku.code2graph.io.ObjectExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
@@ -78,6 +81,8 @@ public class Differ {
     Generators generator = Generators.getInstance();
 
     Graph<Node, Edge> aGraph = generator.generateFromFiles(tempFilePaths.getLeft());
+    // save into file and read when compare
+    // clear global graph
     Graph<Node, Edge> bGraph = generator.generateFromFiles(tempFilePaths.getRight());
 
     // 2. compare graphs and compute diffs
@@ -107,8 +112,9 @@ public class Differ {
     Generators generator = Generators.getInstance();
 
     Graph<Node, Edge> aGraph = generator.generateFromFiles(tempFilePaths.getLeft());
-    Graph<Node, Edge> bGraph = generator.generateFromFiles(tempFilePaths.getRight());
 
+
+    Graph<Node, Edge> bGraph = generator.generateFromFiles(tempFilePaths.getRight());
     // 2. compare graphs and compute diffs
     compare(aGraph, bGraph);
     // return graph-patch

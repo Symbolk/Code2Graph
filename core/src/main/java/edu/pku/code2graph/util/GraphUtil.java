@@ -6,6 +6,18 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 
 public class GraphUtil {
+  // singleton across a graph building process (but for diff?)
+  private static Graph<Node, Edge> graph;
+  // FIXME use global counter as a compromise for performance,
+  // BUT may skip or jump an id if adding node or edge failed (which means graph not changed)
+  private static Integer nodeCount;
+  private static Integer edgeCount;
+
+  static {
+    graph = initGraph();
+    nodeCount = 0;
+    edgeCount = 0;
+  }
 
   /**
    * Initialize an empty Graph, return the instance
@@ -22,20 +34,31 @@ public class GraphUtil {
   }
 
   /**
-   * Generate a unique and incremental id for node TODO support parallel security
+   * Generate a unique and incremental id for node
    *
    * @return
    */
-  public static Integer popNodeID(Graph graph) {
-    return graph.vertexSet().size() + 1;
+  public static Integer nid() {
+    // return graph.vertexSet().size() + 1;
+    return ++nodeCount;
   }
 
   /**
-   * Generate a unique and incremental id for edge TODO support parallel security
+   * Generate a unique and incremental id for edge
    *
    * @return
    */
-  public static Integer popEdgeID(Graph graph) {
-    return graph.edgeSet().size() + 1;
+  public static Integer eid() {
+    return ++edgeCount;
+  }
+
+  public static Graph<Node, Edge> getGraph() {
+    return graph;
+  }
+
+  public static void clearGraph() {
+    graph = initGraph();
+    nodeCount = 0;
+    edgeCount = 0;
   }
 }
