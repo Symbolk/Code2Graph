@@ -3,7 +3,6 @@ package edu.pku.code2graph.diff.util;
 import edu.pku.code2graph.diff.model.ContentType;
 import edu.pku.code2graph.diff.model.FileStatus;
 import edu.pku.code2graph.diff.model.FileType;
-import org.apache.commons.io.FileUtils;
 import org.mozilla.universalchardet.UniversalDetector;
 
 import java.io.BufferedReader;
@@ -20,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class Utils {
+public class DiffUtil {
   /**
    * Run system command under the given dir
    *
@@ -170,52 +169,5 @@ public class Utils {
       return ContentType.COMMENT;
     }
     return ContentType.CODE;
-  }
-
-  /**
-   * Create a folder if not exists
-   *
-   * @param dir abs path
-   * @return
-   */
-  public static String createDir(String dir) {
-    File directory = new File(dir);
-    if (!directory.exists()) {
-      // create the entire directory path including parents
-      directory.mkdirs();
-    }
-    return directory.getAbsolutePath();
-  }
-
-  /**
-   * Read the content of a file into string
-   *
-   * @return
-   */
-  public static String readFileToString(String filePath) {
-    String content = "";
-    try {
-      content = FileUtils.readFileToString(new File(filePath), "UTF-8");
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return content;
-  }
-
-  /**
-   * Write the given content in the file of the given file path.
-   *
-   * @param content
-   * @param filePath
-   * @return boolean indicating the success of the write operation.
-   */
-  public static boolean writeStringToFile(String content, String filePath) {
-    try {
-      FileUtils.writeStringToFile(new File(filePath), content, "UTF-8");
-    } catch (IOException e) {
-      e.printStackTrace();
-      return false;
-    }
-    return true;
   }
 }

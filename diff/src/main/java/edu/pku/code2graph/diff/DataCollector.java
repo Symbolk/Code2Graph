@@ -3,7 +3,7 @@ package edu.pku.code2graph.diff;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
 import edu.pku.code2graph.diff.model.Version;
-import edu.pku.code2graph.diff.util.Utils;
+import edu.pku.code2graph.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,8 +71,8 @@ public class DataCollector {
    */
   private Pair<List<String>, List<String>> collect(
       String aDir, String bDir, List<DiffFile> diffFiles) {
-    Utils.createDir(aDir);
-    Utils.createDir(bDir);
+    FileUtil.createDir(aDir);
+    FileUtil.createDir(bDir);
     List<String> aPaths = new ArrayList<>();
     List<String> bPaths = new ArrayList<>();
     for (DiffFile diffFile : diffFiles) {
@@ -85,14 +85,14 @@ public class DataCollector {
         case ADDED:
         case UNTRACKED:
           bPath = bDir + diffFile.getBRelativePath();
-          if (Utils.writeStringToFile(diffFile.getBContent(), bPath)) {
+          if (FileUtil.writeStringToFile(diffFile.getBContent(), bPath)) {
           } else {
             logger.error("Error when collecting: " + diffFile.getStatus() + ":" + bPath);
           }
           break;
         case DELETED:
           aPath = aDir + diffFile.getARelativePath();
-          if (!Utils.writeStringToFile(diffFile.getAContent(), aPath)) {
+          if (!FileUtil.writeStringToFile(diffFile.getAContent(), aPath)) {
             logger.error("Error when collecting: " + diffFile.getStatus() + ":" + aPath);
           }
           break;
@@ -101,8 +101,8 @@ public class DataCollector {
         case COPIED:
           aPath = aDir + diffFile.getARelativePath();
           bPath = bDir + diffFile.getBRelativePath();
-          boolean aOk = Utils.writeStringToFile(diffFile.getAContent(), aPath);
-          boolean bOk = Utils.writeStringToFile(diffFile.getBContent(), bPath);
+          boolean aOk = FileUtil.writeStringToFile(diffFile.getAContent(), aPath);
+          boolean bOk = FileUtil.writeStringToFile(diffFile.getBContent(), bPath);
           if (!aOk || !bOk) {
             logger.error("Error when collecting: " + diffFile.getStatus() + ":" + aPath);
           }
