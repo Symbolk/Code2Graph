@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
+  private static String tempDir = "/Users/symbolk/coding/data/temp/c2g";
+
   public static void main(String[] args) {
     // config the logger with log4j
     //    System.setProperty("logs.dir", System.getProperty("user.dir"));
@@ -19,9 +21,24 @@ public class Main {
     //    // use basic configuration when packaging
     //    BasicConfigurator.configure();
     //    org.apache.log4j.Logger.getRootLogger().setLevel(Level.ERROR);
+    testDiff();
+  }
 
-    String tempDir = "/Users/symbolk/coding/data/temp/c2g_temp";
+  private static void testDiff() {
+    Code2Graph client =
+        new Code2Graph("MLManager", "/Users/symbolk/coding/data/repos/MLManager", tempDir);
+
+    // TODO: create a root project node if necessary
+    try {
+      client.getDiffer().computeDiff("76adb20");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private static void testFiles() {
     Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"), tempDir);
+
     // specify
     //    Generator generator = new JdtGenerator();
 
@@ -34,13 +51,6 @@ public class Main {
     try {
       Graph<Node, Edge> graph = client.getGenerator().generateFromFiles(filePaths);
       GraphVizExporter.printAsDot(graph);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    // TODO: create a root project node if necessary
-    try {
-      client.getDiffer().computeDiff();
     } catch (IOException e) {
       e.printStackTrace();
     }
