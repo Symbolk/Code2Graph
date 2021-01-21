@@ -113,6 +113,10 @@ public class Differ {
 
     Graph<Node, Edge> aGraph = generator.generateFromFiles(tempFilePaths.getLeft());
 
+    ObjectExporter.exportObjectToFile(
+        aGraph,
+        tempPath + File.separator + commitID + File.separator + Version.A.asString() + ".dat");
+    GraphUtil.clearGraph();
 
     Graph<Node, Edge> bGraph = generator.generateFromFiles(tempFilePaths.getRight());
     // 2. compare graphs and compute diffs
