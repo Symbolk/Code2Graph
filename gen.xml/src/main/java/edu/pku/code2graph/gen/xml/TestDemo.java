@@ -22,6 +22,8 @@ public class TestDemo {
 
     // DOM way
     DocumentBuilderFactory fac = DocumentBuilderFactory.newInstance();
+    //    fac.setNamespaceAware(true);
+    //    fac.setIgnoringElementContentWhitespace(true);
     DocumentBuilder builder = fac.newDocumentBuilder();
 
     // Load the input XML document, parse it and return an instance of the
@@ -31,8 +33,10 @@ public class TestDemo {
     NodeList nodeList1 = document.getElementsByTagName("*Layout");
     for (int i = 0; i < nodeList.getLength(); i++) {
       Node node = nodeList.item(i);
-      System.out.println(node.getNodeName() + node.getTextContent());
-      System.out.println(node.getAttributes());
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+        System.out.println(node.getNodeName() + node.getTextContent());
+        System.out.println(node.getAttributes());
+      }
     }
 
     System.out.println("-----------------------");

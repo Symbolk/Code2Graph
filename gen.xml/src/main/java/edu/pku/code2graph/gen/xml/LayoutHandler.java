@@ -9,11 +9,15 @@ import org.jgrapht.alg.util.Triple;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
+import java.util.Stack;
+
 import static edu.pku.code2graph.model.TypeSet.type;
 
 public class LayoutHandler extends AbstractHandler {
   // text content between tag start and end
   private String tempString;
+  private Stack<ElementNode> stack = new Stack<>();
+  public static final Type CHILD = type("child");
 
   @Override
   public void characters(char[] ch, int start, int length) throws SAXException {
@@ -30,6 +34,9 @@ public class LayoutHandler extends AbstractHandler {
 
   @Override
   public void endElement(String uri, String localName, String qName) throws SAXException {
+    if (stack.size() > 1) {
+      stack.pop();
+    }
     super.endElement(uri, localName, qName);
   }
 
@@ -42,11 +49,14 @@ public class LayoutHandler extends AbstractHandler {
   @Override
   public void startElement(String uri, String localName, String qName, Attributes attributes)
       throws SAXException {
-
     Type nType = type(qName);
 
     ElementNode en = new ElementNode(GraphUtil.nid(), nType, "", "", "");
     graph.addVertex(en);
+    if (stack.size() > 0) {
+      graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));
+    }
+    stack.push(en);
 
     if (attributes != null) {
       for (int i = 0; i < attributes.getLength(); i++) {
@@ -65,14 +75,13 @@ public class LayoutHandler extends AbstractHandler {
           Type eType = type(key);
           RelationNode rn = new RelationNode(GraphUtil.nid(), eType, key + "=" + value);
           graph.addVertex(rn);
+          graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
 
           if (value.startsWith("@id")) {
-            graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
+            usePool.add(Triple.of(rn, eType, value.replace("@id", "@+id")));
           } else if (value.startsWith("@string") || value.startsWith("@color")) {
-            // TODO specify sources
-            graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
+            usePool.add(Triple.of(rn, eType, value));
           }
-          usePool.add(Triple.of(rn, eType, value));
         }
       }
     }
