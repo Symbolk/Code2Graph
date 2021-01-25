@@ -199,8 +199,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
     String name = getMethodQNameFromBinding(mdBinding);
     String qname = name;
     ElementNode node =
-        new ElementNode(
-            GraphUtil.nid(), NodeType.METHOD_DECLARATION, md.toString(), name, qname);
+        new ElementNode(GraphUtil.nid(), NodeType.METHOD_DECLARATION, md.toString(), name, qname);
     graph.addVertex(node);
     defPool.put(qname, node);
 
@@ -223,11 +222,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
         ElementNode pn =
             new ElementNode(
-                GraphUtil.nid(),
-                NodeType.VAR_DECLARATION,
-                p.toString(),
-                para_name,
-                para_qname);
+                GraphUtil.nid(), NodeType.VAR_DECLARATION, p.toString(), para_name, para_qname);
         graph.addVertex(pn);
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.METHOD_PARAMETER));
         defPool.put(para_qname, pn);
@@ -302,8 +297,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
       }
 
       parseStatement(stmt)
-          .ifPresent(
-              node -> graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
+          .ifPresent(node -> graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
     }
     return Optional.of(root);
   }
@@ -328,8 +322,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               parseStatement((Statement) st)
                   .ifPresent(
                       child ->
-                          graph.addEdge(
-                              node, child, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
+                          graph.addEdge(node, child, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
             }
             return Optional.of(node);
           }
@@ -358,11 +351,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               qname = getVariableQNameFromBinding(binding, stmt);
               ElementNode node =
                   new ElementNode(
-                      GraphUtil.nid(),
-                      NodeType.VAR_DECLARATION,
-                      fragment.toString(),
-                      name,
-                      qname);
+                      GraphUtil.nid(), NodeType.VAR_DECLARATION, fragment.toString(), name, qname);
               graph.addVertex(node);
               defPool.put(qname, node);
 
@@ -399,8 +388,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           IfStatement ifStatement = (IfStatement) stmt;
           //      ifStatement.getStartPosition();
           RelationNode node =
-              new RelationNode(
-                  GraphUtil.nid(), NodeType.IF_STATEMENT, ifStatement.toString());
+              new RelationNode(GraphUtil.nid(), NodeType.IF_STATEMENT, ifStatement.toString());
           graph.addVertex(node);
 
           if (ifStatement.getExpression() != null) {
@@ -410,14 +398,12 @@ public class JdtVisitor extends AbstractJdtVisitor {
           if (ifStatement.getThenStatement() != null) {
             parseStatement(ifStatement.getThenStatement())
                 .ifPresent(
-                    then ->
-                        graph.addEdge(node, then, new Edge(GraphUtil.eid(), EdgeType.THEN)));
+                    then -> graph.addEdge(node, then, new Edge(GraphUtil.eid(), EdgeType.THEN)));
           }
           if (ifStatement.getElseStatement() != null) {
             parseStatement(ifStatement.getThenStatement())
                 .ifPresent(
-                    els ->
-                        graph.addEdge(node, els, new Edge(GraphUtil.eid(), EdgeType.ELSE)));
+                    els -> graph.addEdge(node, els, new Edge(GraphUtil.eid(), EdgeType.ELSE)));
           }
           return Optional.of(node);
         }
@@ -425,8 +411,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
         {
           ForStatement forStatement = (ForStatement) stmt;
           RelationNode node =
-              new RelationNode(
-                  GraphUtil.nid(), NodeType.FOR_STATEMENT, forStatement.toString());
+              new RelationNode(GraphUtil.nid(), NodeType.FOR_STATEMENT, forStatement.toString());
           graph.addVertex(node);
 
           forStatement
@@ -452,8 +437,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               new Edge(GraphUtil.eid(), EdgeType.CONDITION));
           parseStatement(forStatement.getBody())
               .ifPresent(
-                  body ->
-                      graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+                  body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
 
           return Optional.of(node);
         }
@@ -475,11 +459,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           }
           ElementNode pn =
               new ElementNode(
-                  GraphUtil.nid(),
-                  NodeType.VAR_DECLARATION,
-                  p.toString(),
-                  para_name,
-                  para_qname);
+                  GraphUtil.nid(), NodeType.VAR_DECLARATION, p.toString(), para_name, para_qname);
           graph.addVertex(pn);
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.ELEMENT));
           defPool.put(para_qname, pn);
@@ -495,8 +475,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               new Edge(GraphUtil.eid(), EdgeType.VALUES));
           parseStatement(eForStatement.getBody())
               .ifPresent(
-                  body ->
-                      graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+                  body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
 
           return Optional.of(node);
         }
@@ -504,8 +483,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
         {
           DoStatement doStatement = ((DoStatement) stmt);
           RelationNode node =
-              new RelationNode(
-                  GraphUtil.nid(), NodeType.DO_STATEMENT, doStatement.toString());
+              new RelationNode(GraphUtil.nid(), NodeType.DO_STATEMENT, doStatement.toString());
           graph.addVertex(node);
 
           Expression expression = doStatement.getExpression();
@@ -518,8 +496,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           if (doBody != null) {
             parseStatement(doBody)
                 .ifPresent(
-                    body ->
-                        graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+                    body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
           }
           return Optional.of(node);
         }
@@ -541,8 +518,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           if (whileBody != null) {
             parseStatement(whileBody)
                 .ifPresent(
-                    body ->
-                        graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+                    body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
           }
           return Optional.of(node);
         }
@@ -550,16 +526,14 @@ public class JdtVisitor extends AbstractJdtVisitor {
         {
           TryStatement tryStatement = (TryStatement) stmt;
           RelationNode node =
-              new RelationNode(
-                  GraphUtil.nid(), NodeType.TRY_STATEMENT, tryStatement.toString());
+              new RelationNode(GraphUtil.nid(), NodeType.TRY_STATEMENT, tryStatement.toString());
           graph.addVertex(node);
 
           Statement tryBody = tryStatement.getBody();
           if (tryBody != null) {
             parseStatement(tryBody)
                 .ifPresent(
-                    body ->
-                        graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+                    body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
 
             List<CatchClause> catchClauses = tryStatement.catchClauses();
             if (catchClauses != null && !catchClauses.isEmpty()) {
@@ -579,9 +553,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
                       .ifPresent(
                           block ->
                               graph.addEdge(
-                                  catchNode,
-                                  block,
-                                  new Edge(GraphUtil.eid(), EdgeType.CHILD)));
+                                  catchNode, block, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
                 }
               }
             }
@@ -589,8 +561,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
               parseBodyBlock(tryStatement.getFinally())
                   .ifPresent(
                       block ->
-                          graph.addEdge(
-                              node, block, new Edge(GraphUtil.eid(), EdgeType.FINALLY)));
+                          graph.addEdge(node, block, new Edge(GraphUtil.eid(), EdgeType.FINALLY)));
             }
           }
           return Optional.of(node);
@@ -612,6 +583,42 @@ public class JdtVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.SWITCH_STATEMENT:
         {
+          SwitchStatement switchStatement = (SwitchStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(), NodeType.SWITCH_STATEMENT, switchStatement.toString());
+          graph.addVertex(node);
+
+          Expression expression = switchStatement.getExpression();
+          if (expression != null) {
+            RelationNode cond = parseExpression(expression);
+            graph.addEdge(node, cond, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
+          // treat case as an implicit block of statements
+          for (Iterator iter = switchStatement.statements().iterator(); iter.hasNext(); ) {
+            Object nxt = iter.next();
+            if (nxt instanceof SwitchCase) {
+              RelationNode caseNode =
+                  new RelationNode(
+                      GraphUtil.nid(), NodeType.SWITCH_CASE, ((SwitchCase) nxt).toString());
+              graph.addVertex(caseNode);
+              graph.addEdge(node, caseNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+
+              while (iter.hasNext()) {
+                Object nxxt = iter.next();
+                if (nxxt instanceof SwitchCase || nxxt instanceof BreakStatement) {
+                  break;
+                } else if (nxxt instanceof Statement) {
+                  parseStatement((Statement) nxxt)
+                      .ifPresent(
+                          then ->
+                              graph.addEdge(
+                                  caseNode, then, new Edge(GraphUtil.eid(), EdgeType.THEN)));
+                }
+              }
+            }
+          }
+          return Optional.of(node);
         }
     }
 
@@ -727,11 +734,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
             }
             ElementNode n =
                 new ElementNode(
-                    GraphUtil.nid(),
-                    NodeType.VAR_DECLARATION,
-                    fragment.toString(),
-                    name,
-                    qname);
+                    GraphUtil.nid(), NodeType.VAR_DECLARATION, fragment.toString(), name, qname);
             graph.addVertex(n);
             graph.addEdge(root, n, new Edge(GraphUtil.eid(), EdgeType.CHILD));
             defPool.put(qname, n);
@@ -867,9 +870,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           root.setArity(1);
 
           graph.addEdge(
-              root,
-              parseExpression(pex.getOperand()),
-              new Edge(GraphUtil.eid(), EdgeType.LEFT));
+              root, parseExpression(pex.getOperand()), new Edge(GraphUtil.eid(), EdgeType.LEFT));
           break;
         }
       case ASTNode.POSTFIX_EXPRESSION:
@@ -880,9 +881,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           root.setArity(1);
 
           graph.addEdge(
-              root,
-              parseExpression(pex.getOperand()),
-              new Edge(GraphUtil.eid(), EdgeType.RIGHT));
+              root, parseExpression(pex.getOperand()), new Edge(GraphUtil.eid(), EdgeType.RIGHT));
         }
     }
 
