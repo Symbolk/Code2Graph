@@ -20,6 +20,7 @@ public class AbstractHandler extends DefaultHandler {
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 
+  // unified identifier: @type/id
   protected Map<String, Node> defPool = new HashMap<>();
   protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
 
@@ -32,5 +33,9 @@ public class AbstractHandler extends DefaultHandler {
         graph.addEdge(src, tgt, new Edge(GraphUtil.eid(), entry.getSecond()));
       }
     }
+  }
+
+  public Graph<Node, Edge> getGraph() {
+    return graph;
   }
 }

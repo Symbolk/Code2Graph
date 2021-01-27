@@ -10,8 +10,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
+import javax.xml.xpath.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.*;
 
 public class TestDemo {
 
@@ -71,5 +73,68 @@ public class TestDemo {
       }
       xr.next();
     }
+  }
+
+
+  /**
+   * Categorize files naively
+   * @deprecated
+   * @param filePaths
+   * @return
+   */
+  public Map<String, List<String>> categorizeFiles(List<String> filePaths) {
+    List<String> supportedTypes = Arrays.asList("resources", "manifest", "layout");
+    Map<String, List<String>> typeToPaths = new HashMap<>();
+    supportedTypes.forEach(type -> typeToPaths.put(type, new ArrayList<>()));
+
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    factory.setNamespaceAware(true);
+    try {
+
+      DocumentBuilder builder = factory.newDocumentBuilder();
+      for (String filePath : filePaths) {
+        Document doc = builder.parse(filePath);
+        boolean matched = false;
+        for (String type : supportedTypes) {
+          if (checkIfNodeExists(doc, "//" + type)) {
+            typeToPaths.get(type).add(filePath);
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          typeToPaths.get(supportedTypes.get(supportedTypes.size() - 1)).add(filePath);
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return typeToPaths;
+  }
+
+  private boolean checkIfNodeExists(Document document, String xpathExpression) {
+    boolean matched = false;
+
+    // Create XPathFactory object
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+
+    // Create XPath object
+    XPath xpath = xpathFactory.newXPath();
+
+    try {
+      // Create XPathExpression object
+      XPathExpression expr = xpath.compile(xpathExpression);
+
+      // Evaluate expression result on XML document
+      NodeList nodes = (NodeList) expr.evaluate(document, XPathConstants.NODESET);
+
+      if (nodes != null && nodes.getLength() > 0) {
+        matched = true;
+      }
+
+    } catch (XPathExpressionException e) {
+      e.printStackTrace();
+    }
+    return matched;
   }
 }

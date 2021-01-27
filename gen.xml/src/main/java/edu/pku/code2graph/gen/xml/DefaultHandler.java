@@ -1,10 +1,9 @@
-package edu.pku.code2graph.gen.xml.handlers;
+package edu.pku.code2graph.gen.xml;
 
-import edu.pku.code2graph.gen.xml.AbstractHandler;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
-import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.util.Triple;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 
@@ -13,12 +12,11 @@ import java.util.Stack;
 import static edu.pku.code2graph.model.TypeSet.type;
 
 /**
- * Resources are used for anything from defining colors, images, layouts, menus, and string values.
- * The value of this is that nothing is hardcoded. Everything is defined in these resource files and
- * then can be referenced within your application's code. The simplest of these resources and the
- * most common is using string resources to allow for flexible, localized text.
+ * Layout xml files are used to define the actual UI(User interface) of our application. It holds
+ * all the elements(views) or the tools that we want to use in our application. Like the TextView’s,
+ * Button’s and other UI elements.
  */
-public class ResourceHandler extends AbstractHandler {
+public class DefaultHandler extends AbstractHandler {
   // text content between tag start and end
   private String tempString;
   private Stack<ElementNode> stack = new Stack<>();
@@ -60,6 +58,7 @@ public class ResourceHandler extends AbstractHandler {
     ElementNode en = new ElementNode(GraphUtil.nid(), nType, "", "", "");
     graph.addVertex(en);
     if (stack.size() > 0) {
+      // View is the child of ViewGroup
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));
     }
     stack.push(en);
@@ -68,13 +67,37 @@ public class ResourceHandler extends AbstractHandler {
       for (int i = 0; i < attributes.getLength(); i++) {
         String key = attributes.getQName(i);
         String value = attributes.getValue(i);
+
+        // each attribute should only be processed once
+        // either for def, or for ref
+        // definitions (id)
         if ("name".equals(key)) {
+          // for resources
           // ref in java: R.qname.value
           // ref in xml: @qname/value
           String resName = "@" + qName + "/" + value;
           en.setName(value);
           en.setQualifiedName(resName);
           defPool.put(resName, en);
+        } else if ("android:id".equals(key)) {
+          // fr components
+          if (value.startsWith("@+")) {
+            en.setName(value);
+            String identifier = value.replace("+", "");
+            en.setQualifiedName(identifier);
+            defPool.put(identifier, en);
+          }
+        } else {
+          // references
+          if (value.startsWith("@") && !value.startsWith("@android:")) {
+            Type eType = type(key);
+            RelationNode rn = new RelationNode(GraphUtil.nid(), eType, key + "=" + value);
+            graph.addVertex(rn);
+            graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
+
+            // unified references (may should use regex for matching)
+            usePool.add(Triple.of(rn, eType, value));
+          }
         }
       }
     }
