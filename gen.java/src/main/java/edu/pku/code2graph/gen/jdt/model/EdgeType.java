@@ -7,7 +7,6 @@ import static edu.pku.code2graph.model.TypeSet.type;
 public class EdgeType {
   // type hierarchy
   public static final Type PARENT_CLASS = type("parent_class");
-  public static final Type CHILD_CLASS = type("child_class");
   public static final Type INTERFACE = type("interface");
 
   // type and source

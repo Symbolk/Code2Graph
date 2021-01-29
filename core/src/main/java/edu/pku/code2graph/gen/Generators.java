@@ -41,6 +41,12 @@ import java.util.regex.Pattern;
  */
 public class Generators extends Registry<String, Generator, Register> {
 
+  // implements Callable<Graph<Node, Edge>>
+  //  @Override
+  //  public Graph<Node, Edge> call() {
+  //
+  //  }
+
   Logger logger = LoggerFactory.getLogger(Generators.class);
 
   private static Generators registry;
