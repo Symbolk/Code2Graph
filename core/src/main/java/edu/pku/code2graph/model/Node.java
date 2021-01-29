@@ -13,12 +13,14 @@ public abstract class Node implements Serializable {
   protected Language language;
   //    protected Range range;
 
-  public Node(Integer id) {
+  public Node(Integer id, Language language) {
     this.id = id;
+    this.language = language;
   }
 
-  public Node(Integer id, Type type, String snippet) {
+  public Node(Integer id, Language language, Type type, String snippet) {
     this.id = id;
+    this.language = language;
     this.type = type;
     this.snippet = snippet;
   }

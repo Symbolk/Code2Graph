@@ -2,7 +2,6 @@ package edu.pku.code2graph.gen.xml;
 
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
-import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -55,7 +54,7 @@ public class DefaultHandler extends AbstractHandler {
     Type nType = type(qName);
 
     // qname = tag/type name, name = identifier
-    ElementNode en = new ElementNode(GraphUtil.nid(), nType, "", "", "");
+    ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "");
     graph.addVertex(en);
     if (stack.size() > 0) {
       // View is the child of ViewGroup
@@ -91,7 +90,8 @@ public class DefaultHandler extends AbstractHandler {
           // references
           if (value.startsWith("@") && !value.startsWith("@android:")) {
             Type eType = type(key);
-            RelationNode rn = new RelationNode(GraphUtil.nid(), eType, key + "=" + value);
+            RelationNode rn =
+                new RelationNode(GraphUtil.nid(), Language.XML, eType, key + "=" + value);
             graph.addVertex(rn);
             graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
 

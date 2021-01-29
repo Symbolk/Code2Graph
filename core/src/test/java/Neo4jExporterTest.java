@@ -1,8 +1,5 @@
 import edu.pku.code2graph.io.Neo4jExporter;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.junit.jupiter.api.Test;
@@ -17,9 +14,9 @@ public class Neo4jExporterTest {
   public void testCreateNodes() {
     Graph<Node, Edge> graph = GraphUtil.initGraph();
     Type type = type("ASSIGNMENT_OPERATOR");
-    graph.addVertex(new ElementNode(0, type, "=", "equals", "equals"));
-    graph.addVertex(new ElementNode(1, type, ">", "gt", "gt"));
-    graph.addVertex(new ElementNode(2, type, "<", "lt", "lt"));
+    graph.addVertex(new ElementNode(0, Language.JAVA, type, "=", "equals", "equals"));
+    graph.addVertex(new ElementNode(1, Language.JAVA, type, ">", "gt", "gt"));
+    graph.addVertex(new ElementNode(2, Language.JAVA, type, "<", "lt", "lt"));
     Neo4jExporter.export(graph);
     Integer id = Neo4jExporter.queryByID(0);
     assertThat(id).isEqualTo(0);
