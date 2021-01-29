@@ -1,5 +1,6 @@
 package edu.pku.code2graph.client;
 
+import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
@@ -30,7 +31,10 @@ public class Main {
 
     // TODO: create a root project node if necessary
     try {
-      client.getDiffer().computeDiff("76adb20");
+      Differ differ = client.getDiffer();
+      // TODO hide concrete method calls for diff as one public API
+      differ.buildGraphs("76adb20");
+      differ.compareGraphs();
     } catch (IOException e) {
       e.printStackTrace();
     }
