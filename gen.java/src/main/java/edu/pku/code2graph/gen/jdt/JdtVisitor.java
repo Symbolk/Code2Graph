@@ -26,6 +26,37 @@ import java.util.stream.Collectors;
  * <p>5. create edges
  */
 public class JdtVisitor extends AbstractJdtVisitor {
+  private CompilationUnit cu;
+
+  @Override
+  public boolean visit(CompilationUnit cu) {
+    this.cu = cu;
+    return true;
+  }
+
+  private Range computeRange(ASTNode node) {
+    int startPosition = node.getStartPosition();
+    int endPosition = startPosition + node.getLength() - 1;
+    return new Range(
+        cu.getLineNumber(startPosition),
+        cu.getLineNumber(endPosition),
+        cu.getColumnNumber(startPosition),
+        cu.getColumnNumber(endPosition));
+  }
+
+  private Range computeRange(List<ASTNode> nodes) {
+    if (nodes.isEmpty()) {
+      return new Range(-1, -1);
+    }
+    int startPosition = nodes.get(0).getStartPosition();
+    ASTNode lastNode = nodes.get(nodes.size() - 1);
+    int endPosition = lastNode.getStartPosition() + lastNode.getLength() - 1;
+    return new Range(
+        cu.getLineNumber(startPosition),
+        cu.getLineNumber(endPosition),
+        cu.getColumnNumber(startPosition),
+        cu.getColumnNumber(endPosition));
+  }
 
   @Override
   public void preVisit(ASTNode n) {}
@@ -42,11 +73,12 @@ public class JdtVisitor extends AbstractJdtVisitor {
     ElementNode node =
         new ElementNode(
             GraphUtil.nid(), Language.JAVA, type, td.toString(), td.getName().toString(), qname);
+    node.setRange(computeRange(td));
     graph.addVertex(node);
     defPool.put(qname, node);
 
     parseExtendsAndImplements(tdBinding, node);
-    parseMembers(tdBinding, node, td.bodyDeclarations());
+    parseMembers(td, tdBinding, node);
 
     return true;
   }
@@ -63,6 +95,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
             ed.toString(),
             ed.getName().toString(),
             qname);
+    node.setRange(computeRange(ed));
+
     graph.addVertex(node);
     defPool.put(qname, node);
 
@@ -77,12 +111,14 @@ public class JdtVisitor extends AbstractJdtVisitor {
               cst.toString(),
               cst.getName().toString(),
               qname);
+      node.setRange(computeRange(cst));
+
       graph.addVertex(cstNode);
       graph.addEdge(node, cstNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
       defPool.put(qname, cstNode);
     }
     parseExtendsAndImplements(edBinding, node);
-    parseMembers(edBinding, node, ed.bodyDeclarations());
+    parseMembers(ed, edBinding, node);
     return true;
   }
 
@@ -115,12 +151,15 @@ public class JdtVisitor extends AbstractJdtVisitor {
    * @param node
    */
   private void parseMembers(
-      ITypeBinding binding, ElementNode node, List<BodyDeclaration> bodyDeclarations) {
+      AbstractTypeDeclaration declaration, ITypeBinding binding, ElementNode node) {
+    List<BodyDeclaration> bodyDeclarations = declaration.bodyDeclarations();
     if (bodyDeclarations.isEmpty()) {
       return;
     }
     String parentQName = node.getQualifiedName();
     RelationNode body = new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
+    body.setRange(computeRange(declaration));
+
     graph.addVertex(body);
     defPool.put(parentQName + ".BLOCK", body);
     graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY));
@@ -141,6 +180,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   initializer.toString(),
                   node.getName() + ".INIT",
                   parentQName + ".INIT");
+          initNode.setRange(computeRange(initializer));
+
           graph.addVertex(initNode);
           graph.addEdge(body, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
 
@@ -184,6 +225,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
               fragment.toString(),
               name,
               qname);
+      node.setRange(computeRange(fragment));
+
       graph.addVertex(node);
       defPool.put(qname, node);
 
@@ -215,6 +258,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
             md.toString(),
             name,
             qname);
+    node.setRange(computeRange(md));
+
     graph.addVertex(node);
     defPool.put(qname, node);
 
@@ -243,6 +288,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                 p.toString(),
                 para_name,
                 para_qname);
+        node.setRange(computeRange(p));
+
         graph.addVertex(pn);
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.METHOD_PARAMETER));
         defPool.put(para_qname, pn);
@@ -298,6 +345,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
    */
   private Optional<RelationNode> parseBodyBlock(Block body) {
     RelationNode root = new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
+    root.setRange(computeRange(body));
     graph.addVertex(root);
 
     List<Statement> statementList = body.statements();
@@ -338,6 +386,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
           } else {
             RelationNode node =
                 new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
+            node.setRange(computeRange(stmt));
+
             graph.addVertex(node);
             for (Object st : block.statements()) {
               parseStatement((Statement) st)
@@ -378,6 +428,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                       fragment.toString(),
                       name,
                       qname);
+              node.setRange(computeRange(fragment));
+
               graph.addVertex(node);
               defPool.put(qname, node);
 
@@ -416,6 +468,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
           RelationNode node =
               new RelationNode(
                   GraphUtil.nid(), Language.JAVA, NodeType.IF_STATEMENT, ifStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           if (ifStatement.getExpression() != null) {
@@ -440,6 +494,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
           RelationNode node =
               new RelationNode(
                   GraphUtil.nid(), Language.JAVA, NodeType.FOR_STATEMENT, forStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           forStatement
@@ -479,6 +535,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   Language.JAVA,
                   NodeType.ENHANCED_FOR_STATEMENT,
                   eForStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           SingleVariableDeclaration p = eForStatement.getParameter();
@@ -496,6 +554,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   p.toString(),
                   para_name,
                   para_qname);
+          pn.setRange(computeRange(p));
+
           graph.addVertex(pn);
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.ELEMENT));
           defPool.put(para_qname, pn);
@@ -521,6 +581,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
           RelationNode node =
               new RelationNode(
                   GraphUtil.nid(), Language.JAVA, NodeType.DO_STATEMENT, doStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           Expression expression = doStatement.getExpression();
@@ -546,6 +608,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   Language.JAVA,
                   NodeType.WHILE_STATEMENT,
                   whileStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           Expression expression = whileStatement.getExpression();
@@ -568,6 +632,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
           RelationNode node =
               new RelationNode(
                   GraphUtil.nid(), Language.JAVA, NodeType.TRY_STATEMENT, tryStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           Statement tryBody = tryStatement.getBody();
@@ -586,6 +652,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                         Language.JAVA,
                         NodeType.CATCH_CLAUSE,
                         catchClause.toString());
+                catchNode.setRange(computeRange(catchClause));
+
                 graph.addVertex(catchNode);
                 graph.addEdge(node, catchNode, new Edge(GraphUtil.eid(), EdgeType.CATCH));
 
@@ -619,6 +687,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   Language.JAVA,
                   NodeType.THROW_STATEMENT,
                   throwStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           if (throwStatement.getExpression() != null) {
@@ -637,6 +707,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                   Language.JAVA,
                   NodeType.SWITCH_STATEMENT,
                   switchStatement.toString());
+          node.setRange(computeRange(stmt));
+
           graph.addVertex(node);
 
           Expression expression = switchStatement.getExpression();
@@ -654,6 +726,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                       Language.JAVA,
                       NodeType.SWITCH_CASE,
                       ((SwitchCase) nxt).toString());
+              caseNode.setRange(computeRange((SwitchCase) nxt));
+
               graph.addVertex(caseNode);
               graph.addEdge(node, caseNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
 
@@ -711,6 +785,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
    */
   private RelationNode parseExpression(Expression exp) {
     RelationNode root = new RelationNode(GraphUtil.nid(), Language.JAVA);
+    root.setRange(computeRange(exp));
+
     root.setSnippet(exp.toString());
     graph.addVertex(root);
 
@@ -793,6 +869,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
                     fragment.toString(),
                     name,
                     qname);
+            n.setRange(computeRange(fragment));
+
             graph.addVertex(n);
             graph.addEdge(root, n, new Edge(GraphUtil.eid(), EdgeType.CHILD));
             defPool.put(qname, n);

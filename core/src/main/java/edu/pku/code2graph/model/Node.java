@@ -11,7 +11,7 @@ public abstract class Node implements Serializable {
   protected Type type;
   protected String snippet;
   protected Language language;
-  //    protected Range range;
+  protected Range range;
 
   public Node(Integer id, Language language) {
     this.id = id;
@@ -51,5 +51,13 @@ public abstract class Node implements Serializable {
 
   public void setLanguage(Language language) {
     this.language = language;
+  }
+
+  public Range getRange() {
+    return range;
+  }
+
+  public void setRange(Range range) {
+    this.range = range;
   }
 }
