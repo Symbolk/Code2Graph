@@ -174,12 +174,12 @@ public class Differ {
         elementNodeSet1.stream()
             .collect(
                 Collectors.toMap(
-                    ElementNode::hashCode, Function.identity(), (o, n) -> o, HashMap::new));
+                    ElementNode::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
     Map<Integer, ElementNode> signMap2 =
         elementNodeSet2.stream()
             .collect(
                 Collectors.toMap(
-                    ElementNode::hashCode, Function.identity(), (o, n) -> o, HashMap::new));
+                    ElementNode::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
     for (Map.Entry<Integer, ElementNode> entry : signMap1.entrySet()) {
       if (signMap2.containsKey(entry.getKey())) {
         // add the matched nodes into the matching relationships
