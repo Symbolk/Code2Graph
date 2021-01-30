@@ -1,4 +1,4 @@
-import edu.pku.code2graph.gen.xml.DefaultHandler;
+import edu.pku.code2graph.gen.xml.AndroidHandler;
 import edu.pku.code2graph.gen.xml.SaxGenerator;
 import edu.pku.code2graph.gen.xml.TestDemo;
 import edu.pku.code2graph.io.GraphVizExporter;
@@ -52,7 +52,7 @@ public class HandlersTest {
     Map<String, List<String>> typeToPaths = demo.categorizeFiles(filePaths);
 
     File f = new File(typeToPaths.get("layout").get(0));
-    DefaultHandler dh = new DefaultHandler();
+    AndroidHandler dh = new AndroidHandler();
     parser.parse(f, dh);
     GraphVizExporter.printAsDot(GraphUtil.getGraph());
   }

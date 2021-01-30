@@ -5,7 +5,6 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.xml.sax.SAXException;
 
@@ -20,7 +19,7 @@ import java.util.List;
 public class SaxGenerator extends Generator {
   @Override
   protected Graph<Node, Edge> generate(List<String> filePaths) {
-    DefaultHandler handler = new DefaultHandler();
+    AndroidHandler handler = new AndroidHandler();
     try {
       SAXParserFactory factory = SAXParserFactory.newInstance();
       SAXParser parser = factory.newSAXParser();

@@ -15,7 +15,7 @@ import static edu.pku.code2graph.model.TypeSet.type;
  * all the elements(views) or the tools that we want to use in our application. Like the TextView’s,
  * Button’s and other UI elements.
  */
-public class DefaultHandler extends AbstractHandler {
+public class AndroidHandler extends AbstractHandler {
   // text content between tag start and end
   private String tempString;
   private Stack<ElementNode> stack = new Stack<>();
