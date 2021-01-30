@@ -48,10 +48,7 @@ public class HandlersTest {
     SAXParserFactory factory = SAXParserFactory.newInstance();
     SAXParser parser = factory.newSAXParser();
 
-    TestDemo demo = new TestDemo();
-    Map<String, List<String>> typeToPaths = demo.categorizeFiles(filePaths);
-
-    File f = new File(typeToPaths.get("layout").get(0));
+    File f = new File("src/test/resources/layout.xml");
     AndroidHandler dh = new AndroidHandler();
     parser.parse(f, dh);
     GraphVizExporter.printAsDot(GraphUtil.getGraph());

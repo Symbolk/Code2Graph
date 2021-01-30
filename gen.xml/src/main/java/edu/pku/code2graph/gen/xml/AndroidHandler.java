@@ -4,7 +4,9 @@ import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.alg.util.Triple;
 import org.xml.sax.Attributes;
+import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.LocatorImpl;
 
 import java.util.Stack;
 
@@ -16,6 +18,15 @@ import static edu.pku.code2graph.model.TypeSet.type;
  * Button’s and other UI elements.
  */
 public class AndroidHandler extends AbstractHandler {
+  private Locator locator;
+  private Stack<Locator> locatorStack = new Stack<>();
+
+  @Override
+  public void setDocumentLocator(Locator locator) {
+    super.setDocumentLocator(locator);
+    this.locator = locator;
+  }
+
   // text content between tag start and end
   private String tempString;
   private Stack<ElementNode> stack = new Stack<>();
@@ -40,6 +51,10 @@ public class AndroidHandler extends AbstractHandler {
       stack.pop();
     }
     super.endElement(uri, localName, qName);
+    if (locatorStack.size() > 0) {
+      Locator startLocator = locatorStack.pop();
+      startLocator.getLineNumber();
+    }
   }
 
   @Override
@@ -55,6 +70,13 @@ public class AndroidHandler extends AbstractHandler {
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "");
+    // TODO correctly set the start line with locator stack
+    en.setRange(
+        new Range(
+            locator.getLineNumber(),
+            locator.getLineNumber(),
+            locator.getColumnNumber(),
+            locator.getColumnNumber()));
     graph.addVertex(en);
     if (stack.size() > 0) {
       // View is the child of ViewGroup
@@ -92,6 +114,13 @@ public class AndroidHandler extends AbstractHandler {
             Type eType = type(key);
             RelationNode rn =
                 new RelationNode(GraphUtil.nid(), Language.XML, eType, key + "=" + value);
+            // TODO correctly set the start line with locator stack
+            rn.setRange(
+                new Range(
+                    locator.getLineNumber(),
+                    locator.getLineNumber(),
+                    locator.getColumnNumber(),
+                    locator.getColumnNumber()));
             graph.addVertex(rn);
             graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
 
@@ -103,5 +132,7 @@ public class AndroidHandler extends AbstractHandler {
     }
 
     super.startElement(uri, localName, qName, attributes);
+    // Keep snapshot of start location, for later when end of element is found.
+    locatorStack.push(new LocatorImpl(locator));
   }
 }
