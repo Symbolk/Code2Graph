@@ -36,6 +36,16 @@ public class FileUtil {
   }
 
   /**
+   * Get path relative to the root path
+   * @param absolutePath
+   * @param rootPath
+   * @return
+   */
+  public static String getRelativePath(String rootPath, String absolutePath) {
+    return Paths.get(rootPath).relativize(Paths.get(absolutePath)).toString();
+  }
+
+  /**
    * Write the given content in the file of the given file path.
    *
    * @param content

@@ -24,53 +24,14 @@ public class DataCollector {
   }
 
   /**
-   * Collect the left and right version of diff files
-   *
-   * @return
-   */
-  public Pair<List<String>, List<String>> collectForWorkingTree(List<DiffFile> diffFiles) {
-    String aDir = tempPath + File.separator + Version.A.asString() + File.separator;
-    String bDir = tempPath + File.separator + Version.B.asString() + File.separator;
-
-    return collect(aDir, bDir, diffFiles);
-  }
-
-  /**
-   * Collect the left and right version of diff files
-   *
-   * @param commitID
-   * @return
-   */
-  public Pair<List<String>, List<String>> collectForCommit(
-      String commitID, List<DiffFile> diffFiles) {
-    String aDir =
-        tempPath
-            + File.separator
-            + commitID
-            + File.separator
-            + Version.A.asString()
-            + File.separator;
-    String bDir =
-        tempPath
-            + File.separator
-            + commitID
-            + File.separator
-            + Version.B.asString()
-            + File.separator;
-
-    return collect(aDir, bDir, diffFiles);
-  }
-
-  /**
    * Collect the diff files into the data dir
    *
-   * @param aDir
-   * @param bDir
    * @param diffFiles
    * @return
    */
-  private Pair<List<String>, List<String>> collect(
-      String aDir, String bDir, List<DiffFile> diffFiles) {
+  public Pair<List<String>, List<String>> collect(List<DiffFile> diffFiles) {
+    String aDir = tempPath + File.separator + Version.A.asString() + File.separator;
+    String bDir = tempPath + File.separator + Version.B.asString() + File.separator;
     FileUtil.createDir(aDir);
     FileUtil.createDir(bDir);
     List<String> aPaths = new ArrayList<>();
