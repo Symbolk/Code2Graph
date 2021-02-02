@@ -19,11 +19,12 @@ import java.util.List;
 public class SaxGenerator extends Generator {
   @Override
   protected Graph<Node, Edge> generate(List<String> filePaths) {
-    AndroidHandler handler = new AndroidHandler();
+    AbstractHandler handler = new AndroidHandler();
     try {
       SAXParserFactory factory = SAXParserFactory.newInstance();
       SAXParser parser = factory.newSAXParser();
       for (String filePath : filePaths) {
+        handler.setFilePath(filePath);
         parser.parse(new File(filePath), handler);
       }
 

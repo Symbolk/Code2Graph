@@ -1,3 +1,4 @@
+import edu.pku.code2graph.gen.xml.AbstractHandler;
 import edu.pku.code2graph.gen.xml.AndroidHandler;
 import edu.pku.code2graph.gen.xml.SaxGenerator;
 import edu.pku.code2graph.gen.xml.TestDemo;
@@ -47,9 +48,10 @@ public class HandlersTest {
   public void testHandler() throws Exception {
     SAXParserFactory factory = SAXParserFactory.newInstance();
     SAXParser parser = factory.newSAXParser();
-
-    File f = new File("src/test/resources/layout.xml");
-    AndroidHandler dh = new AndroidHandler();
+    String filePath = "src/test/resources/layout.xml";
+    File f = new File(filePath);
+    AbstractHandler dh = new AndroidHandler();
+    dh.setFilePath(filePath);
     parser.parse(f, dh);
     GraphVizExporter.printAsDot(GraphUtil.getGraph());
   }

@@ -1,6 +1,7 @@
 package edu.pku.code2graph.gen.xml;
 
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.alg.util.Triple;
 import org.xml.sax.Attributes;
@@ -59,6 +60,16 @@ public class AndroidHandler extends AbstractHandler {
 
   @Override
   public void startDocument() throws SAXException {
+    ElementNode root =
+        new ElementNode(
+            GraphUtil.nid(),
+            Language.XML,
+            type("file"),
+            "",
+            FileUtil.getFileNameFromPath(filePath),
+            filePath);
+    graph.addVertex(root);
+    stack.push(root);
     logger.info("Start Parsing");
     super.startDocument();
   }

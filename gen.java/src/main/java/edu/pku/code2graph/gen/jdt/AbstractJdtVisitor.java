@@ -1,11 +1,11 @@
 package edu.pku.code2graph.gen.jdt;
 
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.gen.jdt.model.NodeType;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
 
@@ -19,6 +19,10 @@ import static edu.pku.code2graph.model.TypeSet.type;
 public abstract class AbstractJdtVisitor extends ASTVisitor {
   // final constructed graph instance
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
+
+  // temporarily keep the current cu and file path
+  protected CompilationUnit cu;
+  protected String filePath;
 
   // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
   // TODO include external type declaration or not?
@@ -57,5 +61,13 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
 
   protected static Type nodeAsSymbol(int id) {
     return type(ASTNode.nodeClassForType(id).getSimpleName());
+  }
+
+  public void setCu(CompilationUnit cu) {
+    this.cu = cu;
+  }
+
+  public void setFilePath(String filePath) {
+    this.filePath = filePath;
   }
 }

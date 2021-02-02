@@ -4,6 +4,7 @@ import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
 import edu.pku.code2graph.model.Type;
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
@@ -26,11 +27,14 @@ import java.util.stream.Collectors;
  * <p>5. create edges
  */
 public class JdtVisitor extends AbstractJdtVisitor {
-  private CompilationUnit cu;
+  private ElementNode root;
 
   @Override
   public boolean visit(CompilationUnit cu) {
-    this.cu = cu;
+    ElementNode cuNode =
+        new ElementNode(GraphUtil.nid(), Language.JAVA, NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath);
+    graph.addVertex(cuNode);
+    this.root = cuNode;
     return true;
   }
 
@@ -77,9 +81,17 @@ public class JdtVisitor extends AbstractJdtVisitor {
     graph.addVertex(node);
     defPool.put(qname, node);
 
+    if (td.isPackageMemberTypeDeclaration()) {
+      graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+    }
+
     parseExtendsAndImplements(tdBinding, node);
     parseMembers(td, tdBinding, node);
 
+    return true;
+  }
+
+  public boolean visit(AnnotationTypeDeclaration node) {
     return true;
   }
 
@@ -99,6 +111,10 @@ public class JdtVisitor extends AbstractJdtVisitor {
 
     graph.addVertex(node);
     defPool.put(qname, node);
+
+    if (ed.isPackageMemberTypeDeclaration()) {
+      graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+    }
 
     for (Iterator<EnumConstantDeclaration> iter = ed.enumConstants().iterator(); iter.hasNext(); ) {
       EnumConstantDeclaration cst = iter.next();

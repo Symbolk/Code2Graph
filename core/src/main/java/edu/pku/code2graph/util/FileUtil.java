@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,6 +24,15 @@ public class FileUtil {
       directory.mkdirs();
     }
     return directory.getAbsolutePath();
+  }
+
+  /**
+   * Get file name from path
+   *
+   * @return
+   */
+  public static String getFileNameFromPath(String filePath) {
+    return Paths.get(filePath).getFileName().toString();
   }
 
   /**

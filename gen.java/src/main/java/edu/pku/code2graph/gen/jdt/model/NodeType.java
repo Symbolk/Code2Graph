@@ -6,6 +6,8 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 public class NodeType {
   // Elements
+  public static final Type FILE = type("file");
+
   public static final Type CLASS_DECLARATION = type("class_declaration");
   public static final Type INTERFACE_DECLARATION = type("interface_declaration");
   public static final Type ENUM_DECLARATION = type("enum_declaration");

@@ -5,7 +5,6 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.RelationNode;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -71,6 +70,9 @@ public class JdtGenerator extends Generator {
         new FileASTRequestor() {
           @Override
           public void acceptAST(String sourceFilePath, CompilationUnit cu) {
+            // use relative path to project root
+            visitor.setFilePath(sourceFilePath);
+            visitor.setCu(cu);
             cu.accept(visitor);
           }
         },

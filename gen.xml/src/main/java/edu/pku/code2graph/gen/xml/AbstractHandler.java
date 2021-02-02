@@ -20,6 +20,9 @@ public class AbstractHandler extends DefaultHandler {
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 
+  // temporarily save the current file path here
+  protected String filePath;
+
   // unified identifier: @type/id
   protected Map<String, Node> defPool = new HashMap<>();
   protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
@@ -37,5 +40,9 @@ public class AbstractHandler extends DefaultHandler {
 
   public Graph<Node, Edge> getGraph() {
     return graph;
+  }
+
+  public void setFilePath(String filePath) {
+    this.filePath = filePath;
   }
 }
