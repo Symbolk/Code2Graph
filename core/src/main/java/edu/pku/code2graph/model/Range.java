@@ -51,9 +51,9 @@ public class Range implements Serializable {
     // overlapping intervals: !(b1 < a2 || b2 < a1) = (b1 >= a2 && b2 >= a1)
     // [a1, b1] this
     // [a2, b2] range
-    if (this.endLine >= range.getStartLine() && range.getEndLine() >= this.startLine) {
-      return true;
+    if (range == null) {
+      return false;
     }
-    return false;
+    return this.endLine >= range.getStartLine() && range.getEndLine() >= this.startLine;
   }
 }
