@@ -177,11 +177,6 @@ public class Differ {
 
   }
 
-  //  private void initMapping() {
-  //    aGraph.vertexSet().stream().forEach(node -> mapping.addUnmatched1(node));
-  //    bGraph.vertexSet().stream().forEach(node -> mapping.addUnmatched2(node));
-  //  }
-
   /**
    * Top down to match/filter/prune unchanged nodes and get unmatched nodes
    *
