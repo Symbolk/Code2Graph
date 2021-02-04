@@ -33,4 +33,14 @@ public class RelationNode extends Node {
   public void setArity(Integer arity) {
     this.arity = arity;
   }
+
+  @Override
+  public int hashSignature() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((language == null) ? 0 : language.hashCode());
+    result = prime * result + ((type == null) ? 0 : type.hashCode());
+    result = prime * result + ((snippet == null) ? 0 : snippet.hashCode());
+    return result;
+  }
 }

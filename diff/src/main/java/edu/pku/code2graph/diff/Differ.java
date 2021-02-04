@@ -17,6 +17,8 @@ import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
+import org.jgrapht.graph.DefaultWeightedEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,78 +152,121 @@ public class Differ {
    */
   public void compareGraphs() {
     // init nodes to mappings by type
-    initMapping();
-
+    //    initMapping();
     // top down filtering
-    topDown();
+    matchBySignature();
 
-    bottomUp();
-
-    System.out.println(mapping);
-    // bottom up matching
-
-    // actually: find&filter matching, and leave others as edits
-
-    // graph-patch in the form of diff nodes (remaining unmatched nodes)
-
-  }
-
-  private void initMapping() {
-    aGraph.vertexSet().stream().forEach(node -> mapping.addUnmatched1(node));
-    bGraph.vertexSet().stream().forEach(node -> mapping.addUnmatched2(node));
-  }
-
-  /**
-   * Top down matching/filtering/pruning to get unmatched nodes
-   *
-   * @return
-   */
-  private void topDown() {
     // filter nodes with textual diff (coarsely)
     filterWithDiffHunks(Version.A);
     filterWithDiffHunks(Version.B);
 
+    // bottom up matching
+    alignByContext();
+
+    // the diff output: graph-patch format
+    generateGraphPatch();
+  }
+
+  /** Generate graph patch from mapping */
+  private void generateGraphPatch() {
+    // how to preserve edges between unmatched nodes
+
+  }
+
+  //  private void initMapping() {
+  //    aGraph.vertexSet().stream().forEach(node -> mapping.addUnmatched1(node));
+  //    bGraph.vertexSet().stream().forEach(node -> mapping.addUnmatched2(node));
+  //  }
+
+  /**
+   * Top down to match/filter/prune unchanged nodes and get unmatched nodes
+   *
+   * @return
+   */
+  private void matchBySignature() {
     // filter element nodes by hash signature of type and qname
-    Set<ElementNode> elementNodeSet1 =
+    // filter relation nodes by hash signature of type and snippet
+    Map<Integer, Node> signMap1 =
         aGraph.vertexSet().stream()
-            .filter(node -> (node instanceof ElementNode))
-            .map(ElementNode.class::cast)
-            .collect(Collectors.toSet());
-    Set<ElementNode> elementNodeSet2 =
+            .collect(
+                Collectors.toMap(
+                    Node::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
+    Map<Integer, Node> signMap2 =
         bGraph.vertexSet().stream()
-            .filter(node -> (node instanceof ElementNode))
-            .map(ElementNode.class::cast)
-            .collect(Collectors.toSet());
-    Map<Integer, ElementNode> signMap1 =
-        elementNodeSet1.stream()
             .collect(
                 Collectors.toMap(
-                    ElementNode::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
-    Map<Integer, ElementNode> signMap2 =
-        elementNodeSet2.stream()
-            .collect(
-                Collectors.toMap(
-                    ElementNode::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
-    for (Map.Entry<Integer, ElementNode> entry : signMap1.entrySet()) {
+                    Node::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
+    for (Map.Entry<Integer, Node> entry : signMap1.entrySet()) {
       if (signMap2.containsKey(entry.getKey())) {
         // add the matched nodes into the matching relationships
         mapping.one2one.put(entry.getValue(), signMap2.get(entry.getKey()));
         // remove the mapped node from other
         signMap2.remove(entry.getKey());
       } else {
-        mapping.addUnmatched1(entry.getValue());
+        mapping.addToUnmatched1(entry.getValue());
       }
     }
-    signMap2.entrySet().forEach(entry -> mapping.addUnmatched2(entry.getValue()));
+    signMap2.entrySet().forEach(entry -> mapping.addToUnmatched2(entry.getValue()));
   }
 
-  private void bottomUp() {}
+  /** Bottom up match to further prune unmatched nodes to get diff nodes */
+  private void alignByContext() {
+    // use bipartite to match methods according to similarity
+    Set<Node> partition1 = new HashSet<>();
+    Set<Node> partition2 = new HashSet<>();
+    // should be simple graph: no self-loops and no multiple edges
+    DefaultUndirectedWeightedGraph<Node, DefaultWeightedEdge> bipartite =
+        new DefaultUndirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
+    //    // divide and conquer by node type
+    //    for (Node n1 : unmatchedMethods1) {
+    //      for (Node n2 : unmatchedMethods2) {
+    //        // filter improbable pairs by type
+    //        // basic assumption: only nodes with the same type can be matched
+    //        if (SimilarityAlg.string(n1.getQualifiedName(), n2.getQualifiedName())
+    //                > MIN_SIMI) {
+    //          bipartite.addVertex(n1);
+    //          partition1.add(n1);
+    //          bipartite.addVertex(n2);
+    //          partition2.add(n2);
+    //          bipartite.addEdge(n1, n2);
+    //          // compute similarity by aggregating both the self information and the context
+    //          double similarity =
+    //                  SimilarityAlg.terminal((MethodDeclNode) n1, (MethodDeclNode) n2);
+    //          bipartite.setEdgeWeight(n1, n2, similarity);
+    //        }
+    //      }
+    //    }
+    //    // bipartite  maximum matching to match most likely matched nodes
+    //    MaximumWeightBipartiteMatching matcher =
+    //            new MaximumWeightBipartiteMatching(bipartite, partition1, partition2);
+    //    Set<DefaultWeightedEdge> edges = matcher.getMatching().getEdges();
+    //    // add one2oneMatchings found and remove from unmatched
+    //    for (DefaultWeightedEdge edge : edges) {
+    //      Node sourceNode = bipartite.getEdgeSource(edge);
+    //      Node targetNode = bipartite.getEdgeTarget(edge);
+    //      double confidence = bipartite.getEdgeWeight(edge);
+    //      if (confidence >= MIN_SIMI) {
+    //        // align matched nodes to decrease diff nodes
+    //        matching.unmatchedNodes1.get(NodeType.METHOD).remove(sourceNode);
+    //        matching.unmatchedNodes2.get(NodeType.METHOD).remove(targetNode);
+    //        matching.markRefactoring(
+    //                sourceNode, targetNode, RefactoringType.CHANGE_METHOD_SIGNATURE, confidence);
+    //      }
+    //    }
+
+  }
+
+  /**
+   * Filter nodes that are not in textual diff ranges
+   *
+   * @param version
+   */
   private void filterWithDiffHunks(Version version) {
     // generate range list as the cache
     Map<String, List<Range>> diffRanges = new HashMap<>();
 
-    List<Node> fileNodes = new ArrayList<>();
+    Set<ElementNode> fileNodes = new HashSet<>();
     if (version.equals(Version.A)) {
       for (DiffFile diffFile : diffFiles) {
         List<Range> ranges = new ArrayList<>();
@@ -230,7 +275,7 @@ public class Differ {
         }
         diffRanges.put(diffFile.getARelativePath(), ranges);
       }
-      fileNodes = mapping.unmatched1.get(type("file"));
+      fileNodes = mapping.unmatchedElementNodes1.get(type("file"));
     } else {
       for (DiffFile diffFile : diffFiles) {
         List<Range> ranges = new ArrayList<>();
@@ -239,7 +284,7 @@ public class Differ {
         }
         diffRanges.put(diffFile.getBRelativePath(), ranges);
       }
-      fileNodes = mapping.unmatched2.get(type("file"));
+      fileNodes = mapping.unmatchedElementNodes2.get(type("file"));
     }
     // filter nodes accordingly in a and b version
     for (Node fileNode : fileNodes) {
@@ -252,6 +297,13 @@ public class Differ {
     }
   }
 
+  /**
+   * Iteratively filter children of nodes
+   *
+   * @param node
+   * @param diffRange
+   * @param version
+   */
   private void filterChildren(Node node, List<Range> diffRange, Version version) {
     Graph<Node, Edge> graph = version.equals(Version.A) ? aGraph : bGraph;
     List<Node> children = new ArrayList<>();
@@ -272,9 +324,9 @@ public class Differ {
       if (!overlaps) {
         // if not overlap, remove from unmatched and continue
         if (version.equals(Version.A)) {
-          mapping.unmatched1.get(child.getType()).remove(child);
+          mapping.removeFromUnmatched1(child);
         } else {
-          mapping.unmatched2.get(child.getType()).remove(child);
+          mapping.removeFromUnmatched1(child);
         }
         continue;
       } else {

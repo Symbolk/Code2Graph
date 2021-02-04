@@ -60,4 +60,6 @@ public abstract class Node implements Serializable {
   public void setRange(Range range) {
     this.range = range;
   }
+
+  public abstract int hashSignature();
 }

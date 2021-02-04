@@ -27,10 +27,11 @@ public class ElementNode extends Node {
     this.qualifiedName = qualifiedName;
   }
 
+  @Override
   public int hashSignature() {
     final int prime = 31;
     int result = 1;
-//    result = prime * result + ((language == null) ? 0 : language.hashCode());
+    result = prime * result + ((language == null) ? 0 : language.hashCode());
     result = prime * result + ((type == null) ? 0 : type.hashCode());
     result = prime * result + ((qualifiedName == null) ? 0 : qualifiedName.hashCode());
     return result;
