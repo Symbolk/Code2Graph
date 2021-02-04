@@ -4,19 +4,18 @@ import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.DiffHunk;
 import edu.pku.code2graph.diff.model.Mapping;
 import edu.pku.code2graph.diff.model.Version;
+import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.io.ObjectExporter;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Range;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.matching.MaximumWeightBipartiteMatching;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.slf4j.Logger;
@@ -50,6 +49,7 @@ public class Differ {
   private Mapping mapping = new Mapping();
 
   // options
+  private double threshold = 0.75D;
 
   public Differ(String repoName, String repoPath) {
     this.repoName = repoName;
@@ -65,6 +65,10 @@ public class Differ {
 
   static {
     initGenerators();
+  }
+
+  public void setThreshold(double threshold) {
+    this.threshold = threshold;
   }
 
   public static void initGenerators() {
@@ -199,63 +203,86 @@ public class Differ {
     for (Map.Entry<Integer, Node> entry : signMap1.entrySet()) {
       if (signMap2.containsKey(entry.getKey())) {
         // add the matched nodes into the matching relationships
-        mapping.one2one.put(entry.getValue(), signMap2.get(entry.getKey()));
+        mapping.addToMatched(entry.getValue(), signMap2.get(entry.getKey()));
         // remove the mapped node from other
         signMap2.remove(entry.getKey());
       } else {
         mapping.addToUnmatched1(entry.getValue());
       }
     }
-    signMap2.entrySet().forEach(entry -> mapping.addToUnmatched2(entry.getValue()));
+    signMap2.forEach((key, value) -> mapping.addToUnmatched2(value));
   }
 
   /** Bottom up match to further prune unmatched nodes to get diff nodes */
   private void alignByContext() {
+    // divide and conquer by node type
+    // basic assumption: only nodes with the same type can be matched
+
+    for (Map.Entry<Type, Set<ElementNode>> entry : mapping.getUnmatchedElementNodes1().entrySet()) {
+      Set<ElementNode> nodes1 = entry.getValue();
+      Type type = entry.getKey();
+      if (mapping.getUnmatchedElementNodes2().containsKey(type)) {
+        Set<ElementNode> nodes2 = mapping.getUnmatchedElementNodes2().get(type);
+        matchElementNodes(nodes1, nodes2);
+      }
+    }
+    for (Map.Entry<Type, Set<RelationNode>> entry :
+        mapping.getUnmatchedRelationNodes1().entrySet()) {
+      Set<RelationNode> nodes1 = entry.getValue();
+      Type type = entry.getKey();
+      if (mapping.getUnmatchedElementNodes2().containsKey(type)) {
+        Set<RelationNode> nodes2 = mapping.getUnmatchedRelationNodes2().get(type);
+        matchRelationNodes(nodes1, nodes2);
+      }
+    }
+  }
+
+  /**
+   * Match nodes of the same type with bipartite matching
+   *
+   * @param nodes1
+   * @param nodes2
+   */
+  public void matchElementNodes(Set<ElementNode> nodes1, Set<ElementNode> nodes2) {
     // use bipartite to match methods according to similarity
-    Set<Node> partition1 = new HashSet<>();
-    Set<Node> partition2 = new HashSet<>();
+    Set<ElementNode> partition1 = new HashSet<>();
+    Set<ElementNode> partition2 = new HashSet<>();
     // should be simple graph: no self-loops and no multiple edges
-    DefaultUndirectedWeightedGraph<Node, DefaultWeightedEdge> bipartite =
+    DefaultUndirectedWeightedGraph<ElementNode, DefaultWeightedEdge> bipartite =
         new DefaultUndirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
-    //    // divide and conquer by node type
-    //    for (Node n1 : unmatchedMethods1) {
-    //      for (Node n2 : unmatchedMethods2) {
-    //        // filter improbable pairs by type
-    //        // basic assumption: only nodes with the same type can be matched
-    //        if (SimilarityAlg.string(n1.getQualifiedName(), n2.getQualifiedName())
-    //                > MIN_SIMI) {
-    //          bipartite.addVertex(n1);
-    //          partition1.add(n1);
-    //          bipartite.addVertex(n2);
-    //          partition2.add(n2);
-    //          bipartite.addEdge(n1, n2);
-    //          // compute similarity by aggregating both the self information and the context
-    //          double similarity =
-    //                  SimilarityAlg.terminal((MethodDeclNode) n1, (MethodDeclNode) n2);
-    //          bipartite.setEdgeWeight(n1, n2, similarity);
-    //        }
-    //      }
-    //    }
-    //    // bipartite  maximum matching to match most likely matched nodes
-    //    MaximumWeightBipartiteMatching matcher =
-    //            new MaximumWeightBipartiteMatching(bipartite, partition1, partition2);
-    //    Set<DefaultWeightedEdge> edges = matcher.getMatching().getEdges();
-    //    // add one2oneMatchings found and remove from unmatched
-    //    for (DefaultWeightedEdge edge : edges) {
-    //      Node sourceNode = bipartite.getEdgeSource(edge);
-    //      Node targetNode = bipartite.getEdgeTarget(edge);
-    //      double confidence = bipartite.getEdgeWeight(edge);
-    //      if (confidence >= MIN_SIMI) {
-    //        // align matched nodes to decrease diff nodes
-    //        matching.unmatchedNodes1.get(NodeType.METHOD).remove(sourceNode);
-    //        matching.unmatchedNodes2.get(NodeType.METHOD).remove(targetNode);
-    //        matching.markRefactoring(
-    //                sourceNode, targetNode, RefactoringType.CHANGE_METHOD_SIGNATURE, confidence);
-    //      }
-    //    }
-
+    for (ElementNode n1 : nodes1) {
+      for (ElementNode n2 : nodes2) {
+        double weight = MetricUtil.weightElement(n1, n2);
+        if(weight >= threshold) {
+        bipartite.addVertex(n1);
+          partition1.add(n1);
+          bipartite.addVertex(n2);
+          partition2.add(n2);
+          bipartite.addEdge(n1, n2);
+          // compute similarity by aggregating both the self information and the context
+          bipartite.setEdgeWeight(n1, n2, weight);
+        }
+      }
+    }
+    // bipartite  maximum matching to match most likely matched nodes
+    MaximumWeightBipartiteMatching matcher =
+        new MaximumWeightBipartiteMatching(bipartite, partition1, partition2);
+    Set<DefaultWeightedEdge> edges = matcher.getMatching().getEdges();
+    // add one2one found and remove from unmatched
+    for (DefaultWeightedEdge edge : edges) {
+      Node source = bipartite.getEdgeSource(edge);
+      Node target = bipartite.getEdgeTarget(edge);
+      double confidence = bipartite.getEdgeWeight(edge);
+//      if (confidence >= threshold) {
+        mapping.addToMatched(source, target);
+        mapping.removeFromUnmatched1(source);
+        mapping.removeFromUnmatched2(target);
+//      }
+    }
   }
+
+  public void matchRelationNodes(Set<RelationNode> nodes1, Set<RelationNode> nodes2) {}
 
   /**
    * Filter nodes that are not in textual diff ranges
@@ -275,7 +302,7 @@ public class Differ {
         }
         diffRanges.put(diffFile.getARelativePath(), ranges);
       }
-      fileNodes = mapping.unmatchedElementNodes1.get(type("file"));
+      fileNodes = mapping.getUnmatchedElementNodes1().get(type("file"));
     } else {
       for (DiffFile diffFile : diffFiles) {
         List<Range> ranges = new ArrayList<>();
@@ -284,7 +311,7 @@ public class Differ {
         }
         diffRanges.put(diffFile.getBRelativePath(), ranges);
       }
-      fileNodes = mapping.unmatchedElementNodes2.get(type("file"));
+      fileNodes = mapping.getUnmatchedElementNodes2().get(type("file"));
     }
     // filter nodes accordingly in a and b version
     for (Node fileNode : fileNodes) {

@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class Mapping {
-  public BiMap<Node, Node> one2one; // exactly matched signatures, used to match unmatched nodes
+  private BiMap<Node, Node> one2one; // exactly matched signatures, used to match unmatched nodes
 
-  public Map<Type, Set<ElementNode>> unmatchedElementNodes1; // possibly deleted nodes
-  public Map<Type, Set<RelationNode>> unmatchedRelationNodes1; // possibly added nodes
+  private Map<Type, Set<ElementNode>> unmatchedElementNodes1; // possibly deleted nodes
+  private Map<Type, Set<RelationNode>> unmatchedRelationNodes1; // possibly added nodes
 
-  public Map<Type, Set<ElementNode>> unmatchedElementNodes2; // possibly deleted nodes
-  public Map<Type, Set<RelationNode>> unmatchedRelationNodes2; // possibly added nodes
+  private Map<Type, Set<ElementNode>> unmatchedElementNodes2; // possibly deleted nodes
+  private Map<Type, Set<RelationNode>> unmatchedRelationNodes2; // possibly added nodes
 
   public Mapping() {
     this.one2one = HashBiMap.create();
@@ -27,6 +27,10 @@ public class Mapping {
     this.unmatchedElementNodes2 = new LinkedHashMap<>();
     this.unmatchedRelationNodes1 = new LinkedHashMap<>();
     this.unmatchedRelationNodes2 = new LinkedHashMap<>();
+  }
+
+  public void addToMatched(Node a, Node b) {
+    one2one.put(a, b);
   }
 
   public void addToUnmatched1(Node node) {
@@ -91,5 +95,25 @@ public class Mapping {
         }
       }
     }
+  }
+
+  public BiMap<Node, Node> getOne2one() {
+    return one2one;
+  }
+
+  public Map<Type, Set<ElementNode>> getUnmatchedElementNodes1() {
+    return unmatchedElementNodes1;
+  }
+
+  public Map<Type, Set<RelationNode>> getUnmatchedRelationNodes1() {
+    return unmatchedRelationNodes1;
+  }
+
+  public Map<Type, Set<ElementNode>> getUnmatchedElementNodes2() {
+    return unmatchedElementNodes2;
+  }
+
+  public Map<Type, Set<RelationNode>> getUnmatchedRelationNodes2() {
+    return unmatchedRelationNodes2;
   }
 }
