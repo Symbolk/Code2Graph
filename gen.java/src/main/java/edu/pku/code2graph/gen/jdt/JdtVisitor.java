@@ -35,6 +35,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
         new ElementNode(GraphUtil.nid(), Language.JAVA, NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath);
     graph.addVertex(cuNode);
     this.root = cuNode;
+
+    logger.info("Start Parsing {}", filePath);
     return true;
   }
 

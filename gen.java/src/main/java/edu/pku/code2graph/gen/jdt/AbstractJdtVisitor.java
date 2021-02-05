@@ -3,11 +3,14 @@ package edu.pku.code2graph.gen.jdt;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
+import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +20,8 @@ import java.util.Map;
 import static edu.pku.code2graph.model.TypeSet.type;
 
 public abstract class AbstractJdtVisitor extends ASTVisitor {
+  protected Logger logger = LoggerFactory.getLogger(AbstractJdtVisitor.class);
+
   // final constructed graph instance
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 
