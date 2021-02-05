@@ -183,18 +183,12 @@ public class Differ {
    * @return
    */
   private void matchBySignature() {
+    // first change absolute path to relative path for file nodes
+    Map<Integer, Node> signMap1 = computeSignatureMap(Version.A);
+    Map<Integer, Node> signMap2 = computeSignatureMap(Version.B);
+
     // filter element nodes by hash signature of type and qname
     // filter relation nodes by hash signature of type and snippet
-    Map<Integer, Node> signMap1 =
-        aGraph.vertexSet().stream()
-            .collect(
-                Collectors.toMap(
-                    Node::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
-    Map<Integer, Node> signMap2 =
-        bGraph.vertexSet().stream()
-            .collect(
-                Collectors.toMap(
-                    Node::hashSignature, Function.identity(), (o, n) -> o, HashMap::new));
     for (Map.Entry<Integer, Node> entry : signMap1.entrySet()) {
       if (signMap2.containsKey(entry.getKey())) {
         // add the matched nodes into the matching relationships
@@ -208,6 +202,26 @@ public class Differ {
     signMap2.forEach((key, value) -> mapping.addToUnmatched2(value));
   }
 
+  private Map<Integer, Node> computeSignatureMap(Version version) {
+    Set<Node> nodeSet = version.equals(Version.A) ? aGraph.vertexSet() : bGraph.vertexSet();
+    Map<Integer, Node> signMap = new HashMap<>();
+    //            graph.vertexSet().stream()
+    //                    .collect(
+    //                            Collectors.toMap(
+    //                                    Node::hashSignature, Function.identity(), (o, n) -> o,
+    // HashMap::new));
+    for (Node node : nodeSet) {
+      if (node.getType().equals(type("file"))) {
+        ElementNode fileNode = (ElementNode) node;
+        String relativePath =
+            FileUtil.getRelativePath(
+                tempPath + File.separator + version.asString(), fileNode.getQualifiedName());
+        fileNode.setQualifiedName(relativePath);
+      }
+      signMap.put(node.hashSignature(), node);
+    }
+    return signMap;
+  }
   /** Bottom up match to further prune unmatched nodes to get diff nodes */
   private void alignByContext() {
     // divide and conquer by node type
@@ -308,14 +322,12 @@ public class Differ {
       }
       fileNodes = mapping.getUnmatchedElementNodes2().get(type("file"));
     }
-    // filter nodes accordingly in a and b version
-    for (Node fileNode : fileNodes) {
-      String relativePath =
-          FileUtil.getRelativePath(
-              tempPath + File.separator + version.asString(),
-              ((ElementNode) fileNode).getQualifiedName());
-      List<Range> diffRange = diffRanges.get(relativePath);
-      filterChildren(fileNode, diffRange, version);
+    if (fileNodes != null) {
+      // filter nodes accordingly in a and b version
+      for (Node fileNode : fileNodes) {
+        List<Range> diffRange = diffRanges.get(((ElementNode) fileNode).getQualifiedName());
+        filterChildren(fileNode, diffRange, version);
+      }
     }
   }
 
