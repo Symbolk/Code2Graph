@@ -19,6 +19,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** Convert graph to dot format of GraphViz */
 public class GraphVizExporter {
@@ -60,6 +61,47 @@ public class GraphVizExporter {
     return writer.toString();
   }
 
+  public static String exportAsDot(
+      Graph<Node, Edge> graph, Set<Node> removed, Set<Node> added, Set<Node> unchanged) {
+    DOTExporter<Node, Edge> exporter = new DOTExporter<>();
+
+    exporter.setVertexIdProvider(v -> v.getId().toString());
+    exporter.setVertexAttributeProvider(
+        v -> {
+          Map<String, Attribute> map = new LinkedHashMap<>();
+          // new jgrapht API has no dedicated label provider setter
+          map.put("id", DefaultAttribute.createAttribute(v.getId().toString()));
+          map.put("type", DefaultAttribute.createAttribute(v.getType().toString()));
+          map.put(
+              "label",
+              DefaultAttribute.createAttribute(
+                  v instanceof ElementNode
+                      ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
+                      : v.getType().name + "(" + ((RelationNode) v).getSymbol() + ")"));
+          map.put("shape", new NodeShapeAttribute(v));
+          map.put(
+              "color",
+              DefaultAttribute.createAttribute(
+                  removed.contains(v) ? "red" : (added.contains(v) ? "green" : "grey")));
+
+          return map;
+        });
+
+    exporter.setEdgeIdProvider(e -> e.getId().toString());
+    exporter.setEdgeAttributeProvider(
+        e -> {
+          Map<String, Attribute> map = new LinkedHashMap<>();
+          map.put("type", DefaultAttribute.createAttribute(e.getType().toString()));
+          map.put("label", DefaultAttribute.createAttribute(e.getType().name));
+          map.put("color", DefaultAttribute.createAttribute("grey"));
+          return map;
+        });
+
+    Writer writer = new StringWriter();
+    exporter.exportGraph(graph, writer);
+    return writer.toString();
+  }
+
   /**
    * Print the graph to console for debugging
    *
@@ -67,6 +109,11 @@ public class GraphVizExporter {
    */
   public static void printAsDot(Graph<Node, Edge> graph) {
     System.out.println(exportAsDot(graph));
+  }
+
+  public static void printAsDot(
+      Graph<Node, Edge> graph, Set<Node> removed, Set<Node> added, Set<Node> unchanged) {
+    System.out.println(exportAsDot(graph, removed, added, unchanged));
   }
 
   /**
