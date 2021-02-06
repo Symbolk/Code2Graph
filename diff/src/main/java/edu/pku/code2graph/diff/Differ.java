@@ -8,6 +8,7 @@ import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
+import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.io.ObjectExporter;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
@@ -15,9 +16,12 @@ import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.alg.matching.MaximumWeightBipartiteMatching;
+import org.jgrapht.graph.AsSubgraph;
 import org.jgrapht.graph.DefaultUndirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.SimpleGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +30,6 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
@@ -155,16 +157,14 @@ public class Differ {
    * @return return graph-patch
    */
   public void compareGraphs() {
-    // init nodes to mappings by type
-    //    initMapping();
-    // top down filtering
+    // filter nodes with signature (superficially)
     matchBySignature();
 
     // filter nodes with textual diff (coarsely)
     filterWithDiffHunks(Version.A);
     filterWithDiffHunks(Version.B);
 
-    // bottom up matching
+    // align nodes with structure and semantics (finely)
     alignByContext();
 
     // the diff output: graph-patch format
@@ -173,8 +173,48 @@ public class Differ {
 
   /** Generate graph patch from mapping */
   private void generateGraphPatch() {
-    // how to preserve edges between unmatched nodes
+    // get two induced sub graphs consists of diff nodes
+    Set<Node> removedNodes = mapping.getAllUnmatchedNodes(Version.A);
+    // BFS to get the k-hop neighbors
+    Set<Node> neighbors1 = new HashSet<>();
+    removedNodes.forEach(node -> neighbors1.addAll(Graphs.neighborSetOf(aGraph, node)));
+    Set<Node> nodeSet1 = new HashSet<>();
+    nodeSet1.addAll(removedNodes);
+    //    nodeSet1.addAll(neighbors1);
+    Graph<Node, Edge> aSubgraph = new AsSubgraph<>(aGraph, nodeSet1);
 
+    Set<Node> addedNodes = mapping.getAllUnmatchedNodes(Version.B);
+    Set<Node> neighbors2 = new HashSet<>();
+    addedNodes.forEach(node -> neighbors2.addAll(Graphs.neighborSetOf(bGraph, node)));
+    // get corresponding nodes in bGraph
+    for (Node neighbor : neighbors1) {
+      if (mapping.getOne2one().containsKey(neighbor)) {
+        neighbors2.add(mapping.getOne2one().get(neighbor));
+      }
+    }
+
+    Set<Node> nodeSet2 = new HashSet<>();
+    nodeSet2.addAll(addedNodes);
+    nodeSet2.addAll(neighbors2);
+
+    Graph<Node, Edge> bSubgraph = new AsSubgraph<>(bGraph, nodeSet2);
+
+    // add a to b
+    Graph<Node, Edge> diffGraph = new SimpleGraph<>(Edge.class);
+    Graphs.addGraph(diffGraph, aSubgraph);
+    Graphs.addGraph(diffGraph, bSubgraph);
+
+    for (Node node : removedNodes) {
+      for (Node neighbor : Graphs.neighborSetOf(aGraph, node)) {
+        Node nnode = mapping.getOne2one().get(neighbor);
+        if (diffGraph.containsVertex(nnode)) {
+          diffGraph.addEdge(node, nnode, aGraph.getEdge(node, neighbor));
+        }
+      }
+    }
+
+    // add common context nodes as the bridge of two graphs
+    GraphVizExporter.printAsDot(diffGraph, removedNodes, addedNodes, neighbors2);
   }
 
   /**
@@ -222,11 +262,12 @@ public class Differ {
     }
     return signMap;
   }
+
   /** Bottom up match to further prune unmatched nodes to get diff nodes */
   private void alignByContext() {
     // divide and conquer by node type
     // basic assumption: only nodes with the same type can be matched
-
+    // TODO save all nodes in only one bipartite with only edges between nodes of same type?
     for (Map.Entry<Type, Set<ElementNode>> entry : mapping.getUnmatchedElementNodes1().entrySet()) {
       Set<ElementNode> nodes1 = entry.getValue();
       Type type = entry.getKey();
@@ -263,8 +304,8 @@ public class Differ {
     for (ElementNode n1 : nodes1) {
       for (ElementNode n2 : nodes2) {
         double weight = MetricUtil.weightElement(n1, n2);
-        if(weight >= threshold) {
-        bipartite.addVertex(n1);
+        if (weight >= threshold) {
+          bipartite.addVertex(n1);
           partition1.add(n1);
           bipartite.addVertex(n2);
           partition2.add(n2);
@@ -283,11 +324,11 @@ public class Differ {
       Node source = bipartite.getEdgeSource(edge);
       Node target = bipartite.getEdgeTarget(edge);
       double confidence = bipartite.getEdgeWeight(edge);
-//      if (confidence >= threshold) {
-        mapping.addToMatched(source, target);
-        mapping.removeFromUnmatched1(source);
-        mapping.removeFromUnmatched2(target);
-//      }
+      //      if (confidence >= threshold) {
+      mapping.addToMatched(source, target);
+      mapping.removeFromUnmatched1(source);
+      mapping.removeFromUnmatched2(target);
+      //      }
     }
   }
 

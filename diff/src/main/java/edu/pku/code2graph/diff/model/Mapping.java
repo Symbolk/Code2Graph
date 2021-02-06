@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Mapping {
-  private BiMap<Node, Node> one2one; // exactly matched signatures, used to match unmatched nodes
+  private BiMap<Node, Node> one2one; // one to one mappings from a and b
 
   private Map<Type, Set<ElementNode>> unmatchedElementNodes1; // possibly deleted nodes
   private Map<Type, Set<RelationNode>> unmatchedRelationNodes1; // possibly added nodes
@@ -115,5 +115,17 @@ public class Mapping {
 
   public Map<Type, Set<RelationNode>> getUnmatchedRelationNodes2() {
     return unmatchedRelationNodes2;
+  }
+
+  public Set<Node> getAllUnmatchedNodes(Version version) {
+    Set<Node> diffNodes = new HashSet<>();
+    if (version.equals(Version.A)) {
+      unmatchedElementNodes1.forEach((key, value) -> diffNodes.addAll(value));
+      unmatchedRelationNodes1.forEach((key, value) -> diffNodes.addAll(value));
+    } else {
+      unmatchedElementNodes2.forEach((key, value) -> diffNodes.addAll(value));
+      unmatchedRelationNodes2.forEach((key, value) -> diffNodes.addAll(value));
+    }
+    return diffNodes;
   }
 }

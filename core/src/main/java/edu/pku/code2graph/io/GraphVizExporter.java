@@ -111,6 +111,14 @@ public class GraphVizExporter {
     System.out.println(exportAsDot(graph));
   }
 
+  /**
+   * Assign different color for removed, added, and context unchanged nodes
+   *
+   * @param graph
+   * @param removed
+   * @param added
+   * @param unchanged
+   */
   public static void printAsDot(
       Graph<Node, Edge> graph, Set<Node> removed, Set<Node> added, Set<Node> unchanged) {
     System.out.println(exportAsDot(graph, removed, added, unchanged));
