@@ -45,11 +45,11 @@ public class JdtGenerator extends Generator {
 
     ASTParser parser = ASTParser.newParser(AST.JLS14);
     Map<String, String> options = JavaCore.getOptions();
-    options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_11);
-    options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_11);
-    options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_11);
+    options.put(JavaCore.COMPILER_COMPLIANCE, JavaCore.VERSION_1_8);
+    options.put(JavaCore.COMPILER_CODEGEN_TARGET_PLATFORM, JavaCore.VERSION_1_8);
+    options.put(JavaCore.COMPILER_SOURCE, JavaCore.VERSION_1_8);
     options.put(JavaCore.COMPILER_DOC_COMMENT_SUPPORT, JavaCore.ENABLED);
-    JavaCore.setComplianceOptions(JavaCore.VERSION_11, options);
+    JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
     parser.setCompilerOptions(options);
 
     //        parser.setProject(WorkspaceUtilities.javaProject);
