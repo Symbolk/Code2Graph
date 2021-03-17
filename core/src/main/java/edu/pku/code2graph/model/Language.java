@@ -1,8 +1,15 @@
 package edu.pku.code2graph.model;
 
 public enum Language {
-  C,
-  CPP,
-  JAVA,
-  XML
+  C(".c"),
+  CPP(".cpp"),
+  HPP(".h"),
+  JAVA(".java"),
+  XML(".xml");
+
+  private String extension;
+
+  Language(String extension) {
+    this.extension = extension;
+  }
 }

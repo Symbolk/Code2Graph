@@ -4,11 +4,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FileUtil {
   /**
@@ -37,6 +42,7 @@ public class FileUtil {
 
   /**
    * Get path relative to the root path
+   *
    * @param absolutePath
    * @param rootPath
    * @return
@@ -74,6 +80,28 @@ public class FileUtil {
       e.printStackTrace();
     }
     return content;
+  }
+
+  /**
+   * Read the content of a given file.
+   *
+   * @param path to be read
+   * @return string content of the file, or null in case of errors.
+   */
+  public static List<String> readFileToLines(String path) {
+    List<String> lines = new ArrayList<>();
+    File file = new File(path);
+    if (file.exists()) {
+      try (BufferedReader reader =
+          Files.newBufferedReader(Paths.get(path), StandardCharsets.UTF_8)) {
+        lines = reader.lines().collect(Collectors.toList());
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    } else {
+      return lines;
+    }
+    return lines;
   }
 
   public static void writeObjectToFile(Object object, String objectFile, boolean append) {
@@ -114,6 +142,27 @@ public class FileUtil {
       } else {
         result.get(extension).add(path);
       }
+    }
+    return result;
+  }
+
+  /**
+   * List all files with specific extension under a folder/directory
+   *
+   * @param dir
+   * @return absolute paths
+   */
+  public static List<String> getSpecificFilePaths(String dir, String extension) {
+    List<String> result = new ArrayList<>();
+    try (Stream<Path> walk = Files.walk(Paths.get(dir))) {
+      result =
+          walk.filter(Files::isRegularFile)
+              .map(Path::toString)
+              .filter(f -> f.endsWith(extension))
+              //              .map(s -> s.substring(dir.length()))
+              .collect(Collectors.toList());
+    } catch (IOException e) {
+      e.printStackTrace();
     }
     return result;
   }
