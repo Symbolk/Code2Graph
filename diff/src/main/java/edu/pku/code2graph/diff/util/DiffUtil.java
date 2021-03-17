@@ -28,6 +28,10 @@ public class DiffUtil {
    * @return
    */
   public static String runSystemCommand(String dir, Charset charSet, String... commands) {
+    if (dir.startsWith("~")) {
+      dir = dir.replaceFirst("^~", System.getProperty("user.home"));
+    }
+
     StringBuilder builder = new StringBuilder();
     try {
       Runtime rt = Runtime.getRuntime();
