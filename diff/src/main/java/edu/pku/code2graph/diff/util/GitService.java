@@ -1,8 +1,9 @@
 package edu.pku.code2graph.diff.util;
 
-
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.DiffHunk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -10,6 +11,8 @@ import java.util.List;
 
 /** A list of helper functions related with Git */
 public interface GitService {
+  Logger logger = LoggerFactory.getLogger(GitService.class);
+
   /**
    * Get the diff files in the current working tree
    *
@@ -39,7 +42,7 @@ public interface GitService {
    * @param commitID
    * @return
    */
-  List<DiffHunk> getDiffHunksAtCommit(String repoPath, String commitID,  List<DiffFile> diffFiles);
+  List<DiffHunk> getDiffHunksAtCommit(String repoPath, String commitID, List<DiffFile> diffFiles);
 
   /**
    * Get the file content at HEAD
@@ -59,6 +62,7 @@ public interface GitService {
 
   /**
    * Get the name of the author of a commit
+   *
    * @param repoDir
    * @param commitID
    * @return
