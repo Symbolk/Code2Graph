@@ -1,0 +1,4 @@
+@Annotation1("abc")
+// line comment between annotations
+@Annotation2("\${123}")
+fun parse() {}

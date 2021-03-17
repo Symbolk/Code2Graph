@@ -4,4 +4,5 @@ dependencies {
     implementation project(':diff')
     implementation project(':gen.java')
     implementation project(':gen.xml')
+    implementation project(':gen.kotlin')
 }

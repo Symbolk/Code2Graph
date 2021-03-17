@@ -5,5 +5,6 @@ include 'core',
         'client',
         'diff',
         'gen.java',
-        'gen.xml'
+        'gen.xml',
+        'gen.kotlin'
 

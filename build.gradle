@@ -29,7 +29,9 @@ subprojects {
         annotationProcessor 'org.atteo.classindex:classindex:3.10'
         implementation 'org.atteo.classindex:classindex:3.10'
 
-        implementation 'org.jgrapht:jgrapht-core:1.5.0'
+        implementation('org.jgrapht:jgrapht-core:1.5.0') {
+            force = true
+        }
         implementation 'org.jgrapht:jgrapht-io:1.5.0'
         implementation 'commons-io:commons-io:2.8.0'
         implementation 'org.neo4j.driver:neo4j-java-driver:4.2.0'
