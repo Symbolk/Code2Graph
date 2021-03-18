@@ -8,7 +8,7 @@ import kotlinx.ast.grammar.kotlin.target.antlr.kotlin.KotlinGrammarAntlrKotlinPa
 
 fun main() {
     val source = AstSource.File(
-            "gen.kotlin/src/main/resources/Example.kt.txt"
+            "gen.kotlin/src/main/resources/2.kt.txt"
     )
     val kotlinFile = KotlinGrammarAntlrKotlinParser.parseKotlinFile(source)
     kotlinFile.summary(attachRawAst = false)
@@ -18,4 +18,3 @@ fun main() {
                 errors.forEach(::println)
             }
 }
-
