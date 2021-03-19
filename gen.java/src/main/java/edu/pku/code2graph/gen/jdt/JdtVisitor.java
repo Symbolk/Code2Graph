@@ -741,9 +741,10 @@ public class JdtVisitor extends AbstractJdtVisitor {
             graph.addEdge(node, cond, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
           }
           // treat case as an implicit block of statements
-          for (Iterator iter = switchStatement.statements().iterator(); iter.hasNext(); ) {
-            Object nxt = iter.next();
+          for (int i = 0; i < switchStatement.statements().size(); ++i) {
+            Object nxt = switchStatement.statements().get(i);
             if (nxt instanceof SwitchCase) {
+              SwitchCase switchCase = (SwitchCase) nxt;
               RelationNode caseNode =
                   new RelationNode(
                       GraphUtil.nid(),
@@ -753,11 +754,21 @@ public class JdtVisitor extends AbstractJdtVisitor {
               caseNode.setRange(computeRange((SwitchCase) nxt));
 
               graph.addVertex(caseNode);
+              for (Object exx : switchCase.expressions()) {
+                if (exx instanceof Expression) {
+                  RelationNode condition = parseExpression((Expression) exx);
+                  graph.addVertex(condition);
+                  graph.addEdge(caseNode, condition, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+                }
+              }
               graph.addEdge(node, caseNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
 
-              while (iter.hasNext()) {
-                Object nxxt = iter.next();
-                if (nxxt instanceof SwitchCase || nxxt instanceof BreakStatement) {
+              while (i + 1 < switchStatement.statements().size()) {
+                Object nxxt = switchStatement.statements().get(++i);
+                if (nxxt instanceof BreakStatement) {
+                  break;
+                } else if (nxxt instanceof SwitchCase) {
+                  i -= 1;
                   break;
                 } else if (nxxt instanceof Statement) {
                   parseStatement((Statement) nxxt)
@@ -830,6 +841,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
       case ASTNode.QUALIFIED_NAME:
         {
           // TODO specific to Android, should be generalized
+          root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
           if (qualifiedName.getQualifier().isQualifiedName()) {
             if ("R"
@@ -965,9 +977,11 @@ public class JdtVisitor extends AbstractJdtVisitor {
                 new Edge(GraphUtil.eid(), EdgeType.ACCESSOR));
           }
 
-          // TODO: link arg use to its declaration (local, field, or external)
           List<Expression> arguments = mi.arguments();
-          for (Expression arg : arguments) {}
+          for (Expression arg : arguments) {
+            graph.addEdge(
+                root, parseExpression(arg), new Edge(GraphUtil.eid(), EdgeType.METHOD_ARGUMENT));
+          }
 
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           // only internal invocation (or consider types, fields and local?)
