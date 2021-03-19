@@ -2,8 +2,13 @@ package edu.pku.code2graph.util;
 
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.Type;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.util.Triple;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GraphUtil {
   // singleton across a graph building process (but for diff?)
@@ -12,6 +17,7 @@ public class GraphUtil {
   // BUT may skip or jump an id if adding node or edge failed (which means graph not changed)
   private static Integer nodeCount;
   private static Integer edgeCount;
+  private static List<Triple<Node, Type, String>> crossLangRefsPool = new ArrayList<>(); //
 
   static {
     graph = initGraph();
@@ -60,5 +66,13 @@ public class GraphUtil {
     graph = initGraph();
     nodeCount = 0;
     edgeCount = 0;
+  }
+
+  public static void addCrossLangRef(Triple<Node, Type, String> ref) {
+    crossLangRefsPool.add(ref);
+  }
+
+  public static List<Triple<Node, Type, String>> getCrossLangRefsPool() {
+    return crossLangRefsPool;
   }
 }

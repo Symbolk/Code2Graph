@@ -18,6 +18,7 @@ public class NodeType {
   public static final Type METHOD_DECLARATION = type("method_declaration");
   public static final Type VAR_DECLARATION = type("variable_declaration");
   public static final Type LITERAL = type("literal");
+  public static final Type QUALIFIED_NAME = type("qualified_name");
 
   // Relations
   // block
