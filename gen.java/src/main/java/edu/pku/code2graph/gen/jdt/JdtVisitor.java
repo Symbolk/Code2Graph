@@ -32,7 +32,13 @@ public class JdtVisitor extends AbstractJdtVisitor {
   @Override
   public boolean visit(CompilationUnit cu) {
     ElementNode cuNode =
-        new ElementNode(GraphUtil.nid(), Language.JAVA, NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath);
+        new ElementNode(
+            GraphUtil.nid(),
+            Language.JAVA,
+            NodeType.FILE,
+            "",
+            FileUtil.getFileNameFromPath(filePath),
+            filePath);
     graph.addVertex(cuNode);
     this.root = cuNode;
 
@@ -500,7 +506,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
                     then -> graph.addEdge(node, then, new Edge(GraphUtil.eid(), EdgeType.THEN)));
           }
           if (ifStatement.getElseStatement() != null) {
-            parseStatement(ifStatement.getThenStatement())
+            parseStatement(ifStatement.getElseStatement())
                 .ifPresent(
                     els -> graph.addEdge(node, els, new Edge(GraphUtil.eid(), EdgeType.ELSE)));
           }
@@ -821,6 +827,23 @@ public class JdtVisitor extends AbstractJdtVisitor {
           root.setType(NodeType.LITERAL);
           break;
         }
+      case ASTNode.QUALIFIED_NAME:
+        {
+          // TODO specific to Android, should be generalized
+          QualifiedName qualifiedName = (QualifiedName) exp;
+          if (qualifiedName.getQualifier().isQualifiedName()) {
+            if ("R"
+                .equals(((QualifiedName) qualifiedName.getQualifier()).getQualifier().toString())) {
+              GraphUtil.addCrossLangRef(
+                  Triple.of(root, EdgeType.REFERENCE, qualifiedName.getFullyQualifiedName()));
+            }
+          }
+          //        ITypeBinding typeBinding = qualifiedName.getQualifier().resolveTypeBinding();
+          //          if (typeBinding != null) {
+          //
+          //          }
+          break;
+        }
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
@@ -905,7 +928,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
           FieldAccess fa = (FieldAccess) exp;
 
           IVariableBinding faBinding = fa.resolveFieldBinding();
-          if (faBinding != null && faBinding.isField()) {
+          if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
             usePool.add(
                 Triple.of(
                     root,
