@@ -14,5 +14,5 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation("com.github.kotlinx.ast:grammar-kotlin-parser-antlr-kotlin:f9c929a8ab")
+    implementation("com.github.kotlinx.ast:grammar-kotlin-parser-antlr-kotlin:5a03ad31d5")
 }
