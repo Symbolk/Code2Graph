@@ -69,10 +69,6 @@ public class Differ {
     initGenerators();
   }
 
-  public void setThreshold(double threshold) {
-    this.threshold = threshold;
-  }
-
   public static void initGenerators() {
     ClassIndex.getSubclasses(Generator.class)
         .forEach(
@@ -80,6 +76,10 @@ public class Differ {
               Register a = gen.getAnnotation(Register.class);
               if (a != null) Generators.getInstance().install(gen, a);
             });
+  }
+
+  public void setThreshold(double threshold) {
+    this.threshold = threshold;
   }
 
   /** Analyze changes in working directory */
@@ -208,7 +208,11 @@ public class Differ {
       for (Node neighbor : Graphs.neighborSetOf(aGraph, node)) {
         Node nnode = mapping.getOne2one().get(neighbor);
         if (diffGraph.containsVertex(nnode)) {
-          diffGraph.addEdge(node, nnode, aGraph.getEdge(node, neighbor));
+          Edge edge =
+              aGraph.getEdge(node, neighbor) == null
+                  ? aGraph.getEdge(neighbor, node)
+                  : aGraph.getEdge(node, neighbor);
+          diffGraph.addEdge(node, nnode, edge);
         }
       }
     }
@@ -270,6 +274,9 @@ public class Differ {
     // TODO save all nodes in only one bipartite with only edges between nodes of same type?
     for (Map.Entry<Type, Set<ElementNode>> entry : mapping.getUnmatchedElementNodes1().entrySet()) {
       Set<ElementNode> nodes1 = entry.getValue();
+      if (nodes1.isEmpty()) {
+        continue;
+      }
       Type type = entry.getKey();
       if (mapping.getUnmatchedElementNodes2().containsKey(type)) {
         Set<ElementNode> nodes2 = mapping.getUnmatchedElementNodes2().get(type);
@@ -279,6 +286,9 @@ public class Differ {
     for (Map.Entry<Type, Set<RelationNode>> entry :
         mapping.getUnmatchedRelationNodes1().entrySet()) {
       Set<RelationNode> nodes1 = entry.getValue();
+      if (nodes1.isEmpty()) {
+        continue;
+      }
       Type type = entry.getKey();
       if (mapping.getUnmatchedElementNodes2().containsKey(type)) {
         Set<RelationNode> nodes2 = mapping.getUnmatchedRelationNodes2().get(type);

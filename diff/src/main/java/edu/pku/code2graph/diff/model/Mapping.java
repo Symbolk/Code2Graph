@@ -65,16 +65,16 @@ public class Mapping {
     if (node instanceof ElementNode) {
       if (unmatchedElementNodes1.containsKey(node.getType())) {
         unmatchedElementNodes1.get(node.getType()).remove(node);
-        if (unmatchedElementNodes1.get(node.getType()).isEmpty()) {
-          unmatchedElementNodes1.remove(node.getType());
-        }
+//        if (unmatchedElementNodes1.get(node.getType()).isEmpty()) {
+//          unmatchedElementNodes1.remove(node.getType());
+//        }
       }
     } else {
       if (unmatchedRelationNodes1.containsKey(node.getType())) {
         unmatchedRelationNodes1.get(node.getType()).remove(node);
-        if (unmatchedRelationNodes1.get(node.getType()).isEmpty()) {
-          unmatchedRelationNodes1.remove(node.getType());
-        }
+//        if (unmatchedRelationNodes1.get(node.getType()).isEmpty()) {
+//          unmatchedRelationNodes1.remove(node.getType());
+//        }
       }
     }
   }
@@ -83,16 +83,16 @@ public class Mapping {
     if (node instanceof ElementNode) {
       if (unmatchedElementNodes2.containsKey(node.getType())) {
         unmatchedElementNodes2.get(node.getType()).remove(node);
-        if (unmatchedElementNodes2.get(node.getType()).isEmpty()) {
-          unmatchedElementNodes2.remove(node.getType());
-        }
+//        if (unmatchedElementNodes2.get(node.getType()).isEmpty()) {
+//          unmatchedElementNodes2.remove(node.getType());
+//        }
       }
     } else {
       if (unmatchedRelationNodes2.containsKey(node.getType())) {
         unmatchedRelationNodes2.get(node.getType()).remove(node);
-        if (unmatchedRelationNodes2.get(node.getType()).isEmpty()) {
-          unmatchedRelationNodes2.remove(node.getType());
-        }
+//        if (unmatchedRelationNodes2.get(node.getType()).isEmpty()) {
+//          unmatchedRelationNodes2.remove(node.getType());
+//        }
       }
     }
   }
