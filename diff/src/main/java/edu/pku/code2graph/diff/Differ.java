@@ -51,7 +51,7 @@ public class Differ {
   private Mapping mapping = new Mapping();
 
   // options
-  private double threshold = 0.75D;
+  private double threshold = 0.6D;
 
   public Differ(String repoName, String repoPath) {
     this.repoName = repoName;
@@ -309,8 +309,9 @@ public class Differ {
           partition1.add(n1);
           bipartite.addVertex(n2);
           partition2.add(n2);
-          bipartite.addEdge(n1, n2);
+          DefaultWeightedEdge e = bipartite.addEdge(n1, n2);
           // compute similarity by aggregating both the self information and the context
+          //          bipartite.setEdgeWeight(e, weight);
           bipartite.setEdgeWeight(n1, n2, weight);
         }
       }
