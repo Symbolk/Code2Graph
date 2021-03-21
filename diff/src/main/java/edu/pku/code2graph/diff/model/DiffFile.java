@@ -89,18 +89,6 @@ public class DiffFile {
     return charset;
   }
 
-  public void setRepoID(String repoID) {
-    this.repoID = repoID;
-  }
-
-  public void setRepoName(String repoName) {
-    this.repoName = repoName;
-  }
-
-  public void setFileID(String fileID) {
-    this.fileID = fileID;
-  }
-
   public List<String> getRawHeaders() {
     return rawHeaders;
   }

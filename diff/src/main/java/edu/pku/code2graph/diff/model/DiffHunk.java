@@ -73,16 +73,8 @@ public class DiffHunk {
     this.fileID = fileID;
   }
 
-  public void setRepoID(String repoID) {
-    this.repoID = repoID;
-  }
-
   public String getRepoName() {
     return repoName;
-  }
-
-  public void setRepoName(String repoName) {
-    this.repoName = repoName;
   }
 
   public String getDiffHunkID() {
