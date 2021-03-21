@@ -20,7 +20,11 @@ import java.util.Set;
 
 public class Evaluation {
   public static void main(String[] args) {
-    //
+    // filter commits with layout xml changes and J/K changes
+
+    // save ground truth
+
+    // run and compare results
     listCommits("/Users/symbolk/coding/data/repos/MLManager");
   }
 

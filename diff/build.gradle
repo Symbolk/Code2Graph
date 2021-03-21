@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     implementation project(':core')
-//    implementation fileTree(dir: 'lib', include: ['*.jar'])
+    implementation fileTree(dir: 'lib', include: ['*.jar'])
     implementation 'com.google.guava:guava:30.1-jre'
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
     implementation 'info.debatty:java-string-similarity:2.0.0'
