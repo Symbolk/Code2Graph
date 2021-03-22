@@ -11,6 +11,10 @@ repositories {
 
 dependencies {
     implementation project(':core')
+    implementation project(':gen.java')
+    implementation project(':gen.xml')
+    implementation project(':gen.kotlin')
+
     implementation fileTree(dir: 'lib', include: ['*.jar'])
     implementation 'com.google.guava:guava:30.1-jre'
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
