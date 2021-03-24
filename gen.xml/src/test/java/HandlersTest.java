@@ -32,7 +32,7 @@ public class HandlersTest {
 
     filePaths.add("src/test/resources/layout.xml");
     filePaths.add("src/test/resources/strings.xml");
-    filePaths.add("src/test/resources/manifest.xml");
+//    filePaths.add("src/test/resources/manifest.xml");
   }
 
   @Test
