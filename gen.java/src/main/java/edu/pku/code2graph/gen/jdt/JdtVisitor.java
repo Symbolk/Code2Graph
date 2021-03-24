@@ -82,6 +82,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
     ITypeBinding tdBinding = td.resolveBinding();
     // isFromSource
     String qname = tdBinding.getQualifiedName();
+
     ElementNode node =
         new ElementNode(
             GraphUtil.nid(), Language.JAVA, type, td.toString(), td.getName().toString(), qname);
@@ -272,8 +273,12 @@ public class JdtVisitor extends AbstractJdtVisitor {
     // A binding represents a named entity in the Java language
     // for internal, should never be null
     IMethodBinding mdBinding = md.resolveBinding();
-    String name = getMethodQNameFromBinding(mdBinding);
+    // can be null for method in local anonymous class
+    String name = md.getName().getFullyQualifiedName();
     String qname = name;
+    if (mdBinding != null) {
+      qname = getMethodQNameFromBinding(mdBinding);
+    }
     ElementNode node =
         new ElementNode(
             GraphUtil.nid(),
@@ -288,9 +293,11 @@ public class JdtVisitor extends AbstractJdtVisitor {
     defPool.put(qname, node);
 
     // return type
-    ITypeBinding tpBinding = mdBinding.getReturnType();
-    if (tpBinding != null && tpBinding.isFromSource()) {
-      usePool.add(Triple.of(node, EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
+    if (mdBinding != null) {
+      ITypeBinding tpBinding = mdBinding.getReturnType();
+      if (tpBinding != null && tpBinding.isFromSource()) {
+        usePool.add(Triple.of(node, EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
+      }
     }
 
     // para decl and type
