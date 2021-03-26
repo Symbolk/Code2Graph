@@ -46,30 +46,6 @@ public class JdtVisitor extends AbstractJdtVisitor {
     return true;
   }
 
-  private Range computeRange(ASTNode node) {
-    int startPosition = node.getStartPosition();
-    int endPosition = startPosition + node.getLength() - 1;
-    return new Range(
-        cu.getLineNumber(startPosition),
-        cu.getLineNumber(endPosition),
-        cu.getColumnNumber(startPosition),
-        cu.getColumnNumber(endPosition));
-  }
-
-  private Range computeRange(List<ASTNode> nodes) {
-    if (nodes.isEmpty()) {
-      return new Range(-1, -1);
-    }
-    int startPosition = nodes.get(0).getStartPosition();
-    ASTNode lastNode = nodes.get(nodes.size() - 1);
-    int endPosition = lastNode.getStartPosition() + lastNode.getLength() - 1;
-    return new Range(
-        cu.getLineNumber(startPosition),
-        cu.getLineNumber(endPosition),
-        cu.getColumnNumber(startPosition),
-        cu.getColumnNumber(endPosition));
-  }
-
   @Override
   public void preVisit(ASTNode n) {}
 
