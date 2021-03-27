@@ -1,4 +1,4 @@
-package edu.pku.code2graph.diff;
+package edu.pku.code2graph.diff.android;
 
 import com.github.gumtreediff.actions.ActionClusterFinder;
 import com.github.gumtreediff.actions.ChawatheScriptGenerator;
@@ -9,6 +9,7 @@ import com.github.gumtreediff.matchers.MappingStore;
 import com.github.gumtreediff.matchers.Matcher;
 import com.github.gumtreediff.matchers.Matchers;
 import com.github.gumtreediff.tree.TreeContext;
+import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
 import edu.pku.code2graph.gen.Generator;
@@ -17,18 +18,21 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.FileUtil;
-import org.apache.log4j.PropertyConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.xmlunit.builder.Input;
+import org.xmlunit.diff.*;
 
+import javax.xml.transform.Source;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ChangeLint {
-  private static String repoName = "test_repo";
-  private static String repoPath = "/Users/symbolk/coding/data/" + repoName;
+  private static String repoName = "LeafPic";
+  //  private static String repoName = "test_repo";
+  private static String repoPath = "/Users/symbolk/coding/data/repos/" + repoName;
   private static String tempDir = "/Users/symbolk/coding/data/temp/c2g";
 
   static {
@@ -46,25 +50,37 @@ public class ChangeLint {
 
   public static void main(String[] args) throws IOException {
 
-    PropertyConfigurator.configure("log4j.properties");
+    //    BasicConfigurator.configure();
 
-    // offline: build the graph
-    Graph<Node, Edge> graph = offline();
-    //      GraphVizExporter.printAsDot(graph);
+    // 1. Offline process: given the commit id of the earliest future multi-lang commit
+    // checkout to that version
+    // offline: build the graph for the current version
+    //    Graph<Node, Edge> graph = offline();
+    //    GraphVizExporter.printAsDot(graph);
 
-    String commitID = "";
+    // 2. Online process: for each of the future commits, extract the changes as GT
+    // predict & compare
+    String commitID = "ea5ccf3";
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID); // together with ground truth
 
-    // gumtree to infer diff nodes
+    // gumtree to infer diff nodes at member/type/file level, or use spoon instead
+    List<Set<Action>> javaChanges = new ArrayList<>();
+
     for (DiffFile diffFile : diffFiles) {
-      // filter only xml diff
       if (diffFile.getFileType().equals(FileType.XML)) {
-        EditScript es = generateEditScript(diffFile.getAContent(), diffFile.getBContent());
+        // TODO use and parse python xml diff
+        compareXMLFiles(diffFile.getAContent(), diffFile.getBContent());
+      } else if (diffFile.getFileType().equals(FileType.JAVA)) {
+        // TODO use gumtree-spoon instead
+        EditScript es = generateEditScriptForJava(diffFile.getAContent(), diffFile.getBContent());
         if (es != null) {
           ActionClusterFinder f = new ActionClusterFinder(es);
           for (Set<Action> cluster : f.getClusters()) {
-            cluster.forEach(System.out::println);
+            //            System.out.println(f.getClusterLabel(cluster));
+            for (Action action : cluster) {
+              System.out.println(action.getNode().getType() + ":" + action.getNode().getLabel());
+            }
           }
         }
       }
@@ -72,13 +88,16 @@ public class ChangeLint {
 
     // locate changed xml nodes in the graph
 
-    // query the graph
+    // query the graph (algorithm here)
 
-    // output co-change file/type/method/statement
+    // output co-change file/type/method
 
     // measure accuracy by comparing with ground truth
 
   }
+
+  /** Extract changes in commit as the input and the output ground truth */
+  private static void extractChanges() {}
 
   private static Graph<Node, Edge> offline() throws IOException {
     // iterate all Java files and match imports
@@ -127,7 +146,6 @@ public class ChangeLint {
     // construct graph above statement level
     // filter only ASTNodes with R.
     // build cross-lang edges
-    //
     Generators generator = Generators.getInstance();
 
     return generator.generateFromFiles(new ArrayList<>(filePaths));
@@ -142,17 +160,11 @@ public class ChangeLint {
         .replace(".", File.separator);
   }
 
-  /**
-   * Compute diff and return edit script
-   *
-   * @param aContent
-   * @param bContent
-   * @return
-   */
-  private static EditScript generateEditScript(String aContent, String bContent) {
+  private static EditScript generateEditScriptForJava(String aContent, String bContent) {
     //        Run.initGenerators();
     JdtTreeGenerator generator = new JdtTreeGenerator();
-    //        Generators generator = Generators.getInstance();
+    //    XmlTreeGenerator generator = new XmlTreeGenerator();
+    //            Generators generator = Generators.getInstance();
 
     try {
       TreeContext oldContext = generator.generateFrom().string(aContent);
@@ -167,5 +179,18 @@ public class ChangeLint {
       e.printStackTrace();
     }
     return null;
+  }
+
+  private static void compareXMLFiles(String aContent, String bContent) {
+    Source control = Input.fromString(aContent).build();
+    Source test = Input.fromString(bContent).build();
+    DifferenceEngine diff = new DOMDifferenceEngine();
+    diff.addDifferenceListener(
+        new ComparisonListener() {
+          public void comparisonPerformed(Comparison comparison, ComparisonResult outcome) {
+            System.out.println(outcome + ":" + comparison);
+          }
+        });
+    diff.compare(control, test);
   }
 }
