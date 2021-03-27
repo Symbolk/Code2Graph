@@ -1,14 +1,5 @@
 package edu.pku.code2graph.diff.cochange;
 
-import com.github.gumtreediff.actions.ActionClusterFinder;
-import com.github.gumtreediff.actions.ChawatheScriptGenerator;
-import com.github.gumtreediff.actions.EditScript;
-import com.github.gumtreediff.actions.model.Action;
-import com.github.gumtreediff.gen.jdt.JdtTreeGenerator;
-import com.github.gumtreediff.matchers.MappingStore;
-import com.github.gumtreediff.matchers.Matcher;
-import com.github.gumtreediff.matchers.Matchers;
-import com.github.gumtreediff.tree.TreeContext;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
@@ -18,6 +9,10 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.FileUtil;
+import gumtree.spoon.AstComparator;
+import gumtree.spoon.diff.Diff;
+import gumtree.spoon.diff.operations.Operation;
+import org.apache.log4j.BasicConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 import org.xmlunit.builder.Input;
@@ -50,7 +45,7 @@ public class ChangeLint {
 
   public static void main(String[] args) throws IOException {
 
-    //    BasicConfigurator.configure();
+    BasicConfigurator.configure();
 
     // 1. Offline process: given the commit id of the earliest future multi-lang commit
     // checkout to that version
@@ -65,24 +60,12 @@ public class ChangeLint {
     List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID); // together with ground truth
 
     // gumtree to infer diff nodes at member/type/file level, or use spoon instead
-    List<Set<Action>> javaChanges = new ArrayList<>();
-
     for (DiffFile diffFile : diffFiles) {
       if (diffFile.getFileType().equals(FileType.XML)) {
         // TODO use and parse python xml diff
-        compareXMLFiles(diffFile.getAContent(), diffFile.getBContent());
+//        compareXMLFiles(diffFile.getAContent(), diffFile.getBContent());
       } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        // TODO use gumtree-spoon instead
-        EditScript es = generateEditScriptForJava(diffFile.getAContent(), diffFile.getBContent());
-        if (es != null) {
-          ActionClusterFinder f = new ActionClusterFinder(es);
-          for (Set<Action> cluster : f.getClusters()) {
-            //            System.out.println(f.getClusterLabel(cluster));
-            for (Action action : cluster) {
-              System.out.println(action.getNode().getType() + ":" + action.getNode().getLabel());
-            }
-          }
-        }
+        generateEditScriptForJava2(diffFile.getAContent(), diffFile.getBContent());
       }
     }
 
@@ -160,25 +143,20 @@ public class ChangeLint {
         .replace(".", File.separator);
   }
 
-  private static EditScript generateEditScriptForJava(String aContent, String bContent) {
-    //        Run.initGenerators();
-    JdtTreeGenerator generator = new JdtTreeGenerator();
-    //    XmlTreeGenerator generator = new XmlTreeGenerator();
-    //            Generators generator = Generators.getInstance();
-
-    try {
-      TreeContext oldContext = generator.generateFrom().string(aContent);
-      TreeContext newContext = generator.generateFrom().string(bContent);
-      Matcher matcher = Matchers.getInstance().getMatcher();
-
-      MappingStore mappings = matcher.match(oldContext.getRoot(), newContext.getRoot());
-      EditScript editScript = new ChawatheScriptGenerator().computeActions(mappings);
-
-      return editScript;
-    } catch (Exception e) {
-      e.printStackTrace();
+  /**
+   * Compute diff and return edit script with gumtree spoon
+   *
+   * @param aContent
+   * @param bContent
+   * @return
+   */
+  private static void generateEditScriptForJava2(String aContent, String bContent) {
+    AstComparator diff = new AstComparator();
+    Diff editScript = diff.compare(aContent, bContent);
+    List<Operation> operations = editScript.getRootOperations();
+    for (Operation operation : operations) {
+      System.out.println(operation);
     }
-    return null;
   }
 
   private static void compareXMLFiles(String aContent, String bContent) {
