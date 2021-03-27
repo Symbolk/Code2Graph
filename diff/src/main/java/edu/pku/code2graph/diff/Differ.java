@@ -422,11 +422,11 @@ public class Differ {
     }
   }
 
-  public Graph<Node, Edge> getbGraph() {
+  public Graph<Node, Edge> getBGraph() {
     return bGraph;
   }
 
-  public Graph<Node, Edge> getaGraph() {
+  public Graph<Node, Edge> getAGraph() {
     return aGraph;
   }
 }

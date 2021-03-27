@@ -1,0 +1,26 @@
+package edu.pku.code2graph.diff.cochange;
+
+public class XMLDiff {
+  private String action;
+  private String location;
+  private String schema;
+  private String name;
+
+  public XMLDiff(String action, String location, String schema, String name) {
+    this.action = action;
+    this.location = location;
+    this.schema = schema;
+    this.name = name;
+  }
+
+  public XMLDiff(String action, String location, String schema) {
+    this.action = action;
+    this.location = location;
+    this.schema = schema;
+  }
+
+  public XMLDiff(String action, String location) {
+    this.action = action;
+    this.location = location;
+  }
+}
