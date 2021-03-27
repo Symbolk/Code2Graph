@@ -58,7 +58,8 @@ public class JdtGenerator extends Generator {
     parser.setResolveBindings(true);
     parser.setBindingsRecovery(true);
 
-    AbstractJdtVisitor visitor = new JdtVisitor();
+    AbstractJdtVisitor visitor = new ExpressionVisitor();
+//    AbstractJdtVisitor visitor = new MemberVisitor();
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");

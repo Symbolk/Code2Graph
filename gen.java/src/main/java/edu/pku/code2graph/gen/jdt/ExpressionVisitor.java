@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Visitor to create nodes and collect info to create edges
+ * Visitor focusing on the entity granularity, at or above expression level (cu/type/member/statement/expression)
  *
  * <p>1. visit, store and index all concerned nodes
  *
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  *
  * <p>5. create edges
  */
-public class JdtVisitor extends AbstractJdtVisitor {
+public class ExpressionVisitor extends AbstractJdtVisitor {
   private ElementNode root;
 
   @Override
@@ -205,7 +205,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
       if (b.isDefaultConstructor()) {
         continue;
       }
-      usePool.add(Triple.of(body, EdgeType.CHILD, getMethodQNameFromBinding(b)));
+      usePool.add(Triple.of(body, EdgeType.CHILD, JdtService.getMethodQNameFromBinding(b)));
     }
   }
 
@@ -253,7 +253,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
     String name = md.getName().getFullyQualifiedName();
     String qname = name;
     if (mdBinding != null) {
-      qname = getMethodQNameFromBinding(mdBinding);
+      qname = JdtService.getMethodQNameFromBinding(mdBinding);
     }
     ElementNode node =
         new ElementNode(
@@ -285,7 +285,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
         if (b != null && b.getVariableDeclaration() != null) {
-          para_qname = getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+          para_qname =
+              JdtService.getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
         }
         ElementNode pn =
             new ElementNode(
@@ -426,7 +427,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
             String name = fragment.getName().getFullyQualifiedName();
             String qname = name;
             if (binding != null) { // since it is declaration, binding should never be null
-              qname = getVariableQNameFromBinding(binding, stmt);
+              qname = JdtService.getVariableQNameFromBinding(binding, stmt);
               ElementNode node =
                   new ElementNode(
                       GraphUtil.nid(),
@@ -551,7 +552,8 @@ public class JdtVisitor extends AbstractJdtVisitor {
           String para_qname = para_name;
           IVariableBinding b = p.resolveBinding();
           if (b != null && b.getVariableDeclaration() != null) {
-            para_qname = getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+            para_qname =
+                JdtService.getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
           }
           ElementNode pn =
               new ElementNode(
@@ -770,30 +772,6 @@ public class JdtVisitor extends AbstractJdtVisitor {
     return Optional.empty();
   }
 
-  private String getParentInitBlockName(ASTNode node) {
-    ASTNode parent = node.getParent();
-    while (parent != null && parent.getNodeType() != ASTNode.TYPE_DECLARATION) {
-      parent = parent.getParent();
-    }
-    if (parent.getNodeType() == ASTNode.TYPE_DECLARATION) {
-      TypeDeclaration typeDeclaration = (TypeDeclaration) parent;
-      return typeDeclaration.resolveBinding().getQualifiedName();
-    }
-    return "";
-  }
-
-  private boolean isInsideInitBlock(ASTNode node) {
-    ASTNode parent = node.getParent();
-    while (parent != null && parent.getNodeType() != ASTNode.TYPE_DECLARATION) {
-      if (parent.getNodeType() == ASTNode.INITIALIZER) {
-        return true;
-      } else {
-        parent = parent.getParent();
-      }
-    }
-    return false;
-  }
-
   /**
    * Expression at the leaf level, modeled as relation Link used vars and methods into its def, if
    * exists
@@ -857,7 +835,9 @@ public class JdtVisitor extends AbstractJdtVisitor {
               root.setType(NodeType.PARAMETER_ACCESS);
               usePool.add(
                   Triple.of(
-                      root, EdgeType.REFERENCE, getVariableQNameFromBinding(varBinding, exp)));
+                      root,
+                      EdgeType.REFERENCE,
+                      JdtService.getVariableQNameFromBinding(varBinding, exp)));
             } else if (varBinding.isEnumConstant()) {
               root.setType(NodeType.CONSTANT_ACCESS);
               usePool.add(
@@ -872,7 +852,9 @@ public class JdtVisitor extends AbstractJdtVisitor {
               root.setType(NodeType.LOCAL_VAR_ACCESS);
               usePool.add(
                   Triple.of(
-                      root, EdgeType.REFERENCE, getVariableQNameFromBinding(varBinding, exp)));
+                      root,
+                      EdgeType.REFERENCE,
+                      JdtService.getVariableQNameFromBinding(varBinding, exp)));
             }
           }
           break;
@@ -895,7 +877,7 @@ public class JdtVisitor extends AbstractJdtVisitor {
             String qname = name;
             IVariableBinding binding = fragment.resolveBinding();
             if (binding != null) {
-              qname = getVariableQNameFromBinding(binding, exp);
+              qname = JdtService.getVariableQNameFromBinding(binding, exp);
             }
             ElementNode n =
                 new ElementNode(
@@ -970,14 +952,15 @@ public class JdtVisitor extends AbstractJdtVisitor {
           // only internal invocation (or consider types, fields and local?)
           if (mdBinding != null) {
             // get caller qname
-            findWrappedMethod(mi)
+            JdtService.findWrappedMethod(mi)
                 .ifPresent(
                     name -> {
                       usePool.add(Triple.of(root, EdgeType.METHOD_CALLER, name));
                     });
             // get callee qname
             usePool.add(
-                Triple.of(root, EdgeType.METHOD_CALLEE, getMethodQNameFromBinding(mdBinding)));
+                Triple.of(
+                    root, EdgeType.METHOD_CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
           }
           break;
         }
@@ -1060,59 +1043,5 @@ public class JdtVisitor extends AbstractJdtVisitor {
     }
 
     return root;
-  }
-
-  /**
-   * Find the parent method, return its qname
-   *
-   * @return
-   */
-  private Optional<String> findWrappedMethod(ASTNode node) {
-    ASTNode parent = node.getParent();
-    while (parent != null) {
-      if (parent.getNodeType() == ASTNode.METHOD_DECLARATION) {
-        return Optional.of(
-            getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
-      }
-      parent = parent.getParent();
-    }
-    return Optional.empty();
-  }
-
-  /**
-   * Get the qname for var declaration, which can be inside a method or init block
-   *
-   * @param binding
-   * @param node
-   * @return
-   */
-  private String getVariableQNameFromBinding(IVariableBinding binding, ASTNode node) {
-    String qname = binding.getName();
-    if (binding.getDeclaringMethod() != null) {
-      qname = getMethodQNameFromBinding(binding.getDeclaringMethod()) + "." + qname;
-    } else if (isInsideInitBlock(node)) {
-      qname = getParentInitBlockName(node) + ".INIT." + qname;
-    }
-    return qname;
-  }
-
-  /**
-   * Get the qname of a method from binding
-   *
-   * @param binding
-   * @return
-   */
-  private String getMethodQNameFromBinding(IMethodBinding binding) {
-    ITypeBinding[] paraBindings = binding.getParameterTypes();
-    List<String> paraTypes = new ArrayList<>();
-    for (ITypeBinding b : paraBindings) {
-      paraTypes.add(b.getQualifiedName());
-    }
-
-    String qname = binding.getName() + "(" + String.join(",", paraTypes).trim() + ")";
-    if (binding != null) {
-      qname = binding.getDeclaringClass().getQualifiedName() + "." + qname;
-    }
-    return qname;
   }
 }
