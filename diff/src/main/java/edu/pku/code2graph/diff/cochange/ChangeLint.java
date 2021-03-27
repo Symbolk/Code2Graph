@@ -16,7 +16,6 @@ import gumtree.spoon.diff.Diff;
 import gumtree.spoon.diff.operations.Operation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.BasicConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 
@@ -48,7 +47,7 @@ public class ChangeLint {
 
   public static void main(String[] args) throws IOException {
 
-    BasicConfigurator.configure();
+    //    BasicConfigurator.configure();
 
     // 1. Offline process: given the commit id of the earliest future multi-lang commit
     // checkout to that version
@@ -179,6 +178,8 @@ public class ChangeLint {
             .findFirst();
 
     String output = "";
+    //    System.out.println(
+    //        DiffUtil.runSystemCommand(tempDir, Charset.defaultCharset(), "python", "--version"));
     if (aPath.isPresent() && bPath.isPresent()) {
       // compare with system command
       output =
@@ -194,14 +195,18 @@ public class ChangeLint {
   }
 
   private static XMLDiff convertXMLDiff(String line) {
-    String[] parts = StringUtils.removeEnd(StringUtils.removeStart(line, "["), "]").split(",");
+    List<String> parts =
+        Arrays.stream(StringUtils.removeEnd(StringUtils.removeStart(line, "["), "]").split(","))
+            .map(String::trim)
+            .collect(Collectors.toList());
     // convert the diff to objects
-    if (parts.length == 4) {
-      return new XMLDiff(parts[0], parts[1], parts[2], parts[3]);
-    } else if (parts.length == 3) {
-      return new XMLDiff(parts[0], parts[1], parts[2]);
-    } else if (parts.length == 2) {
-      return new XMLDiff(parts[0], parts[1]);
+    switch (parts.size()) {
+      case 4:
+        return new XMLDiff(parts.get(0), parts.get(1), parts.get(2), parts.get(3));
+      case 3:
+        return new XMLDiff(parts.get(0), parts.get(1), parts.get(2));
+      case 2:
+        return new XMLDiff(parts.get(0), parts.get(1));
     }
     return null;
   }
