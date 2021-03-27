@@ -1,8 +1,10 @@
 package edu.pku.code2graph.diff.cochange;
 
+import edu.pku.code2graph.diff.DataCollector;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
+import edu.pku.code2graph.diff.util.DiffUtil;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -12,17 +14,18 @@ import edu.pku.code2graph.util.FileUtil;
 import gumtree.spoon.AstComparator;
 import gumtree.spoon.diff.Diff;
 import gumtree.spoon.diff.operations.Operation;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
-import org.xmlunit.builder.Input;
-import org.xmlunit.diff.*;
 
-import javax.xml.transform.Source;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ChangeLint {
   private static String repoName = "LeafPic";
@@ -58,29 +61,31 @@ public class ChangeLint {
     String commitID = "ea5ccf3";
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID); // together with ground truth
+    DataCollector dataCollector = new DataCollector(tempDir);
+    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
 
-    // gumtree to infer diff nodes at member/type/file level, or use spoon instead
+    Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
+    Map<String, List<Operation>> javaDiffs = new HashMap<>();
+
     for (DiffFile diffFile : diffFiles) {
       if (diffFile.getFileType().equals(FileType.XML)) {
-        // TODO use and parse python xml diff
-//        compareXMLFiles(diffFile.getAContent(), diffFile.getBContent());
+        xmlDiffs.put(diffFile.getARelativePath(), computeXMLChanges(tempFilePaths, diffFile));
       } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        generateEditScriptForJava2(diffFile.getAContent(), diffFile.getBContent());
+        javaDiffs.put(
+            diffFile.getARelativePath(),
+            computeJavaChanges(diffFile.getAContent(), diffFile.getBContent()));
       }
     }
 
     // locate changed xml nodes in the graph
 
-    // query the graph (algorithm here)
+    // predict co-changes according to context/similar nodes
 
     // output co-change file/type/method
 
     // measure accuracy by comparing with ground truth
 
   }
-
-  /** Extract changes in commit as the input and the output ground truth */
-  private static void extractChanges() {}
 
   private static Graph<Node, Edge> offline() throws IOException {
     // iterate all Java files and match imports
@@ -150,25 +155,54 @@ public class ChangeLint {
    * @param bContent
    * @return
    */
-  private static void generateEditScriptForJava2(String aContent, String bContent) {
+  private static List<Operation> computeJavaChanges(String aContent, String bContent) {
     AstComparator diff = new AstComparator();
     Diff editScript = diff.compare(aContent, bContent);
     List<Operation> operations = editScript.getRootOperations();
-    for (Operation operation : operations) {
-      System.out.println(operation);
-    }
+    // TODO filter at member/type/file level
+    //    for (Operation operation : operations) {
+    //      System.out.println(operation);
+    //    }
+    return operations;
   }
 
-  private static void compareXMLFiles(String aContent, String bContent) {
-    Source control = Input.fromString(aContent).build();
-    Source test = Input.fromString(bContent).build();
-    DifferenceEngine diff = new DOMDifferenceEngine();
-    diff.addDifferenceListener(
-        new ComparisonListener() {
-          public void comparisonPerformed(Comparison comparison, ComparisonResult outcome) {
-            System.out.println(outcome + ":" + comparison);
-          }
-        });
-    diff.compare(control, test);
+  private static List<XMLDiff> computeXMLChanges(
+      Pair<List<String>, List<String>> tempFilePaths, DiffFile diffFile) {
+    // find the file path with relative path
+    Optional<String> aPath =
+        tempFilePaths.getLeft().stream()
+            .filter(path -> path.trim().endsWith(diffFile.getARelativePath()))
+            .findFirst();
+    Optional<String> bPath =
+        tempFilePaths.getRight().stream()
+            .filter(path -> path.trim().endsWith(diffFile.getBRelativePath()))
+            .findFirst();
+
+    String output = "";
+    if (aPath.isPresent() && bPath.isPresent()) {
+      // compare with system command
+      output =
+          DiffUtil.runSystemCommand(
+              tempDir, Charset.defaultCharset(), "xmldiff", "-p", aPath.get(), bPath.get());
+    }
+    // TODO process added and deleted files
+    // parse the output and collected diff
+    Stream<String> lines = output.lines();
+    List<XMLDiff> xmlDiffs = new ArrayList<>();
+    lines.forEach(line -> xmlDiffs.add(convertXMLDiff(line)));
+    return xmlDiffs;
+  }
+
+  private static XMLDiff convertXMLDiff(String line) {
+    String[] parts = StringUtils.removeEnd(StringUtils.removeStart(line, "["), "]").split(",");
+    // convert the diff to objects
+    if (parts.length == 4) {
+      return new XMLDiff(parts[0], parts[1], parts[2], parts[3]);
+    } else if (parts.length == 3) {
+      return new XMLDiff(parts[0], parts[1], parts[2]);
+    } else if (parts.length == 2) {
+      return new XMLDiff(parts[0], parts[1]);
+    }
+    return null;
   }
 }
