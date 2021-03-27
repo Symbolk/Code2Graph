@@ -1,4 +1,4 @@
-package edu.pku.code2graph.diff.android;
+package edu.pku.code2graph.diff.cochange;
 
 import com.github.gumtreediff.actions.ActionClusterFinder;
 import com.github.gumtreediff.actions.ChawatheScriptGenerator;

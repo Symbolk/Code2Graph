@@ -1,4 +1,4 @@
-package edu.pku.code2graph.diff.android;
+package edu.pku.code2graph.diff.cochange;
 
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.api.Git;
