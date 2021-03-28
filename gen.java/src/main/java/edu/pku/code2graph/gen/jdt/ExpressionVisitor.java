@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  * <p>5. create edges
  */
 public class ExpressionVisitor extends AbstractJdtVisitor {
-  private ElementNode root;
+  private ElementNode cuNode;
 
   @Override
   public boolean visit(CompilationUnit cu) {
@@ -40,7 +40,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             FileUtil.getFileNameFromPath(filePath),
             filePath);
     graph.addVertex(cuNode);
-    this.root = cuNode;
+    this.cuNode = cuNode;
 
     logger.info("Start Parsing {}", filePath);
     return true;
@@ -67,7 +67,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     defPool.put(qname, node);
 
     if (td.isPackageMemberTypeDeclaration()) {
-      graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
     }
 
     parseExtendsAndImplements(tdBinding, node);
@@ -98,7 +98,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     defPool.put(qname, node);
 
     if (ed.isPackageMemberTypeDeclaration()) {
-      graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
     }
 
     for (Iterator<EnumConstantDeclaration> iter = ed.enumConstants().iterator(); iter.hasNext(); ) {
