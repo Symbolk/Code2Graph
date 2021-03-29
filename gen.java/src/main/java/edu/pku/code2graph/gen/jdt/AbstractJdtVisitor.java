@@ -34,7 +34,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   // TODO include external type declaration or not?
   // intermediate cache to build nodes and edges
   // basic assumption: qualified name is unique in one project
-  protected Map<String, Node> defPool = new HashMap<>();
+  protected Map<String, Node> defPool = new HashMap<>(); // should be ElementNode in theory, but use node to avoid casting when adding edges
   protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
 
   public AbstractJdtVisitor() {

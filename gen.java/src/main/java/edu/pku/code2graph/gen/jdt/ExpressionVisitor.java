@@ -16,7 +16,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Visitor focusing on the entity granularity, at or above expression level (cu/type/member/statement/expression)
+ * Visitor focusing on the entity granularity, at or above expression level
+ * (cu/type/member/statement/expression)
  *
  * <p>1. visit, store and index all concerned nodes
  *
@@ -173,6 +174,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     if (!initializers.isEmpty()) {
       for (Initializer initializer : initializers) {
         if (!initializer.getBody().statements().isEmpty()) {
+          String qname = parentQName + ".INIT";
           ElementNode initNode =
               new ElementNode(
                   GraphUtil.nid(),
@@ -180,11 +182,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                   NodeType.INIT_BLOCK_DECLARATION,
                   initializer.toString(),
                   node.getName() + ".INIT",
-                  parentQName + ".INIT");
+                  qname);
           initNode.setRange(computeRange(initializer));
 
           graph.addVertex(initNode);
           graph.addEdge(body, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+          defPool.put(qname, node);
 
           parseBodyBlock(initializer.getBody(), parentQName + ".BLOCK")
               .ifPresent(
@@ -952,7 +955,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           // only internal invocation (or consider types, fields and local?)
           if (mdBinding != null) {
             // get caller qname
-            JdtService.findWrappedMethod(mi)
+            JdtService.findWrappedMethodName(mi)
                 .ifPresent(
                     name -> {
                       usePool.add(Triple.of(root, EdgeType.METHOD_CALLER, name));
