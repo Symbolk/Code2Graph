@@ -36,15 +36,19 @@ public class JdtService {
           qname = binding.getDeclaringClass().getQualifiedName() + "." + qname;
         }
         return Optional.of(qname);
-      } else if (parent instanceof MethodDeclaration) {
+      } else if (parent instanceof MethodDeclaration
+          && !(parent.getParent()
+              instanceof
+              AnonymousClassDeclaration)) { // to avoid binding null when inside anonymous class
         return Optional.of(
             getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
       } else if (parent instanceof TypeDeclaration) {
         ITypeBinding tdBinding = ((TypeDeclaration) parent).resolveBinding();
         // isFromSource
         return Optional.of(tdBinding.getQualifiedName());
-      }else if (parent instanceof Initializer) {
-
+      } else if (parent instanceof Initializer && parent.getParent() instanceof TypeDeclaration) {
+        // initializer block
+        return Optional.of(getParentInitBlockName(parent) + ".INIT");
       }
       parent = parent.getParent();
     }
