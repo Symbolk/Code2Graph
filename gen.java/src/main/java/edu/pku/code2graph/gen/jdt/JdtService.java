@@ -12,12 +12,39 @@ public class JdtService {
    *
    * @return
    */
-  public static Optional<String> findWrappedMethod(ASTNode node) {
+  public static Optional<String> findWrappedMethodName(ASTNode node) {
     ASTNode parent = node.getParent();
     while (parent != null) {
       if (parent.getNodeType() == ASTNode.METHOD_DECLARATION) {
         return Optional.of(
             getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
+      }
+      parent = parent.getParent();
+    }
+    return Optional.empty();
+  }
+
+  public static Optional<String> findWrappedEntityName(ASTNode node) {
+    ASTNode parent = node.getParent();
+    while (parent != null) {
+      //      if (parent instanceof BodyDeclaration) {
+      if (parent instanceof VariableDeclarationFragment
+          && parent.getParent() instanceof FieldDeclaration) {
+        IVariableBinding binding = ((VariableDeclarationFragment) parent).resolveBinding();
+        String qname = ((VariableDeclarationFragment) parent).getName().getFullyQualifiedName();
+        if (binding != null && binding.getDeclaringClass() != null) {
+          qname = binding.getDeclaringClass().getQualifiedName() + "." + qname;
+        }
+        return Optional.of(qname);
+      } else if (parent instanceof MethodDeclaration) {
+        return Optional.of(
+            getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
+      } else if (parent instanceof TypeDeclaration) {
+        ITypeBinding tdBinding = ((TypeDeclaration) parent).resolveBinding();
+        // isFromSource
+        return Optional.of(tdBinding.getQualifiedName());
+      }else if (parent instanceof Initializer) {
+
       }
       parent = parent.getParent();
     }
