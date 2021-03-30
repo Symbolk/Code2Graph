@@ -1,30 +1,49 @@
-# Code2Graph
+# Code2Graph: Convert source code into graph.
 
-Converting multi-language source code and their changes into graph representation, for various downstream tasks in software engineering.
+> With lightweight static analysis on nesting hierarchy, control and data flow.
 
-### Language Support
+> For various downstream tasks in software&language engineering:
+> - Software architecture analysis
+> - Semantic code diff
+> - Semantic code merge
+> - Impact analysis on code change
+> - Co-change prediction at different granularity
 
-- Java (under dev)
-- C (planning)
-- C++ (planning)
+## Highlights: 
 
-## Frontend
+- Support multi-language code, easy to extend
+- Support cross-lang link, specific to framework
+- Submodule architecture, flexible combination of downstream/high-level tasks
 
-- CLI
-- API
+![architecture](/images/architecture.png?raw=true "architecture")
 
-## Backend
+## Language Support
 
-- Eclipse JDT Parser
-- Eclipse CDT Parser
-- Language Server
+- Java (done): Eclipse JDT Parser
+- XML (done): SAXParser
+- Kotlin (doing): kotlinx
+- Python (in plan)
+- JavaScript (in plan)
 
-# Data Persistence
+## Usage
+### CLI
 
+### API (Java)
+
+
+### I/O 
+
+### Input
+
+### Output
+
+#### Data Persistence
 - Neo4j
 - GraphViz dot file
 
-## Graph Schema
+## Design
+
+### Graph Schema
 
 - Node
 
