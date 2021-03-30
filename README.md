@@ -25,6 +25,10 @@
 - Python (in plan)
 - JavaScript (in plan)
 
+> Special thanks to [Gumtree], which has a nice design for language-agnostic abstraction.  
+
+[Gumtree]: https://github.com/Symbolk/SmartCommit/releases
+
 ## Usage
 ### CLI
 
