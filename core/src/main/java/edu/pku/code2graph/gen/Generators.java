@@ -20,19 +20,18 @@
 
 package edu.pku.code2graph.gen;
 
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.util.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Registry of tree generators, using a singleton pattern.
@@ -83,11 +82,37 @@ public class Generators extends Registry<String, Generator, Register> {
         continue;
       }
       generator.generateFrom().files(entry.getValue());
-      // TODO link cached cross-lang edges if not yet
+    }
+    Graph<Node, Edge> graph = GraphUtil.getGraph();
+    Set<Node> XMLNodes =
+        graph.vertexSet().stream()
+            .filter(v -> v.getLanguage().equals(Language.XML))
+            .filter(v -> v instanceof ElementNode)
+            .collect(Collectors.toSet());
+
+    for (Triple<Node, Type, String> triple : GraphUtil.getCrossLangRefsPool()) {
+      findXMLNodeByID(XMLNodes, triple.getThird())
+          .ifPresent(
+              node ->
+                  graph.addEdge(
+                      triple.getFirst(), node, new Edge(GraphUtil.eid(), triple.getSecond())));
     }
 
-    //    GraphVizExporter.printAsDot(GraphUtil.getGraph());
-    return GraphUtil.getGraph();
+    //    GraphVizExporter.printAsDot(graph);
+    return graph;
+  }
+
+  private Optional<Node> findXMLNodeByID(Set<Node> XMLNodes, String id) {
+    // id: R.a.b
+    String[] secs = id.split("\\.");
+    if (secs.length != 3) {
+      return Optional.empty();
+    } else {
+      String qname = "@" + secs[1] + "/" + secs[2];
+      return XMLNodes.stream()
+          .filter(v -> ((ElementNode) v).getQualifiedName().equals(qname))
+          .findFirst();
+    }
   }
 
   public boolean has(String generator) {
