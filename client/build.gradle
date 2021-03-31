@@ -1,8 +1,32 @@
 description = 'Code2Graph client module.'
 
+repositories {
+    mavenCentral()
+
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/GumTreeDiff/gumtree")
+        credentials {
+            // find in gradle.properties, or system environments
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME")
+            password = project.findProperty("gpr.token") ?: System.getenv("TOKEN")
+        }
+    }
+}
+
+task printProperty {
+    doLast {
+        println(project.findProperty('gpr.user'))
+        println(project.findProperty('gpr.token'))
+    }
+}
+
 dependencies {
     implementation project(':diff')
     implementation project(':gen.java')
     implementation project(':gen.xml')
     implementation project(':gen.kotlin')
+
+    implementation 'com.github.gumtreediff:core:3.0.0-beta2'
+    implementation 'com.github.gumtreediff:gen.antlr3-xml:3.0.0-beta2'
 }

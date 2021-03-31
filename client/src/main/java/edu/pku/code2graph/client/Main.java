@@ -1,5 +1,13 @@
 package edu.pku.code2graph.client;
 
+import com.github.gumtreediff.actions.ChawatheScriptGenerator;
+import com.github.gumtreediff.actions.EditScript;
+import com.github.gumtreediff.gen.TreeGenerator;
+import com.github.gumtreediff.gen.antlr3.xml.XmlTreeGenerator;
+import com.github.gumtreediff.matchers.MappingStore;
+import com.github.gumtreediff.matchers.Matcher;
+import com.github.gumtreediff.matchers.Matchers;
+import com.github.gumtreediff.tree.TreeContext;
 import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
@@ -58,5 +66,29 @@ public class Main {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+
+  /**
+   * Compute diff and return edit script
+   *
+   * @param oldContent
+   * @param newContent
+   * @return
+   */
+  private static EditScript computeXMLChangesWithGumtree(String oldContent, String newContent) {
+    //        Generators generator = Generators.getInstance();
+    TreeGenerator generator = new XmlTreeGenerator();
+    try {
+      TreeContext oldContext = generator.generateFrom().string(oldContent);
+      TreeContext newContext = generator.generateFrom().string(newContent);
+      Matcher matcher = Matchers.getInstance().getMatcher();
+
+      MappingStore mappings = matcher.match(oldContext.getRoot(), newContext.getRoot());
+      EditScript editScript = new ChawatheScriptGenerator().computeActions(mappings);
+      return editScript;
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 }
