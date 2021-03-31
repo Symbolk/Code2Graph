@@ -3,12 +3,9 @@ package edu.pku.code2graph.diff.util;
 import edu.pku.code2graph.diff.model.ContentType;
 import edu.pku.code2graph.diff.model.FileStatus;
 import edu.pku.code2graph.diff.model.FileType;
+import edu.pku.code2graph.util.SysUtil;
 import org.mozilla.universalchardet.UniversalDetector;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,47 +17,6 @@ import java.util.List;
 import java.util.Set;
 
 public class DiffUtil {
-  /**
-   * Run system command under the given dir
-   *
-   * @param dir
-   * @param commands
-   * @return
-   */
-  public static String runSystemCommand(String dir, Charset charSet, String... commands) {
-    if (dir.startsWith("~")) {
-      dir = dir.replaceFirst("^~", System.getProperty("user.home"));
-    }
-
-    StringBuilder builder = new StringBuilder();
-    try {
-      Runtime rt = Runtime.getRuntime();
-      Process proc = rt.exec(commands, null, new File(dir));
-
-      BufferedReader stdInput =
-          new BufferedReader(new InputStreamReader(proc.getInputStream(), charSet));
-
-      BufferedReader stdError =
-          new BufferedReader(new InputStreamReader(proc.getErrorStream(), charSet));
-
-      String s = null;
-      while ((s = stdInput.readLine()) != null) {
-        builder.append(s);
-        builder.append("\n");
-        //                if (verbose) log(s);
-      }
-
-      while ((s = stdError.readLine()) != null) {
-        builder.append(s);
-        builder.append("\n");
-        //                if (verbose) log(s);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return builder.toString();
-  }
-
   /**
    * Check the file type by file path. Two ways to determine whether a file is binary: by git diff
    * or by file -bI, the file must accessible on disk.
@@ -74,7 +30,7 @@ public class DiffUtil {
     //      return FileType.BIN;
     //    }
     String output =
-        runSystemCommand(
+        SysUtil.runSystemCommand(
             repoPath,
             StandardCharsets.UTF_8,
             "git",

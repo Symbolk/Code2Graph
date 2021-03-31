@@ -6,6 +6,7 @@ import edu.pku.code2graph.diff.textualdiffparser.api.UnifiedDiffParser;
 import edu.pku.code2graph.diff.textualdiffparser.api.model.Diff;
 import edu.pku.code2graph.diff.textualdiffparser.api.model.Line;
 import edu.pku.code2graph.util.FileUtil;
+import edu.pku.code2graph.util.SysUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -25,12 +26,12 @@ public class GitServiceCGit implements GitService {
   public ArrayList<DiffFile> getChangedFilesInWorkingTree(String repoPath) {
     // unstage the staged files first
     //    SysUtil.runSystemCommand(repoPath, "git", "restore", "--staged", ".");
-    DiffUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "HEAD", ".");
+    SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "HEAD", ".");
 
     ArrayList<DiffFile> diffFileList = new ArrayList<>();
     // run git status --porcelain to get changeset
     String output =
-        DiffUtil.runSystemCommand(
+        SysUtil.runSystemCommand(
             repoPath, StandardCharsets.UTF_8, "git", "status", "--porcelain", "-uall");
     // early return
     if (output.isEmpty()) {
@@ -158,7 +159,7 @@ public class GitServiceCGit implements GitService {
     // git diff <start_commit> <end_commit>
     // on Windows the ~ character must be used instead of ^
     String output =
-        DiffUtil.runSystemCommand(
+        SysUtil.runSystemCommand(
             repoPath,
             StandardCharsets.UTF_8,
             "git",
@@ -287,7 +288,7 @@ public class GitServiceCGit implements GitService {
   public List<DiffHunk> getDiffHunksInWorkingTree(String repoPath, List<DiffFile> diffFiles) {
     // unstage the staged files first
     //    SysUtil.runSystemCommand(repoPath, "git", "reset", "--mixed");
-    DiffUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "HEAD", ".");
+    SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "HEAD", ".");
     // diff once for all
     // git diff + git diff --cached/staged == git diff HEAD (show all the changes since last commit
     // String diffOutput = SysUtil.runSystemCommand(repoPath, "git", "diff", "HEAD", "-U0");
@@ -307,7 +308,7 @@ public class GitServiceCGit implements GitService {
           diffFile.setDiffHunks(diffHunksInFile);
         }
         diffOutput.append(
-            DiffUtil.runSystemCommand(
+            SysUtil.runSystemCommand(
                 repoPath,
                 diffFile.getCharset(),
                 "git",
@@ -554,7 +555,7 @@ public class GitServiceCGit implements GitService {
     // git diff <start_commit> <end_commit>
     // on Windows the ~ character must be used instead of ^
     String diffOutput =
-        DiffUtil.runSystemCommand(
+        SysUtil.runSystemCommand(
             repoPath, StandardCharsets.UTF_8, "git", "diff", "-U0", commitID + "~", commitID);
     List<Diff> diffs = new ArrayList<>();
     if (!diffOutput.trim().isEmpty()) {
@@ -574,7 +575,7 @@ public class GitServiceCGit implements GitService {
    */
   @Override
   public String getContentAtHEAD(Charset charset, String repoDir, String relativePath) {
-    return DiffUtil.runSystemCommand(repoDir, charset, "git", "show", "HEAD:" + relativePath);
+    return SysUtil.runSystemCommand(repoDir, charset, "git", "show", "HEAD:" + relativePath);
   }
 
   /**
@@ -586,7 +587,7 @@ public class GitServiceCGit implements GitService {
   @Override
   public String getContentAtCommit(
       Charset charset, String repoDir, String relativePath, String commitID) {
-    return DiffUtil.runSystemCommand(repoDir, charset, "git", "show", commitID + ":" + relativePath);
+    return SysUtil.runSystemCommand(repoDir, charset, "git", "show", commitID + ":" + relativePath);
   }
 
   /**
@@ -614,9 +615,9 @@ public class GitServiceCGit implements GitService {
    * @param repoPath
    */
   public boolean clearWorkingTree(String repoPath) {
-    DiffUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "--hard");
+    SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "--hard");
     String status =
-        DiffUtil.runSystemCommand(
+        SysUtil.runSystemCommand(
             repoPath, StandardCharsets.UTF_8, "git", "status", "--porcelain", "-uall");
     // working tree clean if empty
     return status.isEmpty();
@@ -627,7 +628,7 @@ public class GitServiceCGit implements GitService {
     // git show HEAD | grep Author
     // git log -1 --format='%an' HASH
     // git show -s --format='%an' HASH
-    return DiffUtil.runSystemCommand(
+    return SysUtil.runSystemCommand(
             repoDir, StandardCharsets.UTF_8, "git", "show", "-s", "--format='%an'", commitID)
         .trim()
         .replaceAll("'", "");
@@ -637,14 +638,15 @@ public class GitServiceCGit implements GitService {
   public String getCommitterEmail(String repoDir, String commitID) {
     // git log -1 --format='%ae' HASH
     // git show -s --format='%ae' HASH
-    return DiffUtil.runSystemCommand(
+    return SysUtil.runSystemCommand(
             repoDir, StandardCharsets.UTF_8, "git", "show", "-s", "--format='%ae'", commitID)
         .trim()
         .replaceAll("'", "");
   }
 
   private boolean checkBinaryFileByDiff(String repoPath, String filePath, Charset charset) {
-    String output = DiffUtil.runSystemCommand(repoPath, charset, "git", "diff", "-U0", "--", filePath);
+    String output =
+        SysUtil.runSystemCommand(repoPath, charset, "git", "diff", "-U0", "--", filePath);
     // e.g. Binary files a/11.png and /dev/null differ
     if (output.trim().contains("Binary files")) {
       return true;
