@@ -255,7 +255,7 @@ public class Differ {
     //                                    Node::hashSignature, Function.identity(), (o, n) -> o,
     // HashMap::new));
     for (Node node : nodeSet) {
-      if (node.getType().equals(type("file"))) {
+      if (node.getType().equals(type("file", true))) {
         ElementNode fileNode = (ElementNode) node;
         String relativePath =
             FileUtil.getRelativePath(
@@ -363,7 +363,7 @@ public class Differ {
         }
         diffRanges.put(diffFile.getARelativePath(), ranges);
       }
-      fileNodes = mapping.getUnmatchedElementNodes1().get(type("file"));
+      fileNodes = mapping.getUnmatchedElementNodes1().get(type("file", true));
     } else {
       for (DiffFile diffFile : diffFiles) {
         List<Range> ranges = new ArrayList<>();
@@ -372,7 +372,7 @@ public class Differ {
         }
         diffRanges.put(diffFile.getBRelativePath(), ranges);
       }
-      fileNodes = mapping.getUnmatchedElementNodes2().get(type("file"));
+      fileNodes = mapping.getUnmatchedElementNodes2().get(type("file", true));
     }
     if (fileNodes != null) {
       // filter nodes accordingly in a and b version

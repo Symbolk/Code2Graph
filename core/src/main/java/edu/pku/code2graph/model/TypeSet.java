@@ -31,6 +31,10 @@ public class TypeSet implements Serializable {
     return implementation.makeOrGetType(name);
   }
 
+  public static Type type(String name, boolean isEntity) {
+    return implementation.makeOrGetType(name, isEntity);
+  }
+
   private static class TypeFactoryImplementation extends Type.TypeFactory {
     private final Map<String, Type> types = new HashMap<>();
 
@@ -41,6 +45,19 @@ public class TypeSet implements Serializable {
       Type sym = types.get(name);
       if (sym == null) {
         sym = makeType(name);
+        types.put(name, sym);
+      }
+
+      return sym;
+    }
+
+    public Type makeOrGetType(String name, boolean isEntity) {
+      //            return types.computeIfAbsent(name == null ? "" : name, (key) -> makeType(key));
+      if (name == null) name = "";
+
+      Type sym = types.get(name);
+      if (sym == null) {
+        sym = makeType(name, isEntity);
         types.put(name, sym);
       }
 

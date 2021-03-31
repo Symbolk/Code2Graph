@@ -6,16 +6,18 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 public class NodeType {
   // Elements
-  public static final Type FILE = type("file");
+  public static final Type FILE = type("file", true);
 
-  public static final Type CLASS_DECLARATION = type("class_declaration");
-  public static final Type INTERFACE_DECLARATION = type("interface_declaration");
-  public static final Type ENUM_DECLARATION = type("enum_declaration");
+  // types
+  public static final Type CLASS_DECLARATION = type("class_declaration", true);
+  public static final Type INTERFACE_DECLARATION = type("interface_declaration", true);
+  public static final Type ENUM_DECLARATION = type("enum_declaration", true);
 
-  public static final Type INIT_BLOCK_DECLARATION = type("init_block_declaration");
-  public static final Type FIELD_DECLARATION = type("field_declaration");
-  public static final Type ENUM_CONSTANT_DECLARATION = type("enum_const_declaration");
-  public static final Type METHOD_DECLARATION = type("method_declaration");
+  // members
+  public static final Type INIT_BLOCK_DECLARATION = type("init_block_declaration", true);
+  public static final Type FIELD_DECLARATION = type("field_declaration", true);
+  public static final Type ENUM_CONSTANT_DECLARATION = type("enum_const_declaration", true);
+  public static final Type METHOD_DECLARATION = type("method_declaration", true);
   public static final Type VAR_DECLARATION = type("variable_declaration");
   public static final Type LITERAL = type("literal");
   public static final Type QUALIFIED_NAME = type("qualified_name");

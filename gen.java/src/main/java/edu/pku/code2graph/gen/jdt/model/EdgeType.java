@@ -6,8 +6,9 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 public class EdgeType {
   // type hierarchy
-  public static final Type PARENT_CLASS = type("parent_class");
-  public static final Type INTERFACE = type("interface");
+  public static final Type SUPER_CLASS = type("super_class");
+  public static final Type EXTENDED_INTERFACE = type("extended_interface");
+  public static final Type THROWN_EXCEPTION = type("thrown_exception");
 
   // type and source
   public static final Type DATA_TYPE = type("data_type");
@@ -16,7 +17,6 @@ public class EdgeType {
   // roles for method declaration
   public static final Type METHOD_PARAMETER = type("parameter");
   public static final Type METHOD_RETURN = type("return_type");
-  public static final Type METHOD_EXCEPTION = type("exception");
 
   // roles for method invocation
   public static final Type METHOD_CALLER = type("caller");

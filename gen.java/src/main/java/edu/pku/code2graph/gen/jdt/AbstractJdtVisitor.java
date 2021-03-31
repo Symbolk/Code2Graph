@@ -61,14 +61,6 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     return graph;
   }
 
-  protected static Type nodeAsSymbol(ASTNode node) {
-    return nodeAsSymbol(node.getNodeType());
-  }
-
-  protected static Type nodeAsSymbol(int id) {
-    return type(ASTNode.nodeClassForType(id).getSimpleName());
-  }
-
   public void setCu(CompilationUnit cu) {
     this.cu = cu;
   }

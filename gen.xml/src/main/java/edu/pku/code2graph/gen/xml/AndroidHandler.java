@@ -64,7 +64,7 @@ public class AndroidHandler extends AbstractHandler {
         new ElementNode(
             GraphUtil.nid(),
             Language.XML,
-            type("file"),
+            type("file", true),
             "",
             FileUtil.getFileNameFromPath(filePath),
             filePath);
@@ -77,7 +77,7 @@ public class AndroidHandler extends AbstractHandler {
   @Override
   public void startElement(String uri, String localName, String qName, Attributes attributes)
       throws SAXException {
-    Type nType = type(qName);
+    Type nType = type(qName, true);
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "");
