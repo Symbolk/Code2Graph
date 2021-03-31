@@ -5,7 +5,7 @@ import java.io.Serializable;
 public class Edge implements Serializable {
   private static final long serialVersionUID = -8788348413604586284L;
 
-  private Integer id;
+  private final Integer id;
   public Type type;
   public Double weight;
   //    public Boolean isMutual;

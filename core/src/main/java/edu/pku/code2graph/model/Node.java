@@ -7,7 +7,7 @@ import static edu.pku.code2graph.model.TypeSet.type;
 public abstract class Node implements Serializable {
   private static final long serialVersionUID = -4685691468295743770L;
 
-  private Integer id;
+  private final Integer id;
   protected Type type;
   protected String snippet;
   protected Language language;
