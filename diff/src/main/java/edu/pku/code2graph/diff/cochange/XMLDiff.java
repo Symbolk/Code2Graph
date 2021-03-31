@@ -23,4 +23,20 @@ public class XMLDiff {
     this.action = action;
     this.location = location;
   }
+
+  public String getAction() {
+    return action;
+  }
+
+  public String getLocation() {
+    return location;
+  }
+
+  public String getSchema() {
+    return schema;
+  }
+
+  public String getName() {
+    return name;
+  }
 }

@@ -16,8 +16,12 @@ import gumtree.spoon.diff.Diff;
 import gumtree.spoon.diff.operations.Operation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.PropertyConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtTypeMember;
+import spoon.support.reflect.declaration.CtTypeImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,45 +52,63 @@ public class ChangeLint {
   public static void main(String[] args) throws IOException {
 
     //    BasicConfigurator.configure();
+    PropertyConfigurator.configure(
+        System.getProperty("user.dir") + File.separator + "log4j.properties");
 
     // 1. Offline process: given the commit id of the earliest future multi-lang commit
     // checkout to that version
-    // offline: build the graph for the current version
-    //    Graph<Node, Edge> graph = offline();
-    //    GraphVizExporter.printAsDot(graph);
+    //    DiffUtil.runSystemCommand(repoPath, Charset.defaultCharset(), "git", "checkout", "-b",
+    // "changelint", "e457da8");
+    //    offline: build the graph for the current version
+    //    Graph<Node, Edge> graph = buildGraph();
+    //    System.out.println(graph.vertexSet().size());
+    //    System.out.println(graph.edgeSet().size());
+    //    GraphVizExporter.copyAsDot(graph);
 
     // 2. Online process: for each of the future commits, extract the changes as GT
     // predict & compare
-    String commitID = "ea5ccf3";
+    String testCommitID = "ea5ccf3";
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
-    List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID); // together with ground truth
+    List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
     DataCollector dataCollector = new DataCollector(tempDir);
     Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
 
+    // file relative path, changed xml element id
     Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
-    Map<String, List<Operation>> javaDiffs = new HashMap<>();
+    // file relative path, type name, member name
+    Map<String, Set<Pair<String, String>>> javaDiffs = new HashMap<>();
 
     for (DiffFile diffFile : diffFiles) {
       if (diffFile.getFileType().equals(FileType.XML)) {
         xmlDiffs.put(diffFile.getARelativePath(), computeXMLChanges(tempFilePaths, diffFile));
       } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        javaDiffs.put(
-            diffFile.getARelativePath(),
-            computeJavaChanges(diffFile.getAContent(), diffFile.getBContent()));
+        javaDiffs.put(diffFile.getARelativePath(), computeJavaChanges(diffFile));
       }
     }
 
     // locate changed xml nodes in the graph
+    for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
+      for (XMLDiff diff : entry.getValue()) {
+        if (diff.getName() != null) {
+          if (diff.getName().startsWith("@+id")) {
+            System.out.println(diff);
+          }
+        }
+      }
+    }
+    // modified
 
-    // predict co-changes according to context/similar nodes
+    // removed
 
-    // output co-change file/type/method
+    // added: predict co-changes according to context/similar nodes
+
+    // output co-change file/type/member
 
     // measure accuracy by comparing with ground truth
 
   }
 
-  private static Graph<Node, Edge> offline() throws IOException {
+  private static Graph<Node, Edge> buildGraph() throws IOException {
     // iterate all Java files and match imports
     List<String> allJavaFilePaths = FileUtil.getSpecificFilePaths(repoPath, ".java");
 
@@ -150,19 +172,47 @@ public class ChangeLint {
   /**
    * Compute diff and return edit script with gumtree spoon
    *
-   * @param aContent
-   * @param bContent
    * @return
    */
-  private static List<Operation> computeJavaChanges(String aContent, String bContent) {
+  private static Set<Pair<String, String>> computeJavaChanges(DiffFile diffFile) {
+    Set<Pair<String, String>> results = new HashSet<>();
+
     AstComparator diff = new AstComparator();
-    Diff editScript = diff.compare(aContent, bContent);
-    List<Operation> operations = editScript.getRootOperations();
-    // TODO filter at member/type/file level
-    //    for (Operation operation : operations) {
-    //      System.out.println(operation);
-    //    }
-    return operations;
+    Diff editScript = diff.compare(diffFile.getAContent(), diffFile.getBContent());
+    // build GT: process Java changes to file/type/member
+    for (Operation operation : editScript.getRootOperations()) { // or allOperations?
+      Pair<String, String> names = findWrappedTypeAndMemberNames(operation.getSrcNode());
+      results.add(names);
+    }
+    return results;
+  }
+
+  private static Pair<String, String> findWrappedTypeAndMemberNames(CtElement element) {
+    if (element instanceof CtTypeImpl) {
+      return Pair.of(((CtTypeImpl) element).getQualifiedName(), "");
+    } else if (element instanceof CtTypeMember) {
+      CtTypeMember member = (CtTypeMember) element;
+      return Pair.of(member.getDeclaringType().getQualifiedName(), member.getSimpleName());
+    } else {
+      // find parent member and type
+      CtElement parentType = element.getParent();
+      CtElement parentMember = element.getParent();
+
+      while (parentType != null && !(parentType instanceof CtTypeImpl)) {
+        parentType = parentType.getParent();
+      }
+      while (parentMember != null && !(parentMember instanceof CtTypeMember)) {
+        parentMember = parentMember.getParent();
+      }
+
+      String parentTypeName =
+          parentType != null ? ((CtTypeImpl) parentType).getQualifiedName() : "";
+      String parentMemberName =
+          parentMember != null ? ((CtTypeMember) parentMember).getSimpleName() : "";
+      return Pair.of(parentTypeName, parentMemberName);
+    }
+    //    String nodeType = element.getClass().getSimpleName();
+    //    nodeType = nodeType.substring(2, nodeType.length() - 4);
   }
 
   private static List<XMLDiff> computeXMLChanges(
