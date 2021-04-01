@@ -25,10 +25,10 @@ import spoon.support.reflect.declaration.CtTypeImpl;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
+import static edu.pku.code2graph.gen.xml.cochange.XMLDiffUtil.computeXMLChanges;
 
 public class ChangeLint {
   private static String repoName = "LeafPic";
@@ -213,51 +213,5 @@ public class ChangeLint {
     }
     //    String nodeType = element.getClass().getSimpleName();
     //    nodeType = nodeType.substring(2, nodeType.length() - 4);
-  }
-
-  private static List<XMLDiff> computeXMLChanges(
-      Pair<List<String>, List<String>> tempFilePaths, DiffFile diffFile) {
-    // find the file path with relative path
-    Optional<String> aPath =
-        tempFilePaths.getLeft().stream()
-            .filter(path -> path.trim().endsWith(diffFile.getARelativePath()))
-            .findFirst();
-    Optional<String> bPath =
-        tempFilePaths.getRight().stream()
-            .filter(path -> path.trim().endsWith(diffFile.getBRelativePath()))
-            .findFirst();
-
-    String output = "";
-    //    System.out.println(
-    //        DiffUtil.runSystemCommand(tempDir, Charset.defaultCharset(), "python", "--version"));
-    if (aPath.isPresent() && bPath.isPresent()) {
-      // compare with system command
-      output =
-          DiffUtil.runSystemCommand(
-              tempDir, Charset.defaultCharset(), "xmldiff", "-p", aPath.get(), bPath.get());
-    }
-    // TODO process added and deleted files
-    // parse the output and collected diff
-    Stream<String> lines = output.lines();
-    List<XMLDiff> xmlDiffs = new ArrayList<>();
-    lines.forEach(line -> xmlDiffs.add(convertXMLDiff(line)));
-    return xmlDiffs;
-  }
-
-  private static XMLDiff convertXMLDiff(String line) {
-    List<String> parts =
-        Arrays.stream(StringUtils.removeEnd(StringUtils.removeStart(line, "["), "]").split(","))
-            .map(String::trim)
-            .collect(Collectors.toList());
-    // convert the diff to objects
-    switch (parts.size()) {
-      case 4:
-        return new XMLDiff(parts.get(0), parts.get(1), parts.get(2), parts.get(3));
-      case 3:
-        return new XMLDiff(parts.get(0), parts.get(1), parts.get(2));
-      case 2:
-        return new XMLDiff(parts.get(0), parts.get(1));
-    }
-    return null;
   }
 }

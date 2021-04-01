@@ -1,10 +1,10 @@
-package edu.pku.code2graph.diff.cochange;
+package edu.pku.code2graph.gen.xml.cochange;
 
 public class XMLDiff {
-  private String action;
-  private String location;
-  private String schema;
-  private String name;
+  private String action = "";
+  private String location = "";
+  private String schema = "";
+  private String name = "";
 
   public XMLDiff(String action, String location, String schema, String name) {
     this.action = action;
@@ -38,5 +38,23 @@ public class XMLDiff {
 
   public String getName() {
     return name;
+  }
+
+  @Override
+  public String toString() {
+    return "XMLDiff{"
+        + "action='"
+        + action
+        + '\''
+        + ", location='"
+        + location
+        + '\''
+        + ", schema='"
+        + schema
+        + '\''
+        + ", name='"
+        + name
+        + '\''
+        + '}';
   }
 }
