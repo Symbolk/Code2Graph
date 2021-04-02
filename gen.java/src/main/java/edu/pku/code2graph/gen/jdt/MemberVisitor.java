@@ -146,7 +146,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
         // res)));
       }
     }
-    return false;
+    return true;
   }
 
   public boolean visit(MethodDeclaration md) {

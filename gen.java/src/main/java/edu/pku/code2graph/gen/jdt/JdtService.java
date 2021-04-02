@@ -36,6 +36,17 @@ public class JdtService {
           qname = binding.getDeclaringClass().getQualifiedName() + "." + qname;
         }
         return Optional.of(qname);
+      } else if (parent instanceof FieldDeclaration) {
+        List<VariableDeclarationFragment> fragments = ((FieldDeclaration) parent).fragments();
+        // use the first one as the binding
+        if (!fragments.isEmpty()) {
+          String qname = fragments.get(0).getName().getFullyQualifiedName();
+          IVariableBinding binding = fragments.get(0).resolveBinding();
+          if (binding != null && binding.getDeclaringClass() != null) {
+            qname = binding.getDeclaringClass().getQualifiedName() + "." + qname;
+          }
+          return Optional.of(qname);
+        }
       } else if (parent instanceof MethodDeclaration
           && !(parent.getParent()
               instanceof
