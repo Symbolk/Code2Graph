@@ -4,21 +4,23 @@ import edu.pku.code2graph.diff.DataCollector;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
-import edu.pku.code2graph.diff.util.DiffUtil;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.gen.jdt.model.EdgeType;
+import edu.pku.code2graph.gen.jdt.model.NodeType;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import gumtree.spoon.AstComparator;
 import gumtree.spoon.diff.Diff;
 import gumtree.spoon.diff.operations.Operation;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.PropertyConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.support.reflect.declaration.CtTypeImpl;
@@ -28,9 +30,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static edu.pku.code2graph.gen.xml.cochange.XMLDiffUtil.computeXMLChanges;
-
 public class ChangeLint {
+  static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
+
   private static String repoName = "LeafPic";
   //  private static String repoName = "test_repo";
   private static String repoPath = "/Users/symbolk/coding/data/repos/" + repoName;
@@ -57,55 +59,147 @@ public class ChangeLint {
 
     // 1. Offline process: given the commit id of the earliest future multi-lang commit
     // checkout to that version
-    //    DiffUtil.runSystemCommand(repoPath, Charset.defaultCharset(), "git", "checkout", "-b",
+    //    SysUtil.runSystemCommand(repoPath, Charset.defaultCharset(), "git", "checkout", "-b",
     // "changelint", "e457da8");
-    //    offline: build the graph for the current version
-    //    Graph<Node, Edge> graph = buildGraph();
-    //    System.out.println(graph.vertexSet().size());
-    //    System.out.println(graph.edgeSet().size());
-    //    GraphVizExporter.copyAsDot(graph);
+    //   build the graph for the current version
+    Graph<Node, Edge> graph = buildGraph();
+    logger.info(
+        "Graph building done, with {} nodes and {} edges",
+        graph.vertexSet().size(),
+        graph.edgeSet().size());
 
     // 2. Online process: for each of the future commits, extract the changes as GT
-    // predict & compare
     String testCommitID = "ea5ccf3";
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
     DataCollector dataCollector = new DataCollector(tempDir);
     Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
 
-    // file relative path, changed xml element id
+    // Input: XMLDiff (file relative path, changed xml element id)
     Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
-    // file relative path, type name, member name
+    // Ground Truth: JavaDiff (file relative path, type name, member name)
     Map<String, Set<Pair<String, String>>> javaDiffs = new HashMap<>();
 
     for (DiffFile diffFile : diffFiles) {
       if (diffFile.getFileType().equals(FileType.XML)) {
-        xmlDiffs.put(diffFile.getARelativePath(), computeXMLChanges(tempFilePaths, diffFile));
+        xmlDiffs.put(
+            diffFile.getARelativePath(),
+            XMLDiffUtil.computeXMLChangesWithGumtree(
+                diffFile.getAContent(), diffFile.getBContent()));
+        //        xmlDiffs.put(
+        //            diffFile.getARelativePath(),
+        //                XMLDiffUtil.computeXMLChanges(
+        //                tempFilePaths, diffFile.getARelativePath(), diffFile.getBRelativePath()));
       } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        javaDiffs.put(diffFile.getARelativePath(), computeJavaChanges(diffFile));
+        javaDiffs.put(diffFile.getARelativePath(), computeJavaChangesWithSpoon(diffFile));
       }
     }
 
-    // locate changed xml nodes in the graph
+    Set<String> xmlDiffElements = new HashSet<>();
     for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
       for (XMLDiff diff : entry.getValue()) {
-        if (diff.getName() != null) {
-          if (diff.getName().startsWith("@+id")) {
-            System.out.println(diff);
-          }
+        if (XMLDiffUtil.isIDLabel(diff.getName())) {
+          xmlDiffElements.add(diff.getName().replace("\"", "").replace("+", ""));
         }
       }
     }
-    // modified
 
-    // removed
+    // Output: predicted co-change file/type/member in the graph
+    Map<String, Set<Pair<String, String>>> javaCochanges = new HashMap<>();
 
-    // added: predict co-changes according to context/similar nodes
+    // check if exists to determine change action (if the tool reports wrong change action)
+    Set<ElementNode> XMLNodes =
+        graph.vertexSet().stream()
+            .filter(v -> v.getLanguage().equals(Language.XML))
+            .filter(v -> v instanceof ElementNode)
+            .map(ElementNode.class::cast)
+            .collect(Collectors.toSet());
+    for (String element : xmlDiffElements) {
+      Optional<ElementNode> nodeOpt =
+          XMLNodes.stream().filter(node -> element.equals(node.getQualifiedName())).findAny();
+      if (nodeOpt.isPresent()) {
+        // locate changed xml nodes in the graph
+        // if exist, modified/removed
+        Set<Edge> useEdges =
+            graph.incomingEdgesOf(nodeOpt.get()).stream()
+                .filter(edge -> !edge.getType().equals(EdgeType.CHILD))
+                .collect(Collectors.toSet());
 
-    // output co-change file/type/member
+        // find edge source (uses) nodes in Java code
+        for (Edge useEdge : useEdges) {
+          Node sourceNode = graph.getEdgeSource(useEdge);
+          if (sourceNode.getLanguage().equals(Language.JAVA)) {
+            // find wrapped member, type, and file nodes, return names
+            addOutputEntry(javaCochanges, findWrappedEntities(graph, sourceNode));
+          }
+        }
+      } else {
+        // if not exist, added: predict co-changes according to context/similar nodes
+
+      }
+    }
 
     // measure accuracy by comparing with ground truth
 
+
+  }
+
+  private static void addOutputEntry(
+      Map<String, Set<Pair<String, String>>> javaCochanges,
+      Triple<String, String, String> entityNames) {
+    String filePath = entityNames.getLeft(),
+        typeName = entityNames.getMiddle(),
+        memberName = entityNames.getRight();
+
+    if (!javaCochanges.containsKey(filePath)) {
+      javaCochanges.put(filePath, new HashSet<>());
+    }
+    javaCochanges.get(filePath).add(Pair.of(typeName, memberName));
+  }
+
+  /**
+   * (file relative path, type name, member name)
+   *
+   * @param node
+   * @return
+   */
+  private static Triple<String, String, String> findWrappedEntities(
+      Graph<Node, Edge> graph, Node node) {
+    // iteratively find wrapped entities (until file)
+    Optional<Node> parentOpt = Optional.of(node);
+    String filePath = "", typeName = "", memberName = "";
+
+    while (parentOpt.isPresent()) {
+      Node parent = parentOpt.get();
+      if (parent instanceof ElementNode) {
+        Type type = parent.getType();
+        if (NodeType.FILE.equals(type)) {
+          filePath = ((ElementNode) parent).getQualifiedName();
+        } else if (NodeType.ENUM_DECLARATION.equals(type)
+            || NodeType.INTERFACE_DECLARATION.equals(type)
+            || NodeType.CLASS_DECLARATION.equals(type)) {
+          typeName = ((ElementNode) parent).getName();
+        } else if (parent.getType().isEntity) {
+          memberName = ((ElementNode) parent).getName();
+        }
+      }
+      parentOpt = getParentNode(graph, parent);
+    }
+    return Triple.of(filePath, typeName, memberName);
+  }
+
+  /**
+   * TODO: cache parent and children in Node, to speed up
+   *
+   * @param graph
+   * @param node
+   * @return
+   */
+  private static Optional<Node> getParentNode(Graph<Node, Edge> graph, Node node) {
+    return graph.incomingEdgesOf(node).stream()
+        .filter(edge -> edge.getType().equals(EdgeType.CHILD))
+        .map(graph::getEdgeSource)
+        .findFirst();
   }
 
   private static Graph<Node, Edge> buildGraph() throws IOException {
@@ -152,9 +246,6 @@ public class ChangeLint {
             .filter(path -> path.contains("layout"))
             .collect(Collectors.toList()));
 
-    // construct graph above statement level
-    // filter only ASTNodes with R.
-    // build cross-lang edges
     Generators generator = Generators.getInstance();
 
     return generator.generateFromFiles(new ArrayList<>(filePaths));
@@ -174,11 +265,10 @@ public class ChangeLint {
    *
    * @return
    */
-  private static Set<Pair<String, String>> computeJavaChanges(DiffFile diffFile) {
+  private static Set<Pair<String, String>> computeJavaChangesWithSpoon(DiffFile diffFile) {
     Set<Pair<String, String>> results = new HashSet<>();
 
-    AstComparator diff = new AstComparator();
-    Diff editScript = diff.compare(diffFile.getAContent(), diffFile.getBContent());
+    Diff editScript = new AstComparator().compare(diffFile.getAContent(), diffFile.getBContent());
     // build GT: process Java changes to file/type/member
     for (Operation operation : editScript.getRootOperations()) { // or allOperations?
       Pair<String, String> names = findWrappedTypeAndMemberNames(operation.getSrcNode());
