@@ -95,7 +95,7 @@ public class MetricUtil {
    * @param s2
    * @return
    */
-  private static double jaccardSet(Set s1, Set s2) {
+  public static double jaccardSet(Set s1, Set s2) {
     Set<String> union = new HashSet<>();
     union.addAll(s1);
     union.addAll(s2);
@@ -106,6 +106,12 @@ public class MetricUtil {
     } else {
       return formatDouble((double) intersection.size() / union.size());
     }
+  }
+
+  public static int intersectSize(Set s1, Set s2) {
+    Set<String> intersection = new HashSet<>(s1);
+    intersection.retainAll(s2);
+    return intersection.size();
   }
 
   /**
@@ -147,7 +153,7 @@ public class MetricUtil {
    * @param value
    * @return
    */
-  private static double formatDouble(double value) {
+  public static double formatDouble(double value) {
     return (double) Math.round(value * 100) / 100;
   }
 

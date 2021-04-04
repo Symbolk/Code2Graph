@@ -1,9 +1,9 @@
 package edu.pku.code2graph.diff.cochange;
 
-import edu.pku.code2graph.diff.DataCollector;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
+import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -72,8 +72,8 @@ public class ChangeLint {
     String testCommitID = "ea5ccf3";
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
-    DataCollector dataCollector = new DataCollector(tempDir);
-    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
+    //    DataCollector dataCollector = new DataCollector(tempDir);
+    //    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
 
     // Input: XMLDiff (file relative path, changed xml element id)
     Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
@@ -139,9 +139,63 @@ public class ChangeLint {
       }
     }
 
-    // measure accuracy by comparing with ground truth
+    // measure accuracy by comparing with ground truth (compute the three sets)
+    evaluate(javaCochanges, javaDiffs);
+  }
 
+  private static void evaluate(
+      Map<String, Set<Pair<String, String>>> output,
+      Map<String, Set<Pair<String, String>>> groundTruth) {
+    // separately on three levels
+    int correctFileNum = 0;
+    int correctTypeNum = 0;
+    int correctMemberNum = 0;
 
+    for (Map.Entry<String, Set<Pair<String, String>>> entry : output.entrySet()) {
+      String filePath = FileUtil.getRelativePath(repoPath, entry.getKey());
+      Set<String> outputTypes = new HashSet<>();
+      Set<String> outputMembers = new HashSet<>();
+      entry
+          .getValue()
+          .forEach(
+              pair -> {
+                outputTypes.add(pair.getLeft());
+                outputMembers.add(pair.getRight());
+              });
+
+      if (groundTruth.containsKey(filePath)) {
+        Set<Pair<String, String>> typeAndMember = groundTruth.get(filePath);
+        correctFileNum += 1;
+        Set<String> gtTypes = new HashSet<>();
+        Set<String> gtMembers = new HashSet<>();
+        typeAndMember.forEach(
+            pair -> {
+              gtTypes.add(pair.getLeft());
+              gtMembers.add(pair.getRight());
+            });
+        correctTypeNum += MetricUtil.intersectSize(outputTypes, gtTypes);
+        correctMemberNum += MetricUtil.intersectSize(outputMembers, gtMembers);
+      }
+    }
+
+    int totalFileNum = groundTruth.entrySet().size();
+    Set<String> totalTypes = new HashSet<>();
+    Set<String> totalMembers = new HashSet<>();
+    for (Map.Entry<String, Set<Pair<String, String>>> entry : groundTruth.entrySet()) {
+      for (Pair<String, String> pair : entry.getValue()) {
+        if (!pair.getLeft().isEmpty()) {
+          totalTypes.add(pair.getLeft());
+        }
+
+        if (!pair.getRight().isEmpty()) {
+          totalMembers.add(pair.getRight());
+        }
+      }
+    }
+
+    System.out.println(MetricUtil.formatDouble((double) correctFileNum / totalFileNum));
+    System.out.println(MetricUtil.formatDouble((double) (correctTypeNum / totalTypes.size())));
+    System.out.println(MetricUtil.formatDouble(((double) correctMemberNum / totalMembers.size())));
   }
 
   private static void addOutputEntry(
@@ -178,7 +232,7 @@ public class ChangeLint {
         } else if (NodeType.ENUM_DECLARATION.equals(type)
             || NodeType.INTERFACE_DECLARATION.equals(type)
             || NodeType.CLASS_DECLARATION.equals(type)) {
-          typeName = ((ElementNode) parent).getName();
+          typeName = ((ElementNode) parent).getQualifiedName();
         } else if (parent.getType().isEntity) {
           memberName = ((ElementNode) parent).getName();
         }
