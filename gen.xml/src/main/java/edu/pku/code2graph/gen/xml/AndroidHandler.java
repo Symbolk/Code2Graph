@@ -60,14 +60,16 @@ public class AndroidHandler extends AbstractHandler {
 
   @Override
   public void startDocument() throws SAXException {
+    // set qualified name in the intermediate form: R.type.name
+    String name = FileUtil.getFileNameFromPath(filePath);
+    String qName = name;
+    String parentDir = FileUtil.getParentFolderName(filePath);
+    if (!parentDir.contains("-") && !parentDir.startsWith("values")) {
+      qName = "R." + parentDir + "." + name;
+    }
+
     ElementNode root =
-        new ElementNode(
-            GraphUtil.nid(),
-            Language.XML,
-            type("file", true),
-            "",
-            FileUtil.getFileNameFromPath(filePath),
-            filePath);
+        new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName);
     graph.addVertex(root);
     stack.push(root);
     logger.info("Start Parsing {}", filePath);

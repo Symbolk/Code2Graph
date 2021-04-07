@@ -41,6 +41,15 @@ public class FileUtil {
   }
 
   /**
+   * Get the name of the direct parent folder
+   *
+   * @return
+   */
+  public static String getParentFolderName(String filePath) {
+    return Paths.get(filePath).getParent().getFileName().toString();
+  }
+
+  /**
    * Get path relative to the root path
    *
    * @param absolutePath

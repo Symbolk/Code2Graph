@@ -12,4 +12,12 @@ public class FileUtilTest {
     String relativePath = "core/src/test/java/FileUtilTest.java";
     assertThat(FileUtil.getRelativePath(absolutePath, rootPath)).isEqualTo(relativePath);
   }
+
+  @Test
+  public void testGetParentFolder() {
+    String absolutePath =
+        "/Users/symbolk/coding/data/repos/LeafPic/app/src/main/res/layout/activity_about.xml";
+    String parentFolder = "layout";
+    assertThat(FileUtil.getParentFolderName(absolutePath)).isEqualTo(parentFolder);
+  }
 }
