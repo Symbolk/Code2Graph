@@ -3,6 +3,7 @@ package edu.pku.code2graph.gen.xml;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.io.FilenameUtils;
 import org.jgrapht.alg.util.Triple;
 import org.xml.sax.Attributes;
 import org.xml.sax.Locator;
@@ -65,7 +66,7 @@ public class AndroidHandler extends AbstractHandler {
     String qName = name;
     String parentDir = FileUtil.getParentFolderName(filePath);
     if (!parentDir.contains("-") && !parentDir.startsWith("values")) {
-      qName = "R." + parentDir + "." + name;
+      qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
     ElementNode root =
