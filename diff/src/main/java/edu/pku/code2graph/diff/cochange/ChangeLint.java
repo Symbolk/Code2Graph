@@ -138,6 +138,12 @@ public class ChangeLint {
     evaluate(javaCochanges, javaDiffs);
   }
 
+  /**
+   * TODO evaluate top-k precision
+   *
+   * @param output
+   * @param groundTruth
+   */
   private static void evaluate(
       Map<String, Set<Pair<String, String>>> output,
       Map<String, Set<Pair<String, String>>> groundTruth) {
@@ -146,6 +152,9 @@ public class ChangeLint {
     int correctTypeNum = 0;
     int correctMemberNum = 0;
 
+    int otTotalFileNum = output.entrySet().size();
+    int otTotalTypeNum = 0;
+    int otTotalMemberNum = 0;
     for (Map.Entry<String, Set<Pair<String, String>>> entry : output.entrySet()) {
       String filePath = FileUtil.getRelativePath(repoPath, entry.getKey());
       Set<String> outputTypes = new HashSet<>();
@@ -157,13 +166,15 @@ public class ChangeLint {
                 outputTypes.add(pair.getLeft());
                 outputMembers.add(pair.getRight());
               });
+      otTotalTypeNum += outputTypes.size();
+      otTotalMemberNum += outputMembers.size();
 
       if (groundTruth.containsKey(filePath)) {
-        Set<Pair<String, String>> typeAndMember = groundTruth.get(filePath);
+        Set<Pair<String, String>> gtTypesMembers = groundTruth.get(filePath);
         correctFileNum += 1;
         Set<String> gtTypes = new HashSet<>();
         Set<String> gtMembers = new HashSet<>();
-        typeAndMember.forEach(
+        gtTypesMembers.forEach(
             pair -> {
               gtTypes.add(pair.getLeft());
               gtMembers.add(pair.getRight());
@@ -173,24 +184,30 @@ public class ChangeLint {
       }
     }
 
-    int totalFileNum = groundTruth.entrySet().size();
-    Set<String> totalTypes = new HashSet<>();
-    Set<String> totalMembers = new HashSet<>();
+    int gtAllFileNum = groundTruth.entrySet().size();
+    Set<String> gtAllTypes = new HashSet<>();
+    Set<String> gtAllMembers = new HashSet<>();
     for (Map.Entry<String, Set<Pair<String, String>>> entry : groundTruth.entrySet()) {
       for (Pair<String, String> pair : entry.getValue()) {
         if (!pair.getLeft().isEmpty()) {
-          totalTypes.add(pair.getLeft());
+          gtAllTypes.add(pair.getLeft());
         }
 
         if (!pair.getRight().isEmpty()) {
-          totalMembers.add(pair.getRight());
+          gtAllMembers.add(pair.getRight());
         }
       }
     }
 
-    System.out.println(MetricUtil.formatDouble((double) correctFileNum / totalFileNum));
-    System.out.println(MetricUtil.formatDouble((double) (correctTypeNum / totalTypes.size())));
-    System.out.println(MetricUtil.formatDouble(((double) correctMemberNum / totalMembers.size())));
+    // precision
+    System.out.println(MetricUtil.formatDouble((double) correctFileNum / otTotalFileNum));
+    System.out.println(MetricUtil.formatDouble((double) (correctTypeNum / otTotalTypeNum)));
+    System.out.println(MetricUtil.formatDouble(((double) correctMemberNum / otTotalMemberNum)));
+
+    // recall
+    System.out.println(MetricUtil.formatDouble((double) correctFileNum / gtAllFileNum));
+    System.out.println(MetricUtil.formatDouble((double) (correctTypeNum / gtAllTypes.size())));
+    System.out.println(MetricUtil.formatDouble(((double) correctMemberNum / gtAllMembers.size())));
   }
 
   private static void addOutputEntry(
