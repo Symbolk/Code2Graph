@@ -11,9 +11,6 @@ import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
-import gumtree.spoon.AstComparator;
-import gumtree.spoon.diff.Diff;
-import gumtree.spoon.diff.operations.Operation;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.PropertyConfigurator;
@@ -21,9 +18,6 @@ import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtTypeMember;
-import spoon.support.reflect.declaration.CtTypeImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,7 +85,8 @@ public class ChangeLint {
         //                XMLDiffUtil.computeXMLChanges(
         //                tempFilePaths, diffFile.getARelativePath(), diffFile.getBRelativePath()));
       } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        javaDiffs.put(diffFile.getARelativePath(), computeJavaChangesWithSpoon(diffFile));
+        javaDiffs.put(
+            diffFile.getARelativePath(), JavaDiffUtil.computeJavaChanges(diffFile));
       }
     }
 
@@ -242,6 +237,8 @@ public class ChangeLint {
     return Triple.of(filePath, typeName, memberName);
   }
 
+  // TODO use git log to find co-changed elements from the past commits (sorted by confidence)
+
   /**
    * TODO: cache parent and children in Node, to speed up
    *
@@ -312,50 +309,5 @@ public class ChangeLint {
         .replace(";", "")
         .replace(";", "")
         .replace(".", File.separator);
-  }
-
-  /**
-   * Compute diff and return edit script with gumtree spoon
-   *
-   * @return
-   */
-  private static Set<Pair<String, String>> computeJavaChangesWithSpoon(DiffFile diffFile) {
-    Set<Pair<String, String>> results = new HashSet<>();
-
-    Diff editScript = new AstComparator().compare(diffFile.getAContent(), diffFile.getBContent());
-    // build GT: process Java changes to file/type/member
-    for (Operation operation : editScript.getRootOperations()) { // or allOperations?
-      Pair<String, String> names = findWrappedTypeAndMemberNames(operation.getSrcNode());
-      results.add(names);
-    }
-    return results;
-  }
-
-  private static Pair<String, String> findWrappedTypeAndMemberNames(CtElement element) {
-    if (element instanceof CtTypeImpl) {
-      return Pair.of(((CtTypeImpl) element).getQualifiedName(), "");
-    } else if (element instanceof CtTypeMember) {
-      CtTypeMember member = (CtTypeMember) element;
-      return Pair.of(member.getDeclaringType().getQualifiedName(), member.getSimpleName());
-    } else {
-      // find parent member and type
-      CtElement parentType = element.getParent();
-      CtElement parentMember = element.getParent();
-
-      while (parentType != null && !(parentType instanceof CtTypeImpl)) {
-        parentType = parentType.getParent();
-      }
-      while (parentMember != null && !(parentMember instanceof CtTypeMember)) {
-        parentMember = parentMember.getParent();
-      }
-
-      String parentTypeName =
-          parentType != null ? ((CtTypeImpl) parentType).getQualifiedName() : "";
-      String parentMemberName =
-          parentMember != null ? ((CtTypeMember) parentMember).getSimpleName() : "";
-      return Pair.of(parentTypeName, parentMemberName);
-    }
-    //    String nodeType = element.getClass().getSimpleName();
-    //    nodeType = nodeType.substring(2, nodeType.length() - 4);
   }
 }
