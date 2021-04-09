@@ -11,6 +11,8 @@ import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
+import edu.pku.code2graph.util.SysUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.PropertyConfigurator;
@@ -21,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -85,8 +88,11 @@ public class ChangeLint {
         //                XMLDiffUtil.computeXMLChanges(
         //                tempFilePaths, diffFile.getARelativePath(), diffFile.getBRelativePath()));
       } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        javaDiffs.put(
-            diffFile.getARelativePath(), JavaDiffUtil.computeJavaChanges(diffFile));
+        Set<Pair<String, String>> changes = JavaDiffUtil.computeJavaChanges(diffFile);
+        if (!changes.isEmpty()) {
+          // ignore files with only format/comment changes
+          javaDiffs.put(diffFile.getARelativePath(), changes);
+        }
       }
     }
 
@@ -277,25 +283,35 @@ public class ChangeLint {
     Map<String, List<String>> rJavaPathsAndImports = new HashMap<>();
     for (String path : allJavaFilePaths) {
       List<String> lines = FileUtil.readFileToLines(path);
+      String packageName = "";
       for (String line : lines) {
         line = line.trim();
-        // if imports R, collect other imported files
-        if (line.startsWith("import") && line.endsWith(".R;")) {
-          String packageName = line.replace(".R;", "");
-          // filter imported local files
+        if (line.startsWith("public class")) {
+          break;
+        }
+
+        if (line.startsWith("package")) {
+          packageName = line.replaceFirst("package", "").trim();
+          continue;
+        }
+
+        // if imports R, collect other imported project source files
+        if (line.startsWith("import") && line.endsWith(".R;") && !packageName.isEmpty()) {
+          String rPackageName = line.replaceFirst("import", "").replace(".R;", "").trim();
+          String commonPrefix = StringUtils.getCommonPrefix(packageName, rPackageName);
           List<String> imports =
               lines.stream()
                   .map(String::trim)
                   .filter(
-                      l ->
-                          l.startsWith("import") && l.startsWith(packageName) && !l.endsWith(".R;"))
+                      l -> l.startsWith("import") && l.contains(commonPrefix) && !l.endsWith(".R;"))
                   .collect(Collectors.toList());
-          String packagePath = convertImportToPath(packageName);
-          String parentDir = path.substring(0, path.indexOf(packagePath));
-          // get absolute paths
+
+          // root folder that the package is related to
+          String rootSrcFolder = path.substring(0, path.indexOf(convertQNameToPath(packageName)));
+          // get absolute paths of imported files
           List<String> importedJavaPaths = new ArrayList<>();
           for (String im : imports) {
-            importedJavaPaths.add(parentDir + convertImportToPath(im) + ".java");
+            importedJavaPaths.add(rootSrcFolder + convertQNameToPath(im) + ".java");
           }
           rJavaPathsAndImports.put(path, importedJavaPaths);
         }
@@ -319,12 +335,15 @@ public class ChangeLint {
     return generator.generateFromFiles(new ArrayList<>(filePaths));
   }
 
-  private static String convertImportToPath(String importStatement) {
+  /** Convert package and import statement to path */
+  private static String convertQNameToPath(String importStatement) {
     return importStatement
         .trim()
-        .replace("import ", "")
+        .replace("import ", "") // just in case
+        .replace("package ", "")
         .replace(";", "")
         .replace(";", "")
-        .replace(".", File.separator);
+        .replace(".", File.separator)
+        .trim();
   }
 }
