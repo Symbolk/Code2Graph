@@ -1,12 +1,12 @@
 package edu.pku.code2graph.diff.model;
 
-/**
- * Change type of a DiffHunk
- */
+/** Change type of a DiffHunk */
 public enum ChangeType {
-  MODIFIED("M", "Modify"),
+  UPDATED("U", "Update"),
   ADDED("A", "Add"),
-  DELETED("D", "Delete");
+  DELETED("D", "Delete"),
+  MOVED("M", "Move"),
+  UNKNOWN("U", "Unknown");
 
   public String symbol;
   public String label;

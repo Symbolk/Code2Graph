@@ -330,7 +330,7 @@ public class GitServiceCGit implements GitService {
 
   private DiffHunk createDiffHunkForBinaryFile(DiffFile diffFile) {
     ChangeType changeType =
-        diffFile.getStatus().equals(FileStatus.DELETED) ? ChangeType.DELETED : ChangeType.MODIFIED;
+        diffFile.getStatus().equals(FileStatus.DELETED) ? ChangeType.DELETED : ChangeType.UPDATED;
     DiffHunk diffHunk =
         new DiffHunk(
             0,
@@ -458,7 +458,7 @@ public class GitServiceCGit implements GitService {
                     - 1,
                 DiffUtil.checkContentType(bCodeLines),
                 bCodeLines);
-        ChangeType changeType = ChangeType.MODIFIED;
+        ChangeType changeType = ChangeType.UPDATED;
         if (aCodeLines.isEmpty()) {
           changeType = ChangeType.ADDED;
         }
