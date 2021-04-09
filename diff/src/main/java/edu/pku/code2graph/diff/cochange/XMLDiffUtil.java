@@ -8,6 +8,7 @@ import com.github.gumtreediff.matchers.Matcher;
 import com.github.gumtreediff.matchers.Matchers;
 import com.github.gumtreediff.tree.ITree;
 import com.github.gumtreediff.tree.TreeContext;
+import edu.pku.code2graph.diff.model.ChangeType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,18 +50,18 @@ public class XMLDiffUtil {
     // matcher.getMappings());
     for (ITree iTree : actionClassifier.srcDelTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff("delete", iTree.getLabel()));
+        results.add(new XMLDiff(ChangeType.DELETED, iTree.getLabel()));
       }
     }
     for (ITree iTree : actionClassifier.dstAddTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff("add", iTree.getLabel()));
+        results.add(new XMLDiff(ChangeType.ADDED, iTree.getLabel()));
       }
     }
 
     for (ITree iTree : actionClassifier.srcUpdTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff("update", iTree.getLabel()));
+        results.add(new XMLDiff(ChangeType.UPDATED, iTree.getLabel()));
       }
     }
 

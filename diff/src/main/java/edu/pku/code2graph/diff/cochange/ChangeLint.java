@@ -75,10 +75,11 @@ public class ChangeLint {
     // Input: XMLDiff (file relative path, changed xml element id)
     Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
     // Ground Truth: JavaDiff (file relative path, type name, member name)
-    Map<String, Set<Pair<String, String>>> javaDiffs = new HashMap<>();
+    Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
 
     for (DiffFile diffFile : diffFiles) {
-      if (diffFile.getFileType().equals(FileType.XML)) {
+      if (diffFile.getFileType().equals(FileType.XML)
+          && diffFile.getARelativePath().contains("layout")) {
         xmlDiffs.put(
             diffFile.getARelativePath(),
             XMLDiffUtil.computeXMLChangesWithGumtree(
@@ -88,7 +89,7 @@ public class ChangeLint {
         //                XMLDiffUtil.computeXMLChanges(
         //                tempFilePaths, diffFile.getARelativePath(), diffFile.getBRelativePath()));
       } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        Set<Pair<String, String>> changes = JavaDiffUtil.computeJavaChanges(diffFile);
+        List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
         if (!changes.isEmpty()) {
           // ignore files with only format/comment changes
           javaDiffs.put(diffFile.getARelativePath(), changes);
@@ -151,8 +152,7 @@ public class ChangeLint {
    * @param groundTruth
    */
   private static void evaluate(
-      Map<String, Set<Pair<String, String>>> output,
-      Map<String, Set<Pair<String, String>>> groundTruth) {
+      Map<String, Set<Pair<String, String>>> output, Map<String, List<JavaDiff>> groundTruth) {
     // separately on three levels
     int correctFileNum = 0;
     int correctTypeNum = 0;
@@ -176,14 +176,14 @@ public class ChangeLint {
       otTotalMemberNum += outputMembers.size();
 
       if (groundTruth.containsKey(filePath)) {
-        Set<Pair<String, String>> gtTypesMembers = groundTruth.get(filePath);
+        List<JavaDiff> gtTypesMembers = groundTruth.get(filePath);
         correctFileNum += 1;
         Set<String> gtTypes = new HashSet<>();
         Set<String> gtMembers = new HashSet<>();
         gtTypesMembers.forEach(
-            pair -> {
-              gtTypes.add(pair.getLeft());
-              gtMembers.add(pair.getRight());
+            diff -> {
+              gtTypes.add(diff.getType());
+              gtMembers.add(diff.getMember());
             });
         correctTypeNum += MetricUtil.intersectSize(outputTypes, gtTypes);
         correctMemberNum += MetricUtil.intersectSize(outputMembers, gtMembers);
@@ -193,14 +193,14 @@ public class ChangeLint {
     int gtAllFileNum = groundTruth.entrySet().size();
     Set<String> gtAllTypes = new HashSet<>();
     Set<String> gtAllMembers = new HashSet<>();
-    for (Map.Entry<String, Set<Pair<String, String>>> entry : groundTruth.entrySet()) {
-      for (Pair<String, String> pair : entry.getValue()) {
-        if (!pair.getLeft().isEmpty()) {
-          gtAllTypes.add(pair.getLeft());
+    for (Map.Entry<String, List<JavaDiff>> entry : groundTruth.entrySet()) {
+      for (JavaDiff diff : entry.getValue()) {
+        if (!diff.getType().isEmpty()) {
+          gtAllTypes.add(diff.getType());
         }
 
-        if (!pair.getRight().isEmpty()) {
-          gtAllMembers.add(pair.getRight());
+        if (!diff.getMember().isEmpty()) {
+          gtAllMembers.add(diff.getMember());
         }
       }
     }

@@ -1,23 +1,27 @@
 package edu.pku.code2graph.diff.cochange;
 
+import edu.pku.code2graph.diff.model.ChangeType;
+
+import java.util.Objects;
+
 public class XMLDiff {
-  private String action = "";
+  private ChangeType changeType = ChangeType.UNKNOWN;
   private String parent = "";
   private String name = "";
 
-  public XMLDiff(String action, String parent, String name) {
-    this.action = action;
+  public XMLDiff(ChangeType changeType, String parent, String name) {
+    this.changeType = changeType;
     this.parent = parent;
     this.name = name;
   }
 
-  public XMLDiff(String action, String name) {
-    this.action = action;
+  public XMLDiff(ChangeType changeType, String name) {
+    this.changeType = changeType;
     this.name = name;
   }
 
-  public String getAction() {
-    return action;
+  public ChangeType getChangeType() {
+    return changeType;
   }
 
   public String getparent() {
@@ -29,17 +33,15 @@ public class XMLDiff {
   }
 
   @Override
-  public String toString() {
-    return "XMLDiff{"
-        + "action='"
-        + action
-        + '\''
-        + ", parent='"
-        + parent
-        + '\''
-        + ", name='"
-        + name
-        + '\''
-        + '}';
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    XMLDiff xmlDiff = (XMLDiff) o;
+    return Objects.equals(parent, xmlDiff.parent) && Objects.equals(name, xmlDiff.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(parent, name);
   }
 }
