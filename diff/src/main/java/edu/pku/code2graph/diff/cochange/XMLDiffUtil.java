@@ -54,7 +54,7 @@ public class XMLDiffUtil {
     }
     for (ITree iTree : actionClassifier.dstAddTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff("delete", iTree.getLabel()));
+        results.add(new XMLDiff("add", iTree.getLabel()));
       }
     }
 
