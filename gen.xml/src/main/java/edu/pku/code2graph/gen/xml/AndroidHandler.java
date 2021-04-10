@@ -43,7 +43,7 @@ public class AndroidHandler extends AbstractHandler {
 
   @Override
   public void endDocument() throws SAXException {
-    logger.info("\nEnd Parsing {}", filePath);
+    logger.debug("\nEnd Parsing {}", filePath);
     super.endDocument();
   }
 
@@ -73,7 +73,7 @@ public class AndroidHandler extends AbstractHandler {
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName);
     graph.addVertex(root);
     stack.push(root);
-    logger.info("Start Parsing {}", filePath);
+    logger.debug("Start Parsing {}", filePath);
     super.startDocument();
   }
 

@@ -43,7 +43,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     graph.addVertex(cuNode);
     this.cuNode = cuNode;
 
-    logger.info("Start Parsing {}", filePath);
+    logger.debug("Start Parsing {}", filePath);
     return true;
   }
 

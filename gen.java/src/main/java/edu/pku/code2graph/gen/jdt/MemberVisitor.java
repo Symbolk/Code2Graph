@@ -28,10 +28,13 @@ public class MemberVisitor extends AbstractJdtVisitor {
             "",
             FileUtil.getFileNameFromPath(filePath),
             filePath);
+    // TODO get relative path if given a base path
+    //    FileUtil.getRelativePath(
+    //            basePath, cuNode.getQualifiedName());
     graph.addVertex(cuNode);
     this.root = cuNode;
 
-    logger.info("Start Parsing {}", filePath);
+    logger.debug("Start Parsing {}", filePath);
     return true;
   }
 
@@ -40,7 +43,12 @@ public class MemberVisitor extends AbstractJdtVisitor {
     Type type = td.isInterface() ? NodeType.INTERFACE_DECLARATION : NodeType.CLASS_DECLARATION;
     ITypeBinding tdBinding = td.resolveBinding();
     // isFromSource
-    String qname = tdBinding.getQualifiedName();
+    String qname = td.getName().getFullyQualifiedName();
+    if (tdBinding != null) {
+      qname = tdBinding.getQualifiedName();
+    } else {
+      qname = JdtService.getTypeQNameFromParents(td);
+    }
 
     ElementNode node =
         new ElementNode(
@@ -53,7 +61,10 @@ public class MemberVisitor extends AbstractJdtVisitor {
       graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
     }
 
-    parseMembers(td, tdBinding, node);
+    // TODO fix member parsing when tdbinding is null (when file not under main folder)
+    if (tdBinding != null) {
+      parseMembers(td, tdBinding, node);
+    }
 
     return true;
   }
