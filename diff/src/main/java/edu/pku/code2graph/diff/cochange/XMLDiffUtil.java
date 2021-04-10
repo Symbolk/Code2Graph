@@ -9,10 +9,10 @@ import com.github.gumtreediff.matchers.Matchers;
 import com.github.gumtreediff.tree.ITree;
 import com.github.gumtreediff.tree.TreeContext;
 import edu.pku.code2graph.diff.model.ChangeType;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class XMLDiffUtil {
   /**
@@ -55,7 +55,11 @@ public class XMLDiffUtil {
     }
     for (ITree iTree : actionClassifier.dstAddTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff(ChangeType.ADDED, iTree.getLabel()));
+        // the element tree
+        // find other ids with the similar semantics
+        List<Pair<String, Double>> ids =
+            findSiblingNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3);
+        results.add(new XMLDiff(ChangeType.ADDED, iTree.getLabel(), ids));
       }
     }
 
@@ -66,6 +70,64 @@ public class XMLDiffUtil {
     }
 
     return results;
+  }
+
+  static class PairComparator implements Comparator<Pair<String, Double>> {
+    @Override
+    public int compare(Pair<String, Double> p1, Pair<String, Double> p2) {
+      if (p1.getRight() < p2.getRight()) {
+        return 1;
+      } else if (p1.getRight() > p2.getRight()) {
+        return -1;
+      }
+      return 0;
+    }
+  }
+
+  /**
+   * Find and return the top-k siblings
+   *
+   * @param root
+   * @param targetTree
+   * @return
+   */
+  private static List<Pair<String, Double>> findSiblingNodeIDs(
+      ITree root, ITree targetTree, int k) {
+    List<Pair<String, Double>> results = new ArrayList<>();
+
+    PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
+    if (root == null) {
+      return results;
+    }
+
+    // BFS for level traversal
+    ArrayDeque<ITree> queue = new ArrayDeque<>();
+    queue.add(root);
+    while (!queue.isEmpty()) {
+      ITree temp = queue.poll();
+      if (temp.hasSameType(targetTree)) {
+        double similarity = TreeSimilarityMetrics.treeSimilarity(temp, targetTree);
+        pq.add(Pair.of(getIDFromTree(temp), similarity));
+      }
+      if (!temp.getChildren().isEmpty()) {
+        queue.addAll(temp.getChildren());
+      }
+    }
+
+    while (!pq.isEmpty() && k > 0) {
+      results.add(pq.poll());
+      k--;
+    }
+    return results;
+  }
+
+  private static String getIDFromTree(ITree tree) {
+    for (ITree t : tree.getDescendants()) {
+      if (isIDLabel(t.getLabel())) {
+        return t.getLabel();
+      }
+    }
+    return "";
   }
 
   public static boolean isIDLabel(String label) {
