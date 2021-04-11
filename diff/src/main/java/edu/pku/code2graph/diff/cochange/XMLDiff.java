@@ -9,29 +9,30 @@ import java.util.Objects;
 
 public class XMLDiff {
   private ChangeType changeType = ChangeType.UNKNOWN;
+  private String file = "";
   private String type = "";
   private String name = "";
-  private List<Pair<String, Double>> siblingIDs = new ArrayList<>();
+  private List<Pair<String, Double>> contextNodeIDs = new ArrayList<>();
 
-  public XMLDiff(ChangeType changeType, String type, String name) {
+  public XMLDiff(ChangeType changeType, String file, String name) {
     this.changeType = changeType;
-    this.type = type;
+    this.file = file;
     this.name = name;
   }
 
-  public XMLDiff(ChangeType changeType, String name) {
+  public XMLDiff(ChangeType changeType, String file, String name, List<Pair<String, Double>> ids) {
     this.changeType = changeType;
+    this.file = file;
     this.name = name;
-  }
-
-  public XMLDiff(ChangeType changeType, String name, List<Pair<String, Double>> ids) {
-    this.changeType = changeType;
-    this.name = name;
-    this.siblingIDs = ids;
+    this.contextNodeIDs = ids;
   }
 
   public ChangeType getChangeType() {
     return changeType;
+  }
+
+  public String getFile() {
+    return file;
   }
 
   public String getName() {
@@ -42,8 +43,8 @@ public class XMLDiff {
     return type;
   }
 
-  public List<Pair<String, Double>> getSiblingIDs() {
-    return siblingIDs;
+  public List<Pair<String, Double>> getContextNodeIDs() {
+    return contextNodeIDs;
   }
 
   @Override

@@ -9,6 +9,8 @@ import com.github.gumtreediff.matchers.Matchers;
 import com.github.gumtreediff.tree.ITree;
 import com.github.gumtreediff.tree.TreeContext;
 import edu.pku.code2graph.diff.model.ChangeType;
+import edu.pku.code2graph.diff.model.DiffFile;
+import edu.pku.code2graph.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -18,17 +20,16 @@ public class XMLDiffUtil {
   /**
    * Compute diff and return edit script
    *
-   * @param aContent
-   * @param bContent
    * @return
    */
-  public static List<XMLDiff> computeXMLChangesWithGumtree(String aContent, String bContent)
-      throws IOException {
+  public static List<XMLDiff> computeXMLChangesWithGumtree(DiffFile diffFile) throws IOException {
+
     List<XMLDiff> results = new ArrayList<>();
+    String fileName = FileUtil.getFileNameFromPath(diffFile.getARelativePath());
 
     TreeGenerator generator = new XmlTreeGenerator();
-    TreeContext aContext = generator.generateFromString(aContent);
-    TreeContext bContext = generator.generateFromString(bContent);
+    TreeContext aContext = generator.generateFromString(diffFile.getAContent());
+    TreeContext bContext = generator.generateFromString(diffFile.getBContent());
     //      Matcher matcher = Matchers.getInstance().getMatcher();
     ITree aRoot = aContext.getRoot();
     ITree bRoot = bContext.getRoot();
@@ -50,7 +51,7 @@ public class XMLDiffUtil {
     // matcher.getMappings());
     for (ITree iTree : actionClassifier.srcDelTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff(ChangeType.DELETED, iTree.getLabel()));
+        results.add(new XMLDiff(ChangeType.DELETED, fileName, iTree.getLabel()));
       }
     }
     for (ITree iTree : actionClassifier.dstAddTrees) {
@@ -59,13 +60,13 @@ public class XMLDiffUtil {
         // find other ids with the similar semantics
         List<Pair<String, Double>> ids =
             findSiblingNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3);
-        results.add(new XMLDiff(ChangeType.ADDED, iTree.getLabel(), ids));
+        results.add(new XMLDiff(ChangeType.ADDED, fileName, iTree.getLabel(), ids));
       }
     }
 
     for (ITree iTree : actionClassifier.srcUpdTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff(ChangeType.UPDATED, iTree.getLabel()));
+        results.add(new XMLDiff(ChangeType.UPDATED, fileName, iTree.getLabel()));
       }
     }
 
