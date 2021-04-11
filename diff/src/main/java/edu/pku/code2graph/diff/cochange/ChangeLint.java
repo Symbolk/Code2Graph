@@ -1,6 +1,7 @@
 package edu.pku.code2graph.diff.cochange;
 
 import edu.pku.code2graph.diff.RepoAnalyzer;
+import edu.pku.code2graph.diff.model.ChangeType;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
 import edu.pku.code2graph.diff.util.MetricUtil;
@@ -30,10 +31,14 @@ import java.util.stream.Collectors;
 public class ChangeLint {
   static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
 
-  private static String repoName = "LeafPic";
+  private static String repoName = "EhViewer";
   //  private static String repoName = "test_repo";
   private static String repoPath = "/Users/symbolk/coding/data/repos/" + repoName;
   private static String tempDir = "/Users/symbolk/coding/data/temp/c2g";
+
+  private static List<Pair<String, Double>> cochangeFiles = new ArrayList<>();
+  private static List<Pair<String, Double>> cochangeTypes = new ArrayList<>();
+  private static List<Pair<String, Double>> cochangeMembers = new ArrayList<>();
 
   static {
     initGenerators();
@@ -54,10 +59,18 @@ public class ChangeLint {
     PropertyConfigurator.configure(
         System.getProperty("user.dir") + File.separator + "log4j.properties");
 
+    // TODO: only consider the changes that involves id changes (for input commits)
+    String testCommitID = "db893b8";
+
     // 1. Offline process: given the commit id of the earliest future multi-lang commit
     // checkout to that version
     //    SysUtil.runSystemCommand(repoPath, Charset.defaultCharset(), "git", "checkout", "-b",
     // "changelint", "e457da8");
+
+    // checkout to the previous version
+    SysUtil.runSystemCommand(
+        repoPath, Charset.defaultCharset(), "git", "checkout", testCommitID + "~");
+
     //   build the graph for the current version
     Graph<Node, Edge> graph = buildGraph();
     logger.info(
@@ -66,7 +79,6 @@ public class ChangeLint {
         graph.edgeSet().size());
 
     // 2. Online process: for each of the future commits, extract the changes as GT
-    String testCommitID = "ea5ccf3";
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
     //    DataCollector dataCollector = new DataCollector(tempDir);
@@ -97,17 +109,11 @@ public class ChangeLint {
       }
     }
 
-    Set<String> xmlDiffElements = new HashSet<>();
-    for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
-      for (XMLDiff diff : entry.getValue()) {
-        if (XMLDiffUtil.isIDLabel(diff.getName())) {
-          xmlDiffElements.add(diff.getName().replace("\"", "").replace("+", ""));
-        }
-      }
-    }
-
     // Output: predicted co-change file/type/member in the graph
-    Map<String, Set<Pair<String, String>>> javaCochanges = new HashMap<>();
+    //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
+    cochangeFiles = new ArrayList<>();
+    cochangeTypes = new ArrayList<>();
+    cochangeMembers = new ArrayList<>();
 
     // check if exists to determine change action (if the tool reports wrong change action)
     Set<ElementNode> XMLNodes =
@@ -116,84 +122,60 @@ public class ChangeLint {
             .filter(v -> v instanceof ElementNode)
             .map(ElementNode.class::cast)
             .collect(Collectors.toSet());
-    for (String element : xmlDiffElements) {
-      Optional<ElementNode> nodeOpt =
-          XMLNodes.stream().filter(node -> element.equals(node.getQualifiedName())).findAny();
-      if (nodeOpt.isPresent()) {
-        // locate changed xml nodes in the graph
-        // if exist, modified/removed
-        Set<Edge> useEdges =
-            graph.incomingEdgesOf(nodeOpt.get()).stream()
-                .filter(edge -> !edge.getType().equals(EdgeType.CHILD))
-                .collect(Collectors.toSet());
+    for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
+      for (XMLDiff diff : entry.getValue()) {
+        if (XMLDiffUtil.isIDLabel(diff.getName())) {
+          String elementID = diff.getName().replace("\"", "").replace("+", "");
+          Optional<ElementNode> nodeOpt =
+              XMLNodes.stream().filter(node -> elementID.equals(node.getQualifiedName())).findAny();
+          if (nodeOpt.isPresent()) {
+            // locate changed xml nodes in the graph
+            // if exist, modified/removed
+            List<Triple<String, String, String>> refs = findReferences(graph, nodeOpt.get());
+            addOutputEntry(refs);
+          } else {
+            // if not exist/added: predict co-changes according to similar nodes
+            if (diff.getChangeType().equals(ChangeType.ADDED)) {
+              List<Pair<String, Double>> siblingIDs = diff.getSiblingIDs();
+              // find all co-changes of siblings
+              List<Triple<String, String, String>> refs = new ArrayList<>();
+              for (Pair<String, Double> sibling : siblingIDs) {
+                String siblingID = sibling.getLeft().replace("\"", "").replace("+", "");
 
-        // find edge source (uses) nodes in Java code
-        for (Edge useEdge : useEdges) {
-          Node sourceNode = graph.getEdgeSource(useEdge);
-          if (sourceNode.getLanguage().equals(Language.JAVA)) {
-            // find wrapped member, type, and file nodes, return names
-            addOutputEntry(javaCochanges, findWrappedEntities(graph, sourceNode));
+                Optional<ElementNode> siblingOpt =
+                    XMLNodes.stream()
+                        .filter(node -> siblingID.equals(node.getQualifiedName()))
+                        .findAny();
+                siblingOpt.ifPresent(
+                    elementNode -> refs.addAll(findReferences(graph, elementNode)));
+              }
+              // compare and count to estimate confidence
+              // rank and filter with intersection (algorithm to estimate the relevance/possibility
+              // of co-changing)
+              // report the suggested co-changes with an ordered list top-k
+              addOutputEntry(refs);
+            }
           }
         }
-      } else {
-        // if not exist, added: predict co-changes according to context/similar nodes
-
       }
     }
-
     // measure accuracy by comparing with ground truth (compute the three sets)
-    evaluate(javaCochanges, javaDiffs);
+    evaluate(javaDiffs);
   }
 
   /**
    * TODO evaluate top-k precision
    *
-   * @param output
    * @param groundTruth
    */
-  private static void evaluate(
-      Map<String, Set<Pair<String, String>>> output, Map<String, List<JavaDiff>> groundTruth) {
-    // separately on three levels
-    int correctFileNum = 0;
-    int correctTypeNum = 0;
-    int correctMemberNum = 0;
+  private static void evaluate(Map<String, List<JavaDiff>> groundTruth) {
 
-    int otTotalFileNum = output.entrySet().size();
-    int otTotalTypeNum = 0;
-    int otTotalMemberNum = 0;
-    for (Map.Entry<String, Set<Pair<String, String>>> entry : output.entrySet()) {
-      String filePath = FileUtil.getRelativePath(repoPath, entry.getKey());
-      Set<String> outputTypes = new HashSet<>();
-      Set<String> outputMembers = new HashSet<>();
-      entry
-          .getValue()
-          .forEach(
-              pair -> {
-                outputTypes.add(pair.getLeft());
-                outputMembers.add(pair.getRight());
-              });
-      otTotalTypeNum += outputTypes.size();
-      otTotalMemberNum += outputMembers.size();
-
-      if (groundTruth.containsKey(filePath)) {
-        List<JavaDiff> gtTypesMembers = groundTruth.get(filePath);
-        correctFileNum += 1;
-        Set<String> gtTypes = new HashSet<>();
-        Set<String> gtMembers = new HashSet<>();
-        gtTypesMembers.forEach(
-            diff -> {
-              gtTypes.add(diff.getType());
-              gtMembers.add(diff.getMember());
-            });
-        correctTypeNum += MetricUtil.intersectSize(outputTypes, gtTypes);
-        correctMemberNum += MetricUtil.intersectSize(outputMembers, gtMembers);
-      }
-    }
-
-    int gtAllFileNum = groundTruth.entrySet().size();
+    // Ground Truth
+    Set<String> gtAllFiles = new HashSet<>();
     Set<String> gtAllTypes = new HashSet<>();
     Set<String> gtAllMembers = new HashSet<>();
     for (Map.Entry<String, List<JavaDiff>> entry : groundTruth.entrySet()) {
+      gtAllFiles.add(entry.getKey());
       for (JavaDiff diff : entry.getValue()) {
         if (!diff.getType().isEmpty()) {
           gtAllTypes.add(diff.getType());
@@ -205,32 +187,103 @@ public class ChangeLint {
       }
     }
 
+    // separately on three levels
+    int otTotalFileNum = cochangeFiles.size();
+    int otTotalTypeNum = cochangeTypes.size();
+    int otTotalMemberNum = cochangeMembers.size();
+
+    Set<String> otAllFiles = cochangeFiles.stream().map(Pair::getLeft).collect(Collectors.toSet());
+    Set<String> otAllTypes = cochangeTypes.stream().map(Pair::getLeft).collect(Collectors.toSet());
+    Set<String> otAllMembers =
+        cochangeMembers.stream().map(Pair::getLeft).collect(Collectors.toSet());
+
+    int correctFileNum = MetricUtil.intersectSize(gtAllFiles, otAllFiles);
+    int correctTypeNum = MetricUtil.intersectSize(gtAllTypes, otAllTypes);
+    int correctMemberNum = MetricUtil.intersectSize(gtAllMembers, otAllMembers);
+
     // precision
-    System.out.println(MetricUtil.formatDouble((double) correctFileNum / otTotalFileNum));
-    System.out.println(MetricUtil.formatDouble((double) (correctTypeNum / otTotalTypeNum)));
-    System.out.println(MetricUtil.formatDouble(((double) correctMemberNum / otTotalMemberNum)));
+    System.out.println(computeProportion(correctFileNum, otTotalFileNum));
+    System.out.println(computeProportion(correctTypeNum, otTotalTypeNum));
+    System.out.println(computeProportion(correctMemberNum, otTotalMemberNum));
 
     // recall
-    System.out.println(MetricUtil.formatDouble((double) correctFileNum / gtAllFileNum));
-    System.out.println(MetricUtil.formatDouble((double) (correctTypeNum / gtAllTypes.size())));
-    System.out.println(MetricUtil.formatDouble(((double) correctMemberNum / gtAllMembers.size())));
+    System.out.println(computeProportion(correctFileNum, gtAllFiles.size()));
+    System.out.println(computeProportion(correctTypeNum, gtAllTypes.size()));
+    System.out.println(computeProportion(correctMemberNum, gtAllMembers.size()));
   }
 
-  private static void addOutputEntry(
-      Map<String, Set<Pair<String, String>>> javaCochanges,
-      Triple<String, String, String> entityNames) {
-    String filePath = entityNames.getLeft(),
-        typeName = entityNames.getMiddle(),
-        memberName = entityNames.getRight();
+  private static double computeProportion(int a, int b) {
+    return b == 0 ? 0D : MetricUtil.formatDouble((double) a / b);
+  }
 
-    if (!javaCochanges.containsKey(filePath)) {
-      javaCochanges.put(filePath, new HashSet<>());
+  private static void addOutputEntry(List<Triple<String, String, String>> entityNames) {
+    // entity name : frequency
+
+    Map<String, Double> filesMap = new HashMap<>();
+    Map<String, Double> typesMap = new HashMap<>();
+    Map<String, Double> membersMap = new HashMap<>();
+
+    for (var names : entityNames) {
+      String filePath = FileUtil.getRelativePath(repoPath, names.getLeft()),
+          typeName = names.getMiddle(),
+          memberName = names.getRight();
+      if (!filesMap.containsKey(filePath)) {
+        filesMap.put(filePath, 0D);
+      }
+      filesMap.put(filePath, filesMap.get(filePath) + 1);
+
+      if (!typesMap.containsKey(typeName)) {
+        typesMap.put(typeName, 0D);
+      }
+      typesMap.put(typeName, typesMap.get(typeName) + 1);
+
+      if (!membersMap.containsKey(memberName)) {
+        membersMap.put(memberName, 0D);
+      }
+      membersMap.put(memberName, membersMap.get(memberName) + 1);
     }
-    javaCochanges.get(filePath).add(Pair.of(typeName, memberName));
+
+    cochangeFiles.addAll(convertMapToList(filesMap));
+    cochangeTypes.addAll(convertMapToList(typesMap));
+    cochangeMembers.addAll(convertMapToList(membersMap));
+  }
+
+  private static List<Pair<String, Double>> convertMapToList(Map<String, Double> map) {
+    List<Map.Entry<String, Double>> entryList = new ArrayList<>(map.entrySet());
+    entryList.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+    List<Pair<String, Double>> results = new ArrayList<>();
+    entryList.forEach(e -> results.add(Pair.of(e.getKey(), e.getValue())));
+    return results;
+  }
+
+  private static List<Triple<String, String, String>> findReferences(
+      Graph<Node, Edge> graph, Node node) {
+    List<Triple<String, String, String>> results = new ArrayList<>();
+
+    if (node == null) {
+      return results;
+    }
+
+    Set<Edge> useEdges =
+        graph.incomingEdgesOf(node).stream()
+            .filter(edge -> !edge.getType().equals(EdgeType.CHILD))
+            .collect(Collectors.toSet());
+
+    // TODO: find edge source (uses) nodes in Java code k hops
+    // TODO: locate the changed file with R.layout.X (referencing file, if duplicate ids
+    // exist)
+    for (Edge useEdge : useEdges) {
+      Node sourceNode = graph.getEdgeSource(useEdge);
+      if (sourceNode.getLanguage().equals(Language.JAVA)) {
+        // find wrapped member, type, and file nodes, return names
+        results.add(findWrappedEntities(graph, sourceNode));
+      }
+    }
+    return results;
   }
 
   /**
-   * (file relative path, type name, member name)
+   * Find (file relative path, type name, member name) for Java nodes
    *
    * @param node
    * @return
@@ -279,6 +332,7 @@ public class ChangeLint {
   private static Graph<Node, Edge> buildGraph() throws IOException {
     // iterate all Java files and match imports
     List<String> allJavaFilePaths = FileUtil.getSpecificFilePaths(repoPath, ".java");
+    //    logger.info("Total Java files: "+allJavaFilePaths.size());
 
     Map<String, List<String>> rJavaPathsAndImports = new HashMap<>();
     for (String path : allJavaFilePaths) {
@@ -324,11 +378,17 @@ public class ChangeLint {
       filePaths.addAll(entry.getValue());
     }
 
-    // collect all xml files (filter only layout?)
-    filePaths.addAll(
+    logger.info("Java files: " + filePaths.size());
+
+    // collect all xml layout files
+    Set<String> xmlFilePaths =
         FileUtil.getSpecificFilePaths(repoPath, ".xml").stream()
             .filter(path -> path.contains("layout"))
-            .collect(Collectors.toList()));
+            .collect(Collectors.toSet());
+
+    logger.info("XML files: " + xmlFilePaths.size());
+
+    filePaths.addAll(xmlFilePaths);
 
     Generators generator = Generators.getInstance();
 
