@@ -93,9 +93,7 @@ public class ChangeLint {
       if (diffFile.getFileType().equals(FileType.XML)
           && diffFile.getARelativePath().contains("layout")) {
         xmlDiffs.put(
-            diffFile.getARelativePath(),
-            XMLDiffUtil.computeXMLChangesWithGumtree(
-                diffFile.getAContent(), diffFile.getBContent()));
+            diffFile.getARelativePath(), XMLDiffUtil.computeXMLChangesWithGumtree(diffFile));
         //        xmlDiffs.put(
         //            diffFile.getARelativePath(),
         //                XMLDiffUtil.computeXMLChanges(
@@ -136,7 +134,7 @@ public class ChangeLint {
           } else {
             // if not exist/added: predict co-changes according to similar nodes
             if (diff.getChangeType().equals(ChangeType.ADDED)) {
-              List<Pair<String, Double>> siblingIDs = diff.getSiblingIDs();
+              List<Pair<String, Double>> siblingIDs = diff.getContextNodeIDs();
               // find all co-changes of siblings
               List<Triple<String, String, String>> refs = new ArrayList<>();
               for (Pair<String, Double> sibling : siblingIDs) {
@@ -270,8 +268,8 @@ public class ChangeLint {
             .collect(Collectors.toSet());
 
     // TODO: find edge source (uses) nodes in Java code k hops
-    // TODO: locate the changed file with R.layout.X (referencing file, if duplicate ids
-    // exist)
+    // TODO: filter or correct the references with R.layout.X
+    // TODO: express the change for added elements
     for (Edge useEdge : useEdges) {
       Node sourceNode = graph.getEdgeSource(useEdge);
       if (sourceNode.getLanguage().equals(Language.JAVA)) {
