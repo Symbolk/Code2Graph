@@ -254,13 +254,8 @@ public class ChangeLint {
     return results;
   }
 
-  private static List<Triple<String, String, String>> findReferences(
-      Graph<Node, Edge> graph, Node node) {
-    List<Triple<String, String, String>> results = new ArrayList<>();
-
-    if (node == null) {
-      return results;
-    }
+  private static Binding inferReferences(Graph<Node, Edge> graph, ElementNode node) {
+    Binding binding = new Binding(node.getQualifiedName());
 
     Set<Edge> useEdges =
         graph.incomingEdgesOf(node).stream()
@@ -274,10 +269,11 @@ public class ChangeLint {
       Node sourceNode = graph.getEdgeSource(useEdge);
       if (sourceNode.getLanguage().equals(Language.JAVA)) {
         // find wrapped member, type, and file nodes, return names
-        results.add(findWrappedEntities(graph, sourceNode));
+        Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
+        binding.addRefEntities(entities);
       }
     }
-    return results;
+    return binding;
   }
 
   /**
@@ -297,7 +293,7 @@ public class ChangeLint {
       if (parent instanceof ElementNode) {
         Type type = parent.getType();
         if (NodeType.FILE.equals(type)) {
-          filePath = ((ElementNode) parent).getQualifiedName();
+          filePath = FileUtil.getRelativePath(repoPath, ((ElementNode) parent).getQualifiedName());
         } else if (NodeType.ENUM_DECLARATION.equals(type)
             || NodeType.INTERFACE_DECLARATION.equals(type)
             || NodeType.CLASS_DECLARATION.equals(type)) {
