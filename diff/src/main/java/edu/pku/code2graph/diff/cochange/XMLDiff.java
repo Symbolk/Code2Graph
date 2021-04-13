@@ -1,10 +1,9 @@
 package edu.pku.code2graph.diff.cochange;
 
 import edu.pku.code2graph.diff.model.ChangeType;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class XMLDiff {
@@ -12,7 +11,7 @@ public class XMLDiff {
   private String file = "";
   private String type = "";
   private String name = "";
-  private List<Pair<String, Double>> contextNodeIDs = new ArrayList<>();
+  private Map<String, Double> contextNodes = new LinkedHashMap<>();
 
   public XMLDiff(ChangeType changeType, String file, String name) {
     this.changeType = changeType;
@@ -20,11 +19,12 @@ public class XMLDiff {
     this.name = name;
   }
 
-  public XMLDiff(ChangeType changeType, String file, String name, List<Pair<String, Double>> ids) {
+  public XMLDiff(
+      ChangeType changeType, String file, String name, Map<String, Double> contextNodes) {
     this.changeType = changeType;
     this.file = file;
     this.name = name;
-    this.contextNodeIDs = ids;
+    this.contextNodes = contextNodes;
   }
 
   public ChangeType getChangeType() {
@@ -43,8 +43,8 @@ public class XMLDiff {
     return type;
   }
 
-  public List<Pair<String, Double>> getContextNodeIDs() {
-    return contextNodeIDs;
+  public Map<String, Double> getContextNodes() {
+    return contextNodes;
   }
 
   @Override

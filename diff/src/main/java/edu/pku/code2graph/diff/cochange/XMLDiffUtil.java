@@ -57,10 +57,10 @@ public class XMLDiffUtil {
     for (ITree iTree : actionClassifier.dstAddTrees) {
       if (isIDLabel(iTree.getLabel())) {
         // the element tree
-        // find other ids with the similar semantics
-        List<Pair<String, Double>> ids =
+        // find other siblingNodes with the similar semantics
+        Map<String, Double> siblingNodes =
             findSiblingNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3);
-        results.add(new XMLDiff(ChangeType.ADDED, fileName, iTree.getLabel(), ids));
+        results.add(new XMLDiff(ChangeType.ADDED, fileName, iTree.getLabel(), siblingNodes));
       }
     }
 
@@ -92,9 +92,8 @@ public class XMLDiffUtil {
    * @param targetTree
    * @return
    */
-  private static List<Pair<String, Double>> findSiblingNodeIDs(
-      ITree root, ITree targetTree, int k) {
-    List<Pair<String, Double>> results = new ArrayList<>();
+  private static Map<String, Double> findSiblingNodeIDs(ITree root, ITree targetTree, int k) {
+    Map<String, Double> results = new LinkedHashMap<>();
 
     PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
     if (root == null) {
@@ -116,7 +115,8 @@ public class XMLDiffUtil {
     }
 
     while (!pq.isEmpty() && k > 0) {
-      results.add(pq.poll());
+      Pair<String, Double> pair = pq.poll();
+      results.put(pair.getLeft(), pair.getRight());
       k--;
     }
     return results;
