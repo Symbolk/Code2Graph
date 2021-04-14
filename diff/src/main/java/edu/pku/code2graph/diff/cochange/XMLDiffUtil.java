@@ -113,7 +113,7 @@ public class XMLDiffUtil {
   private static String getIDFromTree(ITree tree) {
     for (ITree t : tree.getDescendants()) {
       if (isIDLabel(t.getLabel())) {
-        return t.getLabel();
+        return t.getLabel().replace("\"", "").replace("+", "");
       }
     }
     return "";
