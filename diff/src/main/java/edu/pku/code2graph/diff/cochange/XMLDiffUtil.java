@@ -73,18 +73,6 @@ public class XMLDiffUtil {
     return results;
   }
 
-  static class PairComparator implements Comparator<Pair<String, Double>> {
-    @Override
-    public int compare(Pair<String, Double> p1, Pair<String, Double> p2) {
-      if (p1.getRight() < p2.getRight()) {
-        return 1;
-      } else if (p1.getRight() > p2.getRight()) {
-        return -1;
-      }
-      return 0;
-    }
-  }
-
   /**
    * Find and return the top-k siblings
    *
