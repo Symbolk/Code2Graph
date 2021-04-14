@@ -36,9 +36,12 @@ public class ChangeLint {
   private static String repoPath = "/Users/symbolk/coding/data/repos/" + repoName;
   private static String tempDir = "/Users/symbolk/coding/data/temp/c2g";
 
-  private static List<Pair<String, Double>> cochangeFiles = new ArrayList<>();
-  private static List<Pair<String, Double>> cochangeTypes = new ArrayList<>();
-  private static List<Pair<String, Double>> cochangeMembers = new ArrayList<>();
+  private static PriorityQueue<Pair<String, Double>> cochangeFiles =
+      new PriorityQueue<>(new PairComparator());
+  private static PriorityQueue<Pair<String, Double>> cochangeTypes =
+      new PriorityQueue<>(new PairComparator());
+  private static PriorityQueue<Pair<String, Double>> cochangeMembers =
+      new PriorityQueue<>(new PairComparator());
 
   static {
     initGenerators();
@@ -109,10 +112,6 @@ public class ChangeLint {
 
     // Output: predicted co-change file/type/member in the graph
     //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
-    cochangeFiles = new ArrayList<>();
-    cochangeTypes = new ArrayList<>();
-    cochangeMembers = new ArrayList<>();
-
     // check if exists to determine change action (if the tool reports wrong change action)
     Set<ElementNode> XMLNodes =
         graph.vertexSet().stream()
@@ -129,29 +128,34 @@ public class ChangeLint {
           if (nodeOpt.isPresent()) {
             // locate changed xml nodes in the graph
             // if exist, modified/removed
-            List<Triple<String, String, String>> refs = findReferences(graph, nodeOpt.get());
-            addOutputEntry(refs);
+            Map<String, Binding> bindingInfos = new HashMap<>();
+            ElementNode node = nodeOpt.get();
+            bindingInfos.put(node.getQualifiedName(), inferReferences(graph, node));
+            Map<String, Double> contextNodes = new LinkedHashMap<>();
+
+            collaborativeFilter(bindingInfos, contextNodes);
           } else {
             // if not exist/added: predict co-changes according to similar nodes
             if (diff.getChangeType().equals(ChangeType.ADDED)) {
-              List<Pair<String, Double>> siblingIDs = diff.getContextNodeIDs();
+              Map<String, Double> contextNodes = diff.getContextNodes();
               // find all co-changes of siblings
-              List<Triple<String, String, String>> refs = new ArrayList<>();
-              for (Pair<String, Double> sibling : siblingIDs) {
-                String siblingID = sibling.getLeft().replace("\"", "").replace("+", "");
+              Map<String, Binding> bindingInfos = new HashMap<>();
+              for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
+                String siblingID = cxtEntry.getKey().replace("\"", "").replace("+", "");
 
-                Optional<ElementNode> siblingOpt =
+                Optional<ElementNode> cxtOpt =
                     XMLNodes.stream()
                         .filter(node -> siblingID.equals(node.getQualifiedName()))
                         .findAny();
-                siblingOpt.ifPresent(
-                    elementNode -> refs.addAll(findReferences(graph, elementNode)));
+                cxtOpt.ifPresent(
+                    elementNode ->
+                        bindingInfos.put(siblingID, inferReferences(graph, elementNode)));
               }
               // compare and count to estimate confidence
               // rank and filter with intersection (algorithm to estimate the relevance/possibility
               // of co-changing)
               // report the suggested co-changes with an ordered list top-k
-              addOutputEntry(refs);
+              collaborativeFilter(bindingInfos, contextNodes);
             }
           }
         }
@@ -214,36 +218,65 @@ public class ChangeLint {
     return b == 0 ? 0D : MetricUtil.formatDouble((double) a / b);
   }
 
-  private static void addOutputEntry(List<Triple<String, String, String>> entityNames) {
-    // entity name : frequency
+  /**
+   * Evaluate and rank the co-change probability with neighborhood-based&user-based CF algorithm
+   * from recommendation system
+   */
+  private static void collaborativeFilter(
+      Map<String, Binding> bindingInfos, Map<String, Double> contextNodes) {
+    Map<String, Map<String, Integer>> fileLookup = new HashMap<>();
+    Map<String, Map<String, Integer>> typeLookup = new HashMap<>();
+    Map<String, Map<String, Integer>> memberLookup = new HashMap<>();
 
-    Map<String, Double> filesMap = new HashMap<>();
-    Map<String, Double> typesMap = new HashMap<>();
-    Map<String, Double> membersMap = new HashMap<>();
-
-    for (var names : entityNames) {
-      String filePath = FileUtil.getRelativePath(repoPath, names.getLeft()),
-          typeName = names.getMiddle(),
-          memberName = names.getRight();
-      if (!filesMap.containsKey(filePath)) {
-        filesMap.put(filePath, 0D);
-      }
-      filesMap.put(filePath, filesMap.get(filePath) + 1);
-
-      if (!typesMap.containsKey(typeName)) {
-        typesMap.put(typeName, 0D);
-      }
-      typesMap.put(typeName, typesMap.get(typeName) + 1);
-
-      if (!membersMap.containsKey(memberName)) {
-        membersMap.put(memberName, 0D);
-      }
-      membersMap.put(memberName, membersMap.get(memberName) + 1);
+    for (Map.Entry<String, Binding> entry : bindingInfos.entrySet()) {
+      String id = entry.getKey();
+      Binding binding = entry.getValue();
+      buildLookup(fileLookup, id, binding.getFiles());
+      buildLookup(typeLookup, id, binding.getTypes());
+      buildLookup(memberLookup, id, binding.getMembers());
     }
 
-    cochangeFiles.addAll(convertMapToList(filesMap));
-    cochangeTypes.addAll(convertMapToList(typesMap));
-    cochangeMembers.addAll(convertMapToList(membersMap));
+    // for each entity, find other bindings that has this entry key
+    // compute weighted average
+    // save and sort
+    cochangeFiles = generateCochange(fileLookup, contextNodes);
+    cochangeTypes = generateCochange(typeLookup, contextNodes);
+    cochangeMembers = generateCochange(memberLookup, contextNodes);
+  }
+
+  private static PriorityQueue<Pair<String, Double>> generateCochange(
+      Map<String, Map<String, Integer>> lookup, Map<String, Double> contextNodes) {
+    PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
+
+    for (var entityEntry : lookup.entrySet()) {
+      Map<String, Integer> reverseRefs = entityEntry.getValue();
+      double sum1 = 0D;
+      double sum2 = 0D;
+      for (var refEntry : reverseRefs.entrySet()) {
+        String id = refEntry.getKey();
+        sum1 += (contextNodes.get(id) * refEntry.getValue());
+        sum2 += contextNodes.get(id);
+      }
+      pq.add(Pair.of(entityEntry.getKey(), sum1 / sum2));
+    }
+    return pq;
+  }
+
+  /**
+   * Build a reverse lookup table: from entry to id
+   *
+   * @param lookup
+   * @param id
+   * @param refs
+   */
+  private static void buildLookup(
+      Map<String, Map<String, Integer>> lookup, String id, Map<String, Integer> refs) {
+    for (Map.Entry<String, Integer> entry : refs.entrySet()) {
+      if (!lookup.containsKey(entry.getKey())) {
+        lookup.put(entry.getKey(), new HashMap<>());
+      }
+      lookup.get(entry.getKey()).put(id, entry.getValue());
+    }
   }
 
   private static List<Pair<String, Double>> convertMapToList(Map<String, Double> map) {
