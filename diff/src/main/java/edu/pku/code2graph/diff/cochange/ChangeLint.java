@@ -13,6 +13,7 @@ import edu.pku.code2graph.gen.jdt.model.NodeType;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.SysUtil;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -87,9 +88,9 @@ public class ChangeLint {
     //    DataCollector dataCollector = new DataCollector(tempDir);
     //    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
 
-    // Input: XMLDiff (file relative path, changed xml element id)
+    // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
     Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
-    // Ground Truth: JavaDiff (file relative path, type name, member name)
+    // Ground Truth: JavaDiff (file relative path: <file relative path, type name, member name>)
     Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
 
     for (DiffFile diffFile : diffFiles) {
@@ -120,44 +121,46 @@ public class ChangeLint {
             .map(ElementNode.class::cast)
             .collect(Collectors.toSet());
     for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
+      String path = entry.getKey();
+      String fileID =
+          "@"
+              + FileUtil.getParentFolderName(path)
+              + "/"
+              + FilenameUtils.removeExtension(FileUtil.getFileNameFromPath(path));
       for (XMLDiff diff : entry.getValue()) {
         if (XMLDiffUtil.isIDLabel(diff.getName())) {
           String elementID = diff.getName().replace("\"", "").replace("+", "");
           Optional<ElementNode> nodeOpt =
               XMLNodes.stream().filter(node -> elementID.equals(node.getQualifiedName())).findAny();
+
+          Map<String, Binding> bindingInfos = new HashMap<>();
+          Map<String, Double> contextNodes = new LinkedHashMap<>();
+
+          // locate changed xml nodes in the graph
           if (nodeOpt.isPresent()) {
-            // locate changed xml nodes in the graph
             // if exist, modified/removed
-            Map<String, Binding> bindingInfos = new HashMap<>();
             ElementNode node = nodeOpt.get();
             bindingInfos.put(node.getQualifiedName(), inferReferences(graph, node));
-            Map<String, Double> contextNodes = new LinkedHashMap<>();
-
-            collaborativeFilter(bindingInfos, contextNodes);
           } else {
             // if not exist/added: predict co-changes according to similar nodes
             if (diff.getChangeType().equals(ChangeType.ADDED)) {
-              Map<String, Double> contextNodes = diff.getContextNodes();
-              // find all co-changes of siblings
-              Map<String, Binding> bindingInfos = new HashMap<>();
-              for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
-                String siblingID = cxtEntry.getKey().replace("\"", "").replace("+", "");
-
-                Optional<ElementNode> cxtOpt =
-                    XMLNodes.stream()
-                        .filter(node -> siblingID.equals(node.getQualifiedName()))
-                        .findAny();
-                cxtOpt.ifPresent(
-                    elementNode ->
-                        bindingInfos.put(siblingID, inferReferences(graph, elementNode)));
-              }
-              // compare and count to estimate confidence
-              // rank and filter with intersection (algorithm to estimate the relevance/possibility
-              // of co-changing)
-              // report the suggested co-changes with an ordered list top-k
-              collaborativeFilter(bindingInfos, contextNodes);
+              contextNodes = diff.getContextNodes();
             }
           }
+
+          // all have its parent as a context
+          contextNodes.put(fileID, 1D);
+          for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
+            String siblingID = cxtEntry.getKey();
+
+            Optional<ElementNode> cxtOpt =
+                XMLNodes.stream()
+                    .filter(node -> siblingID.equals(node.getQualifiedName()))
+                    .findAny();
+            cxtOpt.ifPresent(
+                elementNode -> bindingInfos.put(siblingID, inferReferences(graph, elementNode)));
+          }
+          collaborativeFilter(bindingInfos, contextNodes);
         }
       }
     }
