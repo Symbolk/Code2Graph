@@ -65,6 +65,7 @@ public class AndroidHandler extends AbstractHandler {
     String name = FileUtil.getFileNameFromPath(filePath);
     String qName = name;
     String parentDir = FileUtil.getParentFolderName(filePath);
+    // e.g. @layout/xxx, @menu/xxx, could be referenced by other xml and java
     if (!parentDir.contains("-") && !parentDir.startsWith("values")) {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }

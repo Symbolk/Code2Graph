@@ -72,19 +72,24 @@ public class ChangeLint {
     // "changelint", "e457da8");
 
     // checkout to the previous version
+    logger.info("Processing repo: {} at {}", repoName, repoPath);
+
     SysUtil.runSystemCommand(
         repoPath, Charset.defaultCharset(), "git", "checkout", testCommitID + "~");
 
     //   build the graph for the current version
     Graph<Node, Edge> graph = buildGraph();
+
     logger.info(
-        "Graph building done, with {} nodes and {} edges",
+        "Graph building done, nodes: {}; edges: {}",
         graph.vertexSet().size(),
         graph.edgeSet().size());
 
     // 2. Online process: for each of the future commits, extract the changes as GT
+    logger.info("Computing diffs for commit: {}", testCommitID);
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
+
     //    DataCollector dataCollector = new DataCollector(tempDir);
     //    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
 
@@ -120,13 +125,33 @@ public class ChangeLint {
             .filter(v -> v instanceof ElementNode)
             .map(ElementNode.class::cast)
             .collect(Collectors.toSet());
+    // for xml changes in each xml file
     for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
       String path = entry.getKey();
-      String fileID =
+      String viewID =
           "@"
               + FileUtil.getParentFolderName(path)
               + "/"
               + FilenameUtils.removeExtension(FileUtil.getFileNameFromPath(path));
+      // the node representing the view file
+      ElementNode viewNode =
+          XMLNodes.stream()
+              .filter(node -> viewID.equals(node.getQualifiedName()))
+              .findFirst()
+              .get();
+      // find the file name that directly/indirectly refs the view node
+      Set<Edge> useEdges = getUseEdges(graph, viewNode);
+      Set<String> scopeFilePaths = new HashSet<>();
+      for (Edge edge : useEdges) {
+        Node sourceNode = graph.getEdgeSource(edge);
+        if (sourceNode.getLanguage().equals(Language.JAVA)) {
+          Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
+          if (!entities.getLeft().isEmpty()) {
+            scopeFilePaths.add(entities.getLeft());
+          }
+        }
+      }
+
       for (XMLDiff diff : entry.getValue()) {
         if (XMLDiffUtil.isIDLabel(diff.getName())) {
           String elementID = diff.getName().replace("\"", "").replace("+", "");
@@ -140,7 +165,7 @@ public class ChangeLint {
           if (nodeOpt.isPresent()) {
             // if exist, modified/removed
             ElementNode node = nodeOpt.get();
-            bindingInfos.put(node.getQualifiedName(), inferReferences(graph, node));
+            bindingInfos.put(node.getQualifiedName(), inferReferences(graph, node, scopeFilePaths));
           } else {
             // if not exist/added: predict co-changes according to similar nodes
             if (diff.getChangeType().equals(ChangeType.ADDED)) {
@@ -149,7 +174,7 @@ public class ChangeLint {
           }
 
           // all have its parent as a context
-          contextNodes.put(fileID, 1D);
+          contextNodes.put(viewID, 1D);
           for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
             String siblingID = cxtEntry.getKey();
 
@@ -158,7 +183,9 @@ public class ChangeLint {
                     .filter(node -> siblingID.equals(node.getQualifiedName()))
                     .findAny();
             cxtOpt.ifPresent(
-                elementNode -> bindingInfos.put(siblingID, inferReferences(graph, elementNode)));
+                elementNode ->
+                    bindingInfos.put(
+                        siblingID, inferReferences(graph, elementNode, scopeFilePaths)));
           }
           collaborativeFilter(bindingInfos, contextNodes);
         }
@@ -290,26 +317,32 @@ public class ChangeLint {
     return results;
   }
 
-  private static Binding inferReferences(Graph<Node, Edge> graph, ElementNode node) {
+  private static Binding inferReferences(
+      Graph<Node, Edge> graph, ElementNode node, Set<String> scopeFilePaths) {
     Binding binding = new Binding(node.getQualifiedName());
 
-    Set<Edge> useEdges =
-        graph.incomingEdgesOf(node).stream()
-            .filter(edge -> !edge.getType().equals(EdgeType.CHILD))
-            .collect(Collectors.toSet());
+    Set<Edge> useEdges = getUseEdges(graph, node);
 
     // TODO: find edge source (uses) nodes in Java code k hops
-    // TODO: filter or correct the references with R.layout.X
     // TODO: express the change for added elements
     for (Edge useEdge : useEdges) {
       Node sourceNode = graph.getEdgeSource(useEdge);
       if (sourceNode.getLanguage().equals(Language.JAVA)) {
+        // filter incorrect references without the correct view
         // find wrapped member, type, and file nodes, return names
         Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
-        binding.addRefEntities(entities);
+        if (scopeFilePaths.contains(entities.getLeft())) {
+          binding.addRefEntities(entities);
+        }
       }
     }
     return binding;
+  }
+
+  private static Set<Edge> getUseEdges(Graph<Node, Edge> graph, Node node) {
+    return graph.incomingEdgesOf(node).stream()
+        .filter(edge -> !edge.getType().equals(EdgeType.CHILD))
+        .collect(Collectors.toSet());
   }
 
   /**
