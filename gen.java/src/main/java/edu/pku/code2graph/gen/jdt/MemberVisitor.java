@@ -31,6 +31,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
     // TODO get relative path if given a base path
     //    FileUtil.getRelativePath(
     //            basePath, cuNode.getQualifiedName());
+    setPackageAttr(cuNode, cu.getPackage().getName().getFullyQualifiedName());
     graph.addVertex(cuNode);
     this.root = cuNode;
 
@@ -54,13 +55,17 @@ public class MemberVisitor extends AbstractJdtVisitor {
         new ElementNode(
             GraphUtil.nid(), Language.JAVA, type, td.toString(), td.getName().toString(), qname);
     node.setRange(computeRange(td));
-    setModifier(td.modifiers(), node);
+    setModifierAttr(node, td.modifiers());
+    setTypeAttr(node, qname);
 
     graph.addVertex(node);
     defPool.put(qname, node);
 
     if (td.isPackageMemberTypeDeclaration()) {
       graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      if (tdBinding != null) {
+        setPackageAttr(node, tdBinding.getPackage().getName());
+      }
     }
 
     // TODO fix member parsing when tdbinding is null (when file not under main folder)
@@ -104,9 +109,11 @@ public class MemberVisitor extends AbstractJdtVisitor {
                   node.getName() + ".INIT",
                   qname);
           initNode.setRange(computeRange(initializer));
-          defPool.put(qname, node);
+          setPackageAttr(node, cu.getPackage().getName().getFullyQualifiedName());
 
           graph.addVertex(initNode);
+          defPool.put(qname, node);
+
           graph.addEdge(node, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
         }
       }
@@ -144,7 +151,8 @@ public class MemberVisitor extends AbstractJdtVisitor {
               name,
               qname);
       node.setRange(computeRange(fragment));
-      setModifier(fd.modifiers(), node);
+      setModifierAttr(node, fd.modifiers());
+      root.getAttribute("package").ifPresent(pkg -> setPackageAttr(node, (String) pkg));
 
       graph.addVertex(node);
       defPool.put(qname, node);
@@ -182,7 +190,8 @@ public class MemberVisitor extends AbstractJdtVisitor {
             name,
             qname);
     node.setRange(computeRange(md));
-    setModifier(md.modifiers(), node);
+    setModifierAttr(node, md.modifiers());
+    root.getAttribute("package").ifPresent(pkg -> setPackageAttr(node, (String) pkg));
 
     graph.addVertex(node);
     defPool.put(qname, node);
@@ -301,20 +310,36 @@ public class MemberVisitor extends AbstractJdtVisitor {
     IMethodBinding mdBinding = mi.resolveMethodBinding();
     // only internal invocation (or consider types, fields and local?)
     if (mdBinding != null) {
-      // get caller qname
+      String calleeSign = JdtService.getMethodQNameFromBinding(mdBinding);
+      // get caller qname and find caller node (should have been in defpool)
       JdtService.findWrappedMethodName(mi)
           .ifPresent(
               name -> {
-                usePool.add(Triple.of(root, EdgeType.METHOD_CALLER, name));
+                Node callerNode = defPool.get(name);
+                if (callerNode != null) {
+                  usePool.add(Triple.of(callerNode, EdgeType.METHOD_CALLER, calleeSign));
+                }
               });
-      // get callee qname
-      usePool.add(
-          Triple.of(root, EdgeType.METHOD_CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
+      //      // get callee qname
+      //      usePool.add(
+      //          Triple.of(root, EdgeType.METHOD_CALLEE, calleeSign));
     }
     return true;
   }
 
-  private void setModifier(List modifiers, Node node) {
+  private void setTypeAttr(Node node, String typeName) {
+    if (!typeName.isEmpty()) {
+      node.setAttribute("type", typeName);
+    }
+  }
+
+  private void setPackageAttr(Node node, String packageName) {
+    if (!packageName.isEmpty()) {
+      node.setAttribute("package", packageName);
+    }
+  }
+
+  private void setModifierAttr(Node node, List modifiers) {
     for (var obj : modifiers) {
       if (obj instanceof Modifier) {
         Modifier modifier = (Modifier) obj;
