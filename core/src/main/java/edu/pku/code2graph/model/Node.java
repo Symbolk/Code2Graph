@@ -1,6 +1,9 @@
 package edu.pku.code2graph.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
@@ -12,6 +15,8 @@ public abstract class Node implements Serializable {
   protected String snippet;
   protected Language language;
   protected Range range;
+  // optional & additional attributes
+  private Map<String, Object> attrs = new HashMap<>(5);
 
   public Node(Integer id, Language language) {
     this.id = id;
@@ -62,4 +67,15 @@ public abstract class Node implements Serializable {
   }
 
   public abstract int hashSignature();
+
+  public Optional<Object> getAttribute(String name) {
+    if(!attrs.containsKey(name)) {
+      return Optional.empty();
+    }
+    return Optional.of(attrs.get(name));
+  }
+
+  public void setAttribute(String name, Object obj) {
+    attrs.put(name, obj);
+  }
 }

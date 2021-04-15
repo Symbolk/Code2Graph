@@ -54,6 +54,8 @@ public class MemberVisitor extends AbstractJdtVisitor {
         new ElementNode(
             GraphUtil.nid(), Language.JAVA, type, td.toString(), td.getName().toString(), qname);
     node.setRange(computeRange(td));
+    setModifier(td.modifiers(), node);
+
     graph.addVertex(node);
     defPool.put(qname, node);
 
@@ -142,6 +144,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
               name,
               qname);
       node.setRange(computeRange(fragment));
+      setModifier(fd.modifiers(), node);
 
       graph.addVertex(node);
       defPool.put(qname, node);
@@ -179,6 +182,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
             name,
             qname);
     node.setRange(computeRange(md));
+    setModifier(md.modifiers(), node);
 
     graph.addVertex(node);
     defPool.put(qname, node);
@@ -308,5 +312,22 @@ public class MemberVisitor extends AbstractJdtVisitor {
           Triple.of(root, EdgeType.METHOD_CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
     }
     return true;
+  }
+
+  private void setModifier(List modifiers, Node node) {
+    for (var obj : modifiers) {
+      if (obj instanceof Modifier) {
+        Modifier modifier = (Modifier) obj;
+        if (modifier.isPublic()) {
+          node.setAttribute("access", "public");
+        } else if (modifier.isProtected()) {
+          node.setAttribute("access", "protected");
+        } else if (modifier.isDefault()) {
+          node.setAttribute("access", "default");
+        } else if (modifier.isPrivate()) {
+          node.setAttribute("access", "private");
+        }
+      }
+    }
   }
 }
