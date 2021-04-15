@@ -234,14 +234,16 @@ public class ChangeLint {
     int correctMemberNum = MetricUtil.intersectSize(gtAllMembers, otAllMembers);
 
     // precision
-    System.out.println(computeProportion(correctFileNum, otTotalFileNum));
-    System.out.println(computeProportion(correctTypeNum, otTotalTypeNum));
-    System.out.println(computeProportion(correctMemberNum, otTotalMemberNum));
+    System.out.println("Precision:");
+    System.out.println("File: " + computeProportion(correctFileNum, otTotalFileNum));
+    System.out.println("Type: " + computeProportion(correctTypeNum, otTotalTypeNum));
+    System.out.println("Member: " + computeProportion(correctMemberNum, otTotalMemberNum));
 
     // recall
-    System.out.println(computeProportion(correctFileNum, gtAllFiles.size()));
-    System.out.println(computeProportion(correctTypeNum, gtAllTypes.size()));
-    System.out.println(computeProportion(correctMemberNum, gtAllMembers.size()));
+    System.out.println("Recall:");
+    System.out.println("File: " + computeProportion(correctFileNum, gtAllFiles.size()));
+    System.out.println("Type: " + computeProportion(correctTypeNum, gtAllTypes.size()));
+    System.out.println("Member: " + computeProportion(correctMemberNum, gtAllMembers.size()));
   }
 
   private static double computeProportion(int a, int b) {
