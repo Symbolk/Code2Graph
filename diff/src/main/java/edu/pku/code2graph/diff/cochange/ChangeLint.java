@@ -20,10 +20,15 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.PropertyConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -33,11 +38,10 @@ public class ChangeLint {
   static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
 
   private static String repoName = "EhViewer";
-  //  private static String repoName = "test_repo";
   private static String repoPath = "/Users/symbolk/coding/data/repos/" + repoName;
   private static String tempDir = "/Users/symbolk/coding/data/temp/c2g";
 
-  private static String commitsPath = "/Users/symbolk/fsdownload/cross-lang-commits";
+  private static String commitsListPath = "/Users/symbolk/fsdownload/cross-lang-commits";
 
   private static List<Pair<String, Double>> cochangeFiles = new ArrayList<>();
   private static List<Pair<String, Double>> cochangeTypes = new ArrayList<>();
@@ -56,142 +60,174 @@ public class ChangeLint {
             });
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, ParseException {
 
     //    BasicConfigurator.configure();
     PropertyConfigurator.configure(
         System.getProperty("user.dir") + File.separator + "log4j.properties");
 
-    // TODO: only consider the changes that involves id changes (for input commits)
-    String testCommitID = "db893b8";
+    // read commit list and filter commit
+    List<String> filePaths = FileUtil.listFilePaths(commitsListPath, "");
+    for (String filePath : filePaths) {
+      JSONParser parser = new JSONParser();
+      JSONArray commitList = (JSONArray) parser.parse(new FileReader(filePath));
 
-    // 1. Offline process: given the commit id of the earliest future multi-lang commit
-    // checkout to that version
-    //    SysUtil.runSystemCommand(repoPath, Charset.defaultCharset(), "git", "checkout", "-b",
-    // "changelint", "e457da8");
+      Iterator<JSONObject> iterator = commitList.iterator();
+      while (iterator.hasNext()) {
+        JSONObject commit = iterator.next();
+        if (hasViewChanges(commit)) {
+          String testCommitID = (String) commit.get("commit_id");
+          // 1. Offline process: given the commit id of the earliest future multi-lang commit
+          logger.info("Processing repo: {} at {}", repoName, repoPath);
 
-    // checkout to the previous version
-    logger.info("Processing repo: {} at {}", repoName, repoPath);
+          // checkout to the previous version
+          logger.info("Checking out to previous commit of {}", testCommitID);
+          SysUtil.runSystemCommand(
+              repoPath,
+              Charset.defaultCharset(),
+              "git",
+              "checkout", /* "-b","changelint", */
+              testCommitID + "~");
 
-    SysUtil.runSystemCommand(
-        repoPath, Charset.defaultCharset(), "git", "checkout", testCommitID + "~");
+          //   build the graph for the current version
+          Graph<Node, Edge> graph = buildGraph();
 
-    //   build the graph for the current version
-    Graph<Node, Edge> graph = buildGraph();
+          logger.info(
+              "Graph building done, nodes: {}; edges: {}",
+              graph.vertexSet().size(),
+              graph.edgeSet().size());
 
-    logger.info(
-        "Graph building done, nodes: {}; edges: {}",
-        graph.vertexSet().size(),
-        graph.edgeSet().size());
+          // 2. Online process: for each of the future commits, extract the changes as GT
+          logger.info("Computing diffs for commit: {}", testCommitID);
+          RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+          List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
 
-    // 2. Online process: for each of the future commits, extract the changes as GT
-    logger.info("Computing diffs for commit: {}", testCommitID);
-    RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
-    List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
+          //    DataCollector dataCollector = new DataCollector(tempDir);
+          //    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
 
-    //    DataCollector dataCollector = new DataCollector(tempDir);
-    //    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
+          // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
+          Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
+          // Ground Truth: JavaDiff (file relative path: <file relative path, type name, member
+          // name>)
+          Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
 
-    // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
-    Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
-    // Ground Truth: JavaDiff (file relative path: <file relative path, type name, member name>)
-    Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
-
-    for (DiffFile diffFile : diffFiles) {
-      if (diffFile.getFileType().equals(FileType.XML)
-          && diffFile.getARelativePath().contains("layout")) {
-        xmlDiffs.put(
-            diffFile.getARelativePath(), XMLDiffUtil.computeXMLChangesWithGumtree(diffFile));
-        //        xmlDiffs.put(
-        //            diffFile.getARelativePath(),
-        //                XMLDiffUtil.computeXMLChanges(
-        //                tempFilePaths, diffFile.getARelativePath(), diffFile.getBRelativePath()));
-      } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-        List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
-        if (!changes.isEmpty()) {
-          // ignore files with only format/comment changes
-          javaDiffs.put(diffFile.getARelativePath(), changes);
-        }
-      }
-    }
-
-    // Output: predicted co-change file/type/member in the graph
-    //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
-    // check if exists to determine change action (if the tool reports wrong change action)
-    Set<ElementNode> XMLNodes =
-        graph.vertexSet().stream()
-            .filter(v -> v.getLanguage().equals(Language.XML))
-            .filter(v -> v instanceof ElementNode)
-            .map(ElementNode.class::cast)
-            .collect(Collectors.toSet());
-    // for xml changes in each xml file
-    for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
-      String path = entry.getKey();
-      String viewID =
-          "@"
-              + FileUtil.getParentFolderName(path)
-              + "/"
-              + FilenameUtils.removeExtension(FileUtil.getFileNameFromPath(path));
-      // the node representing the view file
-      ElementNode viewNode =
-          XMLNodes.stream()
-              .filter(node -> viewID.equals(node.getQualifiedName()))
-              .findFirst()
-              .get();
-      // find the file name that directly/indirectly refs the view node
-      Set<Edge> useEdges = getUseEdges(graph, viewNode);
-      Set<String> scopeFilePaths = new HashSet<>();
-      for (Edge edge : useEdges) {
-        Node sourceNode = graph.getEdgeSource(edge);
-        if (sourceNode.getLanguage().equals(Language.JAVA)) {
-          Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
-          if (!entities.getLeft().isEmpty()) {
-            scopeFilePaths.add(entities.getLeft());
-          }
-        }
-      }
-
-      for (XMLDiff diff : entry.getValue()) {
-        if (XMLDiffUtil.isIDLabel(diff.getName())) {
-          String elementID = diff.getName().replace("\"", "").replace("+", "");
-          Optional<ElementNode> nodeOpt =
-              XMLNodes.stream().filter(node -> elementID.equals(node.getQualifiedName())).findAny();
-
-          Map<String, Binding> bindingInfos = new HashMap<>();
-          Map<String, Double> contextNodes = new LinkedHashMap<>();
-
-          // locate changed xml nodes in the graph
-          if (nodeOpt.isPresent()) {
-            // if exist, modified/removed
-            ElementNode node = nodeOpt.get();
-            bindingInfos.put(node.getQualifiedName(), inferReferences(graph, node, scopeFilePaths));
-          } else {
-            // if not exist/added: predict co-changes according to similar nodes
-            if (diff.getChangeType().equals(ChangeType.ADDED)) {
-              contextNodes = diff.getContextNodes();
+          for (DiffFile diffFile : diffFiles) {
+            if (diffFile.getFileType().equals(FileType.XML)
+                && diffFile.getARelativePath().contains("layout")) {
+              xmlDiffs.put(
+                  diffFile.getARelativePath(), XMLDiffUtil.computeXMLChangesWithGumtree(diffFile));
+              //        xmlDiffs.put(
+              //            diffFile.getARelativePath(),
+              //                XMLDiffUtil.computeXMLChanges(
+              //                tempFilePaths, diffFile.getARelativePath(),
+              // diffFile.getBRelativePath()));
+            } else if (diffFile.getFileType().equals(FileType.JAVA)) {
+              List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
+              if (!changes.isEmpty()) {
+                // ignore files with only format/comment changes
+                javaDiffs.put(diffFile.getARelativePath(), changes);
+              }
             }
           }
 
-          // all have its parent as a context
-          contextNodes.put(viewID, 1D);
-          for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
-            String siblingID = cxtEntry.getKey();
-
-            Optional<ElementNode> cxtOpt =
+          // Output: predicted co-change file/type/member in the graph
+          //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
+          // check if exists to determine change action (if the tool reports wrong change action)
+          Set<ElementNode> XMLNodes =
+              graph.vertexSet().stream()
+                  .filter(v -> v.getLanguage().equals(Language.XML))
+                  .filter(v -> v instanceof ElementNode)
+                  .map(ElementNode.class::cast)
+                  .collect(Collectors.toSet());
+          // for xml changes in each xml file
+          for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
+            String path = entry.getKey();
+            String viewID =
+                "@"
+                    + FileUtil.getParentFolderName(path)
+                    + "/"
+                    + FilenameUtils.removeExtension(FileUtil.getFileNameFromPath(path));
+            // the node representing the view file
+            ElementNode viewNode =
                 XMLNodes.stream()
-                    .filter(node -> siblingID.equals(node.getQualifiedName()))
-                    .findAny();
-            cxtOpt.ifPresent(
-                elementNode ->
-                    bindingInfos.put(
-                        siblingID, inferReferences(graph, elementNode, scopeFilePaths)));
+                    .filter(node -> viewID.equals(node.getQualifiedName()))
+                    .findFirst()
+                    .get();
+            // find the file name that directly/indirectly refs the view node
+            Set<Edge> useEdges = getUseEdges(graph, viewNode);
+            Set<String> scopeFilePaths = new HashSet<>();
+            for (Edge edge : useEdges) {
+              Node sourceNode = graph.getEdgeSource(edge);
+              if (sourceNode.getLanguage().equals(Language.JAVA)) {
+                Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
+                if (!entities.getLeft().isEmpty()) {
+                  scopeFilePaths.add(entities.getLeft());
+                }
+              }
+            }
+
+            for (XMLDiff diff : entry.getValue()) {
+              if (XMLDiffUtil.isIDLabel(diff.getName())) {
+                String elementID = diff.getName().replace("\"", "").replace("+", "");
+                Optional<ElementNode> nodeOpt =
+                    XMLNodes.stream()
+                        .filter(node -> elementID.equals(node.getQualifiedName()))
+                        .findAny();
+
+                Map<String, Binding> bindingInfos = new HashMap<>();
+                Map<String, Double> contextNodes = new LinkedHashMap<>();
+
+                // locate changed xml nodes in the graph
+                if (nodeOpt.isPresent()) {
+                  // if exist, modified/removed
+                  ElementNode node = nodeOpt.get();
+                  bindingInfos.put(
+                      node.getQualifiedName(), inferReferences(graph, node, scopeFilePaths));
+                } else {
+                  // if not exist/added: predict co-changes according to similar nodes
+                  if (diff.getChangeType().equals(ChangeType.ADDED)) {
+                    contextNodes = diff.getContextNodes();
+                  }
+                }
+
+                // all have its parent as a context
+                contextNodes.put(viewID, 1D);
+                for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
+                  String siblingID = cxtEntry.getKey();
+
+                  Optional<ElementNode> cxtOpt =
+                      XMLNodes.stream()
+                          .filter(node -> siblingID.equals(node.getQualifiedName()))
+                          .findAny();
+                  cxtOpt.ifPresent(
+                      elementNode ->
+                          bindingInfos.put(
+                              siblingID, inferReferences(graph, elementNode, scopeFilePaths)));
+                }
+                collaborativeFilter(bindingInfos, contextNodes);
+              }
+            }
           }
-          collaborativeFilter(bindingInfos, contextNodes);
+          // measure accuracy by comparing with ground truth (compute the three sets)
+          evaluate(javaDiffs);
         }
       }
     }
-    // measure accuracy by comparing with ground truth (compute the three sets)
-    evaluate(javaDiffs);
+  }
+
+  private static boolean hasViewChanges(JSONObject commit) {
+    if (commit == null) {
+      return false;
+    }
+    JSONArray diffFiles = (JSONArray) commit.get("diff_files");
+    Iterator<JSONObject> iterator = diffFiles.iterator();
+    while (iterator.hasNext()) {
+      JSONObject diffFile = iterator.next();
+      if (((String) diffFile.get("file_path")).contains("layout")) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -400,7 +436,7 @@ public class ChangeLint {
 
   private static Graph<Node, Edge> buildGraph() throws IOException {
     // iterate all Java files and match imports
-    List<String> allJavaFilePaths = FileUtil.getSpecificFilePaths(repoPath, ".java");
+    List<String> allJavaFilePaths = FileUtil.listFilePaths(repoPath, ".java");
     //    logger.info("Total Java files: "+allJavaFilePaths.size());
 
     Map<String, List<String>> rJavaPathsAndImports = new HashMap<>();
@@ -451,7 +487,7 @@ public class ChangeLint {
 
     // collect all xml layout files
     Set<String> xmlFilePaths =
-        FileUtil.getSpecificFilePaths(repoPath, ".xml").stream()
+        FileUtil.listFilePaths(repoPath, ".xml").stream()
             .filter(path -> path.contains("layout"))
             .collect(Collectors.toSet());
 

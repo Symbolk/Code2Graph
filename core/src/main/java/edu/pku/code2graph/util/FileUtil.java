@@ -161,15 +161,19 @@ public class FileUtil {
    * @param dir
    * @return absolute paths
    */
-  public static List<String> getSpecificFilePaths(String dir, String extension) {
+  public static List<String> listFilePaths(String dir, String extension) {
     List<String> result = new ArrayList<>();
     try (Stream<Path> walk = Files.walk(Paths.get(dir))) {
-      result =
-          walk.filter(Files::isRegularFile)
-              .map(Path::toString)
-              .filter(f -> f.endsWith(extension))
-              //              .map(s -> s.substring(dir.length()))
-              .collect(Collectors.toList());
+      if (extension.isEmpty() || extension.isBlank()) {
+        result = walk.filter(Files::isRegularFile).map(Path::toString).collect(Collectors.toList());
+      } else {
+        result =
+            walk.filter(Files::isRegularFile)
+                .map(Path::toString)
+                .filter(f -> f.endsWith(extension))
+                //              .map(s -> s.substring(dir.length()))
+                .collect(Collectors.toList());
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
