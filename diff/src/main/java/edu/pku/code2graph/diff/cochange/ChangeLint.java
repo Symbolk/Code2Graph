@@ -37,12 +37,11 @@ public class ChangeLint {
   private static String repoPath = "/Users/symbolk/coding/data/repos/" + repoName;
   private static String tempDir = "/Users/symbolk/coding/data/temp/c2g";
 
-  private static PriorityQueue<Pair<String, Double>> cochangeFiles =
-      new PriorityQueue<>(new PairComparator());
-  private static PriorityQueue<Pair<String, Double>> cochangeTypes =
-      new PriorityQueue<>(new PairComparator());
-  private static PriorityQueue<Pair<String, Double>> cochangeMembers =
-      new PriorityQueue<>(new PairComparator());
+  private static String commitsPath = "/Users/symbolk/fsdownload/cross-lang-commits";
+
+  private static List<Pair<String, Double>> cochangeFiles = new ArrayList<>();
+  private static List<Pair<String, Double>> cochangeTypes = new ArrayList<>();
+  private static List<Pair<String, Double>> cochangeMembers = new ArrayList<>();
 
   static {
     initGenerators();
@@ -276,7 +275,7 @@ public class ChangeLint {
     cochangeMembers = generateCochange(memberLookup, contextNodes);
   }
 
-  private static PriorityQueue<Pair<String, Double>> generateCochange(
+  private static List<Pair<String, Double>> generateCochange(
       Map<String, Map<String, Integer>> lookup, Map<String, Double> contextNodes) {
     PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
 
@@ -291,7 +290,12 @@ public class ChangeLint {
       }
       pq.add(Pair.of(entityEntry.getKey(), sum1 / sum2));
     }
-    return pq;
+
+    List<Pair<String, Double>> results = new ArrayList<>();
+    while (!pq.isEmpty()) {
+      results.add(pq.poll());
+    }
+    return results;
   }
 
   /**
@@ -333,11 +337,11 @@ public class ChangeLint {
         // filter incorrect references without the correct view
         // find wrapped member, type, and file nodes, return names
         Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
-        if (scopeFilePaths.contains(entities.getLeft())) {
-          binding.addRefEntities(entities);
+          if (scopeFilePaths.contains(entities.getLeft())) {
+            binding.addRefEntities(entities);
+          }
         }
       }
-    }
     return binding;
   }
 
