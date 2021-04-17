@@ -72,9 +72,7 @@ public class ChangeLint {
       JSONParser parser = new JSONParser();
       JSONArray commitList = (JSONArray) parser.parse(new FileReader(filePath));
 
-      Iterator<JSONObject> iterator = commitList.iterator();
-      while (iterator.hasNext()) {
-        JSONObject commit = iterator.next();
+      for (JSONObject commit : (Iterable<JSONObject>) commitList) {
         if (hasViewChanges(commit)) {
           String testCommitID = (String) commit.get("commit_id");
           // 1. Offline process: given the commit id of the earliest future multi-lang commit
@@ -220,9 +218,7 @@ public class ChangeLint {
       return false;
     }
     JSONArray diffFiles = (JSONArray) commit.get("diff_files");
-    Iterator<JSONObject> iterator = diffFiles.iterator();
-    while (iterator.hasNext()) {
-      JSONObject diffFile = iterator.next();
+    for (JSONObject diffFile : (Iterable<JSONObject>) diffFiles) {
       if (((String) diffFile.get("file_path")).contains("layout")) {
         return true;
       }
