@@ -78,7 +78,8 @@ public class ChangeLint {
 
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
         if (hasViewChanges(commit)) {
-          String testCommitID = (String) commit.get("commit_id");
+          //          String testCommitID = (String) commit.get("commit_id");
+          String testCommitID = "ee0ffc4";
           // 1. Offline process: given the commit id of the earliest future multi-lang commit
           logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -231,10 +232,10 @@ public class ChangeLint {
             }
           }
           // measure accuracy by comparing with ground truth
-          //          evaluate(javaDiffs);
-          cochangeFiles.forEach(System.out::printf);
-          cochangeTypes.forEach(System.out::printf);
-          cochangeMembers.forEach(System.out::printf);
+          evaluate(javaDiffs);
+          //          cochangeFiles.forEach(System.out::printf);
+          //          cochangeTypes.forEach(System.out::printf);
+          //          cochangeMembers.forEach(System.out::printf);
         }
       }
     }
@@ -252,61 +253,55 @@ public class ChangeLint {
     }
     return false;
   }
-  //
-  //  /**
-  //   * TODO evaluate MAP
-  //   *
-  //   * @param groundTruth
-  //   */
-  //  private static void evaluate(Map<String, List<JavaDiff>> groundTruth) {
-  //
-  //    // Ground Truth
-  //    Set<String> gtAllFiles = new HashSet<>();
-  //    Set<String> gtAllTypes = new HashSet<>();
-  //    Set<String> gtAllMembers = new HashSet<>();
-  //    for (Map.Entry<String, List<JavaDiff>> entry : groundTruth.entrySet()) {
-  //      gtAllFiles.add(entry.getKey());
-  //      for (JavaDiff diff : entry.getValue()) {
-  //        if (!diff.getType().isEmpty()) {
-  //          gtAllTypes.add(diff.getType());
-  //        }
-  //
-  //        if (!diff.getMember().isEmpty()) {
-  //          gtAllMembers.add(diff.getMember());
-  //        }
-  //      }
-  //    }
-  //
-  //    // TODO sort the output by confidence
-  // sortMapByValue(co)
-  //    // separately on three levels
-  //    int otTotalFileNum = cochangeFiles.size();
-  //    int otTotalTypeNum = cochangeTypes.size();
-  //    int otTotalMemberNum = cochangeMembers.size();
-  //
-  //    Set<String> otAllFiles =
-  // cochangeFiles.stream().map(Pair::getLeft).collect(Collectors.toSet());
-  //    Set<String> otAllTypes =
-  // cochangeTypes.stream().map(Pair::getLeft).collect(Collectors.toSet());
-  //    Set<String> otAllMembers =
-  //        cochangeMembers.stream().map(Pair::getLeft).collect(Collectors.toSet());
-  //
-  //    int correctFileNum = MetricUtil.intersectSize(gtAllFiles, otAllFiles);
-  //    int correctTypeNum = MetricUtil.intersectSize(gtAllTypes, otAllTypes);
-  //    int correctMemberNum = MetricUtil.intersectSize(gtAllMembers, otAllMembers);
-  //
-  //    // precision
-  //    System.out.println("Precision:");
-  //    System.out.println("File: " + computeMetric(correctFileNum, otTotalFileNum));
-  //    System.out.println("Type: " + computeMetric(correctTypeNum, otTotalTypeNum));
-  //    System.out.println("Member: " + computeMetric(correctMemberNum, otTotalMemberNum));
-  //
-  //    // recall
-  //    System.out.println("Recall:");
-  //    System.out.println("File: " + computeMetric(correctFileNum, gtAllFiles.size()));
-  //    System.out.println("Type: " + computeMetric(correctTypeNum, gtAllTypes.size()));
-  //    System.out.println("Member: " + computeMetric(correctMemberNum, gtAllMembers.size()));
-  //  }
+
+  /** @param groundTruth */
+  private static void evaluate(Map<String, List<JavaDiff>> groundTruth) {
+
+    // Ground Truth
+    Set<String> gtAllFiles = new HashSet<>();
+    Set<String> gtAllTypes = new HashSet<>();
+    Set<String> gtAllMembers = new HashSet<>();
+    for (Map.Entry<String, List<JavaDiff>> entry : groundTruth.entrySet()) {
+      gtAllFiles.add(entry.getKey());
+      for (JavaDiff diff : entry.getValue()) {
+        if (!diff.getType().isEmpty()) {
+          gtAllTypes.add(diff.getType());
+        }
+
+        if (!diff.getMember().isEmpty()) {
+          gtAllMembers.add(diff.getMember());
+        }
+      }
+    }
+
+    // separately on three levels
+    compare("File level", gtAllFiles, cochangeFiles);
+    compare("Type level", gtAllTypes, cochangeTypes);
+    compare("Member level", gtAllMembers, cochangeMembers);
+  }
+
+  private static void compare(
+      String message, Set<String> groundTruth, Map<String, Double> suggestion) {
+    List<Pair<String, Double>> output = sortMapByValue(suggestion);
+    int outputNum = output.size();
+
+    Set<String> outputEntries = output.stream().map(Pair::getLeft).collect(Collectors.toSet());
+
+    int correctNum = MetricUtil.intersectSize(groundTruth, outputEntries);
+
+    // order not considered
+    // precision and recall
+    System.out.println(
+        message
+            + ": "
+            + "Precision="
+            + computeMetric(correctNum, outputNum)
+            + " Recall="
+            + computeMetric(correctNum, groundTruth.size()));
+
+    // order considered: MAP
+
+  }
 
   private static double computeMetric(int a, int b) {
     return b == 0 ? 1D : MetricUtil.formatDouble((double) a / b);
