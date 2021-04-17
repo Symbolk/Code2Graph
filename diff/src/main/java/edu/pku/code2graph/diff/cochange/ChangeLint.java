@@ -283,6 +283,7 @@ public class ChangeLint {
   private static void compare(
       String message, Set<String> groundTruth, Map<String, Double> suggestion) {
     List<Pair<String, Double>> output = sortMapByValue(suggestion);
+    int groundTruthNum = groundTruth.size();
     int outputNum = output.size();
 
     Set<String> outputEntries = output.stream().map(Pair::getLeft).collect(Collectors.toSet());
@@ -291,16 +292,28 @@ public class ChangeLint {
 
     // order not considered
     // precision and recall
-    System.out.println(
+    System.out.print(
         message
             + ": "
             + "Precision="
             + computeMetric(correctNum, outputNum)
             + " Recall="
-            + computeMetric(correctNum, groundTruth.size()));
+            + computeMetric(correctNum, groundTruthNum)
+            + " ");
 
     // order considered: MAP
-
+    double sum = 0D;
+    double correctForK = 0D;
+    double recallForPreviousK = 0D;
+    for (int k = 1; k <= outputNum; k++) {
+      if (groundTruth.contains(output.get(k - 1).getLeft())) {
+        correctForK += 1;
+      }
+      double precisionForK = correctForK / k;
+      double deltaRecallForK = correctForK / groundTruthNum - recallForPreviousK;
+      sum += precisionForK * deltaRecallForK;
+    }
+    System.out.println("Average Precision=" + sum);
   }
 
   private static double computeMetric(int a, int b) {
