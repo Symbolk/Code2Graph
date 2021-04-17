@@ -37,15 +37,15 @@ import java.util.stream.Collectors;
 public class ChangeLint {
   static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
 
-  private static String repoName = "EhViewer";
-  private static String repoPath = "/Users/symbolk/coding/data/repos/" + repoName;
-  private static String tempDir = "/Users/symbolk/coding/data/temp/c2g";
+  private static String rootFolder = "/Users/symbolk/coding/data/changelint";
+  private static String repoPath = rootFolder + "/repos";
+  private static final String tempDir = rootFolder + "/temp";
 
-  private static String commitsListPath = "/Users/symbolk/fsdownload/cross-lang-commits";
+  private static String commitsListPath = rootFolder + "/cross-lang-commits/eh";
 
-  private static List<Pair<String, Double>> cochangeFiles = new ArrayList<>();
-  private static List<Pair<String, Double>> cochangeTypes = new ArrayList<>();
-  private static List<Pair<String, Double>> cochangeMembers = new ArrayList<>();
+  private static Map<String, Double> cochangeFiles = new HashMap<>();
+  private static Map<String, Double> cochangeTypes = new HashMap<>();
+  private static Map<String, Double> cochangeMembers = new HashMap<>();
 
   static {
     initGenerators();
@@ -68,6 +68,10 @@ public class ChangeLint {
 
     // read commit list and filter commit
     List<String> filePaths = FileUtil.listFilePaths(commitsListPath, "");
+    //    String repoName = FileUtil.getFileNameFromPath(commitsListPath);
+    String repoName = "EhViewer";
+    repoPath = repoPath + File.separator + repoName;
+
     for (String filePath : filePaths) {
       JSONParser parser = new JSONParser();
       JSONArray commitList = (JSONArray) parser.parse(new FileReader(filePath));
@@ -128,6 +132,13 @@ public class ChangeLint {
             }
           }
 
+          logger.info("XML diff files: {}", xmlDiffs.entrySet().size());
+          logger.info("Java diff files: {}", javaDiffs.entrySet().size());
+
+          cochangeFiles = new HashMap<>();
+          cochangeTypes = new HashMap<>();
+          cochangeMembers = new HashMap<>();
+
           // Output: predicted co-change file/type/member in the graph
           //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
           // check if exists to determine change action (if the tool reports wrong change action)
@@ -164,6 +175,9 @@ public class ChangeLint {
               }
             }
 
+            // cached binding infos of relevant nodes: co-change candidates
+            Map<String, Binding> bindingInfos = new HashMap<>();
+            // for each diff in the current file
             for (XMLDiff diff : entry.getValue()) {
               if (XMLDiffUtil.isIDLabel(diff.getName())) {
                 String elementID = diff.getName().replace("\"", "").replace("+", "");
@@ -172,15 +186,20 @@ public class ChangeLint {
                         .filter(node -> elementID.equals(node.getQualifiedName()))
                         .findAny();
 
-                Map<String, Binding> bindingInfos = new HashMap<>();
                 Map<String, Double> contextNodes = new LinkedHashMap<>();
 
                 // locate changed xml nodes in the graph
                 if (nodeOpt.isPresent()) {
                   // if exist, modified/removed
                   ElementNode node = nodeOpt.get();
-                  bindingInfos.put(
-                      node.getQualifiedName(), inferReferences(graph, node, scopeFilePaths));
+                  String nodeID = node.getQualifiedName();
+
+                  contextNodes.put(viewID, 1D);
+                  contextNodes.put(nodeID, 1D);
+
+                  if (!bindingInfos.containsKey(nodeID)) {
+                    bindingInfos.put(nodeID, inferReferences(graph, node, scopeFilePaths));
+                  }
                 } else {
                   // if not exist/added: predict co-changes according to similar nodes
                   if (diff.getChangeType().equals(ChangeType.ADDED)) {
@@ -190,6 +209,7 @@ public class ChangeLint {
 
                 // all have its parent as a context
                 contextNodes.put(viewID, 1D);
+
                 for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
                   String siblingID = cxtEntry.getKey();
 
@@ -198,16 +218,23 @@ public class ChangeLint {
                           .filter(node -> siblingID.equals(node.getQualifiedName()))
                           .findAny();
                   cxtOpt.ifPresent(
-                      elementNode ->
+                      elementNode -> {
+                        if (!bindingInfos.containsKey(siblingID)) {
                           bindingInfos.put(
-                              siblingID, inferReferences(graph, elementNode, scopeFilePaths)));
+                              siblingID, inferReferences(graph, elementNode, scopeFilePaths));
+                        }
+                      });
                 }
+                // compute for the current diff
                 collaborativeFilter(bindingInfos, contextNodes);
               }
             }
           }
-          // measure accuracy by comparing with ground truth (compute the three sets)
-          evaluate(javaDiffs);
+          // measure accuracy by comparing with ground truth
+          //          evaluate(javaDiffs);
+          cochangeFiles.forEach(System.out::printf);
+          cochangeTypes.forEach(System.out::printf);
+          cochangeMembers.forEach(System.out::printf);
         }
       }
     }
@@ -225,60 +252,64 @@ public class ChangeLint {
     }
     return false;
   }
+  //
+  //  /**
+  //   * TODO evaluate MAP
+  //   *
+  //   * @param groundTruth
+  //   */
+  //  private static void evaluate(Map<String, List<JavaDiff>> groundTruth) {
+  //
+  //    // Ground Truth
+  //    Set<String> gtAllFiles = new HashSet<>();
+  //    Set<String> gtAllTypes = new HashSet<>();
+  //    Set<String> gtAllMembers = new HashSet<>();
+  //    for (Map.Entry<String, List<JavaDiff>> entry : groundTruth.entrySet()) {
+  //      gtAllFiles.add(entry.getKey());
+  //      for (JavaDiff diff : entry.getValue()) {
+  //        if (!diff.getType().isEmpty()) {
+  //          gtAllTypes.add(diff.getType());
+  //        }
+  //
+  //        if (!diff.getMember().isEmpty()) {
+  //          gtAllMembers.add(diff.getMember());
+  //        }
+  //      }
+  //    }
+  //
+  //    // TODO sort the output by confidence
+  // sortMapByValue(co)
+  //    // separately on three levels
+  //    int otTotalFileNum = cochangeFiles.size();
+  //    int otTotalTypeNum = cochangeTypes.size();
+  //    int otTotalMemberNum = cochangeMembers.size();
+  //
+  //    Set<String> otAllFiles =
+  // cochangeFiles.stream().map(Pair::getLeft).collect(Collectors.toSet());
+  //    Set<String> otAllTypes =
+  // cochangeTypes.stream().map(Pair::getLeft).collect(Collectors.toSet());
+  //    Set<String> otAllMembers =
+  //        cochangeMembers.stream().map(Pair::getLeft).collect(Collectors.toSet());
+  //
+  //    int correctFileNum = MetricUtil.intersectSize(gtAllFiles, otAllFiles);
+  //    int correctTypeNum = MetricUtil.intersectSize(gtAllTypes, otAllTypes);
+  //    int correctMemberNum = MetricUtil.intersectSize(gtAllMembers, otAllMembers);
+  //
+  //    // precision
+  //    System.out.println("Precision:");
+  //    System.out.println("File: " + computeMetric(correctFileNum, otTotalFileNum));
+  //    System.out.println("Type: " + computeMetric(correctTypeNum, otTotalTypeNum));
+  //    System.out.println("Member: " + computeMetric(correctMemberNum, otTotalMemberNum));
+  //
+  //    // recall
+  //    System.out.println("Recall:");
+  //    System.out.println("File: " + computeMetric(correctFileNum, gtAllFiles.size()));
+  //    System.out.println("Type: " + computeMetric(correctTypeNum, gtAllTypes.size()));
+  //    System.out.println("Member: " + computeMetric(correctMemberNum, gtAllMembers.size()));
+  //  }
 
-  /**
-   * TODO evaluate top-k precision
-   *
-   * @param groundTruth
-   */
-  private static void evaluate(Map<String, List<JavaDiff>> groundTruth) {
-
-    // Ground Truth
-    Set<String> gtAllFiles = new HashSet<>();
-    Set<String> gtAllTypes = new HashSet<>();
-    Set<String> gtAllMembers = new HashSet<>();
-    for (Map.Entry<String, List<JavaDiff>> entry : groundTruth.entrySet()) {
-      gtAllFiles.add(entry.getKey());
-      for (JavaDiff diff : entry.getValue()) {
-        if (!diff.getType().isEmpty()) {
-          gtAllTypes.add(diff.getType());
-        }
-
-        if (!diff.getMember().isEmpty()) {
-          gtAllMembers.add(diff.getMember());
-        }
-      }
-    }
-
-    // separately on three levels
-    int otTotalFileNum = cochangeFiles.size();
-    int otTotalTypeNum = cochangeTypes.size();
-    int otTotalMemberNum = cochangeMembers.size();
-
-    Set<String> otAllFiles = cochangeFiles.stream().map(Pair::getLeft).collect(Collectors.toSet());
-    Set<String> otAllTypes = cochangeTypes.stream().map(Pair::getLeft).collect(Collectors.toSet());
-    Set<String> otAllMembers =
-        cochangeMembers.stream().map(Pair::getLeft).collect(Collectors.toSet());
-
-    int correctFileNum = MetricUtil.intersectSize(gtAllFiles, otAllFiles);
-    int correctTypeNum = MetricUtil.intersectSize(gtAllTypes, otAllTypes);
-    int correctMemberNum = MetricUtil.intersectSize(gtAllMembers, otAllMembers);
-
-    // precision
-    System.out.println("Precision:");
-    System.out.println("File: " + computeProportion(correctFileNum, otTotalFileNum));
-    System.out.println("Type: " + computeProportion(correctTypeNum, otTotalTypeNum));
-    System.out.println("Member: " + computeProportion(correctMemberNum, otTotalMemberNum));
-
-    // recall
-    System.out.println("Recall:");
-    System.out.println("File: " + computeProportion(correctFileNum, gtAllFiles.size()));
-    System.out.println("Type: " + computeProportion(correctTypeNum, gtAllTypes.size()));
-    System.out.println("Member: " + computeProportion(correctMemberNum, gtAllMembers.size()));
-  }
-
-  private static double computeProportion(int a, int b) {
-    return b == 0 ? 0D : MetricUtil.formatDouble((double) a / b);
+  private static double computeMetric(int a, int b) {
+    return b == 0 ? 1D : MetricUtil.formatDouble((double) a / b);
   }
 
   /**
@@ -299,17 +330,25 @@ public class ChangeLint {
       buildLookup(memberLookup, id, binding.getMembers());
     }
 
-    // for each entity, find other bindings that has this entry key
-    // compute weighted average
-    // save and sort
-    cochangeFiles = generateCochange(fileLookup, contextNodes);
-    cochangeTypes = generateCochange(typeLookup, contextNodes);
-    cochangeMembers = generateCochange(memberLookup, contextNodes);
+    mergeOutputEntry(cochangeFiles, generateCochange(fileLookup, contextNodes));
+    mergeOutputEntry(cochangeTypes, generateCochange(typeLookup, contextNodes));
+    mergeOutputEntry(cochangeMembers, generateCochange(memberLookup, contextNodes));
+  }
+
+  private static void mergeOutputEntry(
+      Map<String, Double> output, List<Pair<String, Double>> cochanges) {
+    for (var pair : cochanges) {
+      if (!output.containsKey(pair.getLeft())) {
+        output.put(pair.getLeft(), 0D);
+      }
+      Double oldConfidence = output.get(pair.getLeft());
+      output.put(pair.getLeft(), oldConfidence + pair.getRight());
+    }
   }
 
   private static List<Pair<String, Double>> generateCochange(
       Map<String, Map<String, Integer>> lookup, Map<String, Double> contextNodes) {
-    PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
+    List<Pair<String, Double>> results = new ArrayList<>();
 
     for (var entityEntry : lookup.entrySet()) {
       Map<String, Integer> reverseRefs = entityEntry.getValue();
@@ -317,15 +356,15 @@ public class ChangeLint {
       double sum2 = 0D;
       for (var refEntry : reverseRefs.entrySet()) {
         String id = refEntry.getKey();
-        sum1 += (contextNodes.get(id) * refEntry.getValue());
-        sum2 += contextNodes.get(id);
+        if (contextNodes.containsKey(id)) {
+          sum1 += (contextNodes.get(id) * refEntry.getValue());
+          sum2 += contextNodes.get(id);
+        }
       }
-      pq.add(Pair.of(entityEntry.getKey(), sum1 / sum2));
-    }
-
-    List<Pair<String, Double>> results = new ArrayList<>();
-    while (!pq.isEmpty()) {
-      results.add(pq.poll());
+      double confidence = sum1 / sum2;
+      if (confidence > 0) {
+        results.add(Pair.of(entityEntry.getKey(), confidence));
+      }
     }
     return results;
   }
@@ -347,8 +386,9 @@ public class ChangeLint {
     }
   }
 
-  private static List<Pair<String, Double>> convertMapToList(Map<String, Double> map) {
+  private static List<Pair<String, Double>> sortMapByValue(Map<String, Double> map) {
     List<Map.Entry<String, Double>> entryList = new ArrayList<>(map.entrySet());
+    // descending order
     entryList.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
     List<Pair<String, Double>> results = new ArrayList<>();
     entryList.forEach(e -> results.add(Pair.of(e.getKey(), e.getValue())));
@@ -361,20 +401,46 @@ public class ChangeLint {
 
     Set<Edge> useEdges = getUseEdges(graph, node);
 
-    // TODO: find edge source (uses) nodes in Java code k hops
     // TODO: express the change for added elements
     for (Edge useEdge : useEdges) {
-      Node sourceNode = graph.getEdgeSource(useEdge);
-      if (sourceNode.getLanguage().equals(Language.JAVA)) {
+      Node refNode = graph.getEdgeSource(useEdge);
+      if (refNode.getLanguage().equals(Language.JAVA)) {
+        Set<Node> relevantNodes = new HashSet<>();
+        relevantNodes.add(refNode);
+
+        // find indirect uses with dynamic hop stop condition
+        relevantNodes.addAll(getIndirectNodes(graph, refNode));
         // filter incorrect references without the correct view
         // find wrapped member, type, and file nodes, return names
-        Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
+        for (Node rNode : relevantNodes) {
+          Triple<String, String, String> entities = findWrappedEntities(graph, rNode);
           if (scopeFilePaths.contains(entities.getLeft())) {
             binding.addRefEntities(entities);
           }
         }
       }
+    }
     return binding;
+  }
+
+  private static Set<Node> getIndirectNodes(Graph<Node, Edge> graph, Node refNode) {
+    Set<Node> results = new HashSet<>();
+    Optional<Object> accessOpt = refNode.getAttribute("access");
+    if (accessOpt.isPresent()) {
+      // TODO: determine dynamically by hop
+      //    switch (access) {
+      //      case "private":
+      //        // find all indirect refs under the same type
+      //        break;
+      //      default:
+      //    }
+      Set<Edge> useEdges = getUseEdges(graph, refNode);
+      for (Edge e : useEdges) {
+        Node n = graph.getEdgeSource(e);
+        results.add(n);
+      }
+    }
+    return results;
   }
 
   private static Set<Edge> getUseEdges(Graph<Node, Edge> graph, Node node) {
