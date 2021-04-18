@@ -264,6 +264,48 @@ public class MemberVisitor extends AbstractJdtVisitor {
     return false;
   }
 
+  @Override
+  public boolean visit(FieldAccess fa) {
+    IVariableBinding faBinding = fa.resolveFieldBinding();
+    if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
+      // find wrapped parent entity node and build usage
+      JdtService.findWrappedEntityName(fa)
+          .ifPresent(entityName -> createFieldUsage(faBinding, entityName));
+    }
+    return true;
+  }
+
+  @Override
+  public boolean visit(SimpleName sn) {
+    // find field access from simple names
+    if (!sn.isDeclaration()) {
+      IBinding binding = sn.resolveBinding();
+      if (binding instanceof IVariableBinding) {
+        IVariableBinding variableBinding = (IVariableBinding) binding;
+        if (variableBinding.isField() && variableBinding.getDeclaringClass() != null) {
+          JdtService.findWrappedEntityName(sn)
+              .ifPresent(entityName -> createFieldUsage(variableBinding, entityName));
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private void createFieldUsage(IVariableBinding variableBinding, String wrappedEntityName) {
+    Optional<Node> nodeOpt = findEntityNodeByName(wrappedEntityName);
+    // add to use pool
+    nodeOpt.ifPresent(
+        node ->
+            usePool.add(
+                Triple.of(
+                    node,
+                    EdgeType.REFERENCE,
+                    variableBinding.getDeclaringClass().getQualifiedName()
+                        + "."
+                        + variableBinding.getName())));
+  }
+
   private Optional<Node> findEntityNodeByName(String name) {
     if (defPool.containsKey(name)) {
       return Optional.of(defPool.get(name));
@@ -281,29 +323,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
   //      initializer.getParent().getParent();
   //      return false;
   //    }
-
-  @Override
-  public boolean visit(FieldAccess fa) {
-    IVariableBinding faBinding = fa.resolveFieldBinding();
-    if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
-      // find wrapped parent entity node
-      Optional<String> parentEntityName = JdtService.findWrappedEntityName(fa);
-      if (parentEntityName.isPresent()) {
-        Optional<Node> nodeOpt = findEntityNodeByName(parentEntityName.get());
-        // add to use pool
-        nodeOpt.ifPresent(
-            node ->
-                usePool.add(
-                    Triple.of(
-                        node,
-                        EdgeType.REFERENCE,
-                        faBinding.getDeclaringClass().getQualifiedName()
-                            + "."
-                            + faBinding.getName())));
-      }
-    }
-    return true;
-  }
 
   @Override
   public boolean visit(MethodInvocation mi) {
