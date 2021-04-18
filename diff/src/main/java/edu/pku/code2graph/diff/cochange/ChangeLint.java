@@ -68,11 +68,11 @@ public class ChangeLint {
 
     // read commit list and filter commit
     List<String> filePaths = FileUtil.listFilePaths(commitsListPath, "");
-    //    String repoName = FileUtil.getFileNameFromPath(commitsListPath);
-    String repoName = "EhViewer";
-    repoPath = repoPath + File.separator + repoName;
 
     for (String filePath : filePaths) {
+      String repoName = FileUtil.getFileNameFromPath(filePath).replace(".json", "");
+      repoPath = repoPath + File.separator + repoName;
+
       JSONParser parser = new JSONParser();
       JSONArray commitList = (JSONArray) parser.parse(new FileReader(filePath));
 
@@ -310,8 +310,9 @@ public class ChangeLint {
         correctForK += 1;
       }
       double precisionForK = correctForK / k;
-      double deltaRecallForK = correctForK / groundTruthNum - recallForPreviousK;
-      sum += precisionForK * deltaRecallForK;
+      double recallForK = correctForK / groundTruthNum;
+      sum += precisionForK * (recallForK - recallForPreviousK);
+      recallForPreviousK = recallForK;
     }
     System.out.println("Average Precision=" + sum);
   }
