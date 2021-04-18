@@ -9,20 +9,26 @@ import java.util.Objects;
 public class XMLDiff {
   private ChangeType changeType = ChangeType.UNKNOWN;
   private String file = "";
-  private String type = "";
+  private String type = ""; // for <X ...>, type is X
   private String name = "";
   private Map<String, Double> contextNodes = new LinkedHashMap<>();
 
-  public XMLDiff(ChangeType changeType, String file, String name) {
+  public XMLDiff(ChangeType changeType, String file, String type, String name) {
     this.changeType = changeType;
     this.file = file;
+    this.type = type;
     this.name = name;
   }
 
   public XMLDiff(
-      ChangeType changeType, String file, String name, Map<String, Double> contextNodes) {
+      ChangeType changeType,
+      String file,
+      String type,
+      String name,
+      Map<String, Double> contextNodes) {
     this.changeType = changeType;
     this.file = file;
+    this.type = type;
     this.name = name;
     this.contextNodes = contextNodes;
   }

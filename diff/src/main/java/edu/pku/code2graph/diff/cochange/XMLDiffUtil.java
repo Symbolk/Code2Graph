@@ -51,7 +51,8 @@ public class XMLDiffUtil {
     // matcher.getMappings());
     for (ITree iTree : actionClassifier.srcDelTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff(ChangeType.DELETED, fileName, iTree.getLabel()));
+        results.add(
+            new XMLDiff(ChangeType.DELETED, fileName, getTypeForTree(iTree), iTree.getLabel()));
       }
     }
     for (ITree iTree : actionClassifier.dstAddTrees) {
@@ -60,17 +61,39 @@ public class XMLDiffUtil {
         // find other siblingNodes with the similar semantics
         Map<String, Double> siblingNodes =
             findSiblingNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3);
-        results.add(new XMLDiff(ChangeType.ADDED, fileName, iTree.getLabel(), siblingNodes));
+        results.add(
+            new XMLDiff(
+                ChangeType.ADDED, fileName, getTypeForTree(iTree), iTree.getLabel(), siblingNodes));
       }
     }
 
     for (ITree iTree : actionClassifier.srcUpdTrees) {
       if (isIDLabel(iTree.getLabel())) {
-        results.add(new XMLDiff(ChangeType.UPDATED, fileName, iTree.getLabel()));
+        results.add(
+            new XMLDiff(ChangeType.UPDATED, fileName, getTypeForTree(iTree), iTree.getLabel()));
       }
     }
 
     return results;
+  }
+
+  /**
+   * Get the type of an element by finding its nearest uncle with no children
+   *
+   * @param iTree
+   * @return
+   */
+  private static String getTypeForTree(ITree iTree) {
+    ITree parent = iTree.getParent().getParent();
+    while (parent != null) {
+      for (ITree uncle : parent.getChildren()) {
+        if (uncle.getChildren().size() == 0) {
+          return uncle.getLabel();
+        }
+      }
+      parent = parent.getParent();
+    }
+    return "";
   }
 
   /**
