@@ -24,6 +24,36 @@ public class JdtService {
     return Optional.empty();
   }
 
+  /**
+   * Find the residing expression statement with assignment of a qualified name
+   *
+   * @return return the qualified name of the assigned field
+   */
+  public static Optional<String> findWrappedStatement(QualifiedName node) {
+    ASTNode parent = node.getParent();
+    while (parent != null) {
+      if (parent instanceof ExpressionStatement) {
+        break;
+      } else if (parent instanceof Assignment) {
+        Expression exp = ((Assignment) parent).getLeftHandSide();
+        if (exp instanceof SimpleName) {
+          IBinding binding = ((SimpleName) exp).resolveBinding();
+          if (binding instanceof IVariableBinding) {
+            IVariableBinding variableBinding = (IVariableBinding) binding;
+            if (variableBinding.isField() && variableBinding.getDeclaringClass() != null) {
+              return Optional.of(
+                  variableBinding.getDeclaringClass().getQualifiedName()
+                      + "."
+                      + variableBinding.getName());
+            }
+          }
+        }
+      }
+      parent = parent.getParent();
+    }
+    return Optional.empty();
+  }
+
   public static Optional<String> findWrappedEntityName(ASTNode node) {
     ASTNode parent = node.getParent();
     while (parent != null) {
@@ -125,5 +155,25 @@ public class JdtService {
       }
     }
     return false;
+  }
+
+  public static String getTypeQNameFromParents(TypeDeclaration td) {
+    String qname = td.getName().getFullyQualifiedName();
+    // find wrapped type declaration or package declaration
+    ASTNode parent = td.getParent();
+    while (parent != null && parent.getNodeType() != ASTNode.COMPILATION_UNIT) {
+      if (parent instanceof TypeDeclaration) {
+        qname = ((TypeDeclaration) parent).getName().getFullyQualifiedName() + "." + qname;
+      } else {
+        parent = parent.getParent();
+      }
+    }
+    if (parent instanceof CompilationUnit) {
+      CompilationUnit cu = (CompilationUnit) parent;
+      if (cu.getPackage() != null) {
+        qname = cu.getPackage().getName().getFullyQualifiedName() + "." + qname;
+      }
+    }
+    return qname;
   }
 }

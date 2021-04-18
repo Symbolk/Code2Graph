@@ -248,16 +248,28 @@ public class MemberVisitor extends AbstractJdtVisitor {
     // qn: R.a.b
     if (qn.getQualifier().isQualifiedName()) { // R.a
       if ("R".equals(((QualifiedName) qn.getQualifier()).getQualifier().toString())) { // R
-        // find ancestor entity name
-        Optional<String> parentEntityName = JdtService.findWrappedEntityName(qn);
-        if (parentEntityName.isPresent()) {
-          // find in def pool (should already be visited)
-          Optional<Node> nodeOpt = findEntityNodeByName(parentEntityName.get());
+        // if used in an assignment statement and the assignee is a field, directly bind with the
+        // field
+        Optional<String> assignedFieldOpt = JdtService.findWrappedStatement(qn);
+        if (assignedFieldOpt.isPresent()) {
+          Optional<Node> nodeOpt = findEntityNodeByName(assignedFieldOpt.get());
           // add into usepool
           nodeOpt.ifPresent(
-              value ->
+              node ->
                   GraphUtil.addCrossLangRef(
-                      Triple.of(value, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
+                      Triple.of(node, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
+        } else {
+          // find ancestor entity name
+          Optional<String> parentEntityName = JdtService.findWrappedEntityName(qn);
+          if (parentEntityName.isPresent()) {
+            // find in def pool (should already be visited)
+            Optional<Node> nodeOpt = findEntityNodeByName(parentEntityName.get());
+            // add into usepool
+            nodeOpt.ifPresent(
+                node ->
+                    GraphUtil.addCrossLangRef(
+                        Triple.of(node, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
+          }
         }
       }
     }
