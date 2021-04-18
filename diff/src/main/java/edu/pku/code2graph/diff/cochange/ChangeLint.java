@@ -15,11 +15,11 @@ import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.SysUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.PropertyConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -43,9 +43,9 @@ public class ChangeLint {
 
   private static String commitsListPath = rootFolder + "/cross-lang-commits/eh";
 
-  private static Map<String, Double> cochangeFiles = new HashMap<>();
-  private static Map<String, Double> cochangeTypes = new HashMap<>();
-  private static Map<String, Double> cochangeMembers = new HashMap<>();
+  private static List<Suggestion> cochangeFiles = new ArrayList<>();
+  private static List<Suggestion> cochangeTypes = new ArrayList<>();
+  private static List<Suggestion> cochangeMembers = new ArrayList<>();
 
   static {
     initGenerators();
@@ -79,7 +79,7 @@ public class ChangeLint {
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
         if (hasViewChanges(commit)) {
           //          String testCommitID = (String) commit.get("commit_id");
-          String testCommitID = "ee0ffc4";
+          String testCommitID = "db893b8";
           // 1. Offline process: given the commit id of the earliest future multi-lang commit
           logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -136,9 +136,9 @@ public class ChangeLint {
           logger.info("XML diff files: {}", xmlDiffs.entrySet().size());
           logger.info("Java diff files: {}", javaDiffs.entrySet().size());
 
-          cochangeFiles = new HashMap<>();
-          cochangeTypes = new HashMap<>();
-          cochangeMembers = new HashMap<>();
+          cochangeFiles = new ArrayList<>();
+          cochangeTypes = new ArrayList<>();
+          cochangeMembers = new ArrayList<>();
 
           // Output: predicted co-change file/type/member in the graph
           //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
@@ -201,33 +201,33 @@ public class ChangeLint {
                   if (!bindingInfos.containsKey(nodeID)) {
                     bindingInfos.put(nodeID, inferReferences(graph, node, scopeFilePaths));
                   }
+                  generateSuggestion(bindingInfos);
                 } else {
                   // if not exist/added: predict co-changes according to similar nodes
                   if (diff.getChangeType().equals(ChangeType.ADDED)) {
                     contextNodes = diff.getContextNodes();
                   }
+
+                  // all have its parent as a context
+                  contextNodes.put(viewID, 1D);
+
+                  for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
+                    String siblingID = cxtEntry.getKey();
+
+                    Optional<ElementNode> cxtOpt =
+                        XMLNodes.stream()
+                            .filter(node -> siblingID.equals(node.getQualifiedName()))
+                            .findAny();
+                    cxtOpt.ifPresent(
+                        elementNode -> {
+                          if (!bindingInfos.containsKey(siblingID)) {
+                            bindingInfos.put(
+                                siblingID, inferReferences(graph, elementNode, scopeFilePaths));
+                          }
+                        });
+                  }
+                  generateSuggestion(bindingInfos, contextNodes);
                 }
-
-                // all have its parent as a context
-                contextNodes.put(viewID, 1D);
-
-                for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
-                  String siblingID = cxtEntry.getKey();
-
-                  Optional<ElementNode> cxtOpt =
-                      XMLNodes.stream()
-                          .filter(node -> siblingID.equals(node.getQualifiedName()))
-                          .findAny();
-                  cxtOpt.ifPresent(
-                      elementNode -> {
-                        if (!bindingInfos.containsKey(siblingID)) {
-                          bindingInfos.put(
-                              siblingID, inferReferences(graph, elementNode, scopeFilePaths));
-                        }
-                      });
-                }
-                // compute for the current diff
-                collaborativeFilter(bindingInfos, contextNodes);
               }
             }
           }
@@ -254,22 +254,25 @@ public class ChangeLint {
     return false;
   }
 
-  /** @param groundTruth */
   private static void evaluate(Map<String, List<JavaDiff>> groundTruth) {
 
     // Ground Truth
-    Set<String> gtAllFiles = new HashSet<>();
-    Set<String> gtAllTypes = new HashSet<>();
-    Set<String> gtAllMembers = new HashSet<>();
+    Set<Suggestion> gtAllFiles = new HashSet<>();
+    Set<Suggestion> gtAllTypes = new HashSet<>();
+    Set<Suggestion> gtAllMembers = new HashSet<>();
     for (Map.Entry<String, List<JavaDiff>> entry : groundTruth.entrySet()) {
-      gtAllFiles.add(entry.getKey());
+      gtAllFiles.add(new Suggestion(ChangeType.UPDATED, EntityType.FILE, entry.getKey(), 1.0));
       for (JavaDiff diff : entry.getValue()) {
-        if (!diff.getType().isEmpty()) {
-          gtAllTypes.add(diff.getType());
-        }
-
-        if (!diff.getMember().isEmpty()) {
-          gtAllMembers.add(diff.getMember());
+        if (diff.getMember().isEmpty()) {
+          gtAllTypes.add(
+              new Suggestion(diff.getChangeType(), EntityType.TYPE, diff.getType(), 1.0));
+        } else {
+          gtAllMembers.add(
+              new Suggestion(diff.getChangeType(), EntityType.MEMBER, diff.getMember(), 1.0));
+          if (!diff.getType().isEmpty()) {
+            gtAllTypes.add(
+                new Suggestion(ChangeType.UPDATED, EntityType.TYPE, diff.getType(), 1.0));
+          }
         }
       }
     }
@@ -281,14 +284,21 @@ public class ChangeLint {
   }
 
   private static void compare(
-      String message, Set<String> groundTruth, Map<String, Double> suggestion) {
-    List<Pair<String, Double>> output = sortMapByValue(suggestion);
+      String message, Set<Suggestion> groundTruth, List<Suggestion> suggestion) {
+    suggestion.sort(new SuggestionComparator());
     int groundTruthNum = groundTruth.size();
-    int outputNum = output.size();
+    int outputNum = suggestion.size();
 
-    Set<String> outputEntries = output.stream().map(Pair::getLeft).collect(Collectors.toSet());
+    //    Set<String> outputEntries =
+    //        suggestion.stream().map(Suggestion::getIdentifier).collect(Collectors.toSet());
+    //    MetricUtil.intersectSize(groundTruth, outputEntries);
 
-    int correctNum = MetricUtil.intersectSize(groundTruth, outputEntries);
+    int correctNum = 0;
+    for (Suggestion sg : suggestion) {
+      if (hitGroundTruth(groundTruth, sg)) {
+        correctNum += 1;
+      }
+    }
 
     // order not considered
     // precision and recall
@@ -306,7 +316,7 @@ public class ChangeLint {
     double correctForK = 0D;
     double recallForPreviousK = 0D;
     for (int k = 1; k <= outputNum; k++) {
-      if (groundTruth.contains(output.get(k - 1).getLeft())) {
+      if (hitGroundTruth(groundTruth, suggestion.get(k - 1))) {
         correctForK += 1;
       }
       double precisionForK = correctForK / k;
@@ -314,18 +324,56 @@ public class ChangeLint {
       sum += precisionForK * (recallForK - recallForPreviousK);
       recallForPreviousK = recallForK;
     }
-    System.out.println("Average Precision=" + sum);
+    System.out.println("Average Precision=" + MetricUtil.formatDouble(sum));
+  }
+
+  /**
+   * Check if the suggestion hit any in ground truth
+   *
+   * @param groundTruth
+   * @param suggestion
+   * @return
+   */
+  private static boolean hitGroundTruth(Set<Suggestion> groundTruth, Suggestion suggestion) {
+    for (Suggestion gt : groundTruth) {
+      // TODO compare with empty/wildcard identifier
+      if (gt.getChangeType().equals(ChangeType.ADDED)) {}
+
+      if (gt.getIdentifier().equals(suggestion.getIdentifier())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static double computeMetric(int a, int b) {
     return b == 0 ? 1D : MetricUtil.formatDouble((double) a / b);
   }
 
+  private static void generateSuggestion(Map<String, Binding> bindingInfos) {
+    for (Map.Entry<String, Binding> entry : bindingInfos.entrySet()) {
+      String id = entry.getKey();
+      Binding binding = entry.getValue();
+      for (var temp : binding.getFiles().entrySet()) {
+        cochangeFiles.add(
+            new Suggestion(ChangeType.UPDATED, EntityType.FILE, temp.getKey(), temp.getValue()));
+      }
+      for (var temp : binding.getTypes().entrySet()) {
+        cochangeTypes.add(
+            new Suggestion(ChangeType.UPDATED, EntityType.TYPE, temp.getKey(), temp.getValue()));
+      }
+      for (var temp : binding.getMembers().entrySet()) {
+        cochangeMembers.add(
+            new Suggestion(ChangeType.UPDATED, EntityType.MEMBER, temp.getKey(), temp.getValue()));
+      }
+    }
+  }
+
   /**
    * Evaluate and rank the co-change probability with neighborhood-based&user-based CF algorithm
    * from recommendation system
    */
-  private static void collaborativeFilter(
+  private static void generateSuggestion(
       Map<String, Binding> bindingInfos, Map<String, Double> contextNodes) {
     Map<String, Map<String, Integer>> fileLookup = new HashMap<>();
     Map<String, Map<String, Integer>> typeLookup = new HashMap<>();
@@ -339,25 +387,40 @@ public class ChangeLint {
       buildLookup(memberLookup, id, binding.getMembers());
     }
 
-    mergeOutputEntry(cochangeFiles, generateCochange(fileLookup, contextNodes));
-    mergeOutputEntry(cochangeTypes, generateCochange(typeLookup, contextNodes));
-    mergeOutputEntry(cochangeMembers, generateCochange(memberLookup, contextNodes));
+    mergeOutputEntry(cochangeFiles, collaborativeFilter(EntityType.FILE, fileLookup, contextNodes));
+    mergeOutputEntry(cochangeTypes, collaborativeFilter(EntityType.TYPE, typeLookup, contextNodes));
+    mergeOutputEntry(
+        cochangeMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
   }
 
-  private static void mergeOutputEntry(
-      Map<String, Double> output, List<Pair<String, Double>> cochanges) {
-    for (var pair : cochanges) {
-      if (!output.containsKey(pair.getLeft())) {
-        output.put(pair.getLeft(), 0D);
+  private static void mergeOutputEntry(List<Suggestion> output, List<Suggestion> suggestions) {
+    for (var sug : suggestions) {
+      if (sug.getIdentifier().isEmpty() || sug.getIdentifier().isBlank()) {
+        output.add(sug);
+      } else {
+        // if exist, change confidence
+        boolean exist = false;
+        for (Suggestion ot : output) {
+          if (ot.getEntityType().equals(ot.getEntityType())
+              && ot.getIdentifier().equals(sug.getIdentifier())) {
+            ot.setConfidence(ot.getConfidence() + sug.getConfidence());
+            exist = true;
+          }
+          break;
+        }
+        // else, add a new
+        if (!exist) {
+          output.add(sug);
+        }
       }
-      Double oldConfidence = output.get(pair.getLeft());
-      output.put(pair.getLeft(), oldConfidence + pair.getRight());
     }
   }
 
-  private static List<Pair<String, Double>> generateCochange(
-      Map<String, Map<String, Integer>> lookup, Map<String, Double> contextNodes) {
-    List<Pair<String, Double>> results = new ArrayList<>();
+  private static List<Suggestion> collaborativeFilter(
+      EntityType entityType,
+      Map<String, Map<String, Integer>> lookup,
+      Map<String, Double> contextNodes) {
+    List<Suggestion> results = new ArrayList<>();
 
     for (var entityEntry : lookup.entrySet()) {
       Map<String, Integer> reverseRefs = entityEntry.getValue();
@@ -370,9 +433,10 @@ public class ChangeLint {
           sum2 += contextNodes.get(id);
         }
       }
-      double confidence = sum1 / sum2;
+      double confidence = MetricUtil.formatDouble(sum1 / sum2);
       if (confidence > 0) {
-        results.add(Pair.of(entityEntry.getKey(), confidence));
+        results.add(
+            new Suggestion(ChangeType.UPDATED, entityType, entityEntry.getKey(), confidence));
       }
     }
     return results;
@@ -395,14 +459,27 @@ public class ChangeLint {
     }
   }
 
-  private static List<Pair<String, Double>> sortMapByValue(Map<String, Double> map) {
-    List<Map.Entry<String, Double>> entryList = new ArrayList<>(map.entrySet());
+  static class SuggestionComparator implements Comparator<Suggestion> {
     // descending order
-    entryList.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
-    List<Pair<String, Double>> results = new ArrayList<>();
-    entryList.forEach(e -> results.add(Pair.of(e.getKey(), e.getValue())));
-    return results;
+    @Override
+    public int compare(Suggestion s1, Suggestion s2) {
+      if (s1.getConfidence() < s2.getConfidence()) {
+        return 1;
+      } else if (s1.getConfidence() > s2.getConfidence()) {
+        return -1;
+      }
+      return 0;
+    }
   }
+
+  //  private static List<Pair<String, Double>> sortMapByValue(Map<String, Double> map) {
+  //    List<Map.Entry<String, Double>> entryList = new ArrayList<>(map.entrySet());
+  //    // descending order
+  //    entryList.sort(Map.Entry.comparingByValue(Comparator.reverseOrder()));
+  //    List<Pair<String, Double>> results = new ArrayList<>();
+  //    entryList.forEach(e -> results.add(Pair.of(e.getKey(), e.getValue())));
+  //    return results;
+  //  }
 
   private static Binding inferReferences(
       Graph<Node, Edge> graph, ElementNode node, Set<String> scopeFilePaths) {
@@ -432,6 +509,13 @@ public class ChangeLint {
     return binding;
   }
 
+  /**
+   * Get all connected nodes (k hops or dynamic hops)
+   *
+   * @param graph
+   * @param refNode
+   * @return
+   */
   private static Set<Node> getIndirectNodes(Graph<Node, Edge> graph, Node refNode) {
     Set<Node> results = new HashSet<>();
     Optional<Object> accessOpt = refNode.getAttribute("access");
@@ -443,11 +527,11 @@ public class ChangeLint {
       //        break;
       //      default:
       //    }
-      Set<Edge> useEdges = getUseEdges(graph, refNode);
-      for (Edge e : useEdges) {
-        Node n = graph.getEdgeSource(e);
-        results.add(n);
-      }
+      Set<Node> neighbors =
+          Graphs.neighborListOf(graph, refNode).stream()
+              .filter(n -> n.getLanguage().equals(Language.JAVA))
+              .collect(Collectors.toSet());
+      results.addAll(neighbors);
     }
     return results;
   }
