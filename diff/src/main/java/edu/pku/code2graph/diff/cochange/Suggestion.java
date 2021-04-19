@@ -40,6 +40,21 @@ public class Suggestion {
   }
 
   @Override
+  public String toString() {
+    return "Suggestion{"
+        + "changeType="
+        + changeType
+        + ", entityType="
+        + entityType
+        + ", identifier='"
+        + identifier
+        + '\''
+        + ", confidence="
+        + confidence
+        + '}';
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
