@@ -4,6 +4,8 @@ import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.ChangeType;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
+import edu.pku.code2graph.diff.util.GitService;
+import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
@@ -38,14 +40,15 @@ public class ChangeLint {
   static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
 
   private static String rootFolder = "/Users/symbolk/coding/data/changelint";
+  private static String repoName = "";
   private static String repoPath = rootFolder + "/repos";
   private static final String tempDir = rootFolder + "/temp";
 
   private static String commitsListPath = rootFolder + "/cross-lang-commits/eh";
 
-  private static List<Suggestion> cochangeFiles = new ArrayList<>();
-  private static List<Suggestion> cochangeTypes = new ArrayList<>();
-  private static List<Suggestion> cochangeMembers = new ArrayList<>();
+  private static List<Suggestion> suggestedFiles = new ArrayList<>();
+  private static List<Suggestion> suggestedTypes = new ArrayList<>();
+  private static List<Suggestion> suggestedMembers = new ArrayList<>();
 
   static {
     initGenerators();
@@ -69,13 +72,16 @@ public class ChangeLint {
     // read commit list and filter commit
     List<String> filePaths = FileUtil.listFilePaths(commitsListPath, "");
 
+    // one file, one repo
     for (String filePath : filePaths) {
-      String repoName = FileUtil.getFileNameFromPath(filePath).replace(".json", "");
+      repoName = FileUtil.getFileNameFromPath(filePath).replace(".json", "");
       repoPath = repoPath + File.separator + repoName;
+      RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
       JSONParser parser = new JSONParser();
       JSONArray commitList = (JSONArray) parser.parse(new FileReader(filePath));
 
+      // one entry, one commit
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
         if (hasViewChanges(commit)) {
           //          String testCommitID = (String) commit.get("commit_id");
@@ -102,7 +108,6 @@ public class ChangeLint {
 
           // 2. Online process: for each of the future commits, extract the changes as GT
           logger.info("Computing diffs for commit: {}", testCommitID);
-          RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
           List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
 
           //    DataCollector dataCollector = new DataCollector(tempDir);
@@ -136,9 +141,9 @@ public class ChangeLint {
           logger.info("XML diff files: {}", xmlDiffs.entrySet().size());
           logger.info("Java diff files: {}", javaDiffs.entrySet().size());
 
-          cochangeFiles = new ArrayList<>();
-          cochangeTypes = new ArrayList<>();
-          cochangeMembers = new ArrayList<>();
+          suggestedFiles = new ArrayList<>();
+          suggestedTypes = new ArrayList<>();
+          suggestedMembers = new ArrayList<>();
 
           // Output: predicted co-change file/type/member in the graph
           //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
@@ -274,23 +279,23 @@ public class ChangeLint {
     }
 
     // separately on three levels
-    compare("File level", gtAllFiles, cochangeFiles);
-    compare("Type level", gtAllTypes, cochangeTypes);
-    compare("Member level", gtAllMembers, cochangeMembers);
+    compare("File level", gtAllFiles, suggestedFiles);
+    compare("Type level", gtAllTypes, suggestedTypes);
+    compare("Member level", gtAllMembers, suggestedMembers);
   }
 
   private static void compare(
-      String message, Set<Suggestion> groundTruth, List<Suggestion> suggestion) {
-    suggestion.sort(new SuggestionComparator());
+      String message, Set<Suggestion> groundTruth, List<Suggestion> suggestions) {
+    suggestions.sort(new SuggestionComparator());
     int groundTruthNum = groundTruth.size();
-    int outputNum = suggestion.size();
+    int outputNum = suggestions.size();
 
     //    Set<String> outputEntries =
-    //        suggestion.stream().map(Suggestion::getIdentifier).collect(Collectors.toSet());
+    //        suggestions.stream().map(Suggestion::getIdentifier).collect(Collectors.toSet());
     //    MetricUtil.intersectSize(groundTruth, outputEntries);
 
     int correctNum = 0;
-    for (Suggestion sg : suggestion) {
+    for (Suggestion sg : suggestions) {
       if (hitGroundTruth(groundTruth, sg)) {
         correctNum += 1;
       }
@@ -312,7 +317,7 @@ public class ChangeLint {
     double correctForK = 0D;
     double recallForPreviousK = 0D;
     for (int k = 1; k <= outputNum; k++) {
-      if (hitGroundTruth(groundTruth, suggestion.get(k - 1))) {
+      if (hitGroundTruth(groundTruth, suggestions.get(k - 1))) {
         correctForK += 1;
       }
       double precisionForK = correctForK / k;
@@ -358,15 +363,15 @@ public class ChangeLint {
       String id = entry.getKey();
       Binding binding = entry.getValue();
       for (var temp : binding.getFiles().entrySet()) {
-        cochangeFiles.add(
+        suggestedFiles.add(
             new Suggestion(ChangeType.UPDATED, EntityType.FILE, temp.getKey(), temp.getValue()));
       }
       for (var temp : binding.getTypes().entrySet()) {
-        cochangeTypes.add(
+        suggestedTypes.add(
             new Suggestion(ChangeType.UPDATED, EntityType.TYPE, temp.getKey(), temp.getValue()));
       }
       for (var temp : binding.getMembers().entrySet()) {
-        cochangeMembers.add(
+        suggestedMembers.add(
             new Suggestion(ChangeType.UPDATED, EntityType.MEMBER, temp.getKey(), temp.getValue()));
       }
     }
@@ -390,10 +395,10 @@ public class ChangeLint {
       buildLookup(memberLookup, id, binding.getMembers());
     }
 
-    mergeOutputEntry(cochangeFiles, collaborativeFilter(EntityType.FILE, fileLookup, contextNodes));
-    mergeOutputEntry(cochangeTypes, collaborativeFilter(EntityType.TYPE, typeLookup, contextNodes));
+    mergeOutputEntry(suggestedFiles, collaborativeFilter(EntityType.FILE, fileLookup, contextNodes));
+    mergeOutputEntry(suggestedTypes, collaborativeFilter(EntityType.TYPE, typeLookup, contextNodes));
     mergeOutputEntry(
-        cochangeMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
+            suggestedMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
   }
 
   private static void mergeOutputEntry(List<Suggestion> output, Set<Suggestion> suggestions) {
@@ -495,7 +500,6 @@ public class ChangeLint {
 
     Set<Edge> useEdges = getUseEdges(graph, node);
 
-    // TODO: express the change for added elements
     for (Edge useEdge : useEdges) {
       Node refNode = graph.getEdgeSource(useEdge);
       if (refNode.getLanguage().equals(Language.JAVA)) {
