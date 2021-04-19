@@ -98,15 +98,6 @@ public class ChangeLint {
               "checkout", /* "-b","changelint", */
               testCommitID + "~");
 
-          //   build the graph for the current version
-          Graph<Node, Edge> graph = buildGraph();
-
-          logger.info(
-              "Graph building done, nodes: {}; edges: {}",
-              graph.vertexSet().size(),
-              graph.edgeSet().size());
-
-          // 2. Online process: for each of the future commits, extract the changes as GT
           logger.info("Computing diffs for commit: {}", testCommitID);
           List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
 
@@ -141,9 +132,23 @@ public class ChangeLint {
           logger.info("XML diff files: {}", xmlDiffs.entrySet().size());
           logger.info("Java diff files: {}", javaDiffs.entrySet().size());
 
+          logger.info("Computing historical cochanges...");
+          computeHistoricalCochanges(xmlDiffs);
+
           suggestedFiles = new ArrayList<>();
           suggestedTypes = new ArrayList<>();
           suggestedMembers = new ArrayList<>();
+
+          logger.info("Building graph...");
+          //   build the graph for the current version
+          Graph<Node, Edge> graph = buildGraph();
+
+          logger.info(
+              "Graph building done, nodes: {}; edges: {}",
+              graph.vertexSet().size(),
+              graph.edgeSet().size());
+
+          // 2. Online process: for each of the future commits, extract the changes as GT
 
           // Output: predicted co-change file/type/member in the graph
           //    Map<String, List<JavaDiff>> suggestedCoChanges = new HashMap<>();
@@ -395,10 +400,12 @@ public class ChangeLint {
       buildLookup(memberLookup, id, binding.getMembers());
     }
 
-    mergeOutputEntry(suggestedFiles, collaborativeFilter(EntityType.FILE, fileLookup, contextNodes));
-    mergeOutputEntry(suggestedTypes, collaborativeFilter(EntityType.TYPE, typeLookup, contextNodes));
     mergeOutputEntry(
-            suggestedMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
+        suggestedFiles, collaborativeFilter(EntityType.FILE, fileLookup, contextNodes));
+    mergeOutputEntry(
+        suggestedTypes, collaborativeFilter(EntityType.TYPE, typeLookup, contextNodes));
+    mergeOutputEntry(
+        suggestedMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
   }
 
   private static void mergeOutputEntry(List<Suggestion> output, Set<Suggestion> suggestions) {
@@ -585,7 +592,83 @@ public class ChangeLint {
     return Triple.of(filePath, typeName, memberName);
   }
 
-  // TODO use git log to find co-changed elements from the past commits (sorted by confidence)
+  /** Compute evolutionary coupling entities from the past commits */
+  private static void computeHistoricalCochanges(Map<String, List<XMLDiff>> xmlDiffs) {
+    RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+
+    Map<String, Map<String, Double>> cochangeFiles = new HashMap<>();
+    Map<String, Map<String, Double>> cochangeTypes = new HashMap<>();
+    Map<String, Map<String, Double>> cochangeMembers = new HashMap<>();
+
+    // get all commits that ever changed each xml file
+    for (String xmlFilePath : xmlDiffs.keySet()) {
+      GitService gitService = new GitServiceCGit();
+      // note that here "HEAD" is the tested commit, since we have checkout to it before
+      List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, xmlFilePath, "HEAD", 10);
+      int numAllCommits = commitIDs.size();
+      // count the number of co-change commits
+      Map<String, Double> filesCounter = new HashMap<>();
+      Map<String, Double> typesCounter = new HashMap<>();
+      Map<String, Double> membersCounter = new HashMap<>();
+
+      for (String commitID : commitIDs) {
+        // extract co-changing entities at 3 levels
+        Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
+
+        List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID);
+        for (DiffFile diffFile : diffFiles) {
+          if (diffFile.getFileType().equals(FileType.JAVA)) {
+            List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
+            if (!changes.isEmpty()) {
+              // ignore files with only format/comment changes
+              javaDiffs.put(
+                  diffFile.getARelativePath().isBlank()
+                      ? diffFile.getBRelativePath()
+                      : diffFile.getARelativePath(),
+                  changes);
+            }
+          }
+        }
+
+        // count number of cochange commits
+        for (var entry : javaDiffs.entrySet()) {
+          List<JavaDiff> diffs = entry.getValue();
+          String diffFilePath = entry.getKey();
+          if (!diffFilePath.isEmpty()) {
+            if (!filesCounter.containsKey(diffFilePath)) {
+              filesCounter.put(diffFilePath, 0D);
+            }
+            filesCounter.put(diffFilePath, filesCounter.get(diffFilePath) + 1);
+          }
+          for (JavaDiff diff : diffs) {
+            String diffType = diff.getType();
+            if (!diffType.isEmpty()) {
+              if (!typesCounter.containsKey(diffType)) {
+                typesCounter.put(diffType, 0D);
+              }
+              typesCounter.put(diffType, typesCounter.get(diffType) + 1);
+            }
+
+            String diffMember = diff.getMember();
+            if (!diffMember.isEmpty()) {
+              if (!membersCounter.containsKey(diffMember)) {
+                membersCounter.put(diffMember, 0D);
+              }
+              membersCounter.put(diffMember, membersCounter.get(diffMember) + 1);
+            }
+          }
+        }
+      }
+      // store and consume
+      // compute confidence for each entity
+      filesCounter.replaceAll((k, v) -> MetricUtil.formatDouble(v / numAllCommits));
+      typesCounter.replaceAll((k, v) -> MetricUtil.formatDouble(v / numAllCommits));
+      membersCounter.replaceAll((k, v) -> MetricUtil.formatDouble(v / numAllCommits));
+      cochangeFiles.put(xmlFilePath, filesCounter);
+      cochangeTypes.put(xmlFilePath, typesCounter);
+      cochangeMembers.put(xmlFilePath, membersCounter);
+    }
+  }
 
   /**
    * TODO: cache parent and children in Node, to speed up
