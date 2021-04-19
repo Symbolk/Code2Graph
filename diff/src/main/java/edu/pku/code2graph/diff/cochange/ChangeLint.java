@@ -195,7 +195,6 @@ public class ChangeLint {
                   ElementNode node = nodeOpt.get();
                   String nodeID = node.getQualifiedName();
 
-                  contextNodes.put(viewID, 1D);
                   contextNodes.put(nodeID, 1D);
 
                   if (!bindingInfos.containsKey(nodeID)) {
@@ -207,9 +206,6 @@ public class ChangeLint {
                   if (diff.getChangeType().equals(ChangeType.ADDED)) {
                     contextNodes = diff.getContextNodes();
                   }
-
-                  // all have its parent as a context
-                  contextNodes.put(viewID, 1D);
 
                   for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
                     String siblingID = cxtEntry.getKey();
@@ -335,12 +331,19 @@ public class ChangeLint {
    * @return
    */
   private static boolean hitGroundTruth(Set<Suggestion> groundTruth, Suggestion suggestion) {
-    for (Suggestion gt : groundTruth) {
-      // TODO compare with empty/wildcard identifier
-      if (gt.getChangeType().equals(ChangeType.ADDED)) {}
-
-      if (gt.getIdentifier().equals(suggestion.getIdentifier())) {
-        return true;
+    if (suggestion.getChangeType().equals(ChangeType.ADDED)) {
+      // for added, identifier is not important and cannot be precisely predicted
+      for (Suggestion gt : groundTruth) {
+        if (gt.getChangeType().equals(suggestion.getChangeType())
+            && gt.getEntityType().equals(suggestion.getEntityType())) {
+          return true;
+        }
+      }
+    } else {
+      for (Suggestion gt : groundTruth) {
+        if (gt.getIdentifier().equals(suggestion.getIdentifier())) {
+          return true;
+        }
       }
     }
     return false;
@@ -393,7 +396,7 @@ public class ChangeLint {
         cochangeMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
   }
 
-  private static void mergeOutputEntry(List<Suggestion> output, List<Suggestion> suggestions) {
+  private static void mergeOutputEntry(List<Suggestion> output, Set<Suggestion> suggestions) {
     for (var sug : suggestions) {
       if (sug.getIdentifier().isEmpty() || sug.getIdentifier().isBlank()) {
         output.add(sug);
@@ -416,27 +419,32 @@ public class ChangeLint {
     }
   }
 
-  private static List<Suggestion> collaborativeFilter(
+  private static Set<Suggestion> collaborativeFilter(
       EntityType entityType,
       Map<String, Map<String, Integer>> lookup,
       Map<String, Double> contextNodes) {
-    List<Suggestion> results = new ArrayList<>();
+    Set<Suggestion> results = new HashSet<>();
 
     for (var entityEntry : lookup.entrySet()) {
       Map<String, Integer> reverseRefs = entityEntry.getValue();
       double sum1 = 0D;
       double sum2 = 0D;
-      for (var refEntry : reverseRefs.entrySet()) {
-        String id = refEntry.getKey();
-        if (contextNodes.containsKey(id)) {
-          sum1 += (contextNodes.get(id) * refEntry.getValue());
-          sum2 += contextNodes.get(id);
-        }
+      for (var id : contextNodes.keySet()) {
+        sum1 += (contextNodes.get(id) * reverseRefs.getOrDefault(id, -1));
+        sum2 += contextNodes.get(id);
       }
+      //      for (var refEntry : reverseRefs.entrySet()) {
+      //        String id = refEntry.getKey();
+      //        if (contextNodes.containsKey(id)) {
+      //          sum1 += (contextNodes.get(id) * refEntry.getValue());
+      //          sum2 += contextNodes.get(id);
+      //      }
       double confidence = MetricUtil.formatDouble(sum1 / sum2);
       if (confidence > 0) {
         results.add(
             new Suggestion(ChangeType.UPDATED, entityType, entityEntry.getKey(), confidence));
+      } else {
+        results.add(new Suggestion(ChangeType.ADDED, entityType, "[]", confidence));
       }
     }
     return results;
