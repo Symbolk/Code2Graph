@@ -654,4 +654,28 @@ public class GitServiceCGit implements GitService {
       return false;
     }
   }
+
+  @Override
+  public List<String> getCommitsChangedFile(
+      String repoDir, String filePath, String fromCommit, int... maxNumber) {
+    String output = "";
+    if (maxNumber.length == 1) {
+      output =
+          SysUtil.runSystemCommand(
+              repoDir,
+              StandardCharsets.UTF_8,
+              "git",
+              "rev-list",
+              "--max-count",
+              String.valueOf(maxNumber[0]),
+              fromCommit,
+              filePath);
+    } else {
+      output =
+          SysUtil.runSystemCommand(
+              repoDir, StandardCharsets.UTF_8, "git", "rev-list", fromCommit, filePath);
+    }
+
+    return DiffUtil.convertStringToList(output);
+  }
 }

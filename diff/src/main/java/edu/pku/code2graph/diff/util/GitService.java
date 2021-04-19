@@ -77,4 +77,14 @@ public interface GitService {
    * @return
    */
   String getCommitterEmail(String repoDir, String commitID);
+
+  /**
+   * Get commits that ever changed a specific file before fromCommit
+   * @param repoDir
+   * @param filePath
+   * @param fromCommit
+   * @param maxNumber
+   * @return
+   */
+  List<String> getCommitsChangedFile(String repoDir, String filePath, String fromCommit, int... maxNumber);
 }
