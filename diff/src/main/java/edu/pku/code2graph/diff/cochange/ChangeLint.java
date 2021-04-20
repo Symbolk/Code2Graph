@@ -41,7 +41,7 @@ public class ChangeLint {
 
   private static String rootFolder = "/Users/symbolk/coding/data/changelint";
   private static String repoName = "";
-  private static String repoPath = rootFolder + "/repos";
+  private static String repoPath = "";
   private static final String tempDir = rootFolder + "/temp";
 
   private static String commitsListPath = rootFolder + "/cross-lang-commits/eh";
@@ -70,12 +70,12 @@ public class ChangeLint {
         System.getProperty("user.dir") + File.separator + "log4j.properties");
 
     // read commit list and filter commit
-    List<String> filePaths = FileUtil.listFilePaths(commitsListPath, "");
+    List<String> filePaths = FileUtil.listFilePaths(commitsListPath, ".json");
 
     // one file, one repo
     for (String filePath : filePaths) {
       repoName = FileUtil.getFileNameFromPath(filePath).replace(".json", "");
-      repoPath = repoPath + File.separator + repoName;
+      repoPath = rootFolder + "/repos/" + repoName;
       RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
       JSONParser parser = new JSONParser();
