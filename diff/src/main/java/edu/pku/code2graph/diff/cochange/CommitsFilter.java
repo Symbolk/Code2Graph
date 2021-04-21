@@ -2,6 +2,7 @@ package edu.pku.code2graph.diff.cochange;
 
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
+import edu.pku.code2graph.diff.model.DiffHunk;
 import edu.pku.code2graph.diff.model.FileType;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -10,9 +11,7 @@ import org.json.simple.parser.JSONParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CommitsFilter {
   public static void main(String[] args) throws Exception {
@@ -21,10 +20,10 @@ public class CommitsFilter {
     String resultsFolder = rootFolder + "/input-commits/";
 
     // single repo
-    String repoName = "seven332-EhViewer";
+    String repoName = "Dimezis-BlurView";
     filterCommits(
         repoName,
-        rootFolder + "/repos/" + "seven332-EhViewer",
+        rootFolder + "/repos/" + repoName,
         commitsListFolder + repoName + ".json",
         resultsFolder);
 
@@ -63,28 +62,20 @@ public class CommitsFilter {
         String testCommitID = (String) commit.get("commit_id");
         List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
         Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
-        int changedComponent = 0;
+        Set<String> changedComponents = new HashSet<>();
 
+        // filter with diff hunks
         for (DiffFile diffFile : diffFiles) {
-          if (diffFile.getFileType().equals(FileType.XML)
-              && diffFile.getARelativePath().contains("layout")) {
-            List<XMLDiff> xmlDiffs = XMLDiffUtil.computeXMLChangesWithGumtree(diffFile);
-            for (XMLDiff diff : xmlDiffs) {
-              if (XMLDiffUtil.isIDLabel(diff.getName())) {
-                changedComponent += 1;
-              }
-            }
-          } else if (diffFile.getFileType().equals(FileType.JAVA)) {
-            List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
-            if (!changes.isEmpty()) {
-              // ignore files with only format/comment changes
-              javaDiffs.put(diffFile.getARelativePath(), changes);
+          if (diffFile.getFileType().equals(FileType.XML)) {
+            for (DiffHunk diffHunk : diffFile.getDiffHunks()) {
+              changedComponents.addAll(getInvolvedIDs(diffHunk.getAHunk().getCodeSnippet()));
+              changedComponents.addAll(getInvolvedIDs(diffHunk.getBHunk().getCodeSnippet()));
             }
           }
         }
 
-        if (!javaDiffs.isEmpty() || changedComponent > 0) {
-          System.out.println(testCommitID);
+        if (!javaDiffs.isEmpty() || changedComponents.size() > 0) {
+          System.out.println(testCommitID + " : " + changedComponents.size());
           results.add(commit);
         }
       }
@@ -119,5 +110,15 @@ public class CommitsFilter {
       }
     }
     return false;
+  }
+
+  private static Set<String> getInvolvedIDs(List<String> lines) {
+    Set<String> results = new HashSet<>();
+    for (String line : lines) {
+      if (line.contains("\"@+id")) {
+        results.add(line.trim());
+      }
+    }
+    return results;
   }
 }

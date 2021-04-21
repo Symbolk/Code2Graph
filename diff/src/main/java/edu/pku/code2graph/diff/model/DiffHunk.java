@@ -53,11 +53,11 @@ public class DiffHunk {
     return index;
   }
 
-  public Hunk getaHunk() {
+  public Hunk getAHunk() {
     return aHunk;
   }
 
-  public Hunk getbHunk() {
+  public Hunk getBHunk() {
     return bHunk;
   }
 
