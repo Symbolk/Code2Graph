@@ -45,7 +45,8 @@ public class RepoAnalyzer {
    */
   public List<DiffFile> analyzeCommit(String commitID) {
     // analyze the diff files and hunks
-    GitService gitService = new GitServiceCGit();
+    GitServiceCGit gitService = new GitServiceCGit();
+    gitService.setIgnoreWhiteChanges(true);
     ArrayList<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(this.repoPath, commitID);
     if (!diffFiles.isEmpty()) {
       this.diffHunks = gitService.getDiffHunksAtCommit(this.repoPath, commitID, diffFiles);

@@ -12,6 +12,7 @@ import java.util.List;
 /** A list of helper functions related with Git */
 public interface GitService {
   Logger logger = LoggerFactory.getLogger(GitService.class);
+  boolean ignoreWhiteChanges = false;
 
   /**
    * Get the diff files in the current working tree
@@ -80,11 +81,13 @@ public interface GitService {
 
   /**
    * Get commits that ever changed a specific file before fromCommit
+   *
    * @param repoDir
    * @param filePath
    * @param fromCommit
    * @param maxNumber
    * @return
    */
-  List<String> getCommitsChangedFile(String repoDir, String filePath, String fromCommit, int... maxNumber);
+  List<String> getCommitsChangedFile(
+      String repoDir, String filePath, String fromCommit, int... maxNumber);
 }

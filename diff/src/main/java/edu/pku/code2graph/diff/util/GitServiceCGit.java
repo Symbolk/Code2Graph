@@ -17,6 +17,12 @@ import java.util.List;
 
 /** Implementation of helper functions based on the output of git commands. */
 public class GitServiceCGit implements GitService {
+  private boolean ignoreWhiteChanges = false;
+
+  public void setIgnoreWhiteChanges(boolean ignoreWhiteChanges) {
+    this.ignoreWhiteChanges = ignoreWhiteChanges;
+  }
+
   /**
    * Get the diff files in the current working tree
    *
@@ -294,7 +300,6 @@ public class GitServiceCGit implements GitService {
     // String diffOutput = SysUtil.runSystemCommand(repoPath, "git", "diff", "HEAD", "-U0");
 
     // diff per file
-    List<DiffHunk> binaryDiffHunks = new ArrayList<>();
     StringBuilder diffOutput = new StringBuilder();
     for (DiffFile diffFile : diffFiles) {
       if (null != diffFile.getARelativePath() && !"".equals(diffFile.getARelativePath())) {
@@ -307,15 +312,28 @@ public class GitServiceCGit implements GitService {
           diffHunksInFile.add(diffHunk);
           diffFile.setDiffHunks(diffHunksInFile);
         }
-        diffOutput.append(
-            SysUtil.runSystemCommand(
-                repoPath,
-                diffFile.getCharset(),
-                "git",
-                "diff",
-                "-U0",
-                "--",
-                diffFile.getARelativePath()));
+        if (ignoreWhiteChanges) {
+          diffOutput.append(
+              SysUtil.runSystemCommand(
+                  repoPath,
+                  diffFile.getCharset(),
+                  "git",
+                  "diff",
+                  "--ignore-cr-at-eol --ignore-all-space --ignore-blank-lines --ignore-space-change",
+                  "-U0",
+                  "--",
+                  diffFile.getARelativePath()));
+        } else {
+          diffOutput.append(
+              SysUtil.runSystemCommand(
+                  repoPath,
+                  diffFile.getCharset(),
+                  "git",
+                  "diff",
+                  "-U0",
+                  "--",
+                  diffFile.getARelativePath()));
+        }
       }
     }
     List<Diff> diffs = new ArrayList<>();
@@ -555,8 +573,18 @@ public class GitServiceCGit implements GitService {
     // git diff <start_commit> <end_commit>
     // on Windows the ~ character must be used instead of ^
     String diffOutput =
-        SysUtil.runSystemCommand(
-            repoPath, StandardCharsets.UTF_8, "git", "diff", "-U0", commitID + "~", commitID);
+        ignoreWhiteChanges
+            ? SysUtil.runSystemCommand(
+                repoPath,
+                StandardCharsets.UTF_8,
+                "git",
+                "diff",
+                "--ignore-cr-at-eol --ignore-all-space --ignore-blank-lines --ignore-space-change",
+                "-U0",
+                commitID + "~",
+                commitID)
+            : SysUtil.runSystemCommand(
+                repoPath, StandardCharsets.UTF_8, "git", "diff", "-U0", commitID + "~", commitID);
     List<Diff> diffs = new ArrayList<>();
     if (!diffOutput.trim().isEmpty()) {
       // with -U0 (no context lines), the generated patch cannot be applied successfully
