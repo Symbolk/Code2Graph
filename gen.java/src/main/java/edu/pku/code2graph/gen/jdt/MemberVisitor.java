@@ -213,8 +213,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
         if (b != null && b.getVariableDeclaration() != null) {
-          para_qname =
-              JdtService.getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+          para_qname = qname + "." + para_name;
         }
         ElementNode pn =
             new ElementNode(

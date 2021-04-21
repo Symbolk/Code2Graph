@@ -120,17 +120,18 @@ public class JdtService {
    * @return
    */
   public static String getMethodQNameFromBinding(IMethodBinding binding) {
-    ITypeBinding[] paraBindings = binding.getParameterTypes();
-    List<String> paraTypes = new ArrayList<>();
-    for (ITypeBinding b : paraBindings) {
-      paraTypes.add(b.getQualifiedName());
-    }
-
-    String qname = binding.getName() + "(" + String.join(",", paraTypes).trim() + ")";
     if (binding != null) {
+      ITypeBinding[] paraBindings = binding.getParameterTypes();
+      List<String> paraTypes = new ArrayList<>();
+      for (ITypeBinding b : paraBindings) {
+        paraTypes.add(b.getQualifiedName());
+      }
+
+      String qname = binding.getName() + "(" + String.join(",", paraTypes).trim() + ")";
       qname = binding.getDeclaringClass().getQualifiedName() + "." + qname;
+      return qname;
     }
-    return qname;
+    return "";
   }
 
   private static String getParentInitBlockName(ASTNode node) {
