@@ -319,7 +319,10 @@ public class GitServiceCGit implements GitService {
                   diffFile.getCharset(),
                   "git",
                   "diff",
-                  "--ignore-cr-at-eol --ignore-all-space --ignore-blank-lines --ignore-space-change",
+                  "--ignore-cr-at-eol",
+                  "--ignore-all-space",
+                  "--ignore-blank-lines",
+                  "--ignore-space-change",
                   "-U0",
                   "--",
                   diffFile.getARelativePath()));
@@ -579,7 +582,10 @@ public class GitServiceCGit implements GitService {
                 StandardCharsets.UTF_8,
                 "git",
                 "diff",
-                "--ignore-cr-at-eol --ignore-all-space --ignore-blank-lines --ignore-space-change",
+                "--ignore-cr-at-eol",
+                "--ignore-all-space",
+                "--ignore-blank-lines",
+                "--ignore-space-change",
                 "-U0",
                 commitID + "~",
                 commitID)
