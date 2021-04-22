@@ -4,7 +4,7 @@ mainClassName = 'edu.pku.code2graph.io.Main'
 applicationName = 'Code2Graph'
 archivesBaseName = 'Code2Graph'
 jar.enabled = false
-uploadArchives.enabled = false
+//uploadArchives.enabled = false
 distTar.enabled = false
 
 description = 'Code2Graph distribution.'
