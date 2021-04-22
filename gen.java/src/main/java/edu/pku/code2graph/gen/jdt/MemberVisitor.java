@@ -256,17 +256,19 @@ public class MemberVisitor extends AbstractJdtVisitor {
     if (binding instanceof IVariableBinding) {
       IVariableBinding variableBinding = (IVariableBinding) binding;
       if (variableBinding.getDeclaringClass() != null) {
-        JdtService.findWrappedEntityName(qn)
-            .flatMap(this::findEntityNodeByName)
-            .ifPresent(
-                node ->
-                    usePool.add(
-                        Triple.of(
-                            node,
-                            EdgeType.REFERENCE,
-                            variableBinding.getDeclaringClass().getQualifiedName()
-                                + "."
-                                + variableBinding.getName())));
+        if (variableBinding.isField() || variableBinding.isEnumConstant()) {
+          JdtService.findWrappedEntityName(qn)
+              .flatMap(this::findEntityNodeByName)
+              .ifPresent(
+                  node ->
+                      usePool.add(
+                          Triple.of(
+                              node,
+                              EdgeType.REFERENCE,
+                              variableBinding.getDeclaringClass().getQualifiedName()
+                                  + "."
+                                  + variableBinding.getName())));
+        }
       }
     }
     // qn: R.a.b
