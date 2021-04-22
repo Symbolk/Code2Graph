@@ -4,6 +4,7 @@ import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.ChangeType;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
+import edu.pku.code2graph.diff.util.Counter;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
@@ -21,7 +22,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.PropertyConfigurator;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
-import org.jgrapht.Graphs;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -80,13 +80,20 @@ public class ChangeLint {
       repoPath = rootFolder + "/repos/" + repoName;
       RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
+      String outputPath = outputDir + File.separator + repoName + ".json";
+      File outputFile = new File(outputPath);
+      if (outputFile.exists()) {
+        outputFile.delete();
+      }
+      FileUtil.writeStringToFile("[", outputPath);
+
       JSONParser parser = new JSONParser();
       JSONArray commitList = (JSONArray) parser.parse(new FileReader(filePath));
 
       // one entry, one commit
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
-        //        String testCommitID = (String) commit.get("commit_id");
-        String testCommitID = "c5566aa5e80126e8fb6478b2e25173022de0258a";
+        String testCommitID = (String) commit.get("commit_id");
+        //        String testCommitID = "db893b8";
         // 1. Offline process: given the commit id of the earliest future multi-lang commit
         logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -239,12 +246,13 @@ public class ChangeLint {
           }
         }
         // measure accuracy by comparing with ground truth
-        evaluate(testCommitID, javaDiffs);
+        evaluate(testCommitID, outputPath, javaDiffs);
       }
     }
   }
 
-  private static void evaluate(String testCommitID, Map<String, List<JavaDiff>> groundTruth)
+  private static void evaluate(
+      String testCommitID, String outputPath, Map<String, List<JavaDiff>> groundTruth)
       throws IOException {
 
     // Ground Truth
@@ -269,10 +277,6 @@ public class ChangeLint {
     }
 
     JSONObject outputJson = new JSONObject(new LinkedHashMap());
-    String outputPath = outputDir + File.separator + repoName + ".json";
-    if (!(new File(outputPath).exists())) {
-      FileUtil.writeStringToFile("[", outputPath);
-    }
 
     outputJson.put("commit_id", testCommitID);
 
@@ -380,7 +384,7 @@ public class ChangeLint {
   }
 
   private static double computeMetric(int a, int b) {
-    return b == 0 ? 1D : MetricUtil.formatDouble((double) a / b);
+    return b == 0 ? 0D : MetricUtil.formatDouble((double) a / b);
   }
 
   private static void generateSuggestion(Map<String, Binding> bindingInfos) {
@@ -527,22 +531,23 @@ public class ChangeLint {
 
     Set<Edge> useEdges = getUseEdges(graph, node);
 
+    Counter<ElementNode> counter = new Counter<>();
     for (Edge useEdge : useEdges) {
       Node refNode = graph.getEdgeSource(useEdge);
       if (refNode.getLanguage().equals(Language.JAVA)) {
-        Set<Node> relevantNodes = new HashSet<>();
         // find wrapped member, type, and file nodes, return names
         Triple<String, String, String> entities = findWrappedEntities(graph, refNode);
         // filter incorrect references with incorrect view
         binding.addRefEntities(entities);
         //        relevantNodes.add(refNode);
-        // find indirect uses with dynamic hop stop condition
-        //        relevantNodes.addAll(getIndirectNodes(graph, refNode));
-        //        for (Node rNode : relevantNodes) {
-        //          Triple<String, String, String> entities = findWrappedEntities(graph, rNode);
-        //            binding.addRefEntities(entities);
-        //        }
+        for (ElementNode n : getIndirectNodes(graph, refNode)) {
+          counter.add(n, 1);
+        }
       }
+    }
+    for (ElementNode rNode : counter.mostCommon(5)) {
+      Triple<String, String, String> entities = findWrappedEntities(graph, rNode);
+      binding.addRefEntities(entities);
     }
     return binding;
   }
@@ -551,26 +556,31 @@ public class ChangeLint {
    * Get all connected nodes (k hops or dynamic hops)
    *
    * @param graph
-   * @param refNode
+   * @param node
    * @return
    */
-  private static Set<Node> getIndirectNodes(Graph<Node, Edge> graph, Node refNode) {
-    Set<Node> results = new HashSet<>();
-    Optional<Object> accessOpt = refNode.getAttribute("access");
-    if (accessOpt.isPresent()) {
-      // TODO: determine dynamically by hop
-      //    switch (access) {
-      //      case "private":
-      //        // find all indirect refs under the same type
-      //        break;
-      //      default:
-      //    }
-      Set<Node> neighbors =
-          Graphs.neighborListOf(graph, refNode).stream()
-              .filter(n -> n.getLanguage().equals(Language.JAVA))
-              .collect(Collectors.toSet());
-      results.addAll(neighbors);
+  private static Set<ElementNode> getIndirectNodes(Graph<Node, Edge> graph, Node node) {
+    Set<ElementNode> results = new HashSet<>();
+    // intersect the 2-hop nodes
+    Set<Edge> useEdges = getUseEdges(graph, node);
+
+    for (Edge useEdge : useEdges) {
+      Node refNode = graph.getEdgeSource(useEdge);
+      if (refNode.getLanguage().equals(Language.JAVA) && refNode instanceof ElementNode) {
+        results.add((ElementNode) refNode);
+      }
     }
+
+    // TODO: determine by dynamical hop by access
+    //    Optional<Object> accessOpt = node.getAttribute("access");
+    //    if (accessOpt.isPresent()) {
+    //    switch (access) {
+    //      case "private":
+    //        // find all indirect refs under the same type
+    //        break;
+    //      default:
+    //    }
+    //    }
     return results;
   }
 
