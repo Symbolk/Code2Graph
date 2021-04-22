@@ -2,9 +2,7 @@ package edu.pku.code2graph.gen.jdt;
 
 import org.eclipse.jdt.core.dom.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class JdtService {
   /**
@@ -29,7 +27,7 @@ public class JdtService {
    *
    * @return return the qualified name of the assigned field
    */
-  public static Optional<String> findWrappedStatement(QualifiedName node) {
+  public static Optional<String> findAssignedFieldName(QualifiedName node) {
     ASTNode parent = node.getParent();
     while (parent != null) {
       if (parent instanceof ExpressionStatement) {
@@ -52,6 +50,24 @@ public class JdtService {
       parent = parent.getParent();
     }
     return Optional.empty();
+  }
+
+  public static Set<String> processWrappedStatement(QualifiedName node) {
+    ASTNode parent = node.getParent();
+    while (parent != null) {
+      if (parent instanceof Statement && (!(parent instanceof SwitchCase))) {
+        break;
+      }
+      parent = parent.getParent();
+    }
+
+    if (parent != null) {
+      Statement statement = (Statement) parent;
+      StatementVisitor visitor = new StatementVisitor();
+      statement.accept(visitor);
+      return visitor.getQNames();
+    }
+    return new HashSet<>();
   }
 
   public static Optional<String> findWrappedEntityName(ASTNode node) {

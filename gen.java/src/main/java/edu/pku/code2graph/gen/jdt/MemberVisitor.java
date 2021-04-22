@@ -10,8 +10,8 @@ import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Visitor focusing on the entity granularity, at or above member level (cu/type/member) */
@@ -242,36 +242,53 @@ public class MemberVisitor extends AbstractJdtVisitor {
     return true;
   }
 
+  /**
+   * Bind field access, constant, arg type, method access entities in enclosing statement, and also
+   * the enclosing entity
+   *
+   * @param qn
+   * @return
+   */
   @Override
   public boolean visit(QualifiedName qn) {
+    // enum constant access
+    IBinding binding = qn.resolveBinding();
+    if (binding instanceof IVariableBinding) {
+      IVariableBinding variableBinding = (IVariableBinding) binding;
+      if (variableBinding.getDeclaringClass() != null) {
+        JdtService.findWrappedEntityName(qn)
+            .flatMap(this::findEntityNodeByName)
+            .ifPresent(
+                node ->
+                    usePool.add(
+                        Triple.of(
+                            node,
+                            EdgeType.REFERENCE,
+                            variableBinding.getDeclaringClass().getQualifiedName()
+                                + "."
+                                + variableBinding.getName())));
+      }
+    }
     // qn: R.a.b
     if (qn.getQualifier().isQualifiedName()) { // R.a
-      if ("R".equals(((QualifiedName) qn.getQualifier()).getQualifier().toString())) { // R
-        // if used in an assignment statement and the assignee is a field, directly bind with the
-        // field
-        Optional<String> assignedFieldOpt = JdtService.findWrappedStatement(qn);
-        if (assignedFieldOpt.isPresent()) {
-          Optional<Node> nodeOpt = findEntityNodeByName(assignedFieldOpt.get());
-          // add into usepool
-          nodeOpt.ifPresent(
-              node ->
-                  GraphUtil.addCrossLangRef(
-                      Triple.of(node, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
-        } else {
+      QualifiedName qn2 = ((QualifiedName) qn.getQualifier());
+      String identifier = qn2.getName().getIdentifier();
+      if ("R".equals(qn2.getQualifier().toString())) { // R
+        if ("id".equals(identifier) || "layout".equals(identifier)) {
+          // qnames of the entities that may have relation with qn
+          Set<String> qNames = JdtService.processWrappedStatement(qn);
+          for (String qname : qNames) {
+            crossLangPool.add(Triple.of(qname, EdgeType.REFERENCE, qn.getFullyQualifiedName()));
+          }
+
           // find ancestor entity name
           Optional<String> parentEntityName = JdtService.findWrappedEntityName(qn);
-          if (parentEntityName.isPresent()) {
-            // find in def pool (should already be visited)
-            Optional<Node> nodeOpt = findEntityNodeByName(parentEntityName.get());
-            // add into usepool
-            nodeOpt.ifPresent(
-                node ->
-                    GraphUtil.addCrossLangRef(
-                        Triple.of(node, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
-          }
+          parentEntityName.ifPresent(
+              s -> crossLangPool.add(Triple.of(s, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
         }
       }
     }
+
     return false;
   }
 
@@ -288,12 +305,13 @@ public class MemberVisitor extends AbstractJdtVisitor {
 
   @Override
   public boolean visit(SimpleName sn) {
+    // TODO local enum constant access?
     // find field access from simple names
     if (!sn.isDeclaration()) {
       IBinding binding = sn.resolveBinding();
       if (binding instanceof IVariableBinding) {
         IVariableBinding variableBinding = (IVariableBinding) binding;
-        if (variableBinding.isField() && variableBinding.getDeclaringClass() != null) {
+        if (variableBinding.isField()) {
           JdtService.findWrappedEntityName(sn)
               .ifPresent(entityName -> createFieldUsage(variableBinding, entityName));
         }
@@ -315,18 +333,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
                     variableBinding.getDeclaringClass().getQualifiedName()
                         + "."
                         + variableBinding.getName())));
-  }
-
-  private Optional<Node> findEntityNodeByName(String name) {
-    if (defPool.containsKey(name)) {
-      return Optional.of(defPool.get(name));
-    } else {
-      // greedily match as simple name
-      return defPool.entrySet().stream()
-          .filter(e -> e.getKey().endsWith(name))
-          .map(Map.Entry::getValue)
-          .findFirst();
-    }
   }
 
   //    @Override

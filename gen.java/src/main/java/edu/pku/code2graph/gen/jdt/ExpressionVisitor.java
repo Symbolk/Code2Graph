@@ -58,7 +58,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     Type type = td.isInterface() ? NodeType.INTERFACE_DECLARATION : NodeType.CLASS_DECLARATION;
     ITypeBinding tdBinding = td.resolveBinding();
     // isFromSource
-    String qname = tdBinding.getQualifiedName();
+    String qname = td.getName().getFullyQualifiedName();
+    if (tdBinding != null) {
+      qname = tdBinding.getQualifiedName();
+    } else {
+      qname = JdtService.getTypeQNameFromParents(td);
+    }
 
     ElementNode node =
         new ElementNode(

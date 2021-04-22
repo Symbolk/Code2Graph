@@ -1,5 +1,6 @@
 package edu.pku.code2graph.gen.jdt;
 
+import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.Range;
@@ -13,12 +14,7 @@ import org.jgrapht.alg.util.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static edu.pku.code2graph.model.TypeSet.type;
+import java.util.*;
 
 public abstract class AbstractJdtVisitor extends ASTVisitor {
   protected Logger logger = LoggerFactory.getLogger(AbstractJdtVisitor.class);
@@ -34,8 +30,11 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   // TODO include external type declaration or not?
   // intermediate cache to build nodes and edges
   // basic assumption: qualified name is unique in one project
-  protected Map<String, Node> defPool = new HashMap<>(); // should be ElementNode in theory, but use node to avoid casting when adding edges
+  protected Map<String, Node> defPool =
+      new HashMap<>(); // should be ElementNode in theory, but use node to avoid casting when adding
+  // edges
   protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
+  protected List<Triple<String, Type, String>> crossLangPool = new ArrayList<>();
 
   public AbstractJdtVisitor() {
     super(true);
@@ -45,10 +44,28 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   public void buildEdges() {
     for (Triple<Node, Type, String> entry : usePool) {
       Node src = entry.getFirst();
-      Node tgt = defPool.get(entry.getThird());
-      if (tgt != null) {
-        graph.addEdge(src, tgt, new Edge(GraphUtil.eid(), entry.getSecond()));
-      }
+      Optional<Node> tgt = findEntityNodeByName(entry.getThird());
+      tgt.ifPresent(node -> graph.addEdge(src, node, new Edge(GraphUtil.eid(), entry.getSecond())));
+    }
+  }
+
+  public void buildCrosslangLinks() {
+    for (var entry : crossLangPool) {
+      Optional<Node> src = findEntityNodeByName(entry.getFirst());
+      src.ifPresent(
+          node -> GraphUtil.addCrossLangRef(Triple.of(node, EdgeType.REFERENCE, entry.getThird())));
+    }
+  }
+
+  protected Optional<Node> findEntityNodeByName(String name) {
+    if (defPool.containsKey(name)) {
+      return Optional.of(defPool.get(name));
+    } else {
+      // greedily match as simple name
+      return defPool.entrySet().stream()
+          .filter(e -> e.getKey().endsWith(name))
+          .map(Map.Entry::getValue)
+          .findFirst();
     }
   }
 
