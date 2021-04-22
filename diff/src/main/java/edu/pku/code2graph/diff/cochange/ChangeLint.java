@@ -268,13 +268,13 @@ public class ChangeLint {
       }
     }
 
-    JSONObject resultJson = new JSONObject();
+    JSONObject outputJson = new JSONObject(new LinkedHashMap());
     String path = outputPath + File.separator + repoName + ".json";
-    resultJson.put("commit_id", testCommitID);
+    outputJson.put("commit_id", testCommitID);
 
     JSONObject fileJson = new JSONObject();
     JSONObject typeJson = new JSONObject();
-    JSONObject memeberJson = new JSONObject();
+    JSONObject memberJson = new JSONObject();
 
     fileJson.put("ground_truth", convertSuggestionToJson(gtAllFiles));
     fileJson.put("suggestion", convertSuggestionToJson(suggestedFiles));
@@ -282,15 +282,15 @@ public class ChangeLint {
     typeJson.put("ground_truth", convertSuggestionToJson(gtAllTypes));
     typeJson.put("suggestion", convertSuggestionToJson(suggestedTypes));
 
-    memeberJson.put("ground_truth", convertSuggestionToJson(gtAllMembers));
-    memeberJson.put("suggestion", convertSuggestionToJson(suggestedMembers));
+    memberJson.put("ground_truth", convertSuggestionToJson(gtAllMembers));
+    memberJson.put("suggestion", convertSuggestionToJson(suggestedMembers));
 
-    resultJson.put("file", fileJson);
-    resultJson.put("type", typeJson);
-    resultJson.put("member", memeberJson);
+    outputJson.put("file", fileJson);
+    outputJson.put("type", typeJson);
+    outputJson.put("member", memberJson);
 
     try (FileWriter file = new FileWriter(path, true)) {
-      JSONObject.writeJSONString(resultJson, file);
+      JSONObject.writeJSONString(outputJson, file);
     }
 
     // separately on three levels
