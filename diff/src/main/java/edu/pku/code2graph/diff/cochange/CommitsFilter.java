@@ -11,26 +11,27 @@ import org.json.simple.parser.JSONParser;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class CommitsFilter {
   public static void main(String[] args) throws Exception {
-    String rootFolder = "/Users/symbolk/coding/data/changelint";
+    String rootFolder = "/Users/symbolk/coding/changelint";
     String commitsListFolder = rootFolder + "/cross-lang-commits/";
-    String resultsFolder = rootFolder + "/input-commits/";
+    String resultsFolder = rootFolder + "/input/";
 
     // single repo
-    String repoName = "Dimezis-BlurView";
+    String repoName = "seven332-EhViewer";
     filterCommits(
         repoName,
         rootFolder + "/repos/" + repoName,
         commitsListFolder + repoName + ".json",
         resultsFolder);
 
+    // multi repos
     // read multi-lang commits full list
     //    List<String> filePaths = FileUtil.listFilePaths(commitsListFolder, ".json");
-
-    // one file, one repo
     //    for (String filePath : filePaths) {
     //      String repoName = FileUtil.getFileNameFromPath(filePath).replace(".json", "");
     //
@@ -57,11 +58,10 @@ public class CommitsFilter {
       // 1. filter merge commits
       // 2. filter commits with no view changes
       // 3. filter commits with only comments/format changes
-
       if (!isMergeCommit(commit) && hasViewChanges(commit)) {
         String testCommitID = (String) commit.get("commit_id");
         List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);
-        Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
+        Set<DiffFile> javaDiffFiles = new HashSet<>();
         Set<String> changedComponents = new HashSet<>();
 
         // filter with diff hunks
@@ -71,10 +71,12 @@ public class CommitsFilter {
               changedComponents.addAll(getInvolvedIDs(diffHunk.getAHunk().getCodeSnippet()));
               changedComponents.addAll(getInvolvedIDs(diffHunk.getBHunk().getCodeSnippet()));
             }
+          } else if (diffFile.getFileType().equals(FileType.JAVA)) {
+            javaDiffFiles.add(diffFile);
           }
         }
 
-        if (!javaDiffs.isEmpty() || changedComponents.size() > 0) {
+        if (changedComponents.size() > 0 && javaDiffFiles.size() > 0) {
           System.out.println(testCommitID + " : " + changedComponents.size());
           results.add(commit);
         }
@@ -93,29 +95,33 @@ public class CommitsFilter {
     if (commit == null) {
       return true;
     }
-    if ((Long) commit.get("parent_commit_num") > 1) {
-      return true;
-    }
-    return false;
+    return (Long) commit.get("parent_commit_num") > 1;
   }
 
   private static boolean hasViewChanges(JSONObject commit) {
     if (commit == null) {
       return false;
     }
+    Set<String> changeTypes = new HashSet<>();
     JSONArray diffFiles = (JSONArray) commit.get("diff_files");
     for (JSONObject diffFile : (Iterable<JSONObject>) diffFiles) {
-      if (((String) diffFile.get("file_path")).contains("layout")) {
-        return true;
+      // contains layout files but not added ones
+      String filePath = ((String) diffFile.get("file_path"));
+      if (filePath.contains("layout")) {
+        changeTypes.add(diffFile.get("change_type").toString().trim());
       }
     }
-    return false;
+    if (!changeTypes.isEmpty()) {
+      return !changeTypes.contains("A");
+    } else {
+      return false;
+    }
   }
 
   private static Set<String> getInvolvedIDs(List<String> lines) {
     Set<String> results = new HashSet<>();
     for (String line : lines) {
-      if (line.contains("\"@+id")) {
+      if (line.contains("android:id=\"@+id")) {
         results.add(line.trim());
       }
     }
