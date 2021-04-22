@@ -41,9 +41,9 @@ public class Suggestion {
 
   @Override
   public String toString() {
-    return changeType
+    return changeType.label
         + " "
-        + entityType
+        + entityType.label
         + " "
         + identifier
         + " "

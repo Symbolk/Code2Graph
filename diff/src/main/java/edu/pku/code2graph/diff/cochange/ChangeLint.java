@@ -44,7 +44,7 @@ public class ChangeLint {
   private static String repoName = "";
   private static String repoPath = "";
   private static final String tempDir = rootFolder + "/temp";
-  private static final String outputPath = rootFolder + "/output";
+  private static final String outputDir = rootFolder + "/output";
 
   private static String commitsListPath = rootFolder + "/input";
 
@@ -269,43 +269,31 @@ public class ChangeLint {
     }
 
     JSONObject outputJson = new JSONObject(new LinkedHashMap());
-    String path = outputPath + File.separator + repoName + ".json";
-    outputJson.put("commit_id", testCommitID);
-
-    JSONObject fileJson = new JSONObject();
-    JSONObject typeJson = new JSONObject();
-    JSONObject memberJson = new JSONObject();
-
-    fileJson.put("ground_truth", convertSuggestionToJson(gtAllFiles));
-    fileJson.put("suggestion", convertSuggestionToJson(suggestedFiles));
-
-    typeJson.put("ground_truth", convertSuggestionToJson(gtAllTypes));
-    typeJson.put("suggestion", convertSuggestionToJson(suggestedTypes));
-
-    memberJson.put("ground_truth", convertSuggestionToJson(gtAllMembers));
-    memberJson.put("suggestion", convertSuggestionToJson(suggestedMembers));
-
-    outputJson.put("file", fileJson);
-    outputJson.put("type", typeJson);
-    outputJson.put("member", memberJson);
-
-    try (FileWriter file = new FileWriter(path, true)) {
-      JSONObject.writeJSONString(outputJson, file);
+    String outputPath = outputDir + File.separator + repoName + ".json";
+    if (!(new File(outputPath).exists())) {
+      FileUtil.writeStringToFile("[", outputPath);
     }
+
+    outputJson.put("commit_id", testCommitID);
 
     // separately on three levels
     System.out.println("For commit: " + testCommitID);
-    compare("File level", gtAllFiles, suggestedFiles);
-    compare("Type level", gtAllTypes, suggestedTypes);
-    compare("Member level", gtAllMembers, suggestedMembers);
+    outputJson.put("file", compare("File level", gtAllFiles, suggestedFiles));
+    outputJson.put("type", compare("Type level", gtAllTypes, suggestedTypes));
+    outputJson.put("member", compare("Member level", gtAllMembers, suggestedMembers));
+
+    try (FileWriter file = new FileWriter(outputPath, true)) {
+      JSONObject.writeJSONString(outputJson, file);
+      file.append(",\n");
+    }
   }
 
   private static JSONArray convertSuggestionToJson(Collection<Suggestion> suggestions) {
     JSONArray array = new JSONArray();
     for (Suggestion sug : suggestions) {
-      JSONObject temp = new JSONObject();
-      temp.put("change_type", sug.getChangeType());
-      temp.put("entity_type", sug.getEntityType());
+      JSONObject temp = new JSONObject(new LinkedHashMap());
+      temp.put("change_type", sug.getChangeType().label);
+      temp.put("entity_type", sug.getEntityType().label);
       temp.put("identifier", sug.getIdentifier());
       temp.put("confidence", sug.getConfidence());
       array.add(temp);
@@ -313,9 +301,15 @@ public class ChangeLint {
     return array;
   }
 
-  private static void compare(
+  private static JSONObject compare(
       String message, Set<Suggestion> groundTruth, List<Suggestion> suggestions) {
     suggestions.sort(new SuggestionComparator());
+
+    JSONObject json = new JSONObject();
+
+    json.put("ground_truth", convertSuggestionToJson(groundTruth));
+    json.put("suggestion", convertSuggestionToJson(suggestions));
+
     int groundTruthNum = groundTruth.size();
     int outputNum = suggestions.size();
 
@@ -332,17 +326,15 @@ public class ChangeLint {
 
     // order not considered
     // precision and recall
-    System.out.print(
-        message
-            + ": "
-            + "Precision="
-            + computeMetric(correctNum, outputNum)
-            + " Recall="
-            + computeMetric(correctNum, groundTruthNum)
-            + " ");
+    double precision = computeMetric(correctNum, outputNum);
+    double recall = computeMetric(correctNum, groundTruthNum);
+    System.out.print(message + ": " + "Precision=" + precision + " Recall=" + recall + " ");
+
+    json.put("precision", precision);
+    json.put("recall", recall);
 
     // order considered: MAP
-    double sum = 0D;
+    double averagePrecision = 0D;
     double correctForK = 0D;
     double recallForPreviousK = 0D;
     for (int k = 1; k <= outputNum; k++) {
@@ -351,10 +343,14 @@ public class ChangeLint {
       }
       double precisionForK = correctForK / k;
       double recallForK = correctForK / groundTruthNum;
-      sum += precisionForK * (recallForK - recallForPreviousK);
+      averagePrecision += precisionForK * (recallForK - recallForPreviousK);
       recallForPreviousK = recallForK;
     }
-    System.out.println("Average Precision=" + MetricUtil.formatDouble(sum));
+    averagePrecision = MetricUtil.formatDouble(averagePrecision);
+    System.out.println("Average Precision=" + averagePrecision);
+    json.put("average_precision", averagePrecision);
+
+    return json;
   }
 
   /**
