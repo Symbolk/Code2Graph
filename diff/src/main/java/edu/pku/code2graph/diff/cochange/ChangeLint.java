@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -39,12 +40,13 @@ import java.util.stream.Collectors;
 public class ChangeLint {
   static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
 
-  private static String rootFolder = "/Users/symbolk/coding/data/changelint";
+  private static final String rootFolder = "/Users/symbolk/coding/changelint";
   private static String repoName = "";
   private static String repoPath = "";
   private static final String tempDir = rootFolder + "/temp";
+  private static final String outputPath = rootFolder + "/output";
 
-  private static String commitsListPath = rootFolder + "/cross-lang-commits/eh";
+  private static String commitsListPath = rootFolder + "/input";
 
   private static List<Suggestion> suggestedFiles = new ArrayList<>();
   private static List<Suggestion> suggestedTypes = new ArrayList<>();
@@ -83,8 +85,8 @@ public class ChangeLint {
 
       // one entry, one commit
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
-        //          String testCommitID = (String) commit.get("commit_id");
-        String testCommitID = "db893b8";
+        //        String testCommitID = (String) commit.get("commit_id");
+        String testCommitID = "c5566aa5e80126e8fb6478b2e25173022de0258a";
         // 1. Offline process: given the commit id of the earliest future multi-lang commit
         logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -237,15 +239,13 @@ public class ChangeLint {
           }
         }
         // measure accuracy by comparing with ground truth
-        evaluate(javaDiffs);
-        //          cochangeFiles.forEach(System.out::printf);
-        //          cochangeTypes.forEach(System.out::printf);
-        //          cochangeMembers.forEach(System.out::printf);
+        evaluate(testCommitID, javaDiffs);
       }
     }
   }
 
-  private static void evaluate(Map<String, List<JavaDiff>> groundTruth) {
+  private static void evaluate(String testCommitID, Map<String, List<JavaDiff>> groundTruth)
+      throws IOException {
 
     // Ground Truth
     Set<Suggestion> gtAllFiles = new HashSet<>();
@@ -268,10 +268,49 @@ public class ChangeLint {
       }
     }
 
+    JSONObject resultJson = new JSONObject();
+    String path = outputPath + File.separator + repoName + ".json";
+    resultJson.put("commit_id", testCommitID);
+
+    JSONObject fileJson = new JSONObject();
+    JSONObject typeJson = new JSONObject();
+    JSONObject memeberJson = new JSONObject();
+
+    fileJson.put("ground_truth", convertSuggestionToJson(gtAllFiles));
+    fileJson.put("suggestion", convertSuggestionToJson(suggestedFiles));
+
+    typeJson.put("ground_truth", convertSuggestionToJson(gtAllTypes));
+    typeJson.put("suggestion", convertSuggestionToJson(suggestedTypes));
+
+    memeberJson.put("ground_truth", convertSuggestionToJson(gtAllMembers));
+    memeberJson.put("suggestion", convertSuggestionToJson(suggestedMembers));
+
+    resultJson.put("file", fileJson);
+    resultJson.put("type", typeJson);
+    resultJson.put("member", memeberJson);
+
+    try (FileWriter file = new FileWriter(path, true)) {
+      JSONObject.writeJSONString(resultJson, file);
+    }
+
     // separately on three levels
+    System.out.println("For commit: " + testCommitID);
     compare("File level", gtAllFiles, suggestedFiles);
     compare("Type level", gtAllTypes, suggestedTypes);
     compare("Member level", gtAllMembers, suggestedMembers);
+  }
+
+  private static JSONArray convertSuggestionToJson(Collection<Suggestion> suggestions) {
+    JSONArray array = new JSONArray();
+    for (Suggestion sug : suggestions) {
+      JSONObject temp = new JSONObject();
+      temp.put("change_type", sug.getChangeType());
+      temp.put("entity_type", sug.getEntityType());
+      temp.put("identifier", sug.getIdentifier());
+      temp.put("confidence", sug.getConfidence());
+      array.add(temp);
+    }
+    return array;
   }
 
   private static void compare(
@@ -496,18 +535,17 @@ public class ChangeLint {
       Node refNode = graph.getEdgeSource(useEdge);
       if (refNode.getLanguage().equals(Language.JAVA)) {
         Set<Node> relevantNodes = new HashSet<>();
-        relevantNodes.add(refNode);
-
-        // find indirect uses with dynamic hop stop condition
-        relevantNodes.addAll(getIndirectNodes(graph, refNode));
-        // filter incorrect references without the correct view
         // find wrapped member, type, and file nodes, return names
-        for (Node rNode : relevantNodes) {
-          Triple<String, String, String> entities = findWrappedEntities(graph, rNode);
-          if (scopeFilePaths.contains(entities.getLeft())) {
-            binding.addRefEntities(entities);
-          }
-        }
+        Triple<String, String, String> entities = findWrappedEntities(graph, refNode);
+        // filter incorrect references with incorrect view
+        binding.addRefEntities(entities);
+        //        relevantNodes.add(refNode);
+        // find indirect uses with dynamic hop stop condition
+        //        relevantNodes.addAll(getIndirectNodes(graph, refNode));
+        //        for (Node rNode : relevantNodes) {
+        //          Triple<String, String, String> entities = findWrappedEntities(graph, rNode);
+        //            binding.addRefEntities(entities);
+        //        }
       }
     }
     return binding;

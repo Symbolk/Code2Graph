@@ -41,17 +41,15 @@ public class Suggestion {
 
   @Override
   public String toString() {
-    return "Suggestion{"
-        + "changeType="
-        + changeType
-        + ", entityType="
+    return changeType
+        + " "
         + entityType
-        + ", identifier='"
+        + " "
         + identifier
-        + '\''
-        + ", confidence="
+        + " "
+        + " (confidence="
         + confidence
-        + '}';
+        + ')';
   }
 
   @Override

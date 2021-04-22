@@ -113,11 +113,11 @@ public class FileUtil {
     return lines;
   }
 
-  public static void writeObjectToFile(Object object, String objectFile, boolean append) {
+  public static void writeObjectToFile(Object object, String filePath, boolean append) {
     try {
       ObjectOutputStream out =
           new ObjectOutputStream(
-              new BufferedOutputStream(new FileOutputStream(objectFile, append)));
+              new BufferedOutputStream(new FileOutputStream(filePath, append)));
       out.writeObject(object);
       out.flush();
       out.close();
