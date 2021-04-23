@@ -48,9 +48,9 @@ public class ChangeLint {
 
   private static String commitsListPath = rootFolder + "/input";
 
-  private static List<Suggestion> suggestedFiles = new ArrayList<>();
-  private static List<Suggestion> suggestedTypes = new ArrayList<>();
-  private static List<Suggestion> suggestedMembers = new ArrayList<>();
+  private static SortedSet<Suggestion> suggestedFiles = new TreeSet<>(new SuggestionComparator());
+  private static SortedSet<Suggestion> suggestedTypes = new TreeSet<>(new SuggestionComparator());
+  private static SortedSet<Suggestion> suggestedMembers = new TreeSet<>(new SuggestionComparator());
 
   static {
     initGenerators();
@@ -92,8 +92,8 @@ public class ChangeLint {
 
       // one entry, one commit
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
-        String testCommitID = (String) commit.get("commit_id");
-        //        String testCommitID = "db893b8";
+        //        String testCommitID = (String) commit.get("commit_id");
+        String testCommitID = "b5d518fc25afa277a63ac4db56cad11cdc976c3c";
         // 1. Offline process: given the commit id of the earliest future multi-lang commit
         logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -134,9 +134,9 @@ public class ChangeLint {
         //          logger.info("Computing historical cochanges...");
         //          computeHistoricalCochanges(xmlDiffs);
 
-        suggestedFiles = new ArrayList<>();
-        suggestedTypes = new ArrayList<>();
-        suggestedMembers = new ArrayList<>();
+        suggestedFiles.clear();
+        suggestedTypes.clear();
+        suggestedMembers.clear();
 
         // checkout to the previous version
         logger.info("Checking out to previous commit of {}", testCommitID);
@@ -306,9 +306,9 @@ public class ChangeLint {
   }
 
   private static JSONObject compare(
-      String message, Set<Suggestion> groundTruth, List<Suggestion> suggestions) {
-    suggestions.sort(new SuggestionComparator());
+      String message, Set<Suggestion> groundTruth, Set<Suggestion> suggestions) {
 
+    List<Suggestion> suggestionList = new ArrayList<>(suggestions);
     JSONObject json = new JSONObject();
 
     json.put("ground_truth", convertSuggestionToJson(groundTruth));
@@ -342,7 +342,7 @@ public class ChangeLint {
     double correctForK = 0D;
     double recallForPreviousK = 0D;
     for (int k = 1; k <= outputNum; k++) {
-      if (hitGroundTruth(groundTruth, suggestions.get(k - 1))) {
+      if (hitGroundTruth(groundTruth, suggestionList.get(k - 1))) {
         correctForK += 1;
       }
       double precisionForK = correctForK / k;
@@ -432,15 +432,16 @@ public class ChangeLint {
         suggestedMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
   }
 
-  private static void mergeOutputEntry(List<Suggestion> output, Set<Suggestion> suggestions) {
+  private static void mergeOutputEntry(Set<Suggestion> output, Set<Suggestion> suggestions) {
     for (var sug : suggestions) {
       if (sug.getIdentifier().isEmpty() || sug.getIdentifier().isBlank()) {
         output.add(sug);
       } else {
         // if exist, change confidence
         boolean exist = false;
+
         for (Suggestion ot : output) {
-          if (ot.getEntityType().equals(ot.getEntityType())
+          if (ot.getEntityType().equals(sug.getEntityType())
               && ot.getIdentifier().equals(sug.getIdentifier())) {
             ot.setConfidence(ot.getConfidence() + sug.getConfidence());
             exist = true;
