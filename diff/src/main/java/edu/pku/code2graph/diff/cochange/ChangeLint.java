@@ -92,8 +92,8 @@ public class ChangeLint {
 
       // one entry, one commit
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
-        //        String testCommitID = (String) commit.get("commit_id");
-        String testCommitID = "a20e925";
+        String testCommitID = (String) commit.get("commit_id");
+        //        String testCommitID = "a1d1b04667ba7fb4661ada41db8f9e1871b54076";
         // 1. Offline process: given the commit id of the earliest future multi-lang commit
         logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -146,13 +146,25 @@ public class ChangeLint {
         suggestedMembers.clear();
 
         // checkout to the previous version
-        logger.info("Checking out to previous commit of {}", testCommitID);
-        SysUtil.runSystemCommand(
-            repoPath,
-            Charset.defaultCharset(),
-            "git",
-            "checkout", /* "-b","changelint", */
-            testCommitID + "~");
+        logger.info(
+            SysUtil.runSystemCommand(
+                repoPath,
+                Charset.defaultCharset(),
+                "git",
+                "checkout", /* "-b","changelint", */
+                "-f",
+                testCommitID + "^"));
+
+        logger.info(
+            SysUtil.runSystemCommand(
+                repoPath,
+                Charset.defaultCharset(),
+                "git",
+                "log",
+                "--pretty=%P",
+                "-n",
+                "1",
+                testCommitID));
 
         logger.info(
             "Now at HEAD commit: "
@@ -234,6 +246,7 @@ public class ChangeLint {
               } else {
                 // if not exist/added: predict co-changes according to similar nodes
                 contextNodes = diff.getContextNodes();
+                contextNodes.put(elementID, 1D);
 
                 for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
                   String siblingID = cxtEntry.getKey();
@@ -385,7 +398,8 @@ public class ChangeLint {
       }
     } else {
       for (Suggestion gt : groundTruth) {
-        if (gt.getIdentifier().equals(suggestion.getIdentifier())) {
+        if (gt.getIdentifier().equals(suggestion.getIdentifier())
+            || gt.getIdentifier().endsWith(suggestion.getIdentifier())) {
           return true;
         }
       }
@@ -751,7 +765,8 @@ public class ChangeLint {
                   .collect(Collectors.toList());
 
           // root folder that the package is related to
-          String rootSrcFolder = path.substring(0, path.indexOf(convertQNameToPath(packageName)));
+          String rootSrcFolder =
+              path.substring(0, path.toLowerCase().indexOf(convertQNameToPath(packageName).toLowerCase()));
           // get absolute paths of imported files
           List<String> importedJavaPaths = new ArrayList<>();
           for (String im : imports) {
