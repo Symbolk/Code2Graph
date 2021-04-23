@@ -10,6 +10,7 @@ import com.github.gumtreediff.tree.ITree;
 import com.github.gumtreediff.tree.TreeContext;
 import edu.pku.code2graph.diff.model.ChangeType;
 import edu.pku.code2graph.diff.model.DiffFile;
+import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -52,25 +53,42 @@ public class XMLDiffUtil {
     for (ITree iTree : actionClassifier.srcDelTrees) {
       if (isIDLabel(iTree.getLabel())) {
         results.add(
-            new XMLDiff(ChangeType.DELETED, fileName, getTypeForTree(iTree), iTree.getLabel()));
+            new XMLDiff(ChangeType.DELETED, fileName, getTagForTree(iTree), iTree.getLabel()));
       }
     }
     for (ITree iTree : actionClassifier.dstAddTrees) {
       if (isIDLabel(iTree.getLabel())) {
         // the element tree
-        // find other siblingNodes with the similar semantics
-        Map<String, Double> siblingNodes =
-            findSiblingNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3);
+        // find other contextNodes with the similar semantics
+        Map<String, Double> contextNodes =
+            findContextNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3);
         results.add(
             new XMLDiff(
-                ChangeType.ADDED, fileName, getTypeForTree(iTree), iTree.getLabel(), siblingNodes));
+                ChangeType.ADDED, fileName, getTagForTree(iTree), iTree.getLabel(), contextNodes));
       }
     }
 
     for (ITree iTree : actionClassifier.srcUpdTrees) {
       if (isIDLabel(iTree.getLabel())) {
         results.add(
-            new XMLDiff(ChangeType.UPDATED, fileName, getTypeForTree(iTree), iTree.getLabel()));
+            new XMLDiff(
+                ChangeType.UPDATED,
+                fileName,
+                getTagForTree(iTree),
+                iTree.getLabel(),
+                findContextNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3)));
+      }
+    }
+
+    for (ITree iTree : actionClassifier.dstUpdTrees) {
+      if (isIDLabel(iTree.getLabel())) {
+        results.add(
+            new XMLDiff(
+                ChangeType.UPDATED,
+                fileName,
+                getTagForTree(iTree),
+                iTree.getLabel(),
+                findContextNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3)));
       }
     }
 
@@ -83,7 +101,11 @@ public class XMLDiffUtil {
    * @param iTree
    * @return
    */
-  private static String getTypeForTree(ITree iTree) {
+  private static String getTagForTree(ITree iTree) {
+    if (iTree.getParent() == null || iTree.getParent().getParent() == null) {
+      return "";
+    }
+
     ITree parent = iTree.getParent().getParent();
     while (parent != null) {
       for (ITree uncle : parent.getChildren()) {
@@ -103,7 +125,7 @@ public class XMLDiffUtil {
    * @param targetTree
    * @return
    */
-  private static Map<String, Double> findSiblingNodeIDs(ITree root, ITree targetTree, int k) {
+  private static Map<String, Double> findContextNodeIDs(ITree root, ITree targetTree, int k) {
     Map<String, Double> results = new LinkedHashMap<>();
 
     PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
@@ -111,14 +133,21 @@ public class XMLDiffUtil {
       return results;
     }
 
+    String targetTag = getTagForTree(targetTree);
+
     // BFS for level traversal
     ArrayDeque<ITree> queue = new ArrayDeque<>();
     queue.add(root);
     while (!queue.isEmpty()) {
       ITree temp = queue.poll();
-      if (temp.hasSameType(targetTree)) {
-        double similarity = TreeSimilarityMetrics.treeSimilarity(temp, targetTree);
-        pq.add(Pair.of(getIDFromTree(temp), similarity));
+      double similarity =
+          MetricUtil.formatDouble(
+              (MetricUtil.cosineString(getTagForTree(temp), targetTag)
+                      + TreeSimilarityMetrics.treeSimilarity(temp, targetTree))
+                  / 2);
+      String id = getIDForTree(temp);
+      if (!id.isEmpty()) {
+        pq.add(Pair.of(id, similarity));
       }
       if (!temp.getChildren().isEmpty()) {
         queue.addAll(temp.getChildren());
@@ -133,7 +162,7 @@ public class XMLDiffUtil {
     return results;
   }
 
-  private static String getIDFromTree(ITree tree) {
+  private static String getIDForTree(ITree tree) {
     for (ITree t : tree.getDescendants()) {
       if (isIDLabel(t.getLabel())) {
         return t.getLabel().replace("\"", "").replace("+", "");

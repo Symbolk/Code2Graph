@@ -93,7 +93,7 @@ public class ChangeLint {
       // one entry, one commit
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
         //        String testCommitID = (String) commit.get("commit_id");
-        String testCommitID = "b5d518fc25afa277a63ac4db56cad11cdc976c3c";
+        String testCommitID = "a20e925";
         // 1. Offline process: given the commit id of the earliest future multi-lang commit
         logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -111,8 +111,10 @@ public class ChangeLint {
         for (DiffFile diffFile : diffFiles) {
           if (diffFile.getFileType().equals(FileType.XML)
               && diffFile.getARelativePath().contains("layout")) {
-            xmlDiffs.put(
-                diffFile.getARelativePath(), XMLDiffUtil.computeXMLChangesWithGumtree(diffFile));
+            List<XMLDiff> changes = XMLDiffUtil.computeXMLChangesWithGumtree(diffFile);
+            if (!changes.isEmpty()) {
+              xmlDiffs.put(diffFile.getARelativePath(), changes);
+            }
             //        xmlDiffs.put(
             //            diffFile.getARelativePath(),
             //                XMLDiffUtil.computeXMLChanges(
@@ -125,6 +127,11 @@ public class ChangeLint {
               javaDiffs.put(diffFile.getARelativePath(), changes);
             }
           }
+        }
+
+        // jump commits with pure move/comments/format changes
+        if (xmlDiffs.isEmpty() || javaDiffs.isEmpty()) {
+          continue;
         }
 
         logger.info("XML diff files: {} for commit: {}", xmlDiffs.entrySet().size(), testCommitID);
@@ -146,6 +153,11 @@ public class ChangeLint {
             "git",
             "checkout", /* "-b","changelint", */
             testCommitID + "~");
+
+        logger.info(
+            "HEAD commit: "
+                + SysUtil.runSystemCommand(
+                    repoPath, Charset.defaultCharset(), "git", "rev-parse", "HEAD"));
 
         logger.info("Building graph...");
         //   build the graph for the current version
@@ -213,6 +225,7 @@ public class ChangeLint {
                 ElementNode node = nodeOpt.get();
                 String nodeID = node.getQualifiedName();
 
+                contextNodes = diff.getContextNodes();
                 contextNodes.put(nodeID, 1D);
 
                 if (!bindingInfos.containsKey(nodeID)) {
@@ -221,9 +234,7 @@ public class ChangeLint {
                 generateSuggestion(bindingInfos);
               } else {
                 // if not exist/added: predict co-changes according to similar nodes
-                if (diff.getChangeType().equals(ChangeType.ADDED)) {
-                  contextNodes = diff.getContextNodes();
-                }
+                contextNodes = diff.getContextNodes();
 
                 for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
                   String siblingID = cxtEntry.getKey();
