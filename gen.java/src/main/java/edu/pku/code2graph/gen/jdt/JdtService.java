@@ -55,17 +55,37 @@ public class JdtService {
   public static Set<String> processWrappedStatement(QualifiedName node) {
     ASTNode parent = node.getParent();
     while (parent != null) {
-      if (parent instanceof Statement && (!(parent instanceof SwitchCase))) {
+      if (parent instanceof Statement) {
         break;
       }
       parent = parent.getParent();
     }
 
-    if (parent != null) {
-      Statement statement = (Statement) parent;
+    if (parent instanceof SwitchCase) {
       StatementVisitor visitor = new StatementVisitor();
-      statement.accept(visitor);
+      SwitchCase switchCase = (SwitchCase) parent;
+      // handle the statements before the next switchcase
+      SwitchStatement switchStatement = (SwitchStatement) parent.getParent();
+      List statements = switchStatement.statements();
+      for (int i = 0; i < statements.size(); ++i) {
+        if (statements.get(i).equals(switchCase)) {
+          i += 1;
+          while (i < statements.size() && !(statements.get(i) instanceof SwitchCase)) {
+            ((Statement) statements.get(i)).accept(visitor);
+            i++;
+          }
+          break;
+        }
+      }
       return visitor.getQNames();
+    } else {
+
+      if (parent != null) {
+        Statement statement = (Statement) parent;
+        StatementVisitor visitor = new StatementVisitor();
+        statement.accept(visitor);
+        return visitor.getQNames();
+      }
     }
     return new HashSet<>();
   }
