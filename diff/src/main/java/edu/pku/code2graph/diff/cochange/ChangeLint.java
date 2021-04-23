@@ -138,8 +138,8 @@ public class ChangeLint {
         logger.info(
             "Java diff files: {} for commit: {}", javaDiffs.entrySet().size(), testCommitID);
 
-        //          logger.info("Computing historical cochanges...");
-        //          computeHistoricalCochanges(xmlDiffs);
+        //        logger.info("Computing historical cochanges...");
+        //        computeHistoricalCochanges(xmlDiffs);
 
         suggestedFiles.clear();
         suggestedTypes.clear();
@@ -155,7 +155,7 @@ public class ChangeLint {
             testCommitID + "~");
 
         logger.info(
-            "HEAD commit: "
+            "Now at HEAD commit: "
                 + SysUtil.runSystemCommand(
                     repoPath, Charset.defaultCharset(), "git", "rev-parse", "HEAD"));
 
@@ -188,20 +188,19 @@ public class ChangeLint {
                   + "/"
                   + FilenameUtils.removeExtension(FileUtil.getFileNameFromPath(path));
           // the node representing the view file
-          ElementNode viewNode =
-              XMLNodes.stream()
-                  .filter(node -> viewID.equals(node.getQualifiedName()))
-                  .findFirst()
-                  .get();
+          Optional<ElementNode> viewNodeOpt =
+              XMLNodes.stream().filter(node -> viewID.equals(node.getQualifiedName())).findFirst();
           // find the file name that directly/indirectly refs the view node
-          Set<Edge> useEdges = getUseEdges(graph, viewNode);
           Set<String> scopeFilePaths = new HashSet<>();
-          for (Edge edge : useEdges) {
-            Node sourceNode = graph.getEdgeSource(edge);
-            if (sourceNode.getLanguage().equals(Language.JAVA)) {
-              Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
-              if (!entities.getLeft().isEmpty()) {
-                scopeFilePaths.add(entities.getLeft());
+          if (viewNodeOpt.isPresent()) {
+            Set<Edge> useEdges = getUseEdges(graph, viewNodeOpt.get());
+            for (Edge edge : useEdges) {
+              Node sourceNode = graph.getEdgeSource(edge);
+              if (sourceNode.getLanguage().equals(Language.JAVA)) {
+                Triple<String, String, String> entities = findWrappedEntities(graph, sourceNode);
+                if (!entities.getLeft().isEmpty()) {
+                  scopeFilePaths.add(entities.getLeft());
+                }
               }
             }
           }
@@ -403,15 +402,18 @@ public class ChangeLint {
       String id = entry.getKey();
       Binding binding = entry.getValue();
       for (var temp : binding.getFiles().entrySet()) {
-        suggestedFiles.add(
+        mergeOutputEntry(
+            suggestedFiles,
             new Suggestion(ChangeType.UPDATED, EntityType.FILE, temp.getKey(), temp.getValue()));
       }
       for (var temp : binding.getTypes().entrySet()) {
-        suggestedTypes.add(
+        mergeOutputEntry(
+            suggestedTypes,
             new Suggestion(ChangeType.UPDATED, EntityType.TYPE, temp.getKey(), temp.getValue()));
       }
       for (var temp : binding.getMembers().entrySet()) {
-        suggestedMembers.add(
+        mergeOutputEntry(
+            suggestedMembers,
             new Suggestion(ChangeType.UPDATED, EntityType.MEMBER, temp.getKey(), temp.getValue()));
       }
     }
@@ -443,27 +445,31 @@ public class ChangeLint {
         suggestedMembers, collaborativeFilter(EntityType.MEMBER, memberLookup, contextNodes));
   }
 
+  private static void mergeOutputEntry(Set<Suggestion> output, Suggestion suggestion) {
+    if (suggestion.getIdentifier().isEmpty() || suggestion.getIdentifier().isBlank()) {
+      output.add(suggestion);
+    } else {
+      // if exist, change confidence
+      boolean exist = false;
+
+      for (Suggestion ot : output) {
+        if (ot.getEntityType().equals(suggestion.getEntityType())
+            && ot.getIdentifier().equals(suggestion.getIdentifier())) {
+          ot.setConfidence(ot.getConfidence() + suggestion.getConfidence());
+          exist = true;
+        }
+        break;
+      }
+      // else, add a new
+      if (!exist) {
+        output.add(suggestion);
+      }
+    }
+  }
+
   private static void mergeOutputEntry(Set<Suggestion> output, Set<Suggestion> suggestions) {
     for (var sug : suggestions) {
-      if (sug.getIdentifier().isEmpty() || sug.getIdentifier().isBlank()) {
-        output.add(sug);
-      } else {
-        // if exist, change confidence
-        boolean exist = false;
-
-        for (Suggestion ot : output) {
-          if (ot.getEntityType().equals(sug.getEntityType())
-              && ot.getIdentifier().equals(sug.getIdentifier())) {
-            ot.setConfidence(ot.getConfidence() + sug.getConfidence());
-            exist = true;
-          }
-          break;
-        }
-        // else, add a new
-        if (!exist) {
-          output.add(sug);
-        }
-      }
+      mergeOutputEntry(output, sug);
     }
   }
 
@@ -648,9 +654,9 @@ public class ChangeLint {
       List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, xmlFilePath, "HEAD", 10);
       int numAllCommits = commitIDs.size();
       // count the number of co-change commits
-      Map<String, Double> filesCounter = new HashMap<>();
-      Map<String, Double> typesCounter = new HashMap<>();
-      Map<String, Double> membersCounter = new HashMap<>();
+      Counter<String> filesCounter = new Counter<>();
+      Counter<String> typesCounter = new Counter<>();
+      Counter<String> membersCounter = new Counter<>();
 
       for (String commitID : commitIDs) {
         // extract co-changing entities at 3 levels
@@ -676,38 +682,26 @@ public class ChangeLint {
           List<JavaDiff> diffs = entry.getValue();
           String diffFilePath = entry.getKey();
           if (!diffFilePath.isEmpty()) {
-            if (!filesCounter.containsKey(diffFilePath)) {
-              filesCounter.put(diffFilePath, 0D);
-            }
-            filesCounter.put(diffFilePath, filesCounter.get(diffFilePath) + 1);
+            filesCounter.add(diffFilePath, 1);
           }
           for (JavaDiff diff : diffs) {
             String diffType = diff.getType();
             if (!diffType.isEmpty()) {
-              if (!typesCounter.containsKey(diffType)) {
-                typesCounter.put(diffType, 0D);
-              }
-              typesCounter.put(diffType, typesCounter.get(diffType) + 1);
+              typesCounter.add(diffType, 1);
             }
 
             String diffMember = diff.getMember();
             if (!diffMember.isEmpty()) {
-              if (!membersCounter.containsKey(diffMember)) {
-                membersCounter.put(diffMember, 0D);
-              }
-              membersCounter.put(diffMember, membersCounter.get(diffMember) + 1);
+              membersCounter.add(diffMember, 1);
             }
           }
         }
       }
       // store and consume
       // compute confidence for each entity
-      filesCounter.replaceAll((k, v) -> MetricUtil.formatDouble(v / numAllCommits));
-      typesCounter.replaceAll((k, v) -> MetricUtil.formatDouble(v / numAllCommits));
-      membersCounter.replaceAll((k, v) -> MetricUtil.formatDouble(v / numAllCommits));
-      cochangeFiles.put(xmlFilePath, filesCounter);
-      cochangeTypes.put(xmlFilePath, typesCounter);
-      cochangeMembers.put(xmlFilePath, membersCounter);
+      List<String> freqFiles = filesCounter.mostCommon(5);
+      List<String> freqTypes = typesCounter.mostCommon(5);
+      List<String> freqMembers = membersCounter.mostCommon(5);
     }
   }
 
