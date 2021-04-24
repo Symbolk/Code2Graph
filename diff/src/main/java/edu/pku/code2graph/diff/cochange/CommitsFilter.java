@@ -22,7 +22,7 @@ public class CommitsFilter {
     String resultsFolder = rootFolder + "/input/";
 
     // single repo
-    String repoName = "seven332-EhViewer";
+    String repoName = "smuyyh-BookReader";
     filterCommits(
         repoName,
         rootFolder + "/repos/" + repoName,
@@ -112,7 +112,7 @@ public class CommitsFilter {
       }
     }
     if (!changeTypes.isEmpty()) {
-      return !changeTypes.contains("A");
+      return !changeTypes.contains("A") && changeTypes.contains("M");
     } else {
       return false;
     }
