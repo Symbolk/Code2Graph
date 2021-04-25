@@ -61,12 +61,20 @@ public class MemberVisitor extends AbstractJdtVisitor {
     graph.addVertex(node);
     defPool.put(qname, node);
 
-    if (td.isPackageMemberTypeDeclaration()) {
-      graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
-      if (tdBinding != null) {
-        setPackageAttr(node, tdBinding.getPackage().getName());
-      }
+    graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+    if (tdBinding != null) {
+      setPackageAttr(node, tdBinding.getPackage().getName());
     }
+
+    //    if (td.isPackageMemberTypeDeclaration()) {
+    //
+    //    } else if (td.isLocalTypeDeclaration()) {
+    //      // find parent method node
+    //
+    //    } else if (td.isMemberTypeDeclaration()) {
+    //      // find parent type node
+    //
+    //    }
 
     // TODO fix member parsing when tdbinding is null (when file not under main folder)
     if (tdBinding != null) {
@@ -324,17 +332,19 @@ public class MemberVisitor extends AbstractJdtVisitor {
   }
 
   private void createFieldUsage(IVariableBinding variableBinding, String wrappedEntityName) {
-    Optional<Node> nodeOpt = findEntityNodeByName(wrappedEntityName);
-    // add to use pool
-    nodeOpt.ifPresent(
-        node ->
-            usePool.add(
-                Triple.of(
-                    node,
-                    EdgeType.REFERENCE,
-                    variableBinding.getDeclaringClass().getQualifiedName()
-                        + "."
-                        + variableBinding.getName())));
+    if (variableBinding.getDeclaringClass() != null) {
+      Optional<Node> nodeOpt = findEntityNodeByName(wrappedEntityName);
+      // add to use pool
+      nodeOpt.ifPresent(
+          node ->
+              usePool.add(
+                  Triple.of(
+                      node,
+                      EdgeType.REFERENCE,
+                      variableBinding.getDeclaringClass().getQualifiedName()
+                          + "."
+                          + variableBinding.getName())));
+    }
   }
 
   //    @Override
