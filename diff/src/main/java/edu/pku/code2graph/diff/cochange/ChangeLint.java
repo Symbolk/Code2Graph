@@ -47,7 +47,12 @@ public class ChangeLint {
   private static final String tempDir = rootFolder + "/temp";
   private static final String outputDir = rootFolder + "/output";
 
-  private static String commitsListDir = rootFolder + "/input";
+  List<Double> filePs = new ArrayList<>();
+  List<Double> fileRs = new ArrayList<>();
+  List<Double> typePs = new ArrayList<>();
+  List<Double> typeRs = new ArrayList<>();
+  List<Double> memberPs = new ArrayList<>();
+  List<Double> memberRs = new ArrayList<>();
 
   private static SortedSet<Suggestion> suggestedFiles = new TreeSet<>(new SuggestionComparator());
   private static SortedSet<Suggestion> suggestedTypes = new TreeSet<>(new SuggestionComparator());
@@ -77,22 +82,17 @@ public class ChangeLint {
     logger.info("Processing repo: {} at {}", repoName, repoPath);
     List<String> dataFilePaths =
         FileUtil.listFilePaths(tempDir + File.separator + repoName, ".json");
-    String outputPath = outputDir + File.separator + repoName + ".json";
 
-    File outputFile = new File(outputPath);
-    if (outputFile.exists()) {
-      outputFile.delete();
-    }
-    FileUtil.writeStringToFile("[", outputPath);
+    FileUtil.clearDir(outputDir + File.separator + repoName);
 
     Gson gson = new Gson();
 
     for (String dataFilePath : dataFilePaths) {
       String commitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
 
-      if (!commitID.equals("85d4bc814fff6dbb136ddebda41d4391743c7ebb")) {
-        continue;
-      }
+      //      if (!commitID.equals("85d4bc814fff6dbb136ddebda41d4391743c7ebb")) {
+      //        continue;
+      //      }
 
       // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
       Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
@@ -272,12 +272,11 @@ public class ChangeLint {
         }
       }
       // measure accuracy by comparing with ground truth
-      evaluate(commitID, outputPath, javaDiffs);
+      evaluate(commitID, javaDiffs);
     }
   }
 
-  private static void evaluate(
-      String testCommitID, String outputPath, Map<String, List<JavaDiff>> groundTruth)
+  private static void evaluate(String commitID, Map<String, List<JavaDiff>> groundTruth)
       throws IOException {
 
     // Ground Truth
@@ -313,17 +312,24 @@ public class ChangeLint {
       }
     }
 
+    String outputPath = outputDir + File.separator + repoName + File.separator + commitID + ".json";
+
+    File outputFile = new File(outputPath);
+    if (outputFile.exists()) {
+      outputFile.delete();
+    }
+
     JSONObject outputJson = new JSONObject(new LinkedHashMap());
 
-    outputJson.put("commit_id", testCommitID);
+    outputJson.put("commit_id", commitID);
 
     // separately on three levels
-    System.out.println("For commit: " + testCommitID);
+    System.out.println("For commit: " + commitID);
     outputJson.put("file", compare("File level", gtAllFiles, suggestedFiles));
     outputJson.put("type", compare("Type level", gtAllTypes, suggestedTypes));
     outputJson.put("member", compare("Member level", gtAllMembers, suggestedMembers));
 
-    try (FileWriter file = new FileWriter(outputPath, true)) {
+    try (FileWriter file = new FileWriter(outputPath, false)) {
       JSONObject.writeJSONString(outputJson, file);
       file.append(",\n");
     }
