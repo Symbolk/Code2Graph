@@ -92,8 +92,8 @@ public class ChangeLint {
 
       // one entry, one commit
       for (JSONObject commit : (Iterable<JSONObject>) commitList) {
-        String testCommitID = (String) commit.get("commit_id");
-        //        String testCommitID = "a1d1b04667ba7fb4661ada41db8f9e1871b54076";
+        //        String testCommitID = (String) commit.get("commit_id");
+        String testCommitID = "812941130a5f744c3662703c9e23b31bf0a5a8f3";
         // 1. Offline process: given the commit id of the earliest future multi-lang commit
         logger.info("Processing repo: {} at {}", repoName, repoPath);
 
@@ -223,7 +223,7 @@ public class ChangeLint {
           for (XMLDiff diff : entry.getValue()) {
             if (XMLDiffUtil.isIDLabel(diff.getName())) {
               String elementID = diff.getName().replace("\"", "").replace("+", "");
-              Optional<ElementNode> nodeOpt =
+              Optional<ElementNode> diffNodeOpt =
                   XMLNodes.stream()
                       .filter(node -> elementID.equals(node.getQualifiedName()))
                       .findAny();
@@ -231,22 +231,38 @@ public class ChangeLint {
               Map<String, Double> contextNodes = new LinkedHashMap<>();
 
               // locate changed xml nodes in the graph
-              if (nodeOpt.isPresent()) {
+              if (diffNodeOpt.isPresent()) {
                 // if exist, modified/removed
-                ElementNode node = nodeOpt.get();
-                String nodeID = node.getQualifiedName();
+                ElementNode diffNode = diffNodeOpt.get();
+                String nodeID = diffNode.getQualifiedName();
 
                 contextNodes = diff.getContextNodes();
                 contextNodes.put(nodeID, 1D);
 
                 if (!bindingInfos.containsKey(nodeID)) {
-                  bindingInfos.put(nodeID, inferReferences(graph, node, scopeFilePaths));
+                  bindingInfos.put(nodeID, inferReferences(graph, diffNode, scopeFilePaths));
                 }
+
+                for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
+                  String siblingID = cxtEntry.getKey();
+
+                  Optional<ElementNode> cxtOpt =
+                      XMLNodes.stream()
+                          .filter(node -> siblingID.equals(node.getQualifiedName()))
+                          .findAny();
+                  cxtOpt.ifPresent(
+                      elementNode -> {
+                        if (!bindingInfos.containsKey(siblingID)) {
+                          bindingInfos.put(
+                              siblingID, inferReferences(graph, elementNode, scopeFilePaths));
+                        }
+                      });
+                }
+
                 generateSuggestion(bindingInfos);
               } else {
                 // if not exist/added: predict co-changes according to similar nodes
                 contextNodes = diff.getContextNodes();
-                contextNodes.put(elementID, 1D);
 
                 for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
                   String siblingID = cxtEntry.getKey();
@@ -471,8 +487,8 @@ public class ChangeLint {
             && ot.getIdentifier().equals(suggestion.getIdentifier())) {
           ot.setConfidence(ot.getConfidence() + suggestion.getConfidence());
           exist = true;
+          break;
         }
-        break;
       }
       // else, add a new
       if (!exist) {
@@ -766,7 +782,8 @@ public class ChangeLint {
 
           // root folder that the package is related to
           String rootSrcFolder =
-              path.substring(0, path.toLowerCase().indexOf(convertQNameToPath(packageName).toLowerCase()));
+              path.substring(
+                  0, path.toLowerCase().indexOf(convertQNameToPath(packageName).toLowerCase()));
           // get absolute paths of imported files
           List<String> importedJavaPaths = new ArrayList<>();
           for (String im : imports) {
