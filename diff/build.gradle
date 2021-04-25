@@ -21,6 +21,7 @@ dependencies {
     implementation 'com.googlecode.juniversalchardet:juniversalchardet:1.0.3'
     implementation 'info.debatty:java-string-similarity:2.0.0'
     implementation 'org.eclipse.jgit:org.eclipse.jgit:5.11.0.202103091610-r'
+    implementation 'com.google.code.gson:gson:2.8.6'
 
     testImplementation 'junit:junit:4.13.2'
 }

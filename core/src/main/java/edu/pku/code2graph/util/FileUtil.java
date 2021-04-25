@@ -51,6 +51,7 @@ public class FileUtil {
   public static boolean clearDir(String dir) {
     File file = new File(dir);
     if (!file.exists()) {
+      file.mkdirs();
       return false;
     }
 
