@@ -12,10 +12,7 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtTypeMember;
 import spoon.support.reflect.declaration.CtTypeImpl;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class JavaDiffUtil {
   /**
@@ -25,19 +22,24 @@ public class JavaDiffUtil {
    */
   public static List<JavaDiff> computeJavaChanges(DiffFile diffFile) {
     Set<JavaDiff> results = new LinkedHashSet<>();
-
-    Diff editScript = new AstComparator().compare(diffFile.getAContent(), diffFile.getBContent());
-    // build GT: process Java changes to file/type/member
-    for (Operation operation : editScript.getRootOperations()) { // or allOperations?
-      Triple<ChangeType, String, String> change = extractEntityChange(operation);
-      results.add(
-          new JavaDiff(
-              change.getLeft(),
-              diffFile.getARelativePath().isEmpty()
-                  ? diffFile.getBRelativePath()
-                  : diffFile.getARelativePath(),
-              change.getMiddle(),
-              change.getRight()));
+    if (!diffFile.getARelativePath().isEmpty()) {
+      Set<ChangeType> changeTypes = new HashSet<>();
+      Diff editScript = new AstComparator().compare(diffFile.getAContent(), diffFile.getBContent());
+      // build GT: process Java changes to file/type/member
+      for (Operation operation : editScript.getRootOperations()) { // or allOperations?
+        Triple<ChangeType, String, String> change = extractEntityChange(operation);
+        changeTypes.add(change.getLeft());
+        results.add(
+            new JavaDiff(
+                change.getLeft(),
+                diffFile.getARelativePath(),
+                change.getMiddle(),
+                change.getRight()));
+      }
+      changeTypes.remove(ChangeType.ADDED);
+      if (changeTypes.isEmpty()) {
+        return new ArrayList<>();
+      }
     }
     return new ArrayList<>(results);
   }
@@ -90,7 +92,7 @@ public class JavaDiffUtil {
           parentType != null ? convertTypeName(((CtTypeImpl) parentType).getQualifiedName()) : "";
       String parentMemberName =
           parentMember != null ? ((CtTypeMember) parentMember).getSimpleName() : "";
-      return Triple.of(ChangeType.UPDATED, parentTypeName, parentMemberName);
+      return Triple.of(getChangeType(operation.getAction()), parentTypeName, parentMemberName);
     }
     //    String nodeType = element.getClass().getSimpleName();
     //    nodeType = nodeType.substring(2, nodeType.length() - 4);
