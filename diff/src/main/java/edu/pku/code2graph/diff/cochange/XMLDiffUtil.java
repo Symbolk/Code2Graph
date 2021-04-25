@@ -61,7 +61,8 @@ public class XMLDiffUtil {
         // the element tree
         // find other contextNodes with the similar semantics
         Map<String, Double> contextNodes =
-            findContextNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3);
+            findContextNodeIDs(
+                aContext.getRoot(), iTree.getParent().getParent(), iTree.getLabel(), 5);
         results.add(
             new XMLDiff(
                 ChangeType.ADDED, fileName, getTagForTree(iTree), iTree.getLabel(), contextNodes));
@@ -76,7 +77,8 @@ public class XMLDiffUtil {
                 fileName,
                 getTagForTree(iTree),
                 iTree.getLabel(),
-                findContextNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3)));
+                findContextNodeIDs(
+                    aContext.getRoot(), iTree.getParent().getParent(), iTree.getLabel(), 5)));
       }
     }
 
@@ -88,7 +90,8 @@ public class XMLDiffUtil {
                 fileName,
                 getTagForTree(iTree),
                 iTree.getLabel(),
-                findContextNodeIDs(aContext.getRoot(), iTree.getParent().getParent(), 3)));
+                findContextNodeIDs(
+                    aContext.getRoot(), iTree.getParent().getParent(), iTree.getLabel(), 5)));
       }
     }
 
@@ -125,7 +128,8 @@ public class XMLDiffUtil {
    * @param targetTree
    * @return
    */
-  private static Map<String, Double> findContextNodeIDs(ITree root, ITree targetTree, int k) {
+  private static Map<String, Double> findContextNodeIDs(
+      ITree root, ITree targetTree, String id, int k) {
     Map<String, Double> results = new LinkedHashMap<>();
 
     PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
@@ -140,14 +144,15 @@ public class XMLDiffUtil {
     queue.add(root);
     while (!queue.isEmpty()) {
       ITree temp = queue.poll();
-      double similarity =
-          MetricUtil.formatDouble(
-              (MetricUtil.cosineString(getTagForTree(temp), targetTag)
-                      + TreeSimilarityMetrics.treeSimilarity(temp, targetTree))
-                  / 2);
-      String id = getIDForTree(temp);
-      if (!id.isEmpty()) {
-        pq.add(Pair.of(id, similarity));
+      String tid = getIDForTree(temp);
+      // do not put itself into context nodes
+      if (!tid.isEmpty() && !tid.equals(id)) {
+        double similarity =
+            MetricUtil.formatDouble(
+                (MetricUtil.cosineString(getTagForTree(temp), targetTag)
+                        + TreeSimilarityMetrics.treeSimilarity(temp, targetTree))
+                    / 2);
+        pq.add(Pair.of(tid, similarity));
       }
       if (!temp.getChildren().isEmpty()) {
         queue.addAll(temp.getChildren());
