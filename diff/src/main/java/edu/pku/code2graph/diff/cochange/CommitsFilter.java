@@ -16,13 +16,14 @@ import java.util.List;
 import java.util.Set;
 
 public class CommitsFilter {
+  private static final String rootFolder = System.getProperty("user.home") + "/coding/changelint";
+
   public static void main(String[] args) throws Exception {
-    String rootFolder = "/Users/symbolk/coding/changelint";
     String commitsListFolder = rootFolder + "/cross-lang-commits/";
     String resultsFolder = rootFolder + "/input/";
 
     // single repo
-    String repoName = "smuyyh-BookReader";
+    String repoName = "youlookwhat-CloudReader";
     filterCommits(
         repoName,
         rootFolder + "/repos/" + repoName,
