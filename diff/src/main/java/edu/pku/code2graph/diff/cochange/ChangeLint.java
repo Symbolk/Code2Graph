@@ -331,7 +331,6 @@ public class ChangeLint {
 
     try (FileWriter file = new FileWriter(outputPath, false)) {
       JSONObject.writeJSONString(outputJson, file);
-      file.append(",\n");
     }
   }
 
