@@ -1,7 +1,6 @@
 package edu.pku.code2graph.diff.cochange;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.ChangeType;
 import edu.pku.code2graph.diff.model.DiffFile;
@@ -67,14 +66,12 @@ public class ChangeLint {
             });
   }
 
-
-
   public static void main(String[] args) throws IOException {
 
     //    BasicConfigurator.configure();
     PropertyConfigurator.configure(
         System.getProperty("user.dir") + File.separator + "log4j.properties");
-    repoName = "youlookwhat-CloudReader";
+    repoName = "seven332-EhViewer";
     repoPath = rootFolder + "/repos/" + repoName;
 
     logger.info("Processing repo: {} at {}", repoName, repoPath);
@@ -91,7 +88,11 @@ public class ChangeLint {
     Gson gson = new Gson();
 
     for (String dataFilePath : dataFilePaths) {
-      String testCommitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
+      String commitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
+
+      if (!commitID.equals("85d4bc814fff6dbb136ddebda41d4391743c7ebb")) {
+        continue;
+      }
 
       // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
       Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
@@ -128,11 +129,11 @@ public class ChangeLint {
         e.printStackTrace();
       }
 
-      logger.info("XML diff files: {} for commit: {}", xmlDiffs.entrySet().size(), testCommitID);
-      logger.info("Java diff files: {} for commit: {}", javaDiffs.entrySet().size(), testCommitID);
+      logger.info("XML diff files: {} for commit: {}", xmlDiffs.entrySet().size(), commitID);
+      logger.info("Java diff files: {} for commit: {}", javaDiffs.entrySet().size(), commitID);
 
       //        logger.info("Computing historical cochanges...");
-      //        computeHistoricalCochanges(xmlDiffs);
+      //              computeHistoricalCochanges(xmlDiffs);
 
       suggestedFiles.clear();
       suggestedTypes.clear();
@@ -146,18 +147,11 @@ public class ChangeLint {
               "git",
               "checkout", /* "-b","changelint", */
               "-f",
-              testCommitID + "^"));
+              commitID + "^"));
 
       String parentCommitID =
           SysUtil.runSystemCommand(
-              repoPath,
-              Charset.defaultCharset(),
-              "git",
-              "log",
-              "--pretty=%P",
-              "-n",
-              "1",
-              testCommitID);
+              repoPath, Charset.defaultCharset(), "git", "log", "--pretty=%P", "-n", "1", commitID);
 
       logger.info(
           "Now at HEAD commit: {}Expected at commit: {}",
@@ -278,7 +272,7 @@ public class ChangeLint {
         }
       }
       // measure accuracy by comparing with ground truth
-      evaluate(testCommitID, outputPath, javaDiffs);
+      evaluate(commitID, outputPath, javaDiffs);
     }
   }
 
@@ -411,7 +405,7 @@ public class ChangeLint {
     if (suggestion.getChangeType().equals(ChangeType.ADDED)) {
       // for added, identifier is not important and cannot be precisely predicted
       for (Suggestion gt : groundTruth) {
-        if (gt.getChangeType().equals(suggestion.getChangeType())
+        if (gt.getIdentifier().equals(suggestion.getIdentifier())
             && gt.getEntityType().equals(suggestion.getEntityType())) {
           return true;
         }
@@ -532,7 +526,7 @@ public class ChangeLint {
         results.add(
             new Suggestion(ChangeType.UPDATED, entityType, entityEntry.getKey(), confidence));
       } else {
-        results.add(new Suggestion(ChangeType.ADDED, entityType, "[]", confidence));
+        results.add(new Suggestion(ChangeType.ADDED, entityType, "", confidence));
       }
     }
     return results;
@@ -590,10 +584,12 @@ public class ChangeLint {
         // find wrapped member, type, and file nodes, return names
         Triple<String, String, String> entities = findWrappedEntities(graph, refNode);
         // filter incorrect references with incorrect view
-        binding.addRefEntities(entities);
-        //        relevantNodes.add(refNode);
-        for (ElementNode n : getIndirectNodes(graph, refNode)) {
-          counter.add(n, 1);
+        if (scopeFilePaths.contains(entities.getLeft())) {
+          binding.addRefEntities(entities);
+          //        relevantNodes.add(refNode);
+          for (ElementNode n : getIndirectNodes(graph, refNode)) {
+            counter.add(n, 1);
+          }
         }
       }
     }
@@ -681,6 +677,10 @@ public class ChangeLint {
     Map<String, Map<String, Double>> cochangeTypes = new HashMap<>();
     Map<String, Map<String, Double>> cochangeMembers = new HashMap<>();
 
+    Counter<String> filesCounter = new Counter<>();
+    Counter<String> typesCounter = new Counter<>();
+    Counter<String> membersCounter = new Counter<>();
+
     // get all commits that ever changed each xml file
     for (String xmlFilePath : xmlDiffs.keySet()) {
       GitService gitService = new GitServiceCGit();
@@ -688,9 +688,6 @@ public class ChangeLint {
       List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, xmlFilePath, "HEAD", 10);
       int numAllCommits = commitIDs.size();
       // count the number of co-change commits
-      Counter<String> filesCounter = new Counter<>();
-      Counter<String> typesCounter = new Counter<>();
-      Counter<String> membersCounter = new Counter<>();
 
       for (String commitID : commitIDs) {
         // extract co-changing entities at 3 levels
@@ -731,12 +728,13 @@ public class ChangeLint {
           }
         }
       }
-      // store and consume
-      // compute confidence for each entity
-      List<String> freqFiles = filesCounter.mostCommon(5);
-      List<String> freqTypes = typesCounter.mostCommon(5);
-      List<String> freqMembers = membersCounter.mostCommon(5);
     }
+
+    // store and consume
+    // compute confidence for each entity
+    List<String> freqFiles = filesCounter.mostCommon(5);
+    List<String> freqTypes = typesCounter.mostCommon(5);
+    List<String> freqMembers = membersCounter.mostCommon(5);
   }
 
   /**

@@ -92,7 +92,7 @@ public class JavaDiffUtil {
           parentType != null ? convertTypeName(((CtTypeImpl) parentType).getQualifiedName()) : "";
       String parentMemberName =
           parentMember != null ? ((CtTypeMember) parentMember).getSimpleName() : "";
-      return Triple.of(getChangeType(operation.getAction()), parentTypeName, parentMemberName);
+      return Triple.of(ChangeType.UPDATED, parentTypeName, parentMemberName);
     }
     //    String nodeType = element.getClass().getSimpleName();
     //    nodeType = nodeType.substring(2, nodeType.length() - 4);
