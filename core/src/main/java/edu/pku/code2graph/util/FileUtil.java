@@ -31,13 +31,53 @@ public class FileUtil {
     return directory.getAbsolutePath();
   }
 
+  public static String prepareDir(String dir) {
+    File file = new File(dir);
+    if (file.exists()) {
+      file.delete();
+    }
+    if (!file.exists()) {
+      file.mkdirs();
+    }
+    return file.getAbsolutePath();
+  }
+
+  /**
+   * Delete all files and subfolders to clear the directory
+   *
+   * @param dir absolute path
+   * @return
+   */
+  public static boolean clearDir(String dir) {
+    File file = new File(dir);
+    if (!file.exists()) {
+      return false;
+    }
+
+    String[] content = file.list();
+    if (content != null) {
+      for (String name : content) {
+        File temp = new File(dir, name);
+        if (temp.isDirectory()) {
+          clearDir(temp.getAbsolutePath());
+          temp.delete();
+        } else {
+          if (!temp.delete()) {
+            System.err.println("Failed to delete the directory: " + name);
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   /**
    * Get file name from path
    *
    * @return
    */
   public static String getFileNameFromPath(String filePath) {
-    return Paths.get(filePath).getFileName().toString();
+    return Paths.get(filePath).getFileName().toString().trim();
   }
 
   /**
@@ -116,8 +156,7 @@ public class FileUtil {
   public static void writeObjectToFile(Object object, String filePath, boolean append) {
     try {
       ObjectOutputStream out =
-          new ObjectOutputStream(
-              new BufferedOutputStream(new FileOutputStream(filePath, append)));
+          new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(filePath, append)));
       out.writeObject(object);
       out.flush();
       out.close();
