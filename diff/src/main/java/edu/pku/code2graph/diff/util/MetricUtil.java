@@ -154,7 +154,7 @@ public class MetricUtil {
    * @return
    */
   public static double formatDouble(double value) {
-    return (double) Math.round(value * 100) / 100;
+    return Math.ceil(value * 100) / 100;
   }
 
   private static int myMax(Integer... vals) {

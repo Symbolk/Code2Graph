@@ -484,7 +484,7 @@ public class ChangeLint {
       averagePrecision += precisionForK * (recallForK - recallForPreviousK);
       recallForPreviousK = recallForK;
     }
-    averagePrecision = MetricUtil.formatDouble(averagePrecision);
+    averagePrecision = MetricUtil.formatDouble(averagePrecision * 100);
     System.out.println("Average Precision=" + averagePrecision);
     json.put("average_precision", averagePrecision);
 
@@ -519,7 +519,7 @@ public class ChangeLint {
   }
 
   private static double computeMetric(int a, int b) {
-    return b == 0 ? 0D : MetricUtil.formatDouble((double) a / b);
+    return b == 0 ? 0D : MetricUtil.formatDouble((double) a * 100 / b);
   }
 
   private static void generateSuggestion(Map<String, Binding> bindingInfos) {
