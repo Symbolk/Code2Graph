@@ -13,6 +13,10 @@ public class Counter<T> {
     add(it, 1);
   }
 
+  public int get(T it) {
+    return counts.get(it);
+  }
+
   public void add(T it, int v) {
     counts.merge(it, v, Integer::sum);
   }

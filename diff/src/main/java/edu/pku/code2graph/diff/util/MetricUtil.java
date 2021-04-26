@@ -178,7 +178,7 @@ public class MetricUtil {
     }
 
     Double average = numList.stream().mapToDouble(val -> val).average().orElse(0.0);
-    return average;
+    return formatDouble(average);
   }
 
   public static double getMedian(List<Double> numList) {
@@ -195,7 +195,7 @@ public class MetricUtil {
     if (numArray.length % 2 == 0) {
       double medianA = numArray[middle];
       double medianB = numArray[middle - 1];
-      return (medianA + medianB) / 2;
+      return formatDouble((medianA + medianB) / 2);
     } else {
       return numArray[middle + 1];
     }

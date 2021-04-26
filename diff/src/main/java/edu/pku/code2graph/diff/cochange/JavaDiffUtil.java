@@ -3,6 +3,7 @@ package edu.pku.code2graph.diff.cochange;
 import com.github.gumtreediff.actions.model.*;
 import edu.pku.code2graph.diff.model.ChangeType;
 import edu.pku.code2graph.diff.model.DiffFile;
+import edu.pku.code2graph.diff.util.DiffUtil;
 import gumtree.spoon.AstComparator;
 import gumtree.spoon.diff.Diff;
 import gumtree.spoon.diff.operations.Operation;
@@ -22,7 +23,7 @@ public class JavaDiffUtil {
    */
   public static List<JavaDiff> computeJavaChanges(DiffFile diffFile) {
     Set<JavaDiff> results = new LinkedHashSet<>();
-    if (!diffFile.getARelativePath().isEmpty()) {
+    if (!diffFile.getARelativePath().isEmpty() && containsViewChanges(diffFile)) {
       Set<ChangeType> changeTypes = new HashSet<>();
       Diff editScript = new AstComparator().compare(diffFile.getAContent(), diffFile.getBContent());
       // build GT: process Java changes to file/type/member
@@ -42,6 +43,20 @@ public class JavaDiffUtil {
       }
     }
     return new ArrayList<>(results);
+  }
+
+  private static boolean containsViewChanges(DiffFile diffFile) {
+    String regex = "import\\s*([^;])*\\.R;";
+    for(String line : DiffUtil.convertStringToList(diffFile.getAContent())) {
+      if(line.matches(regex)) {
+        return true;
+      }
+    } for(String line : DiffUtil.convertStringToList(diffFile.getBContent())) {
+      if(line.matches(regex)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static ChangeType getChangeType(Action action) {
