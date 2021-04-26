@@ -51,47 +51,49 @@ public class XMLDiffUtil {
     //      EditScript editScript = new ChawatheScriptGenerator().computeActions(
     // matcher.getMappings());
     for (ITree iTree : actionClassifier.srcDelTrees) {
+      String tag = getTagForTree(iTree.getParent());
       if (isIDLabel(iTree.getLabel())) {
-        results.add(
-            new XMLDiff(ChangeType.DELETED, fileName, getTagForTree(iTree), iTree.getLabel()));
+        results.add(new XMLDiff(ChangeType.DELETED, fileName, tag, iTree.getLabel()));
       }
     }
     for (ITree iTree : actionClassifier.dstAddTrees) {
       if (isIDLabel(iTree.getLabel())) {
+        String tag = getTagForTree(iTree.getParent());
         // the element tree
         // find other contextNodes with the similar semantics
         Map<String, Double> contextNodes =
             findContextNodeIDs(
-                aContext.getRoot(), iTree.getParent().getParent(), iTree.getLabel(), 5);
-        results.add(
-            new XMLDiff(
-                ChangeType.ADDED, fileName, getTagForTree(iTree), iTree.getLabel(), contextNodes));
+                aContext.getRoot(), iTree.getParent().getParent(), tag, iTree.getLabel(), 5);
+        results.add(new XMLDiff(ChangeType.ADDED, fileName, tag, iTree.getLabel(), contextNodes));
       }
     }
 
     for (ITree iTree : actionClassifier.srcUpdTrees) {
       if (isIDLabel(iTree.getLabel())) {
+        String tag = getTagForTree(iTree.getParent());
+
         results.add(
             new XMLDiff(
                 ChangeType.UPDATED,
                 fileName,
-                getTagForTree(iTree),
+                tag,
                 iTree.getLabel(),
                 findContextNodeIDs(
-                    aContext.getRoot(), iTree.getParent().getParent(), iTree.getLabel(), 5)));
+                    aContext.getRoot(), iTree.getParent().getParent(), tag, iTree.getLabel(), 5)));
       }
     }
 
     for (ITree iTree : actionClassifier.dstUpdTrees) {
       if (isIDLabel(iTree.getLabel())) {
+        String tag = getTagForTree(iTree.getParent());
         results.add(
             new XMLDiff(
                 ChangeType.UPDATED,
                 fileName,
-                getTagForTree(iTree),
+               tag,
                 iTree.getLabel(),
                 findContextNodeIDs(
-                    aContext.getRoot(), iTree.getParent().getParent(), iTree.getLabel(), 5)));
+                    aContext.getRoot(), iTree.getParent().getParent(), tag, iTree.getLabel(), 5)));
       }
     }
 
@@ -105,11 +107,11 @@ public class XMLDiffUtil {
    * @return
    */
   private static String getTagForTree(ITree iTree) {
-    if (iTree.getParent() == null || iTree.getParent().getParent() == null) {
+    if (iTree == null || iTree.getParent() == null) {
       return "";
     }
 
-    ITree parent = iTree.getParent().getParent();
+    ITree parent = iTree.getParent();
     while (parent != null) {
       for (ITree uncle : parent.getChildren()) {
         if (uncle.getChildren().size() == 0) {
@@ -129,15 +131,13 @@ public class XMLDiffUtil {
    * @return
    */
   private static Map<String, Double> findContextNodeIDs(
-      ITree root, ITree targetTree, String id, int k) {
+      ITree root, ITree targetTree, String targetTag, String targetID, int k) {
     Map<String, Double> results = new LinkedHashMap<>();
 
     PriorityQueue<Pair<String, Double>> pq = new PriorityQueue<>(new PairComparator());
     if (root == null) {
       return results;
     }
-
-    String targetTag = getTagForTree(targetTree);
 
     // BFS for level traversal
     ArrayDeque<ITree> queue = new ArrayDeque<>();
@@ -146,7 +146,7 @@ public class XMLDiffUtil {
       ITree temp = queue.poll();
       String tid = getIDForTree(temp);
       // do not put itself into context nodes
-      if (!tid.isEmpty() && !tid.equals(id)) {
+      if (!tid.isEmpty() && !tid.equals(targetID)) {
         double similarity =
             MetricUtil.formatDouble(
                 (MetricUtil.cosineString(getTagForTree(temp), targetTag)
@@ -168,7 +168,7 @@ public class XMLDiffUtil {
   }
 
   private static String getIDForTree(ITree tree) {
-    for (ITree t : tree.getDescendants()) {
+    for (ITree t : tree.getChildren()) {
       if (isIDLabel(t.getLabel())) {
         return t.getLabel().replace("\"", "").replace("+", "");
       }
