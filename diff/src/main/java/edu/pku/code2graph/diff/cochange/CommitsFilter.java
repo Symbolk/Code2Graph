@@ -72,13 +72,14 @@ public class CommitsFilter {
               changedComponents.addAll(getInvolvedIDs(diffHunk.getAHunk().getCodeSnippet()));
               changedComponents.addAll(getInvolvedIDs(diffHunk.getBHunk().getCodeSnippet()));
             }
-          } else if (diffFile.getFileType().equals(FileType.JAVA)) {
+          } else if (diffFile.getFileType().equals(FileType.JAVA) && hasViewCoChanges(diffFile)) {
             javaDiffFiles.add(diffFile);
           }
         }
 
         if (changedComponents.size() > 0 && javaDiffFiles.size() > 0) {
-          System.out.println(testCommitID + " : " + changedComponents.size());
+          System.out.println(
+              testCommitID + " : " + changedComponents.size() + ", " + javaDiffFiles.size());
           results.add(commit);
         }
       }
@@ -90,6 +91,18 @@ public class CommitsFilter {
     }
     System.out.println(
         "Done for repo: " + repoName + " #Commits: " + results.size() + "/" + commitList.size());
+  }
+
+  private static boolean hasViewCoChanges(DiffFile diffFile) {
+    List<DiffHunk> diffHunks = diffFile.getDiffHunks();
+    for (DiffHunk diffHunk : diffHunks) {
+      if (diffHunk.getAHunk().getCodeSnippet().stream().anyMatch(line -> line.contains("R.id"))
+          || diffHunk.getBHunk().getCodeSnippet().stream()
+              .anyMatch(line -> line.contains("R.id"))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isMergeCommit(JSONObject commit) {
