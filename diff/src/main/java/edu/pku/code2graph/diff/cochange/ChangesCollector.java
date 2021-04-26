@@ -6,7 +6,7 @@ import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
 import edu.pku.code2graph.util.FileUtil;
-import org.apache.commons.io.FileUtils;
+import org.apache.log4j.PropertyConfigurator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -30,11 +30,13 @@ public class ChangesCollector {
 
   private static String repoName = "";
   private static String repoPath = "";
-  private static String commitsListDir = rootFolder + "/input";
+  private static String commitsListDir = rootFolder + "/input2";
   private static final String tempDir = rootFolder + "/temp";
 
   public static void main(String[] args) {
-    repoName = "youlookwhat-CloudReader";
+    PropertyConfigurator.configure(
+        System.getProperty("user.dir") + File.separator + "log4j.properties");
+    repoName = Config.repoName;
     repoPath = rootFolder + "/repos/" + repoName;
     try {
       collectChangesForRepo();

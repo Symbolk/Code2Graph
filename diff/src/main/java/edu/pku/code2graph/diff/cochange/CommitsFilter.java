@@ -23,7 +23,7 @@ public class CommitsFilter {
     String resultsFolder = rootFolder + "/input/";
 
     // single repo
-    String repoName = "youlookwhat-CloudReader";
+    String repoName = Config.repoName;
     filterCommits(
         repoName,
         rootFolder + "/repos/" + repoName,

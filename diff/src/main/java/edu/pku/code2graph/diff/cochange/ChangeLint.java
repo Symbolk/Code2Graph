@@ -76,7 +76,7 @@ public class ChangeLint {
     //    BasicConfigurator.configure();
     PropertyConfigurator.configure(
         System.getProperty("user.dir") + File.separator + "log4j.properties");
-    repoName = "seven332-EhViewer";
+    repoName = Config.repoName;
     repoPath = rootFolder + "/repos/" + repoName;
 
     logger.info("Processing repo: {} at {}", repoName, repoPath);
