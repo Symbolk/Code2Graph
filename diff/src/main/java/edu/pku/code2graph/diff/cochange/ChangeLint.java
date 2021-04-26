@@ -273,6 +273,11 @@ public class ChangeLint {
       }
       // measure accuracy by comparing with ground truth
       evaluate(commitID, javaDiffs);
+
+      // restore to master or there will be strangle bugs
+      logger.info(
+          SysUtil.runSystemCommand(
+              repoPath, Charset.defaultCharset(), "git", "checkout", "master"));
     }
   }
 
@@ -589,7 +594,13 @@ public class ChangeLint {
         // find wrapped member, type, and file nodes, return names
         Triple<String, String, String> entities = findWrappedEntities(graph, refNode);
         // filter incorrect references with incorrect view
-        if (scopeFilePaths.contains(entities.getLeft())) {
+        if (scopeFilePaths.isEmpty()) {
+          binding.addRefEntities(entities);
+          //        relevantNodes.add(refNode);
+          for (ElementNode n : getIndirectNodes(graph, refNode)) {
+            counter.add(n, 1);
+          }
+        } else if (scopeFilePaths.contains(entities.getLeft())) {
           binding.addRefEntities(entities);
           //        relevantNodes.add(refNode);
           for (ElementNode n : getIndirectNodes(graph, refNode)) {
