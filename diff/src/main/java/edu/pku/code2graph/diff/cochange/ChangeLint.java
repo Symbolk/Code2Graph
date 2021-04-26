@@ -20,6 +20,7 @@ import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.util.SysUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.PropertyConfigurator;
 import org.atteo.classindex.ClassIndex;
@@ -95,8 +96,7 @@ public class ChangeLint {
       String commitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
 
       List<String> commitList = new ArrayList<>();
-      commitList.add("50fd63e0d874c8ecf5921f511eaa91e9af3dde26");
-      commitList.add("fd4a535701417baf5945b850d9016050cd1e192b");
+      commitList.add("0028df3ee7cffcde0dcdcc575d4b76f02c58c208");
       if (!commitList.contains(commitID)) {
         continue;
       }
@@ -146,9 +146,6 @@ public class ChangeLint {
       logger.info("XML diff files: {} for commit: {}", xmlDiffs.entrySet().size(), commitID);
       logger.info("Java diff files: {} for commit: {}", javaDiffs.entrySet().size(), commitID);
 
-      //        logger.info("Computing historical cochanges...");
-      //              computeHistoricalCochanges(xmlDiffs);
-
       // restore to master or there will be strangle bugs
       logger.info(
           SysUtil.runSystemCommand(
@@ -176,7 +173,8 @@ public class ChangeLint {
       logger.info("Building graph...");
 
       //   build the graph for the current version
-      GraphUtil.clearGraph(); // !must clear the static graph caches, or the graph will keep growing!
+      GraphUtil
+          .clearGraph(); // !must clear the static graph caches, or the graph will keep growing!
       Graph<Node, Edge> graph = buildGraph();
 
       logger.info(
@@ -198,6 +196,9 @@ public class ChangeLint {
       // for xml changes in each xml file
       for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
         String path = entry.getKey();
+
+        HistoricalCochange historicalCoChange = computeHistoricalCochanges(path);
+
         String viewID =
             "@"
                 + FileUtil.getParentFolderName(path)
@@ -262,7 +263,12 @@ public class ChangeLint {
                     });
               }
 
-              generateSuggestion(bindingInfos, suggestedFiles, suggestedTypes, suggestedMembers);
+              generateSuggestion(
+                  bindingInfos,
+                  historicalCoChange,
+                  suggestedFiles,
+                  suggestedTypes,
+                  suggestedMembers);
             } else {
               // if not exist/added: predict co-changes according to similar nodes
               contextNodes = diff.getContextNodes();
@@ -283,7 +289,12 @@ public class ChangeLint {
                     });
               }
               generateSuggestion(
-                  bindingInfos, contextNodes, suggestedFiles, suggestedTypes, suggestedMembers);
+                  bindingInfos,
+                  historicalCoChange,
+                  contextNodes,
+                  suggestedFiles,
+                  suggestedTypes,
+                  suggestedMembers);
             }
           }
         }
@@ -477,6 +488,7 @@ public class ChangeLint {
 
   private static void generateSuggestion(
       Map<String, Binding> bindingInfos,
+      HistoricalCochange historicalCochange,
       SortedSet<Suggestion> suggestedFiles,
       SortedSet<Suggestion> suggestedTypes,
       SortedSet<Suggestion> suggestedMembers) {
@@ -507,13 +519,14 @@ public class ChangeLint {
    */
   private static void generateSuggestion(
       Map<String, Binding> bindingInfos,
+      HistoricalCochange historicalCochange,
       Map<String, Double> contextNodes,
       SortedSet<Suggestion> suggestedFiles,
       SortedSet<Suggestion> suggestedTypes,
       SortedSet<Suggestion> suggestedMembers) {
-    Map<String, Map<String, Integer>> fileLookup = new HashMap<>();
-    Map<String, Map<String, Integer>> typeLookup = new HashMap<>();
-    Map<String, Map<String, Integer>> memberLookup = new HashMap<>();
+    Map<String, Map<String, Double>> fileLookup = new HashMap<>();
+    Map<String, Map<String, Double>> typeLookup = new HashMap<>();
+    Map<String, Map<String, Double>> memberLookup = new HashMap<>();
 
     for (Map.Entry<String, Binding> entry : bindingInfos.entrySet()) {
       String id = entry.getKey();
@@ -521,6 +534,23 @@ public class ChangeLint {
       buildLookup(fileLookup, id, binding.getFiles());
       buildLookup(typeLookup, id, binding.getTypes());
       buildLookup(memberLookup, id, binding.getMembers());
+    }
+
+    for (var hisEntry : historicalCochange.members.entrySet()) {
+      if (memberLookup.containsKey(hisEntry.getKey())) {
+        Map<String, Double> row = memberLookup.get(hisEntry.getKey());
+        // update confidence of each item
+        for (var rowEntry : row.entrySet()) {
+          double updatedConfidence = rowEntry.getValue() * (1 + hisEntry.getValue());
+          row.put(rowEntry.getKey(), updatedConfidence);
+        }
+      } else {
+        Map<String, Double> newRow = new LinkedHashMap<>();
+        for (String s : contextNodes.keySet()) {
+          newRow.put(s, hisEntry.getValue());
+        }
+        memberLookup.put(hisEntry.getKey(), newRow);
+      }
     }
 
     mergeOutputEntry(
@@ -557,16 +587,16 @@ public class ChangeLint {
 
   private static Set<Suggestion> collaborativeFilter(
       EntityType entityType,
-      Map<String, Map<String, Integer>> lookup,
+      Map<String, Map<String, Double>> lookup,
       Map<String, Double> contextNodes) {
     Set<Suggestion> results = new HashSet<>();
 
     for (var entityEntry : lookup.entrySet()) {
-      Map<String, Integer> reverseRefs = entityEntry.getValue();
+      Map<String, Double> reverseRefs = entityEntry.getValue();
       double sum1 = 0D;
       double sum2 = 0D;
       for (var id : contextNodes.keySet()) {
-        sum1 += (contextNodes.get(id) * reverseRefs.getOrDefault(id, -1));
+        sum1 += (contextNodes.get(id) * reverseRefs.getOrDefault(id, -1D));
         sum2 += contextNodes.get(id);
       }
       //      for (var refEntry : reverseRefs.entrySet()) {
@@ -594,12 +624,12 @@ public class ChangeLint {
    * @param refs
    */
   private static void buildLookup(
-      Map<String, Map<String, Integer>> lookup, String id, Map<String, Integer> refs) {
+      Map<String, Map<String, Double>> lookup, String id, Map<String, Integer> refs) {
     for (Map.Entry<String, Integer> entry : refs.entrySet()) {
       if (!lookup.containsKey(entry.getKey())) {
         lookup.put(entry.getKey(), new HashMap<>());
       }
-      lookup.get(entry.getKey()).put(id, entry.getValue());
+      lookup.get(entry.getKey()).put(id, Double.valueOf(entry.getValue()));
     }
   }
 
@@ -724,61 +754,55 @@ public class ChangeLint {
     return Triple.of(filePath, typeName, memberName);
   }
 
-  /** Compute evolutionary coupling entities from the past commits */
-  private static void computeHistoricalCochanges(Map<String, List<XMLDiff>> xmlDiffs) {
+  private static HistoricalCochange computeHistoricalCochanges(String path) {
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
-    Map<String, Map<String, Double>> cochangeFiles = new HashMap<>();
-    Map<String, Map<String, Double>> cochangeTypes = new HashMap<>();
-    Map<String, Map<String, Double>> cochangeMembers = new HashMap<>();
-
     Counter<String> filesCounter = new Counter<>();
-    Counter<String> typesCounter = new Counter<>();
-    Counter<String> membersCounter = new Counter<>();
+    Counter<Pair<String, String>> typesCounter = new Counter<>();
+    Counter<Triple<String, String, String>> membersCounter = new Counter<>();
 
     // get all commits that ever changed each xml file
-    for (String xmlFilePath : xmlDiffs.keySet()) {
-      GitService gitService = new GitServiceCGit();
-      // note that here "HEAD" is the tested commit, since we have checkout to it before
-      List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, xmlFilePath, "HEAD", 10);
-      int numAllCommits = commitIDs.size();
-      // count the number of co-change commits
+    GitService gitService = new GitServiceCGit();
 
-      for (String commitID : commitIDs) {
-        // extract co-changing entities at 3 levels
-        Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
+    // note that here "HEAD" is the tested commit, since we have checkout to it before
+    List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, path, "HEAD", 10);
+    int numAllCommits = commitIDs.size();
+    // count the number of co-change commits
 
-        List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID);
-        for (DiffFile diffFile : diffFiles) {
-          if (diffFile.getFileType().equals(FileType.JAVA)) {
-            List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
-            if (!changes.isEmpty()) {
-              // ignore files with only format/comment changes
-              javaDiffs.put(
-                  diffFile.getARelativePath().isBlank()
-                      ? diffFile.getBRelativePath()
-                      : diffFile.getARelativePath(),
-                  changes);
-            }
+    for (String commitID : commitIDs) {
+      // extract co-changing entities at 3 levels
+      Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
+
+      List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID);
+      for (DiffFile diffFile : diffFiles) {
+        if (diffFile.getFileType().equals(FileType.JAVA)) {
+          List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
+          if (!changes.isEmpty()) {
+            // ignore files with only format/comment changes
+            javaDiffs.put(
+                diffFile.getARelativePath().isBlank()
+                    ? diffFile.getBRelativePath()
+                    : diffFile.getARelativePath(),
+                changes);
           }
         }
+      }
 
-        // count number of cochange commits
-        for (var entry : javaDiffs.entrySet()) {
-          List<JavaDiff> diffs = entry.getValue();
-          String diffFilePath = entry.getKey();
-          if (!diffFilePath.isEmpty()) {
-            filesCounter.add(diffFilePath, 1);
-          }
+      // count number of cochange commits
+      for (var entry : javaDiffs.entrySet()) {
+        List<JavaDiff> diffs = entry.getValue();
+        String diffFilePath = entry.getKey();
+        if (!diffFilePath.isEmpty()) {
+          filesCounter.add(diffFilePath, 1);
           for (JavaDiff diff : diffs) {
             String diffType = diff.getType();
             if (!diffType.isEmpty()) {
-              typesCounter.add(diffType, 1);
+              typesCounter.add(Pair.of(diffFilePath, diffType), 1);
             }
 
             String diffMember = diff.getMember();
             if (!diffMember.isEmpty()) {
-              membersCounter.add(diffMember, 1);
+              membersCounter.add(Triple.of(diffFilePath, diffType, diffMember), 1);
             }
           }
         }
@@ -787,9 +811,126 @@ public class ChangeLint {
 
     // store and consume
     // compute confidence for each entity
-    List<String> freqFiles = filesCounter.mostCommon(5);
-    List<String> freqTypes = typesCounter.mostCommon(5);
-    List<String> freqMembers = membersCounter.mostCommon(5);
+    HistoricalCochange result = new HistoricalCochange();
+
+    for (String k : filesCounter.mostCommon(5)) {
+      double confidence =
+          filesCounter.get(k) >= numAllCommits ? 1.0 : (double) filesCounter.get(k) / numAllCommits;
+      result.files.put(k, MetricUtil.formatDouble(confidence));
+    }
+
+    for (Pair<String, String> k : typesCounter.mostCommon(5)) {
+      double confidence =
+          typesCounter.get(k) >= numAllCommits ? 1.0 : (double) typesCounter.get(k) / numAllCommits;
+      result.types.put(k.getRight(), MetricUtil.formatDouble(confidence));
+    }
+
+    for (Triple<String, String, String> k : membersCounter.mostCommon(5)) {
+      double confidence =
+          membersCounter.get(k) >= numAllCommits
+              ? 1.0
+              : (double) membersCounter.get(k) / numAllCommits;
+      result.members.put(k.getRight(), MetricUtil.formatDouble(confidence));
+    }
+    return result;
+  }
+
+  /** Compute evolutionary coupling entities from the past commits */
+  private static HistoricalCochange computeHistoricalCochanges(
+      Map<String, List<XMLDiff>> xmlDiffs) {
+    RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+
+    Counter<String> filesCounter = new Counter<>();
+    Counter<String> typesCounter = new Counter<>();
+    Counter<String> membersCounter = new Counter<>();
+
+    // get all commits that ever changed each xml file
+    GitService gitService = new GitServiceCGit();
+
+    Map<String, Integer> commitCounter = new HashMap<>();
+    for (String xmlFilePath : xmlDiffs.keySet()) {
+      // note that here "HEAD" is the tested commit, since we have checkout to it before
+      List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, xmlFilePath, "HEAD", 10);
+      for (String commitID : commitIDs) {
+        commitCounter.merge(commitID, 1, Integer::sum);
+      }
+    }
+
+    // get commits that modified all xml files at the same time
+    List<String> commitIDs = new ArrayList<>();
+    for (var entry : commitCounter.entrySet()) {
+      if (entry.getValue() == xmlDiffs.size()) {
+        commitIDs.add(entry.getKey());
+      }
+    }
+
+    int numAllCommits = commitIDs.size();
+    // count the number of co-change commits
+
+    for (String commitID : commitIDs) {
+      // extract co-changing entities at 3 levels
+      Map<String, List<JavaDiff>> javaDiffs = new HashMap<>();
+
+      List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID);
+      for (DiffFile diffFile : diffFiles) {
+        if (diffFile.getFileType().equals(FileType.JAVA)) {
+          List<JavaDiff> changes = JavaDiffUtil.computeJavaChanges(diffFile);
+          if (!changes.isEmpty()) {
+            // ignore files with only format/comment changes
+            javaDiffs.put(
+                diffFile.getARelativePath().isBlank()
+                    ? diffFile.getBRelativePath()
+                    : diffFile.getARelativePath(),
+                changes);
+          }
+        }
+      }
+
+      // count number of cochange commits
+      for (var entry : javaDiffs.entrySet()) {
+        List<JavaDiff> diffs = entry.getValue();
+        String diffFilePath = entry.getKey();
+        if (!diffFilePath.isEmpty()) {
+          filesCounter.add(diffFilePath, 1);
+        }
+        for (JavaDiff diff : diffs) {
+          String diffType = diff.getType();
+          if (!diffType.isEmpty()) {
+            typesCounter.add(diffType, 1);
+          }
+
+          String diffMember = diff.getMember();
+          if (!diffMember.isEmpty()) {
+            membersCounter.add(diffMember, 1);
+          }
+        }
+      }
+    }
+
+    // store and consume
+    // compute confidence for each entity
+    HistoricalCochange result = new HistoricalCochange();
+
+    for (String k : filesCounter.mostCommon(5)) {
+      double confidence =
+          filesCounter.get(k) >= numAllCommits ? 1.0 : (double) filesCounter.get(k) / numAllCommits;
+      result.files.put(k, MetricUtil.formatDouble(confidence));
+    }
+
+    for (String k : typesCounter.mostCommon(5)) {
+      double confidence =
+          typesCounter.get(k) >= numAllCommits ? 1.0 : (double) typesCounter.get(k) / numAllCommits;
+      result.types.put(k, MetricUtil.formatDouble(confidence));
+    }
+
+    for (String k : membersCounter.mostCommon(5)) {
+      double confidence =
+          membersCounter.get(k) >= numAllCommits
+              ? 1.0
+              : (double) membersCounter.get(k) / numAllCommits;
+      result.members.put(k, MetricUtil.formatDouble(confidence));
+    }
+    return result;
   }
 
   /**
