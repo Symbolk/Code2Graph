@@ -31,6 +31,9 @@ public class TreeSimilarityMetrics {
   private TreeSimilarityMetrics() {}
 
   public static double treeSimilarity(ITree src, ITree dst) {
+    if (src == null || dst == null) {
+      return 0D;
+    }
     double similarity = 0D;
     Matcher matcher = Matchers.getInstance().getMatcher(src, dst);
     matcher.match();
