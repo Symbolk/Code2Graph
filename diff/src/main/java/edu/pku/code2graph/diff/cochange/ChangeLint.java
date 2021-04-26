@@ -47,12 +47,12 @@ public class ChangeLint {
   private static final String tempDir = rootFolder + "/temp";
   private static final String outputDir = rootFolder + "/output";
 
-  List<Double> filePs = new ArrayList<>();
-  List<Double> fileRs = new ArrayList<>();
-  List<Double> typePs = new ArrayList<>();
-  List<Double> typeRs = new ArrayList<>();
-  List<Double> memberPs = new ArrayList<>();
-  List<Double> memberRs = new ArrayList<>();
+  private static List<Double> filePs = new ArrayList<>();
+  private static List<Double> fileRs = new ArrayList<>();
+  private static List<Double> typePs = new ArrayList<>();
+  private static List<Double> typeRs = new ArrayList<>();
+  private static List<Double> memberPs = new ArrayList<>();
+  private static List<Double> memberRs = new ArrayList<>();
 
   private static SortedSet<Suggestion> suggestedFiles = new TreeSet<>(new SuggestionComparator());
   private static SortedSet<Suggestion> suggestedTypes = new TreeSet<>(new SuggestionComparator());
@@ -90,9 +90,18 @@ public class ChangeLint {
     for (String dataFilePath : dataFilePaths) {
       String commitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
 
-      //      if (!commitID.equals("85d4bc814fff6dbb136ddebda41d4391743c7ebb")) {
-      //        continue;
-      //      }
+      //            if (!commitID.equals("fd4a535701417baf5945b850d9016050cd1e192b")) {
+      //              continue;
+      //            }
+
+      suggestedFiles = new TreeSet<>(new SuggestionComparator());
+      suggestedTypes = new TreeSet<>(new SuggestionComparator());
+      suggestedMembers = new TreeSet<>(new SuggestionComparator());
+      fileRs = new ArrayList<>();
+      typePs = new ArrayList<>();
+      typeRs = new ArrayList<>();
+      memberPs = new ArrayList<>();
+      memberRs = new ArrayList<>();
 
       // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
       Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
@@ -135,9 +144,10 @@ public class ChangeLint {
       //        logger.info("Computing historical cochanges...");
       //              computeHistoricalCochanges(xmlDiffs);
 
-      suggestedFiles.clear();
-      suggestedTypes.clear();
-      suggestedMembers.clear();
+      // restore to master or there will be strangle bugs
+      logger.info(
+          SysUtil.runSystemCommand(
+              repoPath, Charset.defaultCharset(), "git", "checkout", "-f", "master"));
 
       // checkout to the previous version
       logger.info(
@@ -147,7 +157,7 @@ public class ChangeLint {
               "git",
               "checkout", /* "-b","changelint", */
               "-f",
-              commitID + "^"));
+              commitID + "~"));
 
       String parentCommitID =
           SysUtil.runSystemCommand(
@@ -273,12 +283,19 @@ public class ChangeLint {
       }
       // measure accuracy by comparing with ground truth
       evaluate(commitID, javaDiffs);
-
-      // restore to master or there will be strangle bugs
-      logger.info(
-          SysUtil.runSystemCommand(
-              repoPath, Charset.defaultCharset(), "git", "checkout", "master"));
     }
+
+    System.out.println("File: ");
+    System.out.println("P=" + MetricUtil.getMean(filePs) + " & " + MetricUtil.getMedian(filePs));
+    System.out.println("R=" + MetricUtil.getMean(fileRs) + " & " + MetricUtil.getMedian(fileRs));
+    System.out.println("Type: ");
+    System.out.println("P=" + MetricUtil.getMean(typePs) + " & " + MetricUtil.getMedian(typePs));
+    System.out.println("R=" + MetricUtil.getMean(typeRs) + " & " + MetricUtil.getMedian(typeRs));
+    System.out.println("Member: ");
+    System.out.println(
+        "P=" + MetricUtil.getMean(memberPs) + " & " + MetricUtil.getMedian(memberPs));
+    System.out.println(
+        "R=" + MetricUtil.getMean(memberRs) + " & " + MetricUtil.getMedian(memberRs));
   }
 
   private static void evaluate(String commitID, Map<String, List<JavaDiff>> groundTruth)
@@ -330,9 +347,20 @@ public class ChangeLint {
 
     // separately on three levels
     System.out.println("For commit: " + commitID);
-    outputJson.put("file", compare("File level", gtAllFiles, suggestedFiles));
-    outputJson.put("type", compare("Type level", gtAllTypes, suggestedTypes));
-    outputJson.put("member", compare("Member level", gtAllMembers, suggestedMembers));
+    JSONObject fileResult = compare("File level", gtAllFiles, suggestedFiles);
+    JSONObject typeResult = compare("Type level", gtAllTypes, suggestedTypes);
+    JSONObject memberResult = compare("Member level", gtAllMembers, suggestedMembers);
+
+    filePs.add((Double) fileResult.get("precision"));
+    fileRs.add((Double) fileResult.get("recall"));
+    typePs.add((Double) typeResult.get("precision"));
+    typeRs.add((Double) typeResult.get("recall"));
+    memberPs.add((Double) memberResult.get("precision"));
+    memberRs.add((Double) memberResult.get("recall"));
+
+    outputJson.put("file", fileResult);
+    outputJson.put("type", typeResult);
+    outputJson.put("member", memberResult);
 
     try (FileWriter file = new FileWriter(outputPath, false)) {
       JSONObject.writeJSONString(outputJson, file);

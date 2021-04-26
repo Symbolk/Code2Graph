@@ -168,4 +168,36 @@ public class MetricUtil {
     }
     return formatDouble(sum / numbers.size());
   }
+
+  public static double getMean(List<Double> numList) {
+    if (numList.isEmpty()) {
+      return 0D;
+    }
+    if (numList.size() == 1) {
+      return numList.get(0);
+    }
+
+    Double average = numList.stream().mapToDouble(val -> val).average().orElse(0.0);
+    return average;
+  }
+
+  public static double getMedian(List<Double> numList) {
+    if (numList.isEmpty()) {
+      return 0D;
+    }
+    if (numList.size() == 1) {
+      return numList.get(0);
+    }
+
+    Double[] numArray = numList.toArray(new Double[0]);
+    Arrays.sort(numArray);
+    int middle = ((numArray.length) / 2);
+    if (numArray.length % 2 == 0) {
+      double medianA = numArray[middle];
+      double medianB = numArray[middle - 1];
+      return (medianA + medianB) / 2;
+    } else {
+      return numArray[middle + 1];
+    }
+  }
 }
