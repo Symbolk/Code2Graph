@@ -84,24 +84,28 @@ public class ChangeLint {
         FileUtil.listFilePaths(tempDir + File.separator + repoName, ".json");
 
     FileUtil.clearDir(outputDir + File.separator + repoName);
+    filePs = new ArrayList<>();
+    fileRs = new ArrayList<>();
+    typePs = new ArrayList<>();
+    typeRs = new ArrayList<>();
+    memberPs = new ArrayList<>();
+    memberRs = new ArrayList<>();
 
     Gson gson = new Gson();
 
     for (String dataFilePath : dataFilePaths) {
       String commitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
 
-      //            if (!commitID.equals("fd4a535701417baf5945b850d9016050cd1e192b")) {
-      //              continue;
-      //            }
+      List<String> commitList = new ArrayList<>();
+      commitList.add("50fd63e0d874c8ecf5921f511eaa91e9af3dde26");
+      commitList.add("fd4a535701417baf5945b850d9016050cd1e192b");
+      if (!commitList.contains(commitID)) {
+        continue;
+      }
 
       suggestedFiles = new TreeSet<>(new SuggestionComparator());
       suggestedTypes = new TreeSet<>(new SuggestionComparator());
       suggestedMembers = new TreeSet<>(new SuggestionComparator());
-      fileRs = new ArrayList<>();
-      typePs = new ArrayList<>();
-      typeRs = new ArrayList<>();
-      memberPs = new ArrayList<>();
-      memberRs = new ArrayList<>();
 
       // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
       Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
