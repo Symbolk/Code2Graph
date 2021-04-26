@@ -16,6 +16,7 @@ import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
+import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.util.SysUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -54,10 +55,6 @@ public class ChangeLint {
   private static List<Double> memberPs = new ArrayList<>();
   private static List<Double> memberRs = new ArrayList<>();
 
-  private static SortedSet<Suggestion> suggestedFiles = new TreeSet<>(new SuggestionComparator());
-  private static SortedSet<Suggestion> suggestedTypes = new TreeSet<>(new SuggestionComparator());
-  private static SortedSet<Suggestion> suggestedMembers = new TreeSet<>(new SuggestionComparator());
-
   static {
     initGenerators();
   }
@@ -93,6 +90,7 @@ public class ChangeLint {
 
     Gson gson = new Gson();
 
+    // one file, one commit
     for (String dataFilePath : dataFilePaths) {
       String commitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
 
@@ -103,9 +101,12 @@ public class ChangeLint {
         continue;
       }
 
-      suggestedFiles = new TreeSet<>(new SuggestionComparator());
-      suggestedTypes = new TreeSet<>(new SuggestionComparator());
-      suggestedMembers = new TreeSet<>(new SuggestionComparator());
+      SortedSet<Suggestion> suggestedFiles = new TreeSet<>(new SuggestionComparator());
+      SortedSet<Suggestion> suggestedTypes = new TreeSet<>(new SuggestionComparator());
+      SortedSet<Suggestion> suggestedMembers = new TreeSet<>(new SuggestionComparator());
+      suggestedFiles.clear();
+      suggestedTypes.clear();
+      suggestedMembers.clear();
 
       // Input: XMLDiff (file relative path: <file relative path, changed xml element type, id>)
       Map<String, List<XMLDiff>> xmlDiffs = new HashMap<>();
@@ -173,7 +174,9 @@ public class ChangeLint {
           parentCommitID);
 
       logger.info("Building graph...");
+
       //   build the graph for the current version
+      GraphUtil.clearGraph(); // !must clear the static graph caches, or the graph will keep growing!
       Graph<Node, Edge> graph = buildGraph();
 
       logger.info(
@@ -246,7 +249,6 @@ public class ChangeLint {
 
               for (Map.Entry<String, Double> cxtEntry : contextNodes.entrySet()) {
                 String siblingID = cxtEntry.getKey();
-
                 Optional<ElementNode> cxtOpt =
                     XMLNodes.stream()
                         .filter(node -> siblingID.equals(node.getQualifiedName()))
@@ -260,7 +262,7 @@ public class ChangeLint {
                     });
               }
 
-              generateSuggestion(bindingInfos);
+              generateSuggestion(bindingInfos, suggestedFiles, suggestedTypes, suggestedMembers);
             } else {
               // if not exist/added: predict co-changes according to similar nodes
               contextNodes = diff.getContextNodes();
@@ -280,13 +282,14 @@ public class ChangeLint {
                       }
                     });
               }
-              generateSuggestion(bindingInfos, contextNodes);
+              generateSuggestion(
+                  bindingInfos, contextNodes, suggestedFiles, suggestedTypes, suggestedMembers);
             }
           }
         }
       }
       // measure accuracy by comparing with ground truth
-      evaluate(commitID, javaDiffs);
+      evaluate(commitID, javaDiffs, suggestedFiles, suggestedTypes, suggestedMembers);
     }
 
     System.out.println("File: ");
@@ -302,7 +305,12 @@ public class ChangeLint {
         "R=" + MetricUtil.getMean(memberRs) + " & " + MetricUtil.getMedian(memberRs));
   }
 
-  private static void evaluate(String commitID, Map<String, List<JavaDiff>> groundTruth)
+  private static void evaluate(
+      String commitID,
+      Map<String, List<JavaDiff>> groundTruth,
+      SortedSet<Suggestion> suggestedFiles,
+      SortedSet<Suggestion> suggestedTypes,
+      SortedSet<Suggestion> suggestedMembers)
       throws IOException {
 
     // Ground Truth
@@ -467,7 +475,11 @@ public class ChangeLint {
     return b == 0 ? 0D : MetricUtil.formatDouble((double) a * 100 / b);
   }
 
-  private static void generateSuggestion(Map<String, Binding> bindingInfos) {
+  private static void generateSuggestion(
+      Map<String, Binding> bindingInfos,
+      SortedSet<Suggestion> suggestedFiles,
+      SortedSet<Suggestion> suggestedTypes,
+      SortedSet<Suggestion> suggestedMembers) {
     for (Map.Entry<String, Binding> entry : bindingInfos.entrySet()) {
       String id = entry.getKey();
       Binding binding = entry.getValue();
@@ -494,7 +506,11 @@ public class ChangeLint {
    * from recommendation system
    */
   private static void generateSuggestion(
-      Map<String, Binding> bindingInfos, Map<String, Double> contextNodes) {
+      Map<String, Binding> bindingInfos,
+      Map<String, Double> contextNodes,
+      SortedSet<Suggestion> suggestedFiles,
+      SortedSet<Suggestion> suggestedTypes,
+      SortedSet<Suggestion> suggestedMembers) {
     Map<String, Map<String, Integer>> fileLookup = new HashMap<>();
     Map<String, Map<String, Integer>> typeLookup = new HashMap<>();
     Map<String, Map<String, Integer>> memberLookup = new HashMap<>();
@@ -516,24 +532,20 @@ public class ChangeLint {
   }
 
   private static void mergeOutputEntry(Set<Suggestion> output, Suggestion suggestion) {
-    if (suggestion.getIdentifier().isEmpty() || suggestion.getIdentifier().isBlank()) {
-      output.add(suggestion);
-    } else {
-      // if exist, change confidence
-      boolean exist = false;
+    // if exist, change confidence
+    boolean exist = false;
 
-      for (Suggestion ot : output) {
-        if (ot.getEntityType().equals(suggestion.getEntityType())
-            && ot.getIdentifier().equals(suggestion.getIdentifier())) {
-          ot.setConfidence(ot.getConfidence() + suggestion.getConfidence());
-          exist = true;
-          break;
-        }
+    for (Suggestion ot : output) {
+      if (ot.getEntityType().equals(suggestion.getEntityType())
+          && ot.getIdentifier().equals(suggestion.getIdentifier())) {
+        ot.setConfidence(ot.getConfidence() + suggestion.getConfidence());
+        exist = true;
+        break;
       }
-      // else, add a new
-      if (!exist) {
-        output.add(suggestion);
-      }
+    }
+    // else, add a new
+    if (!exist) {
+      output.add(suggestion);
     }
   }
 
@@ -626,13 +638,7 @@ public class ChangeLint {
         // find wrapped member, type, and file nodes, return names
         Triple<String, String, String> entities = findWrappedEntities(graph, refNode);
         // filter incorrect references with incorrect view
-        if (scopeFilePaths.isEmpty()) {
-          binding.addRefEntities(entities);
-          //        relevantNodes.add(refNode);
-          for (ElementNode n : getIndirectNodes(graph, refNode)) {
-            counter.add(n, 1);
-          }
-        } else if (scopeFilePaths.contains(entities.getLeft())) {
+        if (scopeFilePaths.isEmpty() || scopeFilePaths.contains(entities.getLeft())) {
           binding.addRefEntities(entities);
           //        relevantNodes.add(refNode);
           for (ElementNode n : getIndirectNodes(graph, refNode)) {
@@ -641,6 +647,7 @@ public class ChangeLint {
         }
       }
     }
+
     for (ElementNode rNode : counter.mostCommon(5)) {
       Triple<String, String, String> entities = findWrappedEntities(graph, rNode);
       binding.addRefEntities(entities);
@@ -855,7 +862,7 @@ public class ChangeLint {
     // collect all xml layout files
     Set<String> xmlFilePaths =
         FileUtil.listFilePaths(repoPath, ".xml").stream()
-            .filter(path -> path.contains("layout"))
+            .filter(path -> path.contains("layout") || path.contains("menu"))
             .collect(Collectors.toSet());
 
     logger.info("XML files: " + xmlFilePaths.size());
