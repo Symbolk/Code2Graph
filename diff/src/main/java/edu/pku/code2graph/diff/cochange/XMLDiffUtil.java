@@ -90,7 +90,7 @@ public class XMLDiffUtil {
             new XMLDiff(
                 ChangeType.UPDATED,
                 fileName,
-               tag,
+                tag,
                 iTree.getLabel(),
                 findContextNodeIDs(
                     aContext.getRoot(), iTree.getParent().getParent(), tag, iTree.getLabel(), 5)));
@@ -150,9 +150,12 @@ public class XMLDiffUtil {
         double similarity =
             MetricUtil.formatDouble(
                 (MetricUtil.cosineString(getTagForTree(temp), targetTag)
+                        + MetricUtil.cosineString(targetID, tid)
                         + TreeSimilarityMetrics.treeSimilarity(temp, targetTree))
-                    / 2);
-        pq.add(Pair.of(tid, similarity));
+                    / 3);
+        if (similarity > 0D) {
+          pq.add(Pair.of(tid, similarity));
+        }
       }
       if (!temp.getChildren().isEmpty()) {
         queue.addAll(temp.getChildren());
@@ -169,8 +172,10 @@ public class XMLDiffUtil {
 
   private static String getIDForTree(ITree tree) {
     for (ITree t : tree.getChildren()) {
-      if (isIDLabel(t.getLabel())) {
-        return t.getLabel().replace("\"", "").replace("+", "");
+      if (t.getChildren().size() == 2) {
+        if (t.getChild(0).getLabel().equals("android:id") && isIDLabel(t.getChild(1).getLabel())) {
+          return t.getChild(1).getLabel().replace("\"", "").replace("+", "");
+        }
       }
     }
     return "";
