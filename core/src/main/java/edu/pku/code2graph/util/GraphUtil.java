@@ -17,12 +17,13 @@ public class GraphUtil {
   // BUT may skip or jump an id if adding node or edge failed (which means graph not changed)
   private static Integer nodeCount;
   private static Integer edgeCount;
-  private static List<Triple<Node, Type, String>> crossLangRefsPool = new ArrayList<>(); //
+  private static List<Triple<Node, Type, String>> crossLangRefsPool;
 
   static {
     graph = initGraph();
     nodeCount = 0;
     edgeCount = 0;
+    crossLangRefsPool = new ArrayList<>();
   }
 
   /**
@@ -66,6 +67,7 @@ public class GraphUtil {
     graph = initGraph();
     nodeCount = 0;
     edgeCount = 0;
+    crossLangRefsPool = new ArrayList<>();
   }
 
   public static void addCrossLangRef(Triple<Node, Type, String> ref) {
