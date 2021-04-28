@@ -71,17 +71,25 @@ public class ChangeLint {
 
   public static void main(String[] args) throws IOException {
 
+    List<String> focusList = new ArrayList<>();
+    //    focusList.add("111a0f9f171341f2c35f1c10cdddcb9dcf53f405");
+
     //    BasicConfigurator.configure();
     PropertyConfigurator.configure(
         System.getProperty("user.dir") + File.separator + "log4j.properties");
     repoName = Config.repoName;
     repoPath = rootFolder + "/repos/" + repoName;
+    RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+    GitService gitService = new GitServiceCGit();
 
-    logger.info("Processing repo: {} at {}", repoName, repoPath);
+    System.out.printf("Processing repo: %s at %s %n", repoName, repoPath);
     List<String> dataFilePaths =
         FileUtil.listFilePaths(tempDir + File.separator + repoName, ".json");
 
-    FileUtil.clearDir(outputDir + File.separator + repoName);
+    if (focusList.isEmpty()) {
+      FileUtil.clearDir(outputDir + File.separator + repoName);
+    }
+
     filePs = new ArrayList<>();
     fileRs = new ArrayList<>();
     typePs = new ArrayList<>();
@@ -95,10 +103,10 @@ public class ChangeLint {
     for (String dataFilePath : dataFilePaths) {
       String commitID = FileUtil.getFileNameFromPath(dataFilePath).replace(".json", "");
 
-      List<String> commitList = new ArrayList<>();
-      commitList.add("0028df3ee7cffcde0dcdcc575d4b76f02c58c208");
-      if (!commitList.contains(commitID)) {
-        continue;
+      if (!focusList.isEmpty()) {
+        if (!focusList.contains(commitID)) {
+          continue;
+        }
       }
 
       SortedSet<Suggestion> suggestedFiles = new TreeSet<>(new SuggestionComparator());
@@ -143,8 +151,10 @@ public class ChangeLint {
         e.printStackTrace();
       }
 
-      logger.info("XML diff files: {} for commit: {}", xmlDiffs.entrySet().size(), commitID);
-      logger.info("Java diff files: {} for commit: {}", javaDiffs.entrySet().size(), commitID);
+      System.out.printf(
+          "XML diff files: %d for commit: %s %n", xmlDiffs.entrySet().size(), commitID);
+      System.out.printf(
+          "Java diff files: %d for commit: %s %n", javaDiffs.entrySet().size(), commitID);
 
       // restore to master or there will be strangle bugs
       logger.info(
@@ -170,17 +180,16 @@ public class ChangeLint {
           SysUtil.runSystemCommand(repoPath, Charset.defaultCharset(), "git", "rev-parse", "HEAD"),
           parentCommitID);
 
-      logger.info("Building graph...");
+      System.out.println("Building graph...");
 
       //   build the graph for the current version
       GraphUtil
           .clearGraph(); // !must clear the static graph caches, or the graph will keep growing!
       Graph<Node, Edge> graph = buildGraph();
 
-      logger.info(
-          "Graph building done, nodes: {}; edges: {}",
-          graph.vertexSet().size(),
-          graph.edgeSet().size());
+      System.out.printf(
+          "Graph building done, nodes: %d; edges: %d %n",
+          graph.vertexSet().size(), graph.edgeSet().size());
 
       // 2. Online process: for each of the future commits, extract the changes as GT
 
@@ -265,7 +274,7 @@ public class ChangeLint {
 
               generateSuggestion(
                   bindingInfos,
-                  historicalCoChange,
+                  historicalCochange,
                   suggestedFiles,
                   suggestedTypes,
                   suggestedMembers);
@@ -290,7 +299,7 @@ public class ChangeLint {
               }
               generateSuggestion(
                   bindingInfos,
-                  historicalCoChange,
+                  historicalCochange,
                   contextNodes,
                   suggestedFiles,
                   suggestedTypes,
@@ -304,16 +313,14 @@ public class ChangeLint {
     }
 
     System.out.println("File: ");
-    System.out.println("P=" + MetricUtil.getMean(filePs) + " & " + MetricUtil.getMedian(filePs));
-    System.out.println("R=" + MetricUtil.getMean(fileRs) + " & " + MetricUtil.getMedian(fileRs));
+    System.out.println("P=" + MetricUtil.getMean(filePs));
+    System.out.println("R=" + MetricUtil.getMean(fileRs));
     System.out.println("Type: ");
-    System.out.println("P=" + MetricUtil.getMean(typePs) + " & " + MetricUtil.getMedian(typePs));
-    System.out.println("R=" + MetricUtil.getMean(typeRs) + " & " + MetricUtil.getMedian(typeRs));
+    System.out.println("P=" + MetricUtil.getMean(typePs));
+    System.out.println("R=" + MetricUtil.getMean(typeRs));
     System.out.println("Member: ");
-    System.out.println(
-        "P=" + MetricUtil.getMean(memberPs) + " & " + MetricUtil.getMedian(memberPs));
-    System.out.println(
-        "R=" + MetricUtil.getMean(memberRs) + " & " + MetricUtil.getMedian(memberRs));
+    System.out.println("P=" + MetricUtil.getMean(memberPs));
+    System.out.println("R=" + MetricUtil.getMean(memberRs));
   }
 
   private static void evaluate(
@@ -754,15 +761,13 @@ public class ChangeLint {
     return Triple.of(filePath, typeName, memberName);
   }
 
-  private static HistoricalCochange computeHistoricalCochanges(String path) {
-    RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+  private static HistoricalCochange computeHistoricalCochanges(
+      RepoAnalyzer repoAnalyzer, GitService gitService, String path) {
+    System.out.println("Computing historical changes for " + path);
 
     Counter<String> filesCounter = new Counter<>();
     Counter<Pair<String, String>> typesCounter = new Counter<>();
     Counter<Triple<String, String, String>> membersCounter = new Counter<>();
-
-    // get all commits that ever changed each xml file
-    GitService gitService = new GitServiceCGit();
 
     // note that here "HEAD" is the tested commit, since we have checkout to it before
     List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, path, "HEAD", 10);
@@ -837,15 +842,13 @@ public class ChangeLint {
 
   /** Compute evolutionary coupling entities from the past commits */
   private static HistoricalCochange computeHistoricalCochanges(
-      Map<String, List<XMLDiff>> xmlDiffs) {
-    RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+      RepoAnalyzer repoAnalyzer, GitService gitService, Map<String, List<XMLDiff>> xmlDiffs) {
 
     Counter<String> filesCounter = new Counter<>();
     Counter<String> typesCounter = new Counter<>();
     Counter<String> membersCounter = new Counter<>();
 
     // get all commits that ever changed each xml file
-    GitService gitService = new GitServiceCGit();
 
     Map<String, Integer> commitCounter = new HashMap<>();
     for (String xmlFilePath : xmlDiffs.keySet()) {
@@ -998,7 +1001,7 @@ public class ChangeLint {
       filePaths.addAll(entry.getValue());
     }
 
-    logger.info("Java files: " + filePaths.size());
+    System.out.println("Java files: " + filePaths.size());
 
     // collect all xml layout files
     Set<String> xmlFilePaths =
@@ -1006,7 +1009,7 @@ public class ChangeLint {
             .filter(path -> path.contains("layout") || path.contains("menu"))
             .collect(Collectors.toSet());
 
-    logger.info("XML files: " + xmlFilePaths.size());
+    System.out.println("XML files: " + xmlFilePaths.size());
 
     filePaths.addAll(xmlFilePaths);
 
