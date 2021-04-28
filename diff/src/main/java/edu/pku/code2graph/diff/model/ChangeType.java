@@ -6,7 +6,8 @@ public enum ChangeType {
   ADDED("A", "Add"),
   DELETED("D", "Delete"),
   MOVED("M", "Move"),
-  UNKNOWN("U", "Unknown");
+  UNKNOWN("U", "Unknown"),
+  NONE("N", "NONE");
 
   public String symbol;
   public String label;

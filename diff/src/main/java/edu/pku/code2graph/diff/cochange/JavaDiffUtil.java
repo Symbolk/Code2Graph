@@ -9,8 +9,11 @@ import gumtree.spoon.diff.Diff;
 import gumtree.spoon.diff.operations.Operation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtEnumValue;
 import spoon.reflect.declaration.CtTypeMember;
+import spoon.reflect.path.CtRole;
 import spoon.support.reflect.declaration.CtTypeImpl;
 
 import java.util.*;
@@ -29,6 +32,9 @@ public class JavaDiffUtil {
       // build GT: process Java changes to file/type/member
       for (Operation operation : editScript.getRootOperations()) { // or allOperations?
         Triple<ChangeType, String, String> change = extractEntityChange(operation);
+        if (change.getLeft().equals(ChangeType.NONE)) {
+          continue;
+        }
         changeTypes.add(change.getLeft());
         results.add(
             new JavaDiff(
@@ -47,12 +53,13 @@ public class JavaDiffUtil {
 
   private static boolean containsViewChanges(DiffFile diffFile) {
     String regex = "import\\s*([^;])*\\.R;";
-    for(String line : DiffUtil.convertStringToList(diffFile.getAContent())) {
-      if(line.matches(regex)) {
+    for (String line : DiffUtil.convertStringToList(diffFile.getAContent())) {
+      if (line.trim().matches(regex) || line.contains("R.")) {
         return true;
       }
-    } for(String line : DiffUtil.convertStringToList(diffFile.getBContent())) {
-      if(line.matches(regex)) {
+    }
+    for (String line : DiffUtil.convertStringToList(diffFile.getBContent())) {
+      if (line.trim().matches(regex) || line.contains("R.")) {
         return true;
       }
     }
@@ -80,6 +87,12 @@ public class JavaDiffUtil {
    */
   public static Triple<ChangeType, String, String> extractEntityChange(Operation operation) {
     CtElement element = operation.getSrcNode();
+    if (element instanceof CtLiteral
+        || element instanceof CtEnumValue
+        || isIrrelevantChange(element)) {
+      return Triple.of(ChangeType.NONE, "", "");
+    }
+
     if (element instanceof CtTypeImpl) {
       return Triple.of(
           getChangeType(operation.getAction()),
@@ -113,6 +126,19 @@ public class JavaDiffUtil {
     //    nodeType = nodeType.substring(2, nodeType.length() - 4);
   }
 
+  private static boolean isIrrelevantChange(CtElement element) {
+    CtRole role = element.getRoleInParent();
+    Set<CtRole> irrelevantRoles =
+        new HashSet<>(
+            Arrays.asList(
+                CtRole.MODIFIER,
+                CtRole.EMODIFIER,
+                CtRole.DECLARED_IMPORT,
+                CtRole.DECLARED_IMPORT,
+                CtRole.COMMENT));
+    return irrelevantRoles.contains(role);
+  }
+
   /**
    * Since Gumtree has $ in its type name
    *
@@ -121,6 +147,6 @@ public class JavaDiffUtil {
   private static String convertTypeName(String name) {
     return StringUtils.removeEnd(name, CtTypeImpl.INNERTTYPE_SEPARATOR)
         .replaceAll("\\" + CtTypeImpl.INNERTTYPE_SEPARATOR, ".")
-        .replaceAll("\\.\\d*$", "");
+        .replaceAll("[.\\d*]+$", ""); // there maybe multiple numbers at the end
   }
 }
