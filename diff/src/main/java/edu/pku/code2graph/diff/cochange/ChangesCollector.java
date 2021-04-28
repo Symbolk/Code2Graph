@@ -18,10 +18,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ChangesCollector {
 
@@ -46,11 +43,17 @@ public class ChangesCollector {
   }
 
   private static void collectChangesForRepo() throws IOException {
-    logger.info("Collecting data for repo: {} at {}", repoName, repoPath);
+
+    List<String> focusList = new ArrayList<>();
+//    focusList.add("111a0f9f171341f2c35f1c10cdddcb9dcf53f405");
+
+    System.out.printf("Collecting data for repo: %s at %s %n", repoName, repoPath);
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     // input
     String commitListFilePath = commitsListDir + File.separator + repoName + ".json";
-    FileUtil.clearDir(tempDir + File.separator + repoName);
+    if (focusList.isEmpty()) {
+      FileUtil.clearDir(tempDir + File.separator + repoName);
+    }
 
     JSONParser parser = new JSONParser();
     JSONArray commitList = new JSONArray();
@@ -63,10 +66,18 @@ public class ChangesCollector {
     // one entry, one commit
     for (JSONObject commit : (Iterable<JSONObject>) commitList) {
       String commitID = (String) commit.get("commit_id");
+      if (!focusList.isEmpty()) {
+        if (!focusList.contains(commitID)) {
+          continue;
+        }
+      }
       // output
       String outputPath = tempDir + File.separator + repoName + File.separator + commitID + ".json";
+      //      if ((new File(outputPath)).exists()) {
+      //        continue;
+      //      }
 
-      logger.info("Computing diffs for commit: {}", commitID);
+      System.out.printf("Computing diffs for commit: %s %n", commitID);
       List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commitID);
       //    DataCollector dataCollector = new DataCollector(tempDir);
       //    Pair<List<String>, List<String>> tempFilePaths = dataCollector.collect(diffFiles);
@@ -78,7 +89,8 @@ public class ChangesCollector {
 
       for (DiffFile diffFile : diffFiles) {
         if (diffFile.getFileType().equals(FileType.XML)
-            && diffFile.getARelativePath().contains("layout")) {
+                && diffFile.getARelativePath().contains("layout")
+            || diffFile.getARelativePath().contains("menu")) {
           List<XMLDiff> changes = XMLDiffUtil.computeXMLChangesWithGumtree(diffFile);
           if (!changes.isEmpty()) {
             xmlDiffs.put(diffFile.getARelativePath(), changes);
@@ -102,8 +114,10 @@ public class ChangesCollector {
         continue;
       }
 
-      logger.info("XML diff files: {} for commit: {}", xmlDiffs.entrySet().size(), commitID);
-      logger.info("Java diff files: {} for commit: {}", javaDiffs.entrySet().size(), commitID);
+      System.out.printf(
+          "XML diff files: %s for commit: %s %n", xmlDiffs.entrySet().size(), commitID);
+      System.out.printf(
+          "Java diff files: %s for commit: %s %n", javaDiffs.entrySet().size(), commitID);
 
       JSONObject outputJson = new JSONObject(new LinkedHashMap());
       JSONObject xmlDiffJson = new JSONObject(new LinkedHashMap());
