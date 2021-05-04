@@ -206,7 +206,9 @@ public class ChangeLint {
       for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
         String path = entry.getKey();
 
-        HistoricalCochange historicalCoChange = computeHistoricalCochanges(path);
+        HistoricalCochange historicalCochange =
+            computeHistoricalCochanges(repoAnalyzer, gitService, path);
+        //                HistoricalCochange historicalCochange = new HistoricalCochange();
 
         String viewID =
             "@"
@@ -438,26 +440,27 @@ public class ChangeLint {
     double precision = computeMetric(correctNum, outputNum);
     double recall = computeMetric(correctNum, groundTruthNum);
     System.out.print(message + ": " + "Precision=" + precision + " Recall=" + recall + " ");
+    System.out.println();
 
     json.put("precision", precision);
     json.put("recall", recall);
 
     // order considered: MAP
-    double averagePrecision = 0D;
-    double correctForK = 0D;
-    double recallForPreviousK = 0D;
-    for (int k = 1; k <= outputNum; k++) {
-      if (hitGroundTruth(groundTruth, suggestionList.get(k - 1))) {
-        correctForK += 1;
-      }
-      double precisionForK = correctForK / k;
-      double recallForK = correctForK / groundTruthNum;
-      averagePrecision += precisionForK * (recallForK - recallForPreviousK);
-      recallForPreviousK = recallForK;
-    }
-    averagePrecision = MetricUtil.formatDouble(averagePrecision * 100);
-    System.out.println("Average Precision=" + averagePrecision);
-    json.put("average_precision", averagePrecision);
+    //    double averagePrecision = 0D;
+    //    double correctForK = 0D;
+    //    double recallForPreviousK = 0D;
+    //    for (int k = 1; k <= outputNum; k++) {
+    //      if (hitGroundTruth(groundTruth, suggestionList.get(k - 1))) {
+    //        correctForK += 1;
+    //      }
+    //      double precisionForK = correctForK / k;
+    //      double recallForK = correctForK / groundTruthNum;
+    //      averagePrecision += precisionForK * (recallForK - recallForPreviousK);
+    //      recallForPreviousK = recallForK;
+    //    }
+    //    averagePrecision = MetricUtil.formatDouble(averagePrecision * 100);
+    //    System.out.println("Average Precision=" + averagePrecision);
+    //    json.put("average_precision", averagePrecision);
 
     return json;
   }
@@ -551,13 +554,14 @@ public class ChangeLint {
           double updatedConfidence = rowEntry.getValue() * (1 + hisEntry.getValue());
           row.put(rowEntry.getKey(), updatedConfidence);
         }
-      } else {
-        Map<String, Double> newRow = new LinkedHashMap<>();
-        for (String s : contextNodes.keySet()) {
-          newRow.put(s, hisEntry.getValue());
-        }
-        memberLookup.put(hisEntry.getKey(), newRow);
       }
+      //      } else {
+      //        Map<String, Double> newRow = new LinkedHashMap<>();
+      //        for (String s : contextNodes.keySet()) {
+      //          newRow.put(s, hisEntry.getValue());
+      //        }
+      //        memberLookup.put(hisEntry.getKey(), newRow);
+      //      }
     }
 
     mergeOutputEntry(
