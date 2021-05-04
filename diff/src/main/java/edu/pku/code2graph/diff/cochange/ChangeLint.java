@@ -43,11 +43,11 @@ import java.util.stream.Collectors;
 public class ChangeLint {
   static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
 
-  private static final String rootFolder = System.getProperty("user.home") + "/coding/changelint";
+  private static final String rootFolder = Config.rootDir;
   private static String repoName = "";
   private static String repoPath = "";
-  private static final String tempDir = rootFolder + "/temp";
-  private static final String outputDir = rootFolder + "/output";
+  private static final String tempDir = Config.tempDir;
+  private static final String outputDir = Config.outputDir;
 
   private static List<Double> filePs = new ArrayList<>();
   private static List<Double> fileRs = new ArrayList<>();

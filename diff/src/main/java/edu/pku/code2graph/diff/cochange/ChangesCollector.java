@@ -23,12 +23,11 @@ import java.util.*;
 public class ChangesCollector {
 
   static Logger logger = LoggerFactory.getLogger(ChangesCollector.class);
-  private static final String rootFolder = System.getProperty("user.home") + "/coding/changelint";
-
+  private static final String rootFolder = Config.rootDir;
   private static String repoName = "";
   private static String repoPath = "";
-  private static String commitsListDir = rootFolder + "/input2";
-  private static final String tempDir = rootFolder + "/temp";
+  private static String commitsListDir = Config.commitsListDir;
+  private static final String tempDir = Config.tempDir;
 
   public static void main(String[] args) {
     PropertyConfigurator.configure(
@@ -45,7 +44,7 @@ public class ChangesCollector {
   private static void collectChangesForRepo() throws IOException {
 
     List<String> focusList = new ArrayList<>();
-//    focusList.add("111a0f9f171341f2c35f1c10cdddcb9dcf53f405");
+    //    focusList.add("111a0f9f171341f2c35f1c10cdddcb9dcf53f405");
 
     System.out.printf("Collecting data for repo: %s at %s %n", repoName, repoPath);
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);

@@ -16,11 +16,11 @@ import java.util.List;
 import java.util.Set;
 
 public class CommitsFilter {
-  private static final String rootFolder = System.getProperty("user.home") + "/coding/changelint";
+  private static final String rootFolder = Config.rootDir;
 
   public static void main(String[] args) throws Exception {
     String commitsListFolder = rootFolder + "/cross-lang-commits/";
-    String resultsFolder = rootFolder + "/input/";
+    String resultsFolder = rootFolder + "/selected_repos/";
 
     // single repo
     String repoName = Config.repoName;
