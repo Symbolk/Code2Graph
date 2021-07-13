@@ -33,7 +33,7 @@ public class ChangesCollector {
     PropertyConfigurator.configure(
         System.getProperty("user.dir") + File.separator + "log4j.properties");
     repoName = Config.repoName;
-    repoPath = rootFolder + "/repos/" + repoName;
+    repoPath = Config.repoPath;
     try {
       collectChangesForRepo();
     } catch (IOException e) {

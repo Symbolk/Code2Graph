@@ -20,13 +20,14 @@ public class CommitsFilter {
 
   public static void main(String[] args) throws Exception {
     String commitsListFolder = rootFolder + "/cross-lang-commits/";
-    String resultsFolder = rootFolder + "/selected_repos/";
+    String resultsFolder = rootFolder + "/commits/";
 
     // single repo
     String repoName = Config.repoName;
+    String repoPath = Config.repoPath;
     filterCommits(
         repoName,
-        rootFolder + "/repos/" + repoName,
+        repoPath,
         commitsListFolder + repoName + ".json",
         resultsFolder);
 
@@ -57,8 +58,8 @@ public class CommitsFilter {
 
     for (JSONObject commit : (Iterable<JSONObject>) commitList) {
       // 1. filter merge commits
-      // 2. filter commits with no view changes
-      // 3. filter commits with only comments/format changes
+      // 2. filter pure logical commits with no view changes
+      // 3. filter decorative commits with only comments/format changes
       if (!isMergeCommit(commit) && hasViewChanges(commit)) {
         String testCommitID = (String) commit.get("commit_id");
         List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(testCommitID);

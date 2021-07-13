@@ -49,6 +49,7 @@ public class ChangeLint {
   private static final String tempDir = Config.tempDir;
   private static final String outputDir = Config.outputDir;
 
+  // precisions and recalls for each commit
   private static List<Double> filePs = new ArrayList<>();
   private static List<Double> fileRs = new ArrayList<>();
   private static List<Double> typePs = new ArrayList<>();
@@ -78,7 +79,7 @@ public class ChangeLint {
     PropertyConfigurator.configure(
         System.getProperty("user.dir") + File.separator + "log4j.properties");
     repoName = Config.repoName;
-    repoPath = rootFolder + "/repos/" + repoName;
+    repoPath = Config.repoPath;
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     GitService gitService = new GitServiceCGit();
 
