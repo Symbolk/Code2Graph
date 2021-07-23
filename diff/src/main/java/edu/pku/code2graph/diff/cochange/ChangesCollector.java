@@ -20,6 +20,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * Collect xml and java changes/diffs in each commit as the Ground Truth
+ */
 public class ChangesCollector {
 
   static Logger logger = LoggerFactory.getLogger(ChangesCollector.class);

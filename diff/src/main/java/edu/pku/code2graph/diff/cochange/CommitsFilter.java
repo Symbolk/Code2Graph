@@ -15,6 +15,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Collect test commits while filtering unwanted ones (like merge commits, decorative commits, pure
+ * logical commits, etc.)
+ */
 public class CommitsFilter {
   private static final String rootFolder = Config.rootDir;
 
@@ -25,11 +29,7 @@ public class CommitsFilter {
     // single repo
     String repoName = Config.repoName;
     String repoPath = Config.repoPath;
-    filterCommits(
-        repoName,
-        repoPath,
-        commitsListFolder + repoName + ".json",
-        resultsFolder);
+    filterCommits(repoName, repoPath, commitsListFolder + repoName + ".json", resultsFolder);
 
     // multi repos
     // read multi-lang commits full list
