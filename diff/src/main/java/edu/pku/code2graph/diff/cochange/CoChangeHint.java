@@ -40,8 +40,8 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ChangeLint {
-  static Logger logger = LoggerFactory.getLogger(ChangeLint.class);
+public class CoChangeHint {
+  static Logger logger = LoggerFactory.getLogger(CoChangeHint.class);
 
   private static final String rootFolder = Config.rootDir;
   private static String repoName = "";
@@ -207,9 +207,10 @@ public class ChangeLint {
       for (Map.Entry<String, List<XMLDiff>> entry : xmlDiffs.entrySet()) {
         String path = entry.getKey();
 
-        HistoricalCochange historicalCochange =
-            computeHistoricalCochanges(repoAnalyzer, gitService, path);
-        //                HistoricalCochange historicalCochange = new HistoricalCochange();
+        //        HistoricalCochange historicalCochange =
+        //            computeHistoricalCochanges(repoAnalyzer, gitService, path);
+        // set empty for ablation study
+        HistoricalCochange historicalCochange = new HistoricalCochange();
 
         String viewID =
             "@"
@@ -275,12 +276,7 @@ public class ChangeLint {
                     });
               }
 
-              generateSuggestion(
-                  bindingInfos,
-                  historicalCochange,
-                  suggestedFiles,
-                  suggestedTypes,
-                  suggestedMembers);
+              generateSuggestion(bindingInfos, suggestedFiles, suggestedTypes, suggestedMembers);
             } else {
               // if not exist/added: predict co-changes according to similar nodes
               contextNodes = diff.getContextNodes();
@@ -436,7 +432,6 @@ public class ChangeLint {
       }
     }
 
-    // order not considered
     // precision and recall
     double precision = computeMetric(correctNum, outputNum);
     double recall = computeMetric(correctNum, groundTruthNum);
@@ -445,24 +440,6 @@ public class ChangeLint {
 
     json.put("precision", precision);
     json.put("recall", recall);
-
-    // order considered: MAP
-    //    double averagePrecision = 0D;
-    //    double correctForK = 0D;
-    //    double recallForPreviousK = 0D;
-    //    for (int k = 1; k <= outputNum; k++) {
-    //      if (hitGroundTruth(groundTruth, suggestionList.get(k - 1))) {
-    //        correctForK += 1;
-    //      }
-    //      double precisionForK = correctForK / k;
-    //      double recallForK = correctForK / groundTruthNum;
-    //      averagePrecision += precisionForK * (recallForK - recallForPreviousK);
-    //      recallForPreviousK = recallForK;
-    //    }
-    //    averagePrecision = MetricUtil.formatDouble(averagePrecision * 100);
-    //    System.out.println("Average Precision=" + averagePrecision);
-    //    json.put("average_precision", averagePrecision);
-
     return json;
   }
 
@@ -475,7 +452,7 @@ public class ChangeLint {
    */
   private static boolean hitGroundTruth(Set<Suggestion> groundTruth, Suggestion suggestion) {
     if (suggestion.getChangeType().equals(ChangeType.ADDED)) {
-      // for added, identifier is not important and cannot be precisely predicted
+      // for added, identifier cannot be precisely predicted, but here we strictly requires it
       for (Suggestion gt : groundTruth) {
         if (gt.getIdentifier().equals(suggestion.getIdentifier())
             && gt.getEntityType().equals(suggestion.getEntityType())) {
@@ -497,9 +474,16 @@ public class ChangeLint {
     return b == 0 ? 0D : MetricUtil.formatDouble((double) a * 100 / b);
   }
 
+  /**
+   * Generate co-change suggestion for newly added code
+   *
+   * @param bindingInfos
+   * @param suggestedFiles
+   * @param suggestedTypes
+   * @param suggestedMembers
+   */
   private static void generateSuggestion(
       Map<String, Binding> bindingInfos,
-      HistoricalCochange historicalCochange,
       SortedSet<Suggestion> suggestedFiles,
       SortedSet<Suggestion> suggestedTypes,
       SortedSet<Suggestion> suggestedMembers) {
@@ -525,8 +509,14 @@ public class ChangeLint {
   }
 
   /**
-   * Evaluate and rank the co-change probability with neighborhood-based&user-based CF algorithm
-   * from recommendation system
+   * Generate co-change suggestion for modified/deleted code
+   *
+   * @param bindingInfos
+   * @param historicalCochange
+   * @param contextNodes
+   * @param suggestedFiles
+   * @param suggestedTypes
+   * @param suggestedMembers
    */
   private static void generateSuggestion(
       Map<String, Binding> bindingInfos,
@@ -597,6 +587,14 @@ public class ChangeLint {
     }
   }
 
+  /**
+   * Evaluate and rank the co-change probability with neighborhood-based&user-based CF algorithm
+   *
+   * @param entityType
+   * @param lookup
+   * @param contextNodes
+   * @return
+   */
   private static Set<Suggestion> collaborativeFilter(
       EntityType entityType,
       Map<String, Map<String, Double>> lookup,
@@ -766,6 +764,14 @@ public class ChangeLint {
     return Triple.of(filePath, typeName, memberName);
   }
 
+  /**
+   * Collect evolutionary coupling entities from previous commits that ever changed a file
+   *
+   * @param repoAnalyzer
+   * @param gitService
+   * @param path
+   * @return
+   */
   private static HistoricalCochange computeHistoricalCochanges(
       RepoAnalyzer repoAnalyzer, GitService gitService, String path) {
     System.out.println("Computing historical changes for " + path);
@@ -845,7 +851,15 @@ public class ChangeLint {
     return result;
   }
 
-  /** Compute evolutionary coupling entities from the past commits */
+  /**
+   * Collect evolutionary coupling entities from previous commits that ever changed all examined xml
+   * files
+   *
+   * @param repoAnalyzer
+   * @param gitService
+   * @param xmlDiffs
+   * @return
+   */
   private static HistoricalCochange computeHistoricalCochanges(
       RepoAnalyzer repoAnalyzer, GitService gitService, Map<String, List<XMLDiff>> xmlDiffs) {
 

@@ -4,7 +4,7 @@
 
 ## Instructions
 
-Execution order: Config --> ChangesCollector --> ChangeLint
+Execution order: Config --> ChangesCollector --> CoChangeHint
 
 ### Configuration
 
@@ -46,5 +46,5 @@ public static final String outputDir = rootDir + "/output";
 
 ### Co-change Suggestion 
 
-3. (ChangeLint.java) Run main() to invoke the co-change suggester and compare with the Ground Truth, results will be saved in the specified output folder.
+3. (CoChangeHint.java) Run main() to invoke the co-change suggester and compare with the Ground Truth, results will be saved in the specified output folder.
 

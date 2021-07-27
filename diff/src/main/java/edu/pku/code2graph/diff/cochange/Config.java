@@ -13,6 +13,6 @@ public class Config {
   public static final String tempDir = rootDir + "/changes";
 
   // output: suggested co-changes and comparison with ground truth
-  public static final String outputDir = rootDir + "/output1";
+  public static final String outputDir = rootDir + "/output";
 
 }
