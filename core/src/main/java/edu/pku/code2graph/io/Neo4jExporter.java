@@ -5,6 +5,7 @@ import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.Type;
 import org.jgrapht.Graph;
 import org.neo4j.driver.*;
+import org.neo4j.driver.Record;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
