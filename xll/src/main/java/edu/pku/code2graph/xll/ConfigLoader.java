@@ -1,6 +1,7 @@
 package edu.pku.code2graph.xll;
 
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -23,9 +24,11 @@ public class ConfigLoader {
     }
 
     if (null != inputStream) {
-      Yaml yaml = new Yaml();
-      Map<String, Object> data = yaml.load(inputStream);
-      System.out.println(data);
+//      Yaml yaml = new Yaml();
+//      Map<String, Object> config = yaml.load(inputStream);
+      Yaml yaml = new Yaml(new Constructor(Config.class));
+      Config config = yaml.load(inputStream);
+      System.out.println(config);
     } else {
       System.out.println("Error when reading file: " + path);
     }
