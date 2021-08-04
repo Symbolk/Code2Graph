@@ -1,0 +1,37 @@
+# presets can be imported from cloud or local files as the predefined XLL rules for the used framework/library
+# presets指从云端或本地导入一些针对本项目所用框架或库的内置跨语言关联规则，通常来自于专家的定义或算法的挖掘，在团队或社区内部共享
+presets:
+  - https://path/to/source/root/rule_file1.yml
+  - https://path/to/source/root/rule_file2.yml
+# word_sep defines characters that needed to be ommitted (specific to frameworks and projects)
+# word_sep定义了在跨语言代码匹配中应忽略或跳过的特殊字符（如PHP中变量前的$）
+word_sep: $@#
+# plugins are regex rules which can transform the format of identifiers, eg. camelCase -> snake_case
+# plugins定义了标识符在不同语言间形式变换的方法，如从驼峰命名变为蛇形命名
+plugins:
+  - https://path/to/source/root/transformation_rules.yml
+# rules are user-defined XLL rules as a supplement or overwritting for the presets
+# rules包括了用户自定义的、用于补充或覆盖预定义的跨语言关联规则
+rules:
+  -- def: true
+     strict: true
+     lang: Java
+     file: "*.java"
+     identifier: R.(type).(element:camel)
+     embedding:
+       lang: SQL
+       identifier: { b.x }
+
+  # annoymous/virtual parent
+  # case1, identifier "a" --> embedding:a
+  # case2, code "{int a;}"  --> embedding: lang: X, identifier: {b.x}
+
+  - '*.xml/*/@+(type)\/(element:snake)'
+  - - '*.java/*/R.(type).(element)'
+    - '*.xml/*/@+(type)\/(element)'
+  - - "*.java/*/(fileName.snake)Binding"
+    - '*/(fileName.pascal).xml'
+# types of problems that does not need to be reported
+# 可以忽略的问题类型
+suppress:
+  - warning
