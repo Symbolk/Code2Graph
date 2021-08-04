@@ -9,7 +9,7 @@ import java.util.Objects;
 public class ConfigLoader {
   public static void main(String[] args) {
     ConfigLoader loader = new ConfigLoader();
-    loader.load(Objects.requireNonNull(loader.getClass().getClassLoader().getResource("config.yaml")).getPath());
+    loader.load(Objects.requireNonNull(loader.getClass().getClassLoader().getResource("config.yml")).getPath());
   }
 
   public void load(String path) {
