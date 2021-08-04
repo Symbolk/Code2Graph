@@ -6,9 +6,10 @@ public class Edge implements Serializable {
   private static final long serialVersionUID = -8788348413604586284L;
 
   private final Integer id;
-  public Type type;
-  public Double weight;
-  //    public Boolean isMutual;
+  private final Type type;
+  private Double weight;
+  // whether bidirectional
+  private Boolean isMutual = false;
 
   public Edge(Integer id, Type type) {
     this.id = id;
@@ -21,6 +22,13 @@ public class Edge implements Serializable {
     this.weight = weight;
   }
 
+  public Edge(Integer id, Type type, Double weight, Boolean isMutual) {
+    this.id = id;
+    this.type = type;
+    this.weight = weight;
+    this.isMutual = isMutual;
+  }
+
   public Integer getId() {
     return id;
   }
@@ -31,5 +39,13 @@ public class Edge implements Serializable {
 
   public Double getWeight() {
     return weight;
+  }
+
+  public void setWeight(Double weight) {
+    this.weight = weight;
+  }
+
+  public Boolean getMutual() {
+    return isMutual;
   }
 }

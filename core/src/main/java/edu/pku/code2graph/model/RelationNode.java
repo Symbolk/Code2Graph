@@ -1,6 +1,8 @@
 package edu.pku.code2graph.model;
 
 public class RelationNode extends Node {
+  private static final long serialVersionUID = -2214180402155239327L;
+
   public String symbol;
   public Integer arity;
 

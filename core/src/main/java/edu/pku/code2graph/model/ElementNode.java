@@ -1,14 +1,31 @@
 package edu.pku.code2graph.model;
 
 public class ElementNode extends Node {
-  protected String name;
-  protected String qualifiedName;
+  private static final long serialVersionUID = -8014993858741653383L;
+
+  private String name;
+  private String qualifiedName;
+  private String URI;
 
   public ElementNode(
       Integer id, Language language, Type type, String snippet, String name, String qualifiedName) {
     super(id, language, type, snippet);
     this.name = name;
     this.qualifiedName = qualifiedName;
+  }
+
+  public ElementNode(
+      Integer id,
+      Language language,
+      Type type,
+      String snippet,
+      String name,
+      String qualifiedName,
+      String URI) {
+    super(id, language, type, snippet);
+    this.name = name;
+    this.qualifiedName = qualifiedName;
+    this.URI = URI;
   }
 
   public String getName() {
@@ -35,6 +52,14 @@ public class ElementNode extends Node {
     result = prime * result + ((type == null) ? 0 : type.hashCode());
     result = prime * result + ((qualifiedName == null) ? 0 : qualifiedName.hashCode());
     return result;
+  }
+
+  public String getURI() {
+    return URI;
+  }
+
+  public void setURI(String URI) {
+    this.URI = URI;
   }
 
   //  @Override
