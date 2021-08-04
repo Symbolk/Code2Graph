@@ -1,3 +1,5 @@
+package edu.pku.code2graph.xll;
+
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;

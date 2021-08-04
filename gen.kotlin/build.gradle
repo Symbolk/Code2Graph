@@ -13,6 +13,7 @@ repositories {
 }
 
 dependencies {
+    implementation project(':xll')
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation("com.github.kotlinx.ast:grammar-kotlin-parser-antlr-kotlin:5a03ad31d5")
 }

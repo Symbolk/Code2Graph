@@ -1,5 +1,6 @@
 description = 'Code2Graph generator for Java code (Eclipse JDT based).'
 
 dependencies {
+    implementation project(':xll')
     implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.25.0'
 }
