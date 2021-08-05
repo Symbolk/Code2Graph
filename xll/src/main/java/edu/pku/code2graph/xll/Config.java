@@ -7,17 +7,17 @@ public class Config {
   private List<String> presets;
   private String word_sep;
   private List<String> plugins;
-  // FIXME: now rules are only converted to LinkedHashMap
-  private List<List<Rule>> rules;
+  // FIXME: represent rules as objects
+  private List<?> rules;
   private List<String> suppress;
 
-    public Config() {
-      presets = new ArrayList<>();
-      word_sep = "";
-      plugins = new ArrayList<>();
-      rules = new ArrayList<>();
-      suppress = new ArrayList<>();
-    }
+  public Config() {
+    presets = new ArrayList<>();
+    word_sep = "";
+    plugins = new ArrayList<>();
+    rules = new ArrayList<>();
+    suppress = new ArrayList<>();
+  }
 
   public List<String> getPresets() {
     return presets;
@@ -31,7 +31,7 @@ public class Config {
     return plugins;
   }
 
-  public List<List<Rule>> getRules() {
+  public List<?> getRules() {
     return rules;
   }
 
@@ -51,7 +51,7 @@ public class Config {
     this.plugins = plugins;
   }
 
-  public void setRules(List<List<Rule>> rules) {
+  public void setRules(List<?> rules) {
     this.rules = rules;
   }
 
@@ -61,12 +61,18 @@ public class Config {
 
   @Override
   public String toString() {
-    return "Config{" +
-            "presets=" + presets +
-            ", word_sep='" + word_sep + '\'' +
-            ", plugins=" + plugins +
-            ", rules=" + rules +
-            ", suppress=" + suppress +
-            '}';
+    return "Config{"
+        + "presets="
+        + presets
+        + ", word_sep='"
+        + word_sep
+        + '\''
+        + ", plugins="
+        + plugins
+        + ", rules="
+        + rules
+        + ", suppress="
+        + suppress
+        + '}';
   }
 }

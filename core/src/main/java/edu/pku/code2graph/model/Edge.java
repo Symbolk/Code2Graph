@@ -8,8 +8,12 @@ public class Edge implements Serializable {
   private final Integer id;
   private final Type type;
   private Double weight;
-  // whether bidirectional
-  private Boolean isMutual = false;
+  // directed (default) or bidirectional/mutual
+  public Boolean isMutual = false;
+  // intra-lang (default) or cross-lang (XLL)
+  public Boolean isXLL = false;
+  // hierarchical (default) or semantic
+  public Boolean isSemantic = false;
 
   public Edge(Integer id, Type type) {
     this.id = id;
@@ -22,11 +26,12 @@ public class Edge implements Serializable {
     this.weight = weight;
   }
 
-  public Edge(Integer id, Type type, Double weight, Boolean isMutual) {
+  public Edge(Integer id, Type type, Double weight, Boolean isMutual, Boolean isXLL) {
     this.id = id;
     this.type = type;
     this.weight = weight;
     this.isMutual = isMutual;
+    this.isXLL = isXLL;
   }
 
   public Integer getId() {
@@ -43,9 +48,5 @@ public class Edge implements Serializable {
 
   public void setWeight(Double weight) {
     this.weight = weight;
-  }
-
-  public Boolean getMutual() {
-    return isMutual;
   }
 }

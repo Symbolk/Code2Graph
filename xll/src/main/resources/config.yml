@@ -16,7 +16,7 @@ rules:
  - - def: true
      lang: Java
      file: "*.java"
-     identifier: get(name)
+     identifier: get(name:Capitalized)
    - def: false
      lang: Java
      file: "*.java"

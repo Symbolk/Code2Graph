@@ -5,7 +5,7 @@ public class ElementNode extends Node {
 
   private String name;
   private String qualifiedName;
-  private String URI;
+  private URI uri;
 
   public ElementNode(
       Integer id, Language language, Type type, String snippet, String name, String qualifiedName) {
@@ -21,11 +21,11 @@ public class ElementNode extends Node {
       String snippet,
       String name,
       String qualifiedName,
-      String URI) {
+      URI uri) {
     super(id, language, type, snippet);
     this.name = name;
     this.qualifiedName = qualifiedName;
-    this.URI = URI;
+    this.uri = uri;
   }
 
   public String getName() {
@@ -54,15 +54,15 @@ public class ElementNode extends Node {
     return result;
   }
 
-  public String getURI() {
-    return URI;
+  public URI getUri() {
+    return uri;
   }
 
-  public void setURI(String URI) {
-    this.URI = URI;
+  public void setUri(URI uri) {
+    this.uri = uri;
   }
 
-  //  @Override
+//  @Override
   //  public boolean equals(Object o) {
   //    return (o instanceof ElementNode)
   //        && (getQualifiedName().equals(((ElementNode) o).getQualifiedName()));

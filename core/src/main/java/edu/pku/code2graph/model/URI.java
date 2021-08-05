@@ -1,19 +1,21 @@
-package edu.pku.code2graph.xll;
+package edu.pku.code2graph.model;
 
-/** Wildcard form of URI */
-public class Rule {
+/** Unified Resource Identifier for code elements */
+public class URI {
   private boolean def;
   private String lang;
   private String file;
   private String identifier;
-  private Rule inline;
+  private URI inline;
+  // concrete URI (default) or XLL pattern
+  public boolean isPattern = false;
 
-  public Rule() {
+  public URI() {
     this.def = false;
     this.lang = "";
     this.file = "";
     this.identifier = "";
-    this.inline = null;
+    this.inline = new URI();
   }
 
   public boolean isDef() {
@@ -32,7 +34,7 @@ public class Rule {
     return identifier;
   }
 
-  public Rule getInline() {
+  public URI getInline() {
     return inline;
   }
 
@@ -52,7 +54,7 @@ public class Rule {
     this.identifier = identifier;
   }
 
-  public void setInline(Rule inline) {
+  public void setInline(URI inline) {
     this.inline = inline;
   }
 
