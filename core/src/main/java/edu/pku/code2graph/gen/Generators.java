@@ -21,18 +21,20 @@
 package edu.pku.code2graph.gen;
 
 import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
+import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
-import org.jgrapht.alg.util.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -90,12 +92,13 @@ public class Generators extends Registry<String, Generator, Register> {
     Graph<Node, Edge> graph = GraphUtil.getGraph();
 
     // build cross-language edges with XLL linkers
-    for (Triple<Node, Type, String> triple : GraphUtil.getCrossLangRefsPool()) {
+    for (Map.Entry<Language, Set<URI>> entry : GraphUtil.getUriSets().entrySet()) {
       // get nodes by URI
+
       // create XLL edge
       //              graph.addEdge(
       //                  triple.getFirst(), node, new Edge(GraphUtil.eid(), triple.getSecond()))
-      System.out.println(triple);
+      System.out.println(entry);
     }
 
     //    GraphVizExporter.printAsDot(graph);

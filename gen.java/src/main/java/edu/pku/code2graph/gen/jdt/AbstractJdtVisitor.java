@@ -49,14 +49,6 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     }
   }
 
-  public void buildCrosslangLinks() {
-    for (var entry : crossLangPool) {
-      Optional<Node> src = findEntityNodeByName(entry.getFirst());
-      src.ifPresent(
-          node -> GraphUtil.addCrossLangRef(Triple.of(node, EdgeType.REFERENCE, entry.getThird())));
-    }
-  }
-
   protected Optional<Node> findEntityNodeByName(String name) {
     if (defPool.containsKey(name)) {
       return Optional.of(defPool.get(name));

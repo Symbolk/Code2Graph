@@ -810,15 +810,11 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.QUALIFIED_NAME:
         {
-          // TODO specific to Android, should be generalized
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
           if (qualifiedName.getQualifier().isQualifiedName()) {
-            if ("R"
-                .equals(((QualifiedName) qualifiedName.getQualifier()).getQualifier().toString())) {
-              GraphUtil.addCrossLangRef(
-                  Triple.of(root, EdgeType.REFERENCE, qualifiedName.getFullyQualifiedName()));
-            }
+            //            GraphUtil.addURI(Language.JAVA, new
+            // URI(qualifiedName.getFullyQualifiedName()))
           }
           //        ITypeBinding typeBinding = qualifiedName.getQualifier().resolveTypeBinding();
           //          if (typeBinding != null) {

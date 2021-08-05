@@ -78,7 +78,6 @@ public class JdtGenerator extends Generator {
         },
         null);
     visitor.buildEdges();
-    visitor.buildCrosslangLinks();
     return visitor.getGraph();
   }
 }
