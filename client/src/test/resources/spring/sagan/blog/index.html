@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html data-th-replace="~{admin/layout :: layout(~{::head/content()}, ~{::body/nav/content()}, ~{}, ~{::body/div})}">
+<head>
+    <title>Admin | Blog</title>
+</head>
+<body>
+<nav>
+    <ul>
+        <li><a data-th-href="@{/admin}">Admin</a></li>
+        <li class="is-active"><a data-th-href="@{/admin/blog}" aria-current="page">Blog</a></li>
+    </ul>
+</nav>
+<div>
+    <nav class="level">
+        <!--
+        <div class="level-left">
+            <div class="level-item">
+                <p class="subtitle is-5">
+                    <strong>123</strong> posts
+                </p>
+            </div>
+            <div class="level-item">
+                <div class="field has-addons">
+                    <p class="control">
+                        <input class="input" type="text" placeholder="Find a post">
+                    </p>
+                    <p class="control">
+                        <button class="button">
+                            Search
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </div>
+        -->
+        <div class="level-left">
+            <h2 class="title is-2">Blog Posts</h2>
+        </div>
+        <div class="level-right">
+            <!--
+            <p class="level-item"><strong>All</strong></p>
+            <p class="level-item"><a data-th-href="@{/admin/blog?state=published}">Published</a></p>
+            <p class="level-item"><a data-th-href="@{/admin/blog?state=scheduled}">Scheduled</a></p>
+            <p class="level-item"><a data-th-href="@{/admin/blog?state=draft}">Drafts</a></p>
+            -->
+            <p class="level-item"><a class="button is-success" data-th-href="@{'/admin/blog/new'}">New Post</a></p>
+        </div>
+    </nav>
+
+    <div data-th-if="${drafts.totalElements}">
+        <hr class="hr">
+        <h3 class="title is-3">Drafts</h3>
+        <table class="table is-striped is-fullwidth">
+            <thead data-th-insert="admin/blog/_posts_table::post-head"></thead>
+            <tbody>
+            <tr data-th-each="post : ${drafts}" data-th-insert="admin/blog/_posts_table::post-row">
+            </tbody>
+        </table>
+    </div>
+    <div data-th-if="${scheduled.totalElements}">
+        <hr class="hr">
+        <h3 class="title is-3">Scheduled</h3>
+        <table class="table is-striped is-fullwidth">
+            <thead data-th-insert="admin/blog/_posts_table::post-head"></thead>
+            <tbody>
+            <tr data-th-each="post : ${scheduled}" data-th-insert="admin/blog/_posts_table::post-row">
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div data-th-if="${posts.totalElements}">
+        <hr class="hr">
+        <h3 class="title is-3">Published</h3>
+        <table class="table is-striped is-fullwidth">
+            <thead data-th-insert="admin/blog/_posts_table::post-head"></thead>
+            <tbody>
+            <tr data-th-each="post : ${posts}" data-th-insert="admin/blog/_posts_table::post-row"></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav class="pagination" role="navigation" data-th-if="${paginationInfo.isVisible()}" aria-label="pagination">
+        <a class="pagination-previous" data-th-if="${paginationInfo.previousVisible}"
+           data-th-href="@{/admin/blog(page=${paginationInfo.previousPageNumber})}">Previous</a>
+        <a class="pagination-next" data-th-if="${paginationInfo.nextVisible}"
+           data-th-href="@{/admin/blog(page=${paginationInfo.nextPageNumber})}">Next page</a>
+        <ul class="pagination-list">
+            <li data-th-each="element : ${paginationInfo.pageElements }">
+                <a class="pagination-link" data-th-classappend="${element.currentPage} ? ' is-current'"
+                   data-th-href="@{/admin/blog(page=${element.label})}" data-th-text="${element.label}">1</a>
+                <span class="pagination-ellipsis" data-th-unless="${element.navigable || element.currentPage}">&hellip;</span>
+            </li>
+        </ul>
+    </nav>
+
+</div>
+</body>
+</html>
