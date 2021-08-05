@@ -15,6 +15,7 @@ import java.util.Stack;
 import static edu.pku.code2graph.model.TypeSet.type;
 
 /**
+ * Dedicated handler for view xml in Android code
  * Layout xml files are used to define the actual UI(User interface) of our application. It holds
  * all the elements(views) or the tools that we want to use in our application. Like the TextView’s,
  * Button’s and other UI elements.
