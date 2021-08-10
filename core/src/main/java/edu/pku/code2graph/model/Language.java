@@ -7,7 +7,8 @@ public enum Language {
   JAVA(".java"),
   XML(".xml"),
   SQL(".sql"),
-  HTML(".html");
+  HTML(".html"),
+  DIALECT("");
 
   private String extension;
 

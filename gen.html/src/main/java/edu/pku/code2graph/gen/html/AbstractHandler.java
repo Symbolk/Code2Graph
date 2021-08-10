@@ -3,7 +3,6 @@ package edu.pku.code2graph.gen.html;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Type;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
@@ -14,8 +13,6 @@ import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static edu.pku.code2graph.model.TypeSet.type;
 
 public class AbstractHandler {
   protected Logger logger = LoggerFactory.getLogger(DocumentHandler.class);
@@ -28,8 +25,6 @@ public class AbstractHandler {
   protected String filePath;
 
   protected Stack<ElementNode> stk = new Stack<>();
-  public static final Type CHILD = type("child");
-  public static final Type ATTR = type("attribute");
 
   public Graph<Node, Edge> getGraph() {
     return graph;

@@ -8,21 +8,14 @@ import org.jsoup.nodes.Document;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ParserTest {
-  private static List<String> filePaths = new ArrayList<>();
 
   @BeforeAll
   public static void setUpBeforeAll() {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.DEBUG);
-
-    //        filePaths.add("src/test/resources/layout.xml");
-    //        filePaths.add("src/test/resources/strings.xml");
   }
 
   @Test

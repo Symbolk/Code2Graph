@@ -7,5 +7,6 @@ include 'core',
         'diff',
         'gen.java',
         'gen.xml',
-        'gen.kotlin'
+        'gen.kotlin',
+        'gen.html'
 
