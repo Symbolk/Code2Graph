@@ -8,5 +8,6 @@ include 'core',
         'gen.java',
         'gen.xml',
         'gen.kotlin',
-        'gen.html'
+        'gen.html',
+        'gen.sql'
 

@@ -24,10 +24,6 @@ public class JsoupGenerator extends Generator {
       hdl.setFilePath(filePaths.get(i));
       hdl.generateFromDoc(docs.get(i));
     }
-    //    docs.forEach(
-    //        (doc) -> {
-    //          hdl.generateFromDoc(doc);
-    //        });
     return hdl.getGraph();
   }
 }

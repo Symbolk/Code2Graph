@@ -1,0 +1,17 @@
+plugins {
+    id 'java'
+}
+
+group 'cn.edu.pku'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':xll')
+    testImplementation 'junit:junit:4.13.2'
+
+    implementation group: 'com.github.jsqlparser', name: 'jsqlparser', version: '4.1'
+}
