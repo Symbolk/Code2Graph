@@ -24,7 +24,8 @@ public class Main {
     //    // use basic configuration when packaging
     BasicConfigurator.configure();
     //    org.apache.log4j.Logger.getRootLogger().setLevel(Level.ERROR);
-    testDiff();
+    //    testDiff();
+    testFiles();
   }
 
   private static void testDiff() {
@@ -55,11 +56,7 @@ public class Main {
         client.getRepoPath()
             + File.separator
             + "client/src/main/java/edu/pku/code2graph/client/Code2Graph.java");
-    try {
-      Graph<Node, Edge> graph = client.getGenerator().generateFromFiles(filePaths);
-      GraphVizExporter.printAsDot(graph);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    Graph<Node, Edge> graph = client.generateGraph(filePaths);
+    GraphVizExporter.printAsDot(graph);
   }
 }
