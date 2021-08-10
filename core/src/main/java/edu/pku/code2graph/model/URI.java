@@ -18,6 +18,14 @@ public class URI {
     this.inline = new URI();
   }
 
+  public URI(boolean def, String lang, String file, String identifier){
+    this.def = def;
+    this.lang = lang;
+    this.file = file;
+    this.identifier = identifier;
+  }
+
+
   public boolean isDef() {
     return def;
   }

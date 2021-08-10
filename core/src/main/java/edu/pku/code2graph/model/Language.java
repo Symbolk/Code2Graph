@@ -5,7 +5,9 @@ public enum Language {
   CPP(".cpp"),
   HPP(".h"),
   JAVA(".java"),
-  XML(".xml");
+  XML(".xml"),
+  SQL(".sql"),
+  HTML(".html");
 
   private String extension;
 
