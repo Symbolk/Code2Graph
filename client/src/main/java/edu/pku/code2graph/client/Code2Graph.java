@@ -67,8 +67,32 @@ public class Code2Graph {
     return repoPath;
   }
 
-  public Differ getDiffer() {
-    return differ;
+  /** Compare the old (A) and new (B) version graphs of the working tree */
+  public void compareGraphs() {
+    try {
+      differ.buildGraphs();
+      differ.compareGraphs();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Compare the old (A) and new (B) version graphs of a commit
+   *
+   * @param commitID
+   */
+  public void compareGraphs(String commitID) {
+    if (commitID.isEmpty()) {
+      // TODO check commit id validity
+      System.out.println("Invalid commit id: " + commitID);
+    }
+    try {
+      differ.buildGraphs(commitID);
+      differ.compareGraphs();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   /**

@@ -33,15 +33,7 @@ public class Main {
         new Code2Graph("cxf", System.getProperty("user.home") + "/coding/data/repos/cxf", tempDir);
 
     // TODO: create a root project node if necessary
-    try {
-      Differ differ = client.getDiffer();
-      // TODO hide concrete method calls for diff as one public API
-      differ.buildGraphs("ed4faad");
-      //      GraphVizExporter.copyAsDot(differ.getaGraph());
-      differ.compareGraphs();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    client.compareGraphs("ed4faad");
   }
 
   private static void testFiles() {
