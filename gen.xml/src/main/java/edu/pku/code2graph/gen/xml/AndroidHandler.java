@@ -15,10 +15,9 @@ import java.util.Stack;
 import static edu.pku.code2graph.model.TypeSet.type;
 
 /**
- * Dedicated handler for view xml in Android code
- * Layout xml files are used to define the actual UI(User interface) of our application. It holds
- * all the elements(views) or the tools that we want to use in our application. Like the TextView’s,
- * Button’s and other UI elements.
+ * Dedicated handler for view xml in Android code Layout xml files are used to define the actual
+ * UI(User interface) of our application. It holds all the elements(views) or the tools that we want
+ * to use in our application. Like the TextView’s, Button’s and other UI elements.
  */
 public class AndroidHandler extends AbstractHandler {
   private Locator locator;
@@ -71,8 +70,10 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
+    URI uri = new URI(true, "XML", filePath, null);
+
     ElementNode root =
-        new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName);
+        new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
     logger.debug("Start Parsing {}", filePath);
@@ -84,8 +85,16 @@ public class AndroidHandler extends AbstractHandler {
       throws SAXException {
     Type nType = type(qName, true);
 
+    String idtf = "";
+    String parentIdtf = stack.peek().getUri().getIdentifier();
+    if (stack.size() > 0 && parentIdtf != null) {
+      idtf = parentIdtf;
+    }
+    idtf = idtf + (idtf.isEmpty() ? "" : "/") + qName;
+    URI xllUri = new URI(true, "XML", filePath, idtf);
+
     // qname = tag/type name, name = identifier
-    ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "");
+    ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
     // TODO correctly set the start line with locator stack
     en.setRange(
         new Range(
@@ -115,6 +124,12 @@ public class AndroidHandler extends AbstractHandler {
           String resName = "@" + qName + "/" + value;
           en.setName(value);
           en.setQualifiedName(resName);
+
+          URI inline = new URI();
+          inline.setIdentifier(resName);
+          en.getUri().setDef(true);
+          en.getUri().setInline(inline);
+
           defPool.put(resName, en);
         } else if ("android:id".equals(key)) {
           // fr components
@@ -122,6 +137,12 @@ public class AndroidHandler extends AbstractHandler {
             en.setName(value);
             String identifier = value.replace("+", "");
             en.setQualifiedName(identifier);
+
+            URI inline = new URI();
+            inline.setIdentifier(identifier);
+            en.getUri().setDef(true);
+            en.getUri().setInline(inline);
+
             defPool.put(identifier, en);
           }
         } else {
