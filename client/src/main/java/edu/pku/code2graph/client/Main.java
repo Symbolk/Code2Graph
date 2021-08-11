@@ -24,7 +24,8 @@ public class Main {
     //    // use basic configuration when packaging
     BasicConfigurator.configure();
     //    org.apache.log4j.Logger.getRootLogger().setLevel(Level.ERROR);
-    testDiff();
+    //    testDiff();
+    testFiles();
   }
 
   private static void testDiff() {
@@ -32,15 +33,7 @@ public class Main {
         new Code2Graph("cxf", System.getProperty("user.home") + "/coding/data/repos/cxf", tempDir);
 
     // TODO: create a root project node if necessary
-    try {
-      Differ differ = client.getDiffer();
-      // TODO hide concrete method calls for diff as one public API
-      differ.buildGraphs("ed4faad");
-      //      GraphVizExporter.copyAsDot(differ.getaGraph());
-      differ.compareGraphs();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    client.compareGraphs("ed4faad");
   }
 
   private static void testFiles() {
@@ -55,11 +48,7 @@ public class Main {
         client.getRepoPath()
             + File.separator
             + "client/src/main/java/edu/pku/code2graph/client/Code2Graph.java");
-    try {
-      Graph<Node, Edge> graph = client.getGenerator().generateFromFiles(filePaths);
-      GraphVizExporter.printAsDot(graph);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    Graph<Node, Edge> graph = client.generateGraph(filePaths);
+    GraphVizExporter.printAsDot(graph);
   }
 }

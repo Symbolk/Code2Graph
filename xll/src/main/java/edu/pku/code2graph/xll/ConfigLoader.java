@@ -1,37 +1,32 @@
 package edu.pku.code2graph.xll;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.Objects;
+import java.util.Optional;
 
 public class ConfigLoader {
-  public static void main(String[] args) {
-    ConfigLoader loader = new ConfigLoader();
-    loader.load(
-        Objects.requireNonNull(loader.getClass().getClassLoader().getResource("config.yml"))
-            .getPath());
-  }
+  static Logger logger = LoggerFactory.getLogger(ConfigLoader.class);
 
-  public void load(String path) {
-    InputStream inputStream = null;
+  public Optional<Config> load(String path) {
     try {
-      inputStream = new FileInputStream(path);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
-    }
-
-    if (null != inputStream) {
+      InputStream inputStream = new FileInputStream(path);
       //      Yaml yaml = new Yaml();
       //      Map<String, Object> config = yaml.load(inputStream);
       Yaml yaml = new Yaml(new Constructor(Config.class));
       Config config = yaml.load(inputStream);
-      System.out.println(config);
-    } else {
-      System.out.println("Error when reading file: " + path);
+      logger.info("Successfully loaded the config from " + path);
+      return Optional.of(config);
+    } catch (FileNotFoundException e) {
+      logger.error("Error when reading file: " + path);
+      System.err.println("Error when reading file: " + path);
+      e.printStackTrace();
+      return Optional.empty();
     }
   }
 }

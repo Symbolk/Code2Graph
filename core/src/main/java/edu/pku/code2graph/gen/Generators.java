@@ -65,7 +65,7 @@ public class Generators extends Registry<String, Generator, Register> {
    * fallbacks to default generator
    *
    * @param filePaths
-   * @return
+   * @return a graph with subgraphs for each language
    * @throws UnsupportedOperationException
    * @throws IOException
    */
@@ -88,21 +88,8 @@ public class Generators extends Registry<String, Generator, Register> {
       generator.generateFrom().files(entry.getValue());
     }
 
-    // a graph with subgraphs for each language
-    Graph<Node, Edge> graph = GraphUtil.getGraph();
-
-    // build cross-language edges with XLL linkers
-    for (Map.Entry<Language, Set<URI>> entry : GraphUtil.getUriSets().entrySet()) {
-      // get nodes by URI
-
-      // create XLL edge
-      //              graph.addEdge(
-      //                  triple.getFirst(), node, new Edge(GraphUtil.eid(), triple.getSecond()))
-      System.out.println(entry);
-    }
-
     //    GraphVizExporter.printAsDot(graph);
-    return graph;
+    return  GraphUtil.getGraph();
   }
 
   public boolean has(String generator) {

@@ -2,32 +2,29 @@ package edu.pku.code2graph.model;
 
 /** Unified Resource Identifier for code elements */
 public class URI {
-  private boolean def;
+  private Protocol protocol;
   private String lang;
   private String file;
   private String identifier;
   private URI inline;
-  // concrete URI (default) or XLL pattern
-  public boolean isPattern = false;
 
   public URI() {
-    this.def = false;
+    this.protocol = Protocol.UNKNOWN;
     this.lang = "";
     this.file = "";
     this.identifier = "";
     this.inline = new URI();
   }
 
-  public URI(boolean def, String lang, String file, String identifier){
-    this.def = def;
+  public URI(Protocol protocol, String lang, String file, String identifier){
+    this.protocol = protocol;
     this.lang = lang;
     this.file = file;
     this.identifier = identifier;
   }
 
-
-  public boolean isDef() {
-    return def;
+  public Protocol getProtocol() {
+    return protocol;
   }
 
   public String getLang() {
@@ -46,8 +43,8 @@ public class URI {
     return inline;
   }
 
-  public void setDef(boolean def) {
-    this.def = def;
+  public void setProtocol(Protocol protocol) {
+    this.protocol = protocol;
   }
 
   public void setLang(String lang) {
@@ -69,8 +66,8 @@ public class URI {
   @Override
   public String toString() {
     return "Rule{"
-        + "def="
-        + def
+        + "protocol="
+        + protocol.toString()
         + ", lang='"
         + lang
         + '\''
