@@ -22,7 +22,7 @@ public class SpringHandler extends AbstractHandler {
   }
 
   private void traverseChidren(Element ele) {
-    URI uri = new URI(true, "HTML", filePath, getIdentifier(ele.tagName()));
+    URI uri = new URI(Protocol.DEF, "HTML", filePath, getIdentifier(ele.tagName()));
     ElementNode en =
         new ElementNode(
             GraphUtil.nid(),
@@ -70,9 +70,9 @@ public class SpringHandler extends AbstractHandler {
 
   public Node DialectNodeToGnode(DialectNode node, String attrName, String parentIdtf) {
     DialectNode current = node;
-    URI uri = new URI(false, "HTML", filePath, getIdentifier(attrName));
+    URI uri = new URI(Protocol.USE, "HTML", filePath, getIdentifier(attrName));
     String curIdtf = parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + current.getName();
-    URI inline = new URI(false, "DIALECT", filePath, curIdtf);
+    URI inline = new URI(Protocol.USE, "DIALECT", filePath, curIdtf);
     uri.setInline(inline);
     ElementNode en =
         new ElementNode(
