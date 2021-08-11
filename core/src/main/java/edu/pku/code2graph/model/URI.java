@@ -1,5 +1,10 @@
 package edu.pku.code2graph.model;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /** Unified Resource Identifier for code elements */
 public class URI {
   private Protocol protocol;
@@ -16,7 +21,7 @@ public class URI {
     this.inline = null;
   }
 
-  public URI(Protocol protocol, String lang, String file, String identifier){
+  public URI(Protocol protocol, String lang, String file, String identifier) {
     this.protocol = protocol;
     this.lang = lang;
     this.file = file;
@@ -78,5 +83,17 @@ public class URI {
         + identifier
         + '\''
         + '}';
+  }
+
+  private static List<String> pre =
+      Arrays.asList("\\@", "\\*", "\\(", "\\)", "\\/", "\\[", "\\]", "\\:");
+
+  public static String checkInvalidCh(String name) {
+    for (String ch : pre) {
+      Pattern p = Pattern.compile(ch);
+      Matcher m = p.matcher(name);
+      name = m.replaceAll("\\" + ch);
+    }
+    return name;
   }
 }

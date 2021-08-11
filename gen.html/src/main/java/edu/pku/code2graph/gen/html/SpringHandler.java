@@ -71,7 +71,8 @@ public class SpringHandler extends AbstractHandler {
   public Node DialectNodeToGnode(DialectNode node, String attrName, String parentIdtf) {
     DialectNode current = node;
     URI uri = new URI(Protocol.USE, "HTML", filePath, getIdentifier(attrName));
-    String curIdtf = parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + current.getName();
+    String curIdtf =
+        parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + URI.checkInvalidCh(current.getName());
     URI inline = new URI(Protocol.USE, "DIALECT", filePath, curIdtf);
     uri.setInline(inline);
     ElementNode en =

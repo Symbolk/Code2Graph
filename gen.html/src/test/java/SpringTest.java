@@ -29,7 +29,7 @@ public class SpringTest {
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.ERROR);
 
     filePaths.add("src/test/resources/simple.html");
-    //        filePaths.add("src/test/resources/strings.xml");
+    filePaths.add("src/test/resources/member.html");
   }
 
   @Test

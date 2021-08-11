@@ -90,7 +90,7 @@ public class AndroidHandler extends AbstractHandler {
     if (stack.size() > 0 && parentIdtf != null) {
       idtf = parentIdtf;
     }
-    idtf = idtf + (idtf.isEmpty() ? "" : "/") + qName;
+    idtf = idtf + (idtf.isEmpty() ? "" : "/") + URI.checkInvalidCh(qName);
     URI xllUri = new URI(Protocol.DEF, "XML", filePath, idtf);
 
     // qname = tag/type name, name = identifier
@@ -126,7 +126,7 @@ public class AndroidHandler extends AbstractHandler {
           en.setQualifiedName(resName);
 
           URI inline = new URI();
-          inline.setIdentifier(resName);
+          inline.setIdentifier(URI.checkInvalidCh(resName));
           en.getUri().setProtocol(Protocol.DEF);
           en.getUri().setInline(inline);
 
@@ -139,7 +139,7 @@ public class AndroidHandler extends AbstractHandler {
             en.setQualifiedName(identifier);
 
             URI inline = new URI();
-            inline.setIdentifier(identifier);
+            inline.setIdentifier(URI.checkInvalidCh(identifier));
             en.getUri().setProtocol(Protocol.DEF);
             en.getUri().setInline(inline);
 

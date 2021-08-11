@@ -1,6 +1,7 @@
 import edu.pku.code2graph.gen.html.DocumentHandler;
 import edu.pku.code2graph.gen.html.HtmlParser;
 import edu.pku.code2graph.io.GraphVizExporter;
+import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -31,7 +32,7 @@ public class ParserTest {
   @Test
   public void testInvalidCh() {
     DocumentHandler hdl = new DocumentHandler();
-    assertThat(hdl.checkInvalidCh("he@an/d*i:and[1]")).isEqualTo("he\\@an\\/d\\*i\\:and\\[1\\]");
+    assertThat(URI.checkInvalidCh("he@an/d*i:and[1]")).isEqualTo("he\\@an\\/d\\*i\\:and\\[1\\]");
   }
 
   @Test
