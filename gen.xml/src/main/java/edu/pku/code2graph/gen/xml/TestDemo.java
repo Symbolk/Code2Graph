@@ -75,43 +75,6 @@ public class TestDemo {
     }
   }
 
-
-  /**
-   * Categorize files naively
-   * @deprecated
-   * @param filePaths
-   * @return
-   */
-  public Map<String, List<String>> categorizeFiles(List<String> filePaths) {
-    List<String> supportedTypes = Arrays.asList("resources", "manifest", "layout");
-    Map<String, List<String>> typeToPaths = new HashMap<>();
-    supportedTypes.forEach(type -> typeToPaths.put(type, new ArrayList<>()));
-
-    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    factory.setNamespaceAware(true);
-    try {
-
-      DocumentBuilder builder = factory.newDocumentBuilder();
-      for (String filePath : filePaths) {
-        Document doc = builder.parse(filePath);
-        boolean matched = false;
-        for (String type : supportedTypes) {
-          if (checkIfNodeExists(doc, "//" + type)) {
-            typeToPaths.get(type).add(filePath);
-            matched = true;
-            break;
-          }
-        }
-        if (!matched) {
-          typeToPaths.get(supportedTypes.get(supportedTypes.size() - 1)).add(filePath);
-        }
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return typeToPaths;
-  }
-
   private boolean checkIfNodeExists(Document document, String xpathExpression) {
     boolean matched = false;
 
