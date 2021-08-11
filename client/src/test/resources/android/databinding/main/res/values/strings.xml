@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">DataBinding</string>
+
+    <string name="error_register_empty_username">User name can not be empty.</string>
+    <string name="error_register_empty_password">Password can not be empty.</string>
+    <string name="error_register_invalid_username">Name can not be less than 4 characters</string>
+    <string name="error_register_invalid_password">Password can not be less than 4 characters</string>
+    <string name="error_login_empty_password">Password can not be empty</string>
+    <string name="error_login_invalid_password">Password should be more than 5 characters</string>
+    <string name="login">Login</string>
+    <string name="enter_your_password">Enter Your Password</string>
+    <string name="enter_your_name">Enter Your Name</string>
+    <string name="successfully_logged_in">Successfully Logged-In</string>
+    <string name="reset">Reset</string>
+    <string name="empty">""</string>
+</resources>
