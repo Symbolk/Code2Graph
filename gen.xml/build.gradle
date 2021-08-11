@@ -6,6 +6,5 @@ group 'cn.edu.pku'
 version '1.0-SNAPSHOT'
 
 dependencies {
-    implementation project(':xll')
     testImplementation 'junit:junit:4.13.2'
 }
