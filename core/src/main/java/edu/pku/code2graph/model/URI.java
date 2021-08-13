@@ -61,7 +61,8 @@ public class URI {
     parseLayer(file);
     do {
       parseLayer(p.identifier);
-    } while (p.inline != null);
+      p = p.inline;
+    } while (p != null);
     return layers;
   }
 

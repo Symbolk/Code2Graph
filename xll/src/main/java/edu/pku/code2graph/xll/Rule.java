@@ -20,7 +20,7 @@ public class Rule extends ArrayList<Map<String, Object>> {
         return right = new URIPattern(get(1));
     }
 
-    public void link(List<URI> uris) throws CloneNotSupportedException {
+    public void link(List<URI> uris) {
         for (URI leftUri: uris) {
             Map<String, String> leftCaps = getLeft().match(leftUri);
             if (leftCaps == null) continue;

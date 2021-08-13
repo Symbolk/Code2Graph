@@ -5,7 +5,7 @@ import edu.pku.code2graph.xll.Rule;
 import edu.pku.code2graph.xll.Config;
 import edu.pku.code2graph.xll.ConfigLoader;
 
-import java.util.Optional;
+import java.util.*;
 
 public class LinkerTest {
     @Test
@@ -13,11 +13,14 @@ public class LinkerTest {
         Optional<Config> config = new ConfigLoader().load("src/main/resources/config.yml");
         config.ifPresent(value -> {
             Rule rule = value.getRules().get(0);
-            URI uri = new URI("def://foo/bar/baz.java//getFooBar");
-            URIPattern left = rule.getLeft();
-            System.out.println(left);
-            System.out.println(uri);
-            System.out.println(left.match(uri));
+            URI uri1 = new URI("def://foo/bar.java//getFooBar");
+            System.out.println(rule.getLeft().match(uri1));
+            URI uri2 = new URI("def://foo/baz.java//Select//#{FooBar}");
+            System.out.println(rule.getRight().match(uri2));
+            List<URI> uris = new ArrayList<>();
+            uris.add(uri1);
+            uris.add(uri2);
+            rule.link(uris);
         });
     }
 }
