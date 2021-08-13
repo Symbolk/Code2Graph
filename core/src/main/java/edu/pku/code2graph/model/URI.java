@@ -1,19 +1,27 @@
 package edu.pku.code2graph.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /** Unified Resource Identifier for code elements */
 public class URI {
-  private Protocol protocol;
-  private String lang;
-  private String file;
-  private String identifier;
-  private URI inline;
+  protected Protocol protocol;
+  protected String lang;
+  protected String file;
+  protected String identifier;
+  protected URI inline;
+  protected List<String> layers;
 
   public URI() {
     this.protocol = Protocol.UNKNOWN;
     this.lang = "";
     this.file = "";
     this.identifier = "";
-    this.inline = new URI();
+    this.layers = new ArrayList<>();
+  }
+
+  protected void parseLayer(String source) {
+    layers.add(source);
   }
 
   public Protocol getProtocol() {
@@ -30,6 +38,16 @@ public class URI {
 
   public String getIdentifier() {
     return identifier;
+  }
+
+  public List<String> getLayers() {
+    if (layers != null) return layers;
+    URI p = this;
+    parseLayer(file);
+    do {
+      parseLayer(p.identifier);
+    } while (p.inline != null);
+    return layers;
   }
 
   public URI getInline() {
@@ -58,18 +76,10 @@ public class URI {
 
   @Override
   public String toString() {
-    return "Rule{"
-        + "protocol="
-        + protocol.toString()
-        + ", lang='"
-        + lang
-        + '\''
-        + ", file='"
-        + file
-        + '\''
-        + ", identifier='"
-        + identifier
-        + '\''
-        + '}';
+    StringBuilder output = new StringBuilder(protocol.toString() + "://" + file);
+    for (String layer: getLayers()) {
+      output.append("/#").append(layer);
+    }
+    return output.toString();
   }
 }
