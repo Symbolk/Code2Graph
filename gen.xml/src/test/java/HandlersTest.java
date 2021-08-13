@@ -31,17 +31,8 @@ public class HandlersTest {
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.ERROR);
 
     filePaths.add("src/test/resources/layout.xml");
-    filePaths.add("src/test/resources/strings.xml");
+//    filePaths.add("src/test/resources/strings.xml");
 //    filePaths.add("src/test/resources/manifest.xml");
-  }
-
-  @Test
-  public void testClassifier() {
-    TestDemo demo = new TestDemo();
-    Map<String, List<String>> typeToPaths = demo.categorizeFiles(filePaths);
-    for (Map.Entry<String, List<String>> entry : typeToPaths.entrySet()) {
-      assertThat(entry.getValue().size()).isEqualTo(1);
-    }
   }
 
   @Test
