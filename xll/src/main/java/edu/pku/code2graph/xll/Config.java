@@ -8,7 +8,7 @@ public class Config {
   private String word_sep;
   private List<String> plugins;
   // FIXME: represent rules as objects
-  private List<?> rules;
+  private List<Rule> rules;
   private List<String> suppress;
 
   public Config() {
@@ -31,7 +31,7 @@ public class Config {
     return plugins;
   }
 
-  public List<?> getRules() {
+  public List<Rule> getRules() {
     return rules;
   }
 
@@ -51,7 +51,7 @@ public class Config {
     this.plugins = plugins;
   }
 
-  public void setRules(List<?> rules) {
+  public void setRules(List<Rule> rules) {
     this.rules = rules;
   }
 
