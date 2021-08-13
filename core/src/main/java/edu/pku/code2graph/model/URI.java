@@ -11,12 +11,27 @@ public class URI {
   protected String identifier;
   protected URI inline;
   protected List<String> layers;
+  protected String type = "URI";
 
   public URI() {
     this.protocol = Protocol.UNKNOWN;
     this.lang = "";
     this.file = "";
     this.identifier = "";
+  }
+
+  public URI(String source) {
+    String[] result = source.split("//");
+    this.protocol = Protocol.valueOf(result[0].substring(0, result[0].length() - 1).toUpperCase());
+    this.lang = "";
+    this.file = result[1];
+    this.identifier = result[2];
+    URI p = this;
+    for (int i = 3; i < result.length; ++i) {
+      p.inline = new URI();
+      p = p.inline;
+      p.identifier = result[i];
+    }
   }
 
   protected void parseLayer(String source) {
@@ -76,7 +91,11 @@ public class URI {
 
   @Override
   public String toString() {
-    StringBuilder output = new StringBuilder("URI <" + protocol.toString() + ":");
+    StringBuilder output = new StringBuilder();
+    output.append(type);
+    output.append(" <");
+    output.append(protocol.toString());
+    output.append(":");
     for (String layer: getLayers()) {
       output.append("//").append(layer);
     }

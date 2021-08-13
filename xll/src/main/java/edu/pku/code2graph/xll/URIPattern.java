@@ -3,15 +3,13 @@ package edu.pku.code2graph.xll;
 import edu.pku.code2graph.model.Protocol;
 import edu.pku.code2graph.model.URI;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 public class URIPattern extends URI {
     protected URIPattern inline;
+    protected String type = "Pattern";
     private final Map<String, Token> tokens = new HashMap<>();
     private final List<List<String>> layerTokens = new ArrayList<>();
 
@@ -52,7 +50,11 @@ public class URIPattern extends URI {
     private Map<String, String> matchLayer(int level, String target) {
         String source = layers.get(level);
         List<String> names = layerTokens.get(level);
-        String[] segments = Token.regexp.split(source);
+        source = "**/" + source;
+        source = source
+                .replaceAll("\\*\\*/", "(?:.+/)?")
+                .replaceAll("\\*", "\\\\w+");
+        String[] segments = Token.regexp.split(source, -1);
         source = String.join("(\\w+)", segments);
         Pattern regexp = Pattern.compile(source);
         Matcher matcher = regexp.matcher(target);
@@ -72,14 +74,14 @@ public class URIPattern extends URI {
      */
     public Map<String, String> match(URI uri) {
         // Part 1: match depth
-        int depth = layers.size();
+        int depth = getLayers().size();
         if (uri.getLayers().size() < depth) return null;
 
         // Part 2: match protocol
         String label = protocol.toString();
-        if (!label.equals("NA") && !label.equals(uri.getProtocol().toString())) return null;
+        if (!label.equals("any") && !label.equals(uri.getProtocol().toString())) return null;
 
-        // Part 3: match language
+        // Part 3: match language (TBD)
 
         // Part 4: match every layers
         Map<String, String> captures = new HashMap<>();
