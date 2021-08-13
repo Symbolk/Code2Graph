@@ -19,7 +19,7 @@ public class AbstractHandler {
   // temporarily save the current file path here
   protected String filePath;
 
-  protected Stack<ElementNode> stk = new Stack<>();
+  protected Stack<ElementNode> stack = new Stack<>();
 
   public Graph<Node, Edge> getGraph() {
     return graph;
@@ -30,11 +30,11 @@ public class AbstractHandler {
   }
 
   public String getIdentifier(String self) {
-    String idtf = "";
-    for (ElementNode node : stk) {
-      idtf = idtf + URI.checkInvalidCh(node.getName()) + "/";
+    StringBuilder idtf = new StringBuilder();
+    for (ElementNode node : stack) {
+      idtf = idtf.append(URI.checkInvalidCh(node.getName())).append("/");
     }
-    idtf = idtf + self;
-    return idtf;
+    idtf = idtf.append(self);
+    return idtf.toString();
   }
 }

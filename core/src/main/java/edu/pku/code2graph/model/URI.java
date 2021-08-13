@@ -18,7 +18,6 @@ public class URI {
     this.lang = "";
     this.file = "";
     this.identifier = "";
-    this.inline = null;
   }
 
   public URI(Protocol protocol, String lang, String file, String identifier) {

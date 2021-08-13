@@ -13,5 +13,5 @@ dependencies {
     implementation project(':xll')
     testImplementation 'junit:junit:4.13.2'
 
-    implementation group: 'com.github.jsqlparser', name: 'jsqlparser', version: '4.1'
+    implementation 'com.github.jsqlparser:jsqlparser:4.1'
 }

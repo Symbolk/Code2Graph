@@ -17,7 +17,7 @@ public class SpringHandler extends AbstractHandler {
   private StandardDialectParser dialectParser = new StandardDialectParser();
 
   public void generateFromDoc(Document doc) {
-    stk.clear();
+    stack.clear();
     traverseChidren(doc);
   }
 
@@ -37,8 +37,8 @@ public class SpringHandler extends AbstractHandler {
     logger.debug(uri.getIdentifier());
     graph.addVertex(en);
 
-    if (!stk.isEmpty()) {
-      graph.addEdge(stk.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
+    if (!stack.isEmpty()) {
+      graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
     }
 
     List<Attribute> attrs = ele.attributes().asList();
@@ -62,10 +62,10 @@ public class SpringHandler extends AbstractHandler {
           }
         });
 
-    stk.push(en);
+    stack.push(en);
     Elements children = ele.children();
     children.forEach(this::traverseChidren);
-    stk.pop();
+    stack.pop();
   }
 
   public Node DialectNodeToGnode(DialectNode node, String attrName, String parentIdtf) {

@@ -14,7 +14,7 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 public class DocumentHandler extends AbstractHandler {
   public void generateFromDoc(Document doc) {
-    stk.clear();
+    stack.clear();
     traverseChidren(doc);
   }
 
@@ -34,8 +34,8 @@ public class DocumentHandler extends AbstractHandler {
     logger.debug(uri.getIdentifier());
     graph.addVertex(en);
 
-    if (!stk.isEmpty()) {
-      graph.addEdge(stk.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
+    if (!stack.isEmpty()) {
+      graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
     }
 
     List<Attribute> attrs = ele.attributes().asList();
@@ -53,9 +53,9 @@ public class DocumentHandler extends AbstractHandler {
           graph.addEdge(en, rn, new Edge(GraphUtil.eid(), NodeType.ATTR));
         });
 
-    stk.push(en);
+    stack.push(en);
     Elements children = ele.children();
     children.forEach(this::traverseChidren);
-    stk.pop();
+    stack.pop();
   }
 }
