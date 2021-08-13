@@ -11,20 +11,21 @@ public class URIPattern extends URI {
     private final Map<String, Token> tokens = new HashMap<>();
     private final List<List<String>> layerTokens = new ArrayList<>();
 
+    {
+        type = "Pattern";
+    }
+
     public URIPattern(URIPattern pattern) {
-        this.type = "Pattern";
         this.protocol = pattern.protocol;
         this.lang = pattern.lang;
         this.file = pattern.file;
         this.identifier = pattern.identifier;
-        this.layers = new ArrayList<>(pattern.layers);
         if (pattern.inline != null) {
-            this.inline = new URIPattern((URIPattern) inline);
+            this.inline = new URIPattern((URIPattern) pattern.inline);
         }
     }
 
     public URIPattern(Map<String, Object> pattern) {
-        this.type = "Pattern";
         this.protocol = (Protocol) pattern.getOrDefault("protocol", Protocol.UNKNOWN);
         this.lang = (String) pattern.get("lang");
         this.file = (String) pattern.get("file");
@@ -79,9 +80,6 @@ public class URIPattern extends URI {
      * @return captures
      */
     public Map<String, String> match(URI uri) {
-        System.out.println(this);
-        System.out.println(uri);
-
         // Part 1: match depth
         int depth = getLayers().size();
         if (uri.getLayers().size() < depth) return null;
@@ -116,8 +114,8 @@ public class URIPattern extends URI {
         for (String name: captures.keySet()) {
             Token token = tokens.get(name);
             if (token != null) {
-                String source = pattern.layers.get(token.level);
-                pattern.layers.set(token.level, token.replace(source, captures.get(name)));
+                String source = pattern.getLayers().get(token.level);
+                pattern.getLayers().set(token.level, token.replace(source, captures.get(name)));
                 pattern.tokens.remove(name);
                 pattern.layerTokens.get(token.level).remove(name);
             }

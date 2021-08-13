@@ -20,7 +20,8 @@ public class Rule extends ArrayList<Map<String, Object>> {
         return right = new URIPattern(get(1));
     }
 
-    public void link(List<URI> uris) {
+    public int link(List<URI> uris) {
+        int count = 0;
         for (URI leftUri: uris) {
             Map<String, String> leftCaps = getLeft().match(leftUri);
             if (leftCaps == null) continue;
@@ -28,9 +29,10 @@ public class Rule extends ArrayList<Map<String, Object>> {
             for (URI rightUri: uris) {
                 Map<String, String> rightCaps = pattern.match(rightUri);
                 if (rightCaps == null) continue;
-                System.out.println(leftUri);
-                System.out.println(rightUri);
+                count += 1;
+                System.out.println(leftUri + " ~ " + rightUri);
             }
         }
+        return count;
     }
 }
