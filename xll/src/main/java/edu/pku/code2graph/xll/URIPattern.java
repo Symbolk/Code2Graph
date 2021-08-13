@@ -26,6 +26,16 @@ public class URIPattern extends URI {
         }
     }
 
+    public URIPattern(Map<String, Object> pattern) {
+        this.protocol = (Protocol) pattern.getOrDefault("protocol", Protocol.UNKNOWN);
+        this.lang = (String) pattern.get("lang");
+        this.file = (String) pattern.get("file");
+        this.identifier = (String) pattern.get("identifier");
+        if (pattern.get("inline") != null) {
+            this.inline = new URIPattern((Map<String, Object>) pattern.get("inline"));
+        }
+    }
+
     @Override
     protected void parseLayer(String source) {
         List<String> layer = new ArrayList<>();

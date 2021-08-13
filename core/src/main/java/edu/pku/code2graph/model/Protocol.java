@@ -3,7 +3,7 @@ package edu.pku.code2graph.model;
 public enum Protocol {
   DEF("def"),
   USE("use"),
-  UNKNOWN("NA");
+  UNKNOWN("any");
 
   private final String label;
 

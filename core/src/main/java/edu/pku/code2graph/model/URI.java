@@ -17,7 +17,6 @@ public class URI {
     this.lang = "";
     this.file = "";
     this.identifier = "";
-    this.layers = new ArrayList<>();
   }
 
   protected void parseLayer(String source) {
@@ -42,6 +41,7 @@ public class URI {
 
   public List<String> getLayers() {
     if (layers != null) return layers;
+    layers = new ArrayList<>();
     URI p = this;
     parseLayer(file);
     do {
@@ -76,10 +76,10 @@ public class URI {
 
   @Override
   public String toString() {
-    StringBuilder output = new StringBuilder(protocol.toString() + "://" + file);
+    StringBuilder output = new StringBuilder("URI <" + protocol.toString() + ":");
     for (String layer: getLayers()) {
-      output.append("/#").append(layer);
+      output.append("//").append(layer);
     }
-    return output.toString();
+    return output.append(">").toString();
   }
 }

@@ -6,20 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Rule extends ArrayList<URIPattern> {
-    public URIPattern left() {
-        return get(0);
+public class Rule extends ArrayList<Map<String, Object>> {
+    private URIPattern left;
+    private URIPattern right;
+
+    public URIPattern getLeft() {
+        if (left != null) return left;
+        return left = new URIPattern(get(0));
     }
 
-    public URIPattern right() {
-        return get(1);
+    public URIPattern getRight() {
+        if (right != null) return right;
+        return right = new URIPattern(get(1));
     }
 
     public void link(List<URI> uris) throws CloneNotSupportedException {
         for (URI leftUri: uris) {
-            Map<String, String> leftCaps = left().match(leftUri);
+            Map<String, String> leftCaps = getLeft().match(leftUri);
             if (leftCaps == null) continue;
-            URIPattern pattern = right().applyCaptures(leftCaps);
+            URIPattern pattern = getRight().applyCaptures(leftCaps);
             for (URI rightUri: uris) {
                 Map<String, String> rightCaps = pattern.match(rightUri);
                 if (rightCaps == null) continue;
