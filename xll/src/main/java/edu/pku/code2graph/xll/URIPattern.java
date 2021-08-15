@@ -27,9 +27,9 @@ public class URIPattern extends URI {
 
   public URIPattern(Map<String, Object> pattern) {
     this.protocol = (Protocol) pattern.getOrDefault("protocol", Protocol.UNKNOWN);
-    this.lang = (String) pattern.get("lang");
-    this.file = (String) pattern.get("file");
-    this.identifier = (String) pattern.get("identifier");
+    this.lang = (String) pattern.getOrDefault("lang", "");
+    this.file = (String) pattern.getOrDefault("file", "");
+    this.identifier = (String) pattern.getOrDefault("identifier", "");
     if (pattern.get("inline") != null) {
       this.inline = new URIPattern((Map<String, Object>) pattern.get("inline"));
     }
