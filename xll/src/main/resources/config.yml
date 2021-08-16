@@ -26,11 +26,11 @@ rules:
  - - def: true
      lang: Java
      file: "*.java"
-     identifier: get(name)
+     identifier: R.layout.(name)
    - def: false
-     lang: Java
-     file: "*.java"
-     identifier: "#{(name)}"
+     lang: Xml
+     file: "*.xml"
+     identifier: "@+id/(name)"
 # types of problems that does not need to be reported
 # 可以忽略的问题类型
 suppress:
