@@ -5,7 +5,7 @@ import java.util.Arrays;
 public enum Protocol {
   DEF("def"),
   USE("use"),
-  UNKNOWN("any");
+  ANY("any");
 
   private final String label;
 
@@ -19,8 +19,8 @@ public enum Protocol {
   }
 
   /**
-   * Get enum constant from label
-   * Corresponding to Enum.valueOf(name)
+   * Get enum constant from label, corresponding to Enum.valueOf(name)
+   *
    * @param s
    * @return
    */
@@ -28,6 +28,6 @@ public enum Protocol {
     return Arrays.stream(Protocol.values())
         .filter(p -> p.label.equals(s))
         .findFirst()
-        .orElse(Protocol.UNKNOWN);
+        .orElse(Protocol.ANY);
   }
 }

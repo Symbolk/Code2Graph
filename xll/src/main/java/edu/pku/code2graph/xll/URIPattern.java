@@ -1,5 +1,6 @@
 package edu.pku.code2graph.xll;
 
+import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Protocol;
 import edu.pku.code2graph.model.URI;
 
@@ -31,7 +32,7 @@ public class URIPattern extends URI {
   public URIPattern(Map<String, Object> pattern) {
     this.protocol =
         Protocol.valueOfLabel(pattern.getOrDefault("protocol", "any").toString().toLowerCase());
-    this.lang = (String) pattern.getOrDefault("lang", "");
+    this.lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
     this.file = (String) pattern.getOrDefault("file", "");
     this.identifier = (String) pattern.getOrDefault("identifier", "");
     if (pattern.get("inline") != null) {
