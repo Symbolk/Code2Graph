@@ -4,9 +4,7 @@ import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.XLLDetector;
 import org.apache.commons.lang3.tuple.Pair;
@@ -15,7 +13,9 @@ import org.jgrapht.Graph;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Java API client */
 public class Code2Graph {
@@ -117,15 +117,17 @@ public class Code2Graph {
       // construct graph with intra-language nodes and edges
       Graph<Node, Edge> graph = generator.generateFromFiles(filePaths);
       // build cross-language linking (XLL) edges
-      List<Pair<URI, URI>> links = XLLDetector.detect(GraphUtil.getUriSets());
+      List<Pair<URI, URI>> links = XLLDetector.detect(GraphUtil.getUriMap());
+      // create uri-element map when create node
+      Map<Language, Map<URI, ElementNode>> uriMap = GraphUtil.getUriMap();
 
       for (Pair<URI, URI> link : links) {
         System.out.println(link);
         // get nodes by URI
+       // Node source = uriMap.get(link.getLeft().getLang()).get(link.getLeft())
 
         // create XLL edge
-        //              graph.addEdge(
-        //                  triple.getFirst(), node, new Edge(GraphUtil.eid(), triple.getSecond()))
+        //              graph.addEdge(source, target, new Edge(GraphUtil.eid(), type, weight, false, true))
       }
 
     } catch (IOException e) {
