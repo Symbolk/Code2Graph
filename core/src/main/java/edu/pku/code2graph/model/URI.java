@@ -1,5 +1,7 @@
 package edu.pku.code2graph.model;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,8 +24,9 @@ public class URI {
 
   public URI(String source) {
     String[] result = source.split("//");
-    this.protocol = Protocol.valueOf(result[0].substring(0, result[0].length() - 1).toUpperCase());
-    this.lang = Language.ANY;
+    this.protocol =
+        Protocol.valueOfLabel(result[0].substring(0, result[0].length() - 1).toLowerCase());
+    this.lang = Language.valueOfLabel(FilenameUtils.getExtension(result[1]).toLowerCase());
     this.file = result[1];
     this.identifier = result[2];
     URI p = this;
