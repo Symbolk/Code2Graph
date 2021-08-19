@@ -1,13 +1,14 @@
 package edu.pku.code2graph.client;
 
 import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.Graph;
 
-import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class Evaluation {
@@ -18,16 +19,15 @@ public class Evaluation {
     String repoPath = "";
 
     Code2Graph client = new Code2Graph(repoName, repoPath);
+    client.setSupportedLanguages(
+        new HashSet(Arrays.asList(Language.JAVA, Language.HTML, Language.XML)));
     testRename(client);
   }
 
   private static void testRename(Code2Graph client) {
-    List<String> filePaths = new ArrayList<>();
-    filePaths.add(
-        client.getRepoPath()
-            + File.separator
-            + "client/src/main/java/edu/pku/code2graph/client/Code2Graph.java");
-    Graph<Node, Edge> graph = client.generateGraph(filePaths);
+    Graph<Node, Edge> graph = client.generateGraph();
+    System.out.println(graph.vertexSet().size());
+    System.out.println(graph.edgeSet().size());
 
     List<Pair<URI, URI>> xllLinks = client.getXllLinks();
 

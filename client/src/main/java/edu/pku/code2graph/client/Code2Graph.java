@@ -6,6 +6,7 @@ import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.XLLDetector;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,6 +24,7 @@ public class Code2Graph {
   private final String repoName;
   private final String repoPath;
   private String tempDir;
+
   private Graph<Node, Edge> graph;
   private List<Pair<URI, URI>> xllLinks;
 
@@ -31,13 +33,28 @@ public class Code2Graph {
   private Differ differ;
 
   // options
+  private Set<Language> supportedLanguages;
   private boolean involveImported = false; // consider files imported by diff files or not
   private boolean limitToSource = true; // limit the node inside collected source files or not
+
+  static {
+    initGenerators();
+  }
+
+  public static void initGenerators() {
+    ClassIndex.getSubclasses(Generator.class)
+        .forEach(
+            gen -> {
+              Register a = gen.getAnnotation(Register.class);
+              if (a != null) Generators.getInstance().install(gen, a);
+            });
+  }
 
   {
     this.generator = Generators.getInstance();
     this.graph = GraphUtil.initGraph();
     this.xllLinks = new ArrayList<>();
+    this.supportedLanguages = new HashSet<>();
   }
 
   public Code2Graph(String repoName, String repoPath) {
@@ -52,17 +69,12 @@ public class Code2Graph {
     this.differ = new Differ(repoName, repoPath, tempDir);
   }
 
-  static {
-    initGenerators();
+  public void setSupportedLanguages(Set<Language> supportedLanguages) {
+    this.supportedLanguages = supportedLanguages;
   }
 
-  public static void initGenerators() {
-    ClassIndex.getSubclasses(Generator.class)
-        .forEach(
-            gen -> {
-              Register a = gen.getAnnotation(Register.class);
-              if (a != null) Generators.getInstance().install(gen, a);
-            });
+  public Set<Language> getSupportedLanguages() {
+    return supportedLanguages;
   }
 
   public String getRepoName() {
@@ -116,7 +128,9 @@ public class Code2Graph {
    */
   public Graph<Node, Edge> generateGraph() {
     // collect the path list of source files in supported languages
-    return generateGraph(new ArrayList<>());
+    Map<String, List<String>> ext2FilePaths =
+        FileUtil.listFilePathsInLanguages(this.repoPath, this.supportedLanguages);
+    return generateGraph(ext2FilePaths);
   }
 
   /**
@@ -127,7 +141,9 @@ public class Code2Graph {
    */
   public Graph<Node, Edge> generateGraph(String directory) {
     // collect the path list of source files in supported languages
-    return generateGraph(new ArrayList<>());
+    Map<String, List<String>> ext2FilePaths =
+        FileUtil.listFilePathsInLanguages(directory, this.supportedLanguages);
+    return generateGraph(ext2FilePaths);
   }
 
   /**
@@ -137,9 +153,25 @@ public class Code2Graph {
    * @return
    */
   public Graph<Node, Edge> generateGraph(List<String> filePaths) {
+    if (filePaths.isEmpty()) {
+      throw new UnsupportedOperationException("The given file paths are empty");
+    } else {
+      // a map from generator to file paths
+      Map<String, List<String>> filesMap = FileUtil.categorizeFilesByExtension(filePaths);
+      return generateGraph(filesMap);
+    }
+  }
+
+  /**
+   * Construct graph from a map from extension to a list of file paths
+   *
+   * @param ext2FilePaths
+   * @return
+   */
+  public Graph<Node, Edge> generateGraph(Map<String, List<String>> ext2FilePaths) {
     try {
       // construct graph with intra-language nodes and edges
-      Graph<Node, Edge> graph = generator.generateFromFiles(filePaths);
+      Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
       // build cross-language linking (XLL) edges
       List<Pair<URI, URI>> links = XLLDetector.detect(GraphUtil.getUriMap());
       // create uri-element map when create node

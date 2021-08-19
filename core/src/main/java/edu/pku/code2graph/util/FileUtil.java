@@ -1,5 +1,6 @@
 package edu.pku.code2graph.util;
 
+import edu.pku.code2graph.model.Language;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
@@ -8,10 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -185,12 +183,9 @@ public class FileUtil {
     for (String path : filePaths) {
       String extension = FilenameUtils.getExtension(path);
       if (!result.containsKey(extension)) {
-        List<String> temp = new ArrayList<>();
-        temp.add(path);
-        result.put(extension, temp);
-      } else {
-        result.get(extension).add(path);
+        result.put(extension, new ArrayList<>());
       }
+      result.get(extension).add(path);
     }
     return result;
   }
@@ -210,10 +205,47 @@ public class FileUtil {
         result =
             walk.filter(Files::isRegularFile)
                 .map(Path::toString)
-                .filter(f -> f.endsWith(extension))
+                .filter(path -> path.endsWith(extension))
                 //              .map(s -> s.substring(dir.length()))
                 .collect(Collectors.toList());
       }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return result;
+  }
+
+  /**
+   * List { extension : [filePath] } under a folder/directory
+   *
+   * @param dir
+   * @param languages
+   * @return
+   */
+  public static Map<String, List<String>> listFilePathsInLanguages(
+      String dir, Set<Language> languages) {
+    if (languages.isEmpty()) {
+      return new HashMap<>();
+    }
+    Map<String, List<String>> result = new LinkedHashMap<>();
+
+    Set<String> extensions =
+        languages.stream()
+            .map(language -> language.extension.replace(".", ""))
+            .collect(Collectors.toSet());
+    try (Stream<Path> walk = Files.walk(Paths.get(dir))) {
+      walk.filter(Files::isRegularFile)
+          .map(Path::toString)
+          .forEach(
+              path -> {
+                String ext = FilenameUtils.getExtension(path);
+                if (extensions.contains(ext)) {
+                  if (!result.containsKey(ext)) {
+                    result.put(ext, new ArrayList<>());
+                  }
+                  result.get(ext).add(path);
+                }
+              });
     } catch (IOException e) {
       e.printStackTrace();
     }
