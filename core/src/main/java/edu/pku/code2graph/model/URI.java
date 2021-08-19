@@ -25,7 +25,7 @@ public class URI {
     this.identifier = "";
   }
 
-  public URI(Protocol protocol, String lang, String file, String identifier) {
+  public URI(Protocol protocol, Language lang, String file, String identifier) {
     this.protocol = protocol;
     this.lang = lang;
     this.file = file;

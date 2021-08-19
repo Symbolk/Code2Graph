@@ -70,7 +70,7 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
-    URI uri = new URI(Protocol.DEF, "XML", filePath, null);
+    URI uri = new URI(Protocol.DEF, Language.XML, filePath, null);
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
@@ -91,7 +91,7 @@ public class AndroidHandler extends AbstractHandler {
       idtf = parentIdtf;
     }
     idtf = idtf + (idtf.isEmpty() ? "" : "/") + URI.checkInvalidCh(qName);
-    URI xllUri = new URI(Protocol.DEF, "XML", filePath, idtf);
+    URI xllUri = new URI(Protocol.DEF, Language.XML, filePath, idtf);
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
