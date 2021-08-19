@@ -3,25 +3,35 @@ package edu.pku.code2graph.gen.sql;
 import edu.pku.code2graph.gen.sql.model.NodeType;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
+import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.parser.SimpleNode;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.Block;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.Statements;
+import net.sf.jsqlparser.statement.alter.Alter;
+import net.sf.jsqlparser.statement.alter.AlterExpression;
+import net.sf.jsqlparser.statement.create.index.CreateIndex;
+import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.create.view.AlterView;
+import net.sf.jsqlparser.statement.create.view.CreateView;
+import net.sf.jsqlparser.statement.delete.Delete;
+import net.sf.jsqlparser.statement.drop.Drop;
 import net.sf.jsqlparser.statement.insert.Insert;
-import net.sf.jsqlparser.statement.select.AllTableColumns;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.SubSelect;
+import net.sf.jsqlparser.statement.merge.Merge;
+import net.sf.jsqlparser.statement.replace.Replace;
+import net.sf.jsqlparser.statement.select.*;
+import net.sf.jsqlparser.statement.truncate.Truncate;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.util.TablesNamesFinder;
+import net.sf.jsqlparser.util.deparser.ExpressionDeParser;
+import net.sf.jsqlparser.util.deparser.SelectDeParser;
 import net.sf.jsqlparser.util.deparser.StatementDeParser;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static edu.pku.code2graph.model.TypeSet.type;
@@ -34,152 +44,493 @@ public class StatementHandler {
   // temporarily save the current file path here
   protected String filePath;
 
-  protected Statement current = null;
-
   public void generateFrom(Statements stmts) {
-    List<Statement> listOfStmt = stmts.getStatements();
-    listOfStmt.forEach(
-        (stmt) -> {
-          current = stmt;
-          clearForNextStatement();
-          tablesNamesFinder.getTableList(stmt);
-          //          stmt.accept(deParser);
-        });
+    //    stmts.accept(deParser);
+    tablesNamesFinder.visit(stmts);
   }
 
   //  private Stack<Tuple2<Statement, SimpleNode>> rootNode;
   private SimpleNode parentNode = null;
   private Map<SimpleNode, Node> nodePool = new HashMap<>();
+  private Map<Node, String> identifierMap = new HashMap<>();
   private Map<Statement, Node> rootNodePool = new HashMap<>();
+
+  private boolean inClause = false;
+  private Node clauseNode = null;
 
   public static final Type CHILD = type("child");
 
   private TablesNamesFinder tablesNamesFinder =
       new TablesNamesFinder() {
         @Override
-        public void visit(SubSelect subSelect) {
-          logger.debug("subselect " + subSelect.toString());
-          super.visit(subSelect);
-        }
-
-        @Override
-        public void visit(PlainSelect el) {
-          logger.debug("plainselect " + el.toString());
-          Type nodeType = NodeType.PlainSelect;
-          SimpleNode snode = el.getASTNode();
-          RelationNode rn =
-              new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, el.toString(), "SELECT");
-          rn.setRange(getRange(snode));
-          graph.addVertex(rn);
-          nodePool.put(snode, rn);
-          findParentEdge(snode, rn);
-          super.visit(el);
-        }
-
-        @Override
-        public void visit(Update el) {
-          logger.debug("update " + el.toString());
-          Type nodeType = NodeType.Update;
-          RelationNode rn =
-              new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, el.toString(), "UPDATE");
-          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
-          while (recur.jjtGetParent() != null) {
-            recur = (SimpleNode) recur.jjtGetParent();
-          }
-          rn.setRange(getRange(recur));
-          graph.addVertex(rn);
-          rootNodePool.put(el, rn);
-          super.visit(el);
-        }
-
-        @Override
-        public void visit(Insert el) {
-          logger.debug("insert " + el.toString());
-          Type nodeType = NodeType.Insert;
-          RelationNode rn =
-              new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, el.toString(), "INSERT");
-          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
-          while (recur.jjtGetParent() != null) {
-            recur = (SimpleNode) recur.jjtGetParent();
-          }
-          rn.setRange(getRange(recur));
-          graph.addVertex(rn);
-          rootNodePool.put(el, rn);
-          super.visit(el);
-        }
-
-        @Override
         public void visit(Column el) {
-          logger.debug("column " + el.toString());
-          Type nodeType = NodeType.Column;
-          ElementNode en =
-              new ElementNode(
-                  GraphUtil.nid(),
-                  Language.SQL,
-                  nodeType,
-                  el.toString(),
-                  el.getColumnName(),
-                  el.getFullyQualifiedName());
           SimpleNode snode = el.getASTNode();
-          en.setRange(getRange(snode));
-          graph.addVertex(en);
-          nodePool.put(snode, en);
-          findParentEdge(snode, en);
+          addElementNode(
+              el.toString(),
+              NodeType.Column,
+              el.getColumnName(),
+              el.getFullyQualifiedName(),
+              snode);
           super.visit(el);
         }
 
         @Override
         public void visit(Table el) {
-          logger.debug("table " + el.toString());
-          Type nodeType = NodeType.Table;
-          ElementNode en =
-              new ElementNode(
-                  GraphUtil.nid(),
-                  Language.SQL,
-                  nodeType,
-                  el.toString(),
-                  el.getName(),
-                  el.getFullyQualifiedName());
           SimpleNode snode = el.getASTNode();
-          en.setRange(getRange(snode));
-          graph.addVertex(en);
-          nodePool.put(snode, en);
-          findParentEdge(snode, en);
+          addElementNode(
+              el.toString(), NodeType.Table, el.getName(), el.getFullyQualifiedName(), snode);
+        }
+
+        @Override
+        public void visit(Statements stmts) {
+          stmts
+              .getStatements()
+              .forEach(
+                  stmt -> {
+                    clearForNextStatement();
+                    stmt.accept(this);
+                  });
+        }
+
+        @Override
+        public void visit(CreateIndex el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.CreateIndex, "CreateIndex", recur);
+          el.accept(deParser);
+        }
+
+        @Override
+        public void visit(CreateTable el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.CreateTable, "CreateTable", recur);
           super.visit(el);
         }
 
-        //        @Override
-        //        public void visit(AllTableColumns el){
-        //          logger.debug("btw:", el.toString());
-        //          super.visit(el);
-        //        }
-      };
-
-  private StatementDeParser deParser =
-      new StatementDeParser(new StringBuilder()) {
         @Override
-        public void visit(Block subSelect) {
-          logger.debug("stmt " + subSelect.toString());
-          super.visit(subSelect);
+        public void visit(CreateView el) {
+          el.accept(deParser);
+        }
+
+        @Override
+        public void visit(AlterView el) {
+          SimpleNode recur = (SimpleNode) el.getView().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.AlterView, "AlterView", recur);
+          visit(el.getView());
+          el.accept(deParser);
+        }
+
+        @Override
+        public void visit(Delete el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.Delete, "Delete", recur);
+          visit(el.getTable());
+
+          if (el.getUsingList() != null) {
+            for (Table using : el.getUsingList()) {
+              visit(using);
+            }
+          }
+
+          if (el.getJoins() != null) {
+            for (Join join : el.getJoins()) {
+              SimpleNode snode = join.getASTNode();
+              RelationNode rn =
+                  addRelationNode(join.toString(), NodeType.Join, "Join", snode, true);
+              inClause = true;
+              clauseNode = rn;
+              join.getRightItem().accept(this);
+              inClause = false;
+            }
+          }
+
+          if (el.getWhere() != null) {
+            SimpleNode whereNode = el.getWhere().getASTNode();
+            RelationNode rn =
+                addRelationNode(whereNode.toString(), NodeType.Where, "Where", whereNode, true);
+            inClause = true;
+            clauseNode = rn;
+            el.getWhere().accept(this);
+            inClause = false;
+          }
+        }
+
+        @Override
+        public void visit(Drop el) {
+          SimpleNode recur = (SimpleNode) el.getName().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.Drop, "Drop", recur);
+          el.getName().accept(selectDeParser);
+        }
+
+        @Override
+        public void visit(Insert el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.Insert, "Insert", recur);
+          el.getTable().accept(selectDeParser);
+          if (el.getColumns() != null) {
+            el.getColumns().forEach(column -> column.accept(expreDeParser));
+          }
+          if (el.getItemsList() != null) {
+            el.getItemsList().accept(expreDeParser);
+          }
+          if (el.getSelect() != null) {
+            visit(el.getSelect());
+          }
+        }
+
+        @Override
+        public void visit(Replace el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.Replace, "Replace", recur);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(Select el) {
+          SimpleNode snode = ((PlainSelect) el.getSelectBody()).getASTNode();
+          RelationNode rn = addRelationNode(el.toString(), NodeType.Select, "Select", snode, true);
+          rootNodePool.put(el, rn);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(PlainSelect el) {
+          if (el.getSelectItems() != null) {
+            for (SelectItem item : el.getSelectItems()) {
+              item.accept(this);
+            }
+          }
+
+          if (el.getFromItem() != null) {
+            //            RelationNode rn =
+            //                addRelationNode(el.getFromItem().toString(), NodeType.From, "From",
+            // null, false);
+            //            inClause = true;
+            //            clauseNode = rn;
+            el.getFromItem().accept(this);
+            //            inClause = false;
+          }
+
+          if (el.getJoins() != null) {
+            for (Join join : el.getJoins()) {
+              SimpleNode joinNode = join.getASTNode();
+              RelationNode joinRn =
+                  addRelationNode(join.toString(), NodeType.Join, "Join", joinNode, true);
+              inClause = true;
+              clauseNode = joinRn;
+              join.getRightItem().accept(this);
+              inClause = false;
+            }
+          }
+          if (el.getWhere() != null) {
+            SimpleNode whereNode = el.getWhere().getASTNode();
+            RelationNode whereRn =
+                addRelationNode(el.getWhere().toString(), NodeType.Where, "Where", whereNode, true);
+            inClause = true;
+            clauseNode = whereRn;
+            el.getWhere().accept(this);
+            inClause = false;
+          }
+
+          if (el.getHaving() != null) {
+            SimpleNode havingNode = el.getHaving().getASTNode();
+            RelationNode havingRn =
+                addRelationNode(
+                    el.getHaving().toString(), NodeType.Having, "Having", havingNode, true);
+            inClause = true;
+            clauseNode = havingRn;
+            el.getHaving().accept(this);
+            inClause = false;
+          }
+
+          if (el.getOracleHierarchical() != null) {
+            el.getOracleHierarchical().accept(this);
+          }
+        }
+
+        @Override
+        public void visit(Truncate el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.Truncate, "Truncate", recur);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(Update el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.Update, "Update", recur);
+          visit(el.getTable());
+          if (el.getStartJoins() != null) {
+            for (Join join : el.getStartJoins()) {
+              SimpleNode joinNode = join.getASTNode();
+              RelationNode rn =
+                  addRelationNode(join.toString(), NodeType.Join, "Join", joinNode, true);
+              inClause = true;
+              clauseNode = rn;
+              join.getRightItem().accept(this);
+              inClause = false;
+            }
+          }
+          if (el.getExpressions() != null) {
+            for (Expression expression : el.getExpressions()) {
+              expression.accept(this);
+            }
+          }
+
+          if (el.getFromItem() != null) {
+            //            RelationNode rn =
+            //                addRelationNode(el.getFromItem().toString(), NodeType.From, "From",
+            // null, false);
+            //            inClause = true;
+            //            clauseNode = rn;
+            el.getFromItem().accept(this);
+            //            inClause = false;
+          }
+
+          if (el.getJoins() != null) {
+            for (Join join : el.getJoins()) {
+              SimpleNode joinNode = join.getASTNode();
+              RelationNode rn =
+                  addRelationNode(join.toString(), NodeType.Join, "Join", joinNode, true);
+              inClause = true;
+              clauseNode = rn;
+              join.getRightItem().accept(this);
+              inClause = false;
+            }
+          }
+
+          if (el.getWhere() != null) {
+            SimpleNode whereNode = el.getWhere().getASTNode();
+            RelationNode rn =
+                addRelationNode(el.getWhere().toString(), NodeType.Where, "Where", whereNode, true);
+            inClause = true;
+            clauseNode = rn;
+            el.getWhere().accept(this);
+            inClause = false;
+          }
+        }
+
+        @Override
+        public void visit(Merge el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.Merge, "Merge", recur);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(Alter el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          RelationNode rn = addRootNode(el, NodeType.Alter, "Alter", recur);
+          el.getTable().accept(selectDeParser);
+          el.getAlterExpressions()
+              .forEach(alterExpression -> deparseAlterExpression(alterExpression, rn));
+        }
+
+        private void deparseAlterExpression(AlterExpression expr, Node parent) {
+          if (!expr.getColDataTypeList().isEmpty()) {
+            expr.getColDataTypeList()
+                .forEach(
+                    columnDataType -> {
+                      ElementNode en =
+                          new ElementNode(
+                              GraphUtil.nid(),
+                              Language.SQL,
+                              NodeType.Column,
+                              columnDataType.getColumnName(),
+                              columnDataType.getColumnName(),
+                              columnDataType.getColumnName());
+                      graph.addVertex(en);
+                      StringBuilder idtf = new StringBuilder();
+                      idtf.append(URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
+                          .append("/")
+                          .append(URI.checkInvalidCh(columnDataType.getColumnName()));
+                      URI uri = new URI(Protocol.ANY, Language.SQL, filePath, idtf.toString());
+                      en.setUri(uri);
+                      graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
+                    });
+          }
+        }
+
+        @Override
+        public void visit(WithItem el) {
+          SimpleNode snode = (SimpleNode) el.getSubSelect().getASTNode().jjtGetParent();
+          addRelationNode(el.toString(), NodeType.With, "With", snode, true);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(Function el) {
+          SimpleNode snode = el.getASTNode();
+          addRelationNode(el.toString(), NodeType.Function, "Function", snode, true);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(CaseExpression el) {
+          SimpleNode snode = el.getASTNode();
+          addRelationNode(el.toString(), NodeType.Switch, "Switch", snode, true);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(WhenClause el) {
+          SimpleNode snode = el.getASTNode();
+          addRelationNode(el.toString(), NodeType.When, "when", snode, true);
+          super.visit(el);
+        }
+
+        @Override
+        public void visitBinaryExpression(BinaryExpression el) {
+          SimpleNode snode = el.getASTNode();
+          RelationNode rn =
+              addRelationNode(
+                  el.toString(), NodeType.Binary, el.getStringExpression(), snode, false);
+          if (inClause) {
+            graph.addEdge(clauseNode, rn, new Edge(GraphUtil.eid(), CHILD));
+          }
+          super.visitBinaryExpression(el);
         }
       };
 
+  private ExpressionDeParser expreDeParser =
+      new ExpressionDeParser() {
+        @Override
+        public void visit(Column el) {
+          SimpleNode snode = el.getASTNode();
+          addElementNode(
+              el.toString(),
+              NodeType.Column,
+              el.getColumnName(),
+              el.getFullyQualifiedName(),
+              snode);
+          super.visit(el);
+        }
+      };
+
+  private SelectDeParser selectDeParser =
+      new SelectDeParser() {
+        @Override
+        public void visit(Table el) {
+          SimpleNode snode = el.getASTNode();
+          addElementNode(
+              el.toString(), NodeType.Table, el.getName(), el.getFullyQualifiedName(), snode);
+          super.visit(el);
+        }
+      };
+
+  private StatementDeParser deParser =
+      new StatementDeParser(expreDeParser, selectDeParser, new StringBuilder()) {
+        @Override
+        public void visit(Statements stmts) {
+          stmts
+              .getStatements()
+              .forEach(
+                  stmt -> {
+                    clearForNextStatement();
+                    stmt.accept(this);
+                  });
+        }
+
+        @Override
+        public void visit(CreateIndex el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.CreateIndex, "CreateIndex", recur);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(CreateTable el) {
+          SimpleNode recur = (SimpleNode) el.getTable().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.CreateTable, "CreateTable", recur);
+          super.visit(el);
+        }
+
+        @Override
+        public void visit(CreateView el) {
+          SimpleNode recur = (SimpleNode) el.getView().getASTNode().jjtGetParent();
+          addRootNode(el, NodeType.CreateView, "CreateView", recur);
+          super.visit(el);
+          super.visit(el);
+        }
+      };
+
+  private RelationNode addRootNode(Statement el, Type nodeType, String symbol, SimpleNode recur) {
+    RelationNode rn =
+        new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, el.toString(), symbol);
+    while (recur.jjtGetParent() != null) {
+      recur = (SimpleNode) recur.jjtGetParent();
+    }
+    rn.setRange(getRange(recur));
+    graph.addVertex(rn);
+    rootNodePool.put(el, rn);
+
+    identifierMap.put(rn, symbol);
+
+    return rn;
+  }
+
+  private RelationNode addRelationNode(
+      String snippet, Type nodeType, String symbol, SimpleNode snode, boolean setEdge) {
+    RelationNode rn = new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, snippet, symbol);
+    graph.addVertex(rn);
+    if (snode != null) {
+      rn.setRange(getRange(snode));
+      nodePool.put(snode, rn);
+    }
+    if (setEdge) findParentEdge(snode, rn);
+    return rn;
+  }
+
+  private void addElementNode(
+      String snippet, Type nodeType, String name, String qName, SimpleNode snode) {
+    ElementNode en = new ElementNode(GraphUtil.nid(), Language.SQL, nodeType, snippet, name, qName);
+    en.setRange(getRange(snode));
+    graph.addVertex(en);
+    nodePool.put(snode, en);
+    findParentEdge(snode, en);
+
+    URI uri = new URI(Protocol.USE, Language.SQL, filePath, identifierMap.get(en));
+    en.setUri(uri);
+  }
+
   private void findParentEdge(SimpleNode snode, Node node) {
+    StringBuilder idtf = new StringBuilder();
+
+    if (node instanceof RelationNode) {
+      idtf.append(URI.checkInvalidCh(((RelationNode) node).getSymbol()));
+    } else if (node instanceof ElementNode) {
+      idtf.append(URI.checkInvalidCh(((ElementNode) node).getName()));
+    }
+
+    if (snode == null) {
+      for (Map.Entry<Statement, Node> entry : rootNodePool.entrySet()) {
+        Node node1 = entry.getValue();
+        graph.addEdge(node1, node, new Edge(GraphUtil.eid(), CHILD));
+        idtf.insert(0, identifierMap.get(node1) + "/");
+      }
+      return;
+    }
+
     parentNode = (SimpleNode) snode.jjtGetParent();
     boolean found = false;
     while (parentNode != null) {
-      if (nodePool.get(parentNode) != null) {
-        graph.addEdge(nodePool.get(parentNode), node, new Edge(GraphUtil.eid(), CHILD));
-        logger.debug("found parent");
+      Node pnode = nodePool.get(parentNode);
+      if (pnode != null) {
+        graph.addEdge(pnode, node, new Edge(GraphUtil.eid(), CHILD));
+        idtf.insert(0, identifierMap.get(pnode) + "/");
         found = true;
         break;
       }
       parentNode = (SimpleNode) parentNode.jjtGetParent();
     }
     if (!found) {
-      rootNodePool.forEach(
-          (statement, node1) -> graph.addEdge(node1, node, new Edge(GraphUtil.eid(), CHILD)));
+      for (Map.Entry<Statement, Node> entry : rootNodePool.entrySet()) {
+        Node node1 = entry.getValue();
+        graph.addEdge(node1, node, new Edge(GraphUtil.eid(), CHILD));
+        idtf.insert(0, identifierMap.get(node1) + "/");
+      }
     }
+
+    identifierMap.put(node, idtf.toString());
   }
 
   private Range getRange(SimpleNode snode) {

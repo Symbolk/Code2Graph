@@ -24,6 +24,7 @@ public class JsqlGenerator extends Generator {
         (file) -> {
           try {
             Statements stmts = parser.parseFile(file);
+            hdl.setFilePath(file);
             hdl.generateFrom(stmts);
             stmtsList.add(stmts);
           } catch (IOException e) {
