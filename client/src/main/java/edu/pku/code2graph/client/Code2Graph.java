@@ -1,6 +1,7 @@
 package edu.pku.code2graph.client;
 
 import edu.pku.code2graph.diff.Differ;
+import edu.pku.code2graph.diff.model.ChangeType;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -12,10 +13,9 @@ import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static edu.pku.code2graph.model.TypeSet.type;
 
 /** Java API client */
 public class Code2Graph {
@@ -23,6 +23,8 @@ public class Code2Graph {
   private final String repoName;
   private final String repoPath;
   private String tempDir;
+  private Graph<Node, Edge> graph;
+  private List<Pair<URI, URI>> xllLinks;
 
   // components
   private Generators generator;
@@ -32,18 +34,22 @@ public class Code2Graph {
   private boolean involveImported = false; // consider files imported by diff files or not
   private boolean limitToSource = true; // limit the node inside collected source files or not
 
+  {
+    this.generator = Generators.getInstance();
+    this.graph = GraphUtil.initGraph();
+    this.xllLinks = new ArrayList<>();
+  }
+
   public Code2Graph(String repoName, String repoPath) {
     this.repoName = repoName;
     this.repoPath = repoPath;
     this.differ = new Differ(repoName, repoPath);
-    this.generator = Generators.getInstance();
   }
 
   public Code2Graph(String repoName, String repoPath, String tempDir) {
     this.repoName = repoName;
     this.repoPath = repoPath;
     this.differ = new Differ(repoName, repoPath, tempDir);
-    this.generator = Generators.getInstance();
   }
 
   static {
@@ -65,6 +71,14 @@ public class Code2Graph {
 
   public String getRepoPath() {
     return repoPath;
+  }
+
+  public Graph<Node, Edge> getGraph() {
+    return graph;
+  }
+
+  public List<Pair<URI, URI>> getXllLinks() {
+    return xllLinks;
   }
 
   /** Compare the old (A) and new (B) version graphs of the working tree */
@@ -98,10 +112,20 @@ public class Code2Graph {
   /**
    * Construct graph from a code repository
    *
-   * @param repoPath
    * @return
    */
-  public Graph<Node, Edge> generateGraph(String repoPath) {
+  public Graph<Node, Edge> generateGraph() {
+    // collect the path list of source files in supported languages
+    return generateGraph(new ArrayList<>());
+  }
+
+  /**
+   * Construct graph from a source file directory
+   *
+   * @param directory
+   * @return
+   */
+  public Graph<Node, Edge> generateGraph(String directory) {
     // collect the path list of source files in supported languages
     return generateGraph(new ArrayList<>());
   }
@@ -120,14 +144,17 @@ public class Code2Graph {
       List<Pair<URI, URI>> links = XLLDetector.detect(GraphUtil.getUriMap());
       // create uri-element map when create node
       Map<Language, Map<URI, ElementNode>> uriMap = GraphUtil.getUriMap();
+      Type xllType = type("xll");
 
       for (Pair<URI, URI> link : links) {
         System.out.println(link);
         // get nodes by URI
-       // Node source = uriMap.get(link.getLeft().getLang()).get(link.getLeft())
+        Node source = uriMap.get(link.getLeft().getLang()).get(link.getLeft());
+        Node target = uriMap.get(link.getLeft().getLang()).get(link.getLeft());
+        Double weight = 1.0D;
 
         // create XLL edge
-        //              graph.addEdge(source, target, new Edge(GraphUtil.eid(), type, weight, false, true))
+        graph.addEdge(source, target, new Edge(GraphUtil.eid(), xllType, weight, false, true));
       }
 
     } catch (IOException e) {
@@ -135,5 +162,26 @@ public class Code2Graph {
     }
 
     return GraphUtil.getGraph();
+  }
+
+  public Map<Language, Set<URI>> crossLanguageRename(Language lang, URI uri) {
+    // traverse xll links
+
+    // return suggested renaming uris
+    return new HashMap<>();
+  }
+
+  public Map<Language, Set<URI>> crossLanguageCochange(
+      Language lang, ChangeType changeType, URI uri) {
+    // for deleted: directly find binding uris
+
+    // for added: check xll links of similar/sibling nodes for change suggestion
+
+    return new HashMap<>();
+  }
+
+  public Map<Language, Set<URI>> crossLanguageLint(String directory) {
+    // check possible abnormal/incomplete xll links
+    return new HashMap<>();
   }
 }
