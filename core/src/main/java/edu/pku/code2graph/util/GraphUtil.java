@@ -1,16 +1,11 @@
 package edu.pku.code2graph.util;
 
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.model.*;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class GraphUtil {
   // singleton across a graph building process (but for diff?)
@@ -20,13 +15,13 @@ public class GraphUtil {
   private static Integer nodeCount;
   private static Integer edgeCount;
   // sets of URIs that possibly have XLL
-  private static Map<Language, Set<URI>> uriSets;
+  private static Map<Language, Map<URI, ElementNode>> uriMap;
 
   static {
     graph = initGraph();
     nodeCount = 0;
     edgeCount = 0;
-    uriSets = new HashMap<>();
+    uriMap = new HashMap<>();
   }
 
   /**
@@ -70,17 +65,17 @@ public class GraphUtil {
     graph = initGraph();
     nodeCount = 0;
     edgeCount = 0;
-    uriSets = new HashMap<>();
+    uriMap = new HashMap<>();
   }
 
-  public static void addURI(Language language, URI uri) {
-      if(!uriSets.containsKey(language)) {
-        uriSets.put(language, new HashSet<URI>());
-      }
-      uriSets.get(language).add(uri);
+  public static void addURI(Language language, URI uri, ElementNode node) {
+    if (!uriMap.containsKey(language)) {
+      uriMap.put(language, new HashMap<URI, ElementNode>());
+    }
+    uriMap.get(language).put(uri, node);
   }
 
-  public static Map<Language, Set<URI>> getUriSets() {
-    return uriSets;
+  public static Map<Language, Map<URI, ElementNode>> getUriMap() {
+    return uriMap;
   }
 }

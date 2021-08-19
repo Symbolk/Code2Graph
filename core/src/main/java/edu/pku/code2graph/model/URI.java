@@ -1,5 +1,7 @@
 package edu.pku.code2graph.model;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -9,7 +11,7 @@ import java.util.regex.Pattern;
 /** Unified Resource Identifier for code elements */
 public class URI {
   protected Protocol protocol;
-  protected String lang;
+  protected Language lang;
   protected String file;
   protected String identifier;
   protected URI inline;
@@ -17,8 +19,8 @@ public class URI {
   protected String type = "URI";
 
   public URI() {
-    this.protocol = Protocol.UNKNOWN;
-    this.lang = "";
+    this.protocol = Protocol.ANY;
+    this.lang = Language.ANY;
     this.file = "";
     this.identifier = "";
   }
@@ -32,8 +34,9 @@ public class URI {
 
   public URI(String source) {
     String[] result = source.split("//");
-    this.protocol = Protocol.valueOf(result[0].substring(0, result[0].length() - 1).toUpperCase());
-    this.lang = "";
+    this.protocol =
+        Protocol.valueOfLabel(result[0].substring(0, result[0].length() - 1).toLowerCase());
+    this.lang = Language.valueOfLabel(FilenameUtils.getExtension(result[1]).toLowerCase());
     this.file = result[1];
     this.identifier = result[2];
     URI p = this;
@@ -52,7 +55,7 @@ public class URI {
     return protocol;
   }
 
-  public String getLang() {
+  public Language getLang() {
     return lang;
   }
 
@@ -84,7 +87,7 @@ public class URI {
     this.protocol = protocol;
   }
 
-  public void setLang(String lang) {
+  public void setLang(Language lang) {
     this.lang = lang;
   }
 
@@ -107,7 +110,7 @@ public class URI {
     output.append(" <");
     output.append(protocol.toString());
     output.append(":");
-    for (String layer: getLayers()) {
+    for (String layer : getLayers()) {
       output.append("//").append(layer);
     }
     return output.append(">").toString();

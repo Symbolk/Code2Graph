@@ -1,11 +1,15 @@
 package edu.pku.code2graph.xll;
 
+import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Protocol;
 import edu.pku.code2graph.model.URI;
 
-import java.util.*;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class URIPattern extends URI {
   private final Map<String, Token> tokens = new HashMap<>();
@@ -26,8 +30,9 @@ public class URIPattern extends URI {
   }
 
   public URIPattern(Map<String, Object> pattern) {
-    this.protocol = (Protocol) pattern.getOrDefault("protocol", Protocol.UNKNOWN);
-    this.lang = (String) pattern.getOrDefault("lang", "");
+    this.protocol =
+        Protocol.valueOfLabel(pattern.getOrDefault("protocol", "any").toString().toLowerCase());
+    this.lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
     this.file = (String) pattern.getOrDefault("file", "");
     this.identifier = (String) pattern.getOrDefault("identifier", "");
     if (pattern.get("inline") != null) {
@@ -57,7 +62,8 @@ public class URIPattern extends URI {
     if (source.equals("**")) return new HashMap<>();
     List<String> names = layerTokens.get(level);
     source = "**/" + source;
-    source = source
+    source =
+        source
             .replaceAll("\\*\\*/", "(?:.+/)?")
             .replaceAll("\\*", "\\\\w+")
             .replaceAll("\\.", "\\\\.")
@@ -77,6 +83,7 @@ public class URIPattern extends URI {
 
   /**
    * Match uri, return null if not matched, or a match with captured groups
+   *
    * @param uri uri
    * @return captures
    */
@@ -96,7 +103,7 @@ public class URIPattern extends URI {
     for (int i = 0; i < depth; ++i) {
       Map<String, String> cap = matchLayer(i, uri.getLayers().get(i));
       if (cap == null) return null;
-      for (String name: cap.keySet()) {
+      for (String name : cap.keySet()) {
         captures.put(name, cap.get(name));
       }
     }
@@ -107,12 +114,13 @@ public class URIPattern extends URI {
 
   /**
    * apply captures
+   *
    * @param captures matched result
    * @return new pattern
    */
   public URIPattern applyCaptures(Map<String, String> captures) {
     URIPattern pattern = new URIPattern(this);
-    for (String name: captures.keySet()) {
+    for (String name : captures.keySet()) {
       Token token = tokens.get(name);
       if (token != null) {
         String source = pattern.getLayers().get(token.level);
