@@ -34,7 +34,6 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
       new HashMap<>(); // should be ElementNode in theory, but use node to avoid casting when adding
   // edges
   protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
-  protected List<Triple<String, Type, String>> crossLangPool = new ArrayList<>();
 
   public AbstractJdtVisitor() {
     super(true);

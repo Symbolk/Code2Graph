@@ -22,6 +22,13 @@ public class URI {
     this.identifier = "";
   }
 
+  public URI(Protocol protocol, Language lang, String file, String identifier) {
+    this.protocol = protocol;
+    this.lang = lang;
+    this.file = file;
+    this.identifier = identifier;
+  }
+
   public URI(String source) {
     String[] result = source.split("//");
     this.protocol =

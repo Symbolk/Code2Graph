@@ -6,10 +6,7 @@ import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.FileASTRequestor;
+import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.Graph;
 
 import java.io.File;
@@ -28,7 +25,7 @@ public class JdtGenerator extends Generator {
     filePaths.toArray(srcPaths);
     //    NameResolver.setSrcPathSet(srcPathSet);
 
-    // the absolute sourcepath entries to be used to resolve bindings
+    // the absolute source path entries to be used to resolve bindings
     Set<String> srcFolderSet = new HashSet<>();
     for (String path : filePaths) {
       File file = new File(path);

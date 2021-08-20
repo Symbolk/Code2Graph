@@ -279,25 +279,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
         }
       }
     }
-    // qn: R.a.b
-    if (qn.getQualifier().isQualifiedName()) { // R.a
-      QualifiedName qn2 = ((QualifiedName) qn.getQualifier());
-      String identifier = qn2.getName().getIdentifier();
-      if ("R".equals(qn2.getQualifier().toString())) { // R
-        if ("id".equals(identifier) || "layout".equals(identifier)) {
-          // qnames of the entities that may have relation with qn
-          Set<String> qNames = JdtService.processWrappedStatement(qn);
-          for (String qname : qNames) {
-            crossLangPool.add(Triple.of(qname, EdgeType.REFERENCE, qn.getFullyQualifiedName()));
-          }
-
-          // find ancestor entity name
-          Optional<String> parentEntityName = JdtService.findWrappedEntityName(qn);
-          parentEntityName.ifPresent(
-              s -> crossLangPool.add(Triple.of(s, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
-        }
-      }
-    }
 
     return false;
   }
