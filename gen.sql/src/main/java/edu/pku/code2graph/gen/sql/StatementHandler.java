@@ -339,11 +339,13 @@ public class StatementHandler {
                               columnDataType.getColumnName(),
                               columnDataType.getColumnName());
                       graph.addVertex(en);
-                      StringBuilder idtf = new StringBuilder();
-                      idtf.append(URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
-                          .append("/")
-                          .append(URI.checkInvalidCh(columnDataType.getColumnName()));
-                      URI uri = new URI(Protocol.ANY, Language.SQL, filePath, idtf.toString());
+                      String idtf = "";
+                      idtf =
+                          idtf
+                              + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
+                              + "/"
+                              + (URI.checkInvalidCh(columnDataType.getColumnName()));
+                      URI uri = new URI(Protocol.ANY, Language.SQL, filePath, idtf);
                       en.setUri(uri);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
                     });
@@ -381,11 +383,15 @@ public class StatementHandler {
         @Override
         public void visitBinaryExpression(BinaryExpression el) {
           SimpleNode snode = el.getASTNode();
+          boolean setEdge = !inClause;
           RelationNode rn =
               addRelationNode(
-                  el.toString(), NodeType.Binary, el.getStringExpression(), snode, false);
+                  el.toString(), NodeType.Binary, el.getStringExpression(), snode, setEdge);
           if (inClause) {
             graph.addEdge(clauseNode, rn, new Edge(GraphUtil.eid(), CHILD));
+            String idtf;
+            idtf = identifierMap.get(clauseNode) + "/" + el.getStringExpression();
+            identifierMap.put(rn, idtf);
           }
           super.visitBinaryExpression(el);
         }
@@ -507,6 +513,7 @@ public class StatementHandler {
         graph.addEdge(node1, node, new Edge(GraphUtil.eid(), CHILD));
         idtf.insert(0, identifierMap.get(node1) + "/");
       }
+      identifierMap.put(node, idtf.toString());
       return;
     }
 
@@ -544,6 +551,9 @@ public class StatementHandler {
   private void clearForNextStatement() {
     nodePool.clear();
     rootNodePool.clear();
+    identifierMap.clear();
+    inClause = false;
+    clauseNode = null;
   }
 
   public Graph<Node, Edge> getGraph() {

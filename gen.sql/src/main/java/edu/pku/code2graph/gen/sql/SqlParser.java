@@ -31,13 +31,13 @@ public class SqlParser {
   }
 
   public Statements parseFile(String filename) throws IOException {
-    String data = "";
+    StringBuilder data = new StringBuilder();
     BufferedReader fr = new BufferedReader(new FileReader(filename));
     String buffer;
     while ((buffer = fr.readLine()) != null) {
-      data = data + buffer;
+      data.append(buffer).append("\n");
     }
-    logger.debug(data);
-    return parseLines(data);
+    logger.debug(data.toString());
+    return parseLines(data.toString());
   }
 }
