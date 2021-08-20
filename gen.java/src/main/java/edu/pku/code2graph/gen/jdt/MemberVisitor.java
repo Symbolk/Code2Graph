@@ -61,6 +61,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
     graph.addVertex(node);
     defPool.put(qname, node);
 
+    System.out.println("edge");
     graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
     if (tdBinding != null) {
       setPackageAttr(node, tdBinding.getPackage().getName());
@@ -122,6 +123,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
           graph.addVertex(initNode);
           defPool.put(qname, node);
 
+          System.out.println("edge");
           graph.addEdge(node, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
         }
       }
@@ -129,6 +131,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
 
     IVariableBinding[] fdBindings = binding.getDeclaredFields();
     for (IVariableBinding b : fdBindings) {
+      System.out.println("edge");
       usePool.add(Triple.of(node, EdgeType.CHILD, parentQName + "." + b.getName()));
     }
 
@@ -137,6 +140,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
       if (b.isDefaultConstructor()) {
         continue;
       }
+      System.out.println("edge");
       usePool.add(Triple.of(node, EdgeType.CHILD, JdtService.getMethodQNameFromBinding(b)));
     }
   }

@@ -1,5 +1,7 @@
 package edu.pku.code2graph.model;
 
+import edu.pku.code2graph.util.GraphUtil;
+
 public class ElementNode extends Node {
   private static final long serialVersionUID = -8014993858741653383L;
 
