@@ -68,7 +68,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             td.toString(),
             td.getName().toString(),
             qname,
-            qname);
+            JdtService.getIdentifier(td));
 
     node.setRange(computeRange(td));
 
@@ -96,7 +96,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             ed.toString(),
             ed.getName().toString(),
             qname,
-            qname);
+            JdtService.getIdentifier(ed));
 
     node.setRange(computeRange(ed));
 
@@ -114,7 +114,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               cst.toString(),
               cst.getName().toString(),
               qname,
-              qname);
+              JdtService.getIdentifier(cst));
 
       node.setRange(computeRange(cst));
       graph.addEdge(node, cstNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
@@ -137,10 +137,10 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     }
     ITypeBinding[] interfaces = binding.getInterfaces();
     if (interfaces != null && interfaces.length > 0) {
-      for (int i = 0; i < interfaces.length; ++i) {
-        if (interfaces[i].isFromSource()) {
+      for (ITypeBinding anInterface : interfaces) {
+        if (anInterface.isFromSource()) {
           usePool.add(
-              Triple.of(node, EdgeType.EXTENDED_INTERFACE, interfaces[i].getQualifiedName()));
+                  Triple.of(node, EdgeType.EXTENDED_INTERFACE, anInterface.getQualifiedName()));
         }
       }
     }
@@ -183,7 +183,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                   initializer.toString(),
                   node.getName() + ".INIT",
                   qname,
-                  qname);
+                  JdtService.getIdentifier(initializer));
 
           initNode.setRange(computeRange(initializer));
 
@@ -229,7 +229,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               fragment.toString(),
               name,
               qname,
-              qname);
+              JdtService.getIdentifier(fragment));
 
       node.setRange(computeRange(fragment));
 
@@ -264,7 +264,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             md.toString(),
             name,
             qname,
-            qname);
+            JdtService.getIdentifier(md));
 
     node.setRange(computeRange(md));
 
@@ -295,7 +295,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 p.toString(),
                 para_name,
                 para_qname,
-                para_qname);
+                JdtService.getIdentifier(p));
 
         node.setRange(computeRange(p));
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.METHOD_PARAMETER));
@@ -433,7 +433,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                       fragment.toString(),
                       name,
                       qname,
-                      qname);
+                      JdtService.getIdentifier(fragment));
 
               node.setRange(computeRange(fragment));
 
@@ -558,7 +558,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                   p.toString(),
                   para_name,
                   para_qname,
-                  para_qname);
+                  JdtService.getIdentifier(p));
                   
           pn.setRange(computeRange(p));
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.ELEMENT));
@@ -876,7 +876,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                     fragment.toString(),
                     name,
                     qname,
-                    qname);
+                    JdtService.getIdentifier(fragment));
 
             n.setRange(computeRange(fragment));
             graph.addEdge(root, n, new Edge(GraphUtil.eid(), EdgeType.CHILD));

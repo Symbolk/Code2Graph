@@ -56,7 +56,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
             td.toString(),
             td.getName().toString(),
             qname,
-            qname);
+            JdtService.getIdentifier(td));
 
     node.setRange(computeRange(td));
     setModifierAttr(node, td.modifiers());
@@ -117,7 +117,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
                   initializer.toString(),
                   node.getName() + ".INIT",
                   qname,
-                  qname);
+                  JdtService.getIdentifier(initializer));
                   
           initNode.setRange(computeRange(initializer));
           setPackageAttr(node, cu.getPackage().getName().getFullyQualifiedName());
@@ -162,7 +162,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
               fragment.toString(),
               name,
               qname,
-              qname);
+              JdtService.getIdentifier(fragment));
 
       node.setRange(computeRange(fragment));
       setModifierAttr(node, fd.modifiers());
@@ -199,7 +199,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
             md.toString(),
             name,
             qname,
-            qname);
+            JdtService.getIdentifier(md));
 
     node.setRange(computeRange(md));
     setModifierAttr(node, md.modifiers());
@@ -231,7 +231,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
                 p.toString(),
                 para_name,
                 para_qname,
-                para_qname);
+                JdtService.getIdentifier(p));
   
         node.setRange(computeRange(p));
 

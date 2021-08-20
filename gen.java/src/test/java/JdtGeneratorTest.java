@@ -16,7 +16,7 @@ public class JdtGeneratorTest {
   public void testMethodInvocation() throws IOException {
     try {
       List<String> filePaths = new ArrayList<>();
-      filePaths.add("src/test/resources/TestSwitch.java");
+      filePaths.add("src/test/resources/TestMethod.java");
       Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
       GraphVizExporter.printAsDot(graph);
     } catch (IOException e) {
