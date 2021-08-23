@@ -40,6 +40,7 @@ public class StatementHandler {
   protected Logger logger = LoggerFactory.getLogger(StatementHandler.class);
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
+  protected Map<URI, ElementNode> uriMap = new HashMap<>();
 
   // temporarily save the current file path here
   protected String filePath;
@@ -47,6 +48,10 @@ public class StatementHandler {
   public void generateFrom(Statements stmts) {
     //    stmts.accept(deParser);
     tablesNamesFinder.visit(stmts);
+  }
+
+  public Map<URI, ElementNode> getUriMap() {
+    return uriMap;
   }
 
   //  private Stack<Tuple2<Statement, SimpleNode>> rootNode;
@@ -347,6 +352,7 @@ public class StatementHandler {
                               + (URI.checkInvalidCh(columnDataType.getColumnName()));
                       URI uri = new URI(Protocol.ANY, Language.SQL, filePath, idtf);
                       en.setUri(uri);
+                      uriMap.put(en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
                     });
           }
@@ -496,6 +502,7 @@ public class StatementHandler {
 
     URI uri = new URI(Protocol.USE, Language.SQL, filePath, identifierMap.get(en));
     en.setUri(uri);
+    uriMap.put(en.getUri(), en);
   }
 
   private void findParentEdge(SimpleNode snode, Node node) {

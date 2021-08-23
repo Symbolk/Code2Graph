@@ -3,8 +3,8 @@ package edu.pku.code2graph.gen.sql;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.GraphUtil;
 import net.sf.jsqlparser.statement.Statements;
 import org.jgrapht.Graph;
 
@@ -31,6 +31,7 @@ public class JsqlGenerator extends Generator {
             e.printStackTrace();
           }
         });
+    GraphUtil.getUriMap().put(Language.SQL, hdl.getUriMap());
     return null;
   }
 }

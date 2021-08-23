@@ -76,6 +76,7 @@ public class AndroidHandler extends AbstractHandler {
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
+    uriMap.put(root.getUri(), root);
     logger.debug("Start Parsing {}", filePath);
     super.startDocument();
   }
@@ -103,6 +104,7 @@ public class AndroidHandler extends AbstractHandler {
             locator.getColumnNumber(),
             locator.getColumnNumber()));
     graph.addVertex(en);
+    uriMap.put(en.getUri(), en);
     if (stack.size() > 0) {
       // View is the child of ViewGroup
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));
@@ -113,6 +115,7 @@ public class AndroidHandler extends AbstractHandler {
       for (int i = 0; i < attributes.getLength(); i++) {
         String key = attributes.getQName(i);
         String value = attributes.getValue(i);
+        String idtfLayer = en.getUri().getIdentifier();
 
         // each attribute should only be processed once
         // either for def, or for ref
@@ -122,6 +125,7 @@ public class AndroidHandler extends AbstractHandler {
           // ref in java: R.qname.value
           // ref in xml: @qname/value
           String resName = "@" + qName + "/" + value;
+          en.getUri().setIdentifier(idtfLayer + "/name");
           en.setName(value);
           en.setQualifiedName(resName);
 
@@ -135,6 +139,7 @@ public class AndroidHandler extends AbstractHandler {
           // fr components
           if (value.startsWith("@+")) {
             en.setName(value);
+            en.getUri().setIdentifier(idtfLayer + "/" + URI.checkInvalidCh("android:id"));
             String identifier = value.replace("+", "");
             en.setQualifiedName(identifier);
 

@@ -1,8 +1,6 @@
 package edu.pku.code2graph.gen.xml;
 
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
@@ -19,6 +17,7 @@ public class AbstractHandler extends DefaultHandler {
   protected Logger logger = LoggerFactory.getLogger(AbstractHandler.class);
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
+  protected Map<URI, ElementNode> uriMap = new HashMap<>();
 
   // temporarily save the current file path here
   protected String filePath;
@@ -40,6 +39,9 @@ public class AbstractHandler extends DefaultHandler {
 
   public Graph<Node, Edge> getGraph() {
     return graph;
+  }
+  public Map<URI, ElementNode> getUriMap() {
+    return uriMap;
   }
 
   public void setFilePath(String filePath) {

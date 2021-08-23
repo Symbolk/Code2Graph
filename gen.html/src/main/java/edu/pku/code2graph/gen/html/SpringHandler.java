@@ -36,6 +36,7 @@ public class SpringHandler extends AbstractHandler {
         (ele instanceof Document) + "," + ele + "," + ele.tagName() + "," + ele.normalName());
     logger.debug(uri.getIdentifier());
     graph.addVertex(en);
+    stack.push(en);
 
     if (!stack.isEmpty()) {
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
@@ -62,7 +63,6 @@ public class SpringHandler extends AbstractHandler {
           }
         });
 
-    stack.push(en);
     Elements children = ele.children();
     children.forEach(this::traverseChidren);
     stack.pop();
@@ -85,10 +85,10 @@ public class SpringHandler extends AbstractHandler {
             current.getName(),
             uri);
     graph.addVertex(en);
+    uriMap.put(en.getUri(), en);
 
     for (DialectNode child : node.getChildren()) {
       ElementNode childNode = (ElementNode) DialectNodeToGnode(child, attrName, curIdtf);
-      graph.addVertex(childNode);
       graph.addEdge(en, childNode, new Edge(GraphUtil.eid(), NodeType.CHILD));
     }
 

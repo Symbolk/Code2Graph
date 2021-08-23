@@ -3,12 +3,11 @@ package edu.pku.code2graph.gen.html;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.jsoup.nodes.Document;
 
-import java.io.IOException;
 import java.util.List;
 
 @Register(id = "html-jsoup", accept = "\\.html$", priority = Registry.Priority.MAXIMUM)
@@ -24,6 +23,7 @@ public class JsoupGenerator extends Generator {
       hdl.setFilePath(filePaths.get(i));
       hdl.generateFromDoc(docs.get(i));
     }
+    GraphUtil.getUriMap().put(Language.HTML, hdl.getUriMap());
     return hdl.getGraph();
   }
 }

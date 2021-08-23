@@ -33,6 +33,8 @@ public class DocumentHandler extends AbstractHandler {
         (ele instanceof Document) + "," + ele + "," + ele.tagName() + "," + ele.normalName());
     logger.debug(uri.getIdentifier());
     graph.addVertex(en);
+    stack.push(en);
+    uriMap.put(en.getUri(), en);
 
     if (!stack.isEmpty()) {
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
@@ -53,7 +55,6 @@ public class DocumentHandler extends AbstractHandler {
           graph.addEdge(en, rn, new Edge(GraphUtil.eid(), NodeType.ATTR));
         });
 
-    stack.push(en);
     Elements children = ele.children();
     children.forEach(this::traverseChidren);
     stack.pop();
