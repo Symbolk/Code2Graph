@@ -5,7 +5,9 @@ import edu.pku.code2graph.gen.html.StandardDialectParser;
 import edu.pku.code2graph.gen.html.model.DialectNode;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -63,13 +65,43 @@ public class SpringTest {
             + "    <title>Admin | Projects</title>\n"
             + "</head>\n"
             + "<body>\n"
-            + "    <tr data-th-each=\"${projects}\">\n"
-            + "        <td><a data-th-href=\"@{${project.id}}\" data-th-text=\"${project.name}\">spring-framework</a></td>\n"
-            + "    </tr>\n"
-            + "</body>";
+            + "    <table boder=\"1\">\n"
+            + "        <tr data-th-each=\"${projects}\">\n"
+            + "            <td><a data-th-href=\"@{${project.id}}\" data-th-text=\"${project.name}\">spring-framework</a></td>\n"
+            + "        </tr>\n"
+            + "    </table>\n"
+            + "</body>\n"
+            + "</html>";
     Document doc = parser.parseString(dom);
     hdl.generateFromDoc(doc);
-    GraphVizExporter.printAsDot(GraphUtil.getGraph());
+    Graph<Node, Edge> graph = GraphUtil.getGraph();
+    GraphVizExporter.printAsDot(graph);
+
+    for (Node node : graph.vertexSet()) {
+      if (node instanceof ElementNode) {
+        URI uri = ((ElementNode) node).getUri();
+        switch (((ElementNode) node).getName()) {
+          case "tr":
+            assertThat(uri.getIdentifier()).isEqualTo("#root/html/body/table/tbody/tr");
+            break;
+          case "projects":
+            assertThat(uri.getIdentifier())
+                .isEqualTo("#root/html/body/table/tbody/tr/data-th-each");
+            assertThat(uri.getInline().getIdentifier()).isEqualTo("projects");
+            break;
+          case "${project.id}":
+            assertThat(uri.getIdentifier())
+                .isEqualTo("#root/html/body/table/tbody/tr/td/a/data-th-href");
+            assertThat(uri.getInline().getIdentifier()).isEqualTo("${project.id}");
+            break;
+          case "project.id":
+            assertThat(uri.getIdentifier())
+                .isEqualTo("#root/html/body/table/tbody/tr/td/a/data-th-href");
+            assertThat(uri.getInline().getIdentifier()).isEqualTo("${project.id}/project.id");
+            break;
+        }
+      }
+    }
   }
 
   @Test

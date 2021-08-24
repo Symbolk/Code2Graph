@@ -10,6 +10,8 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.LocatorImpl;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 import static edu.pku.code2graph.model.TypeSet.type;
@@ -22,6 +24,8 @@ import static edu.pku.code2graph.model.TypeSet.type;
 public class AndroidHandler extends AbstractHandler {
   private Locator locator;
   private Stack<Locator> locatorStack = new Stack<>();
+
+  private Map<Node, String> pathMap = new HashMap<>();
 
   @Override
   public void setDocumentLocator(Locator locator) {
@@ -87,7 +91,7 @@ public class AndroidHandler extends AbstractHandler {
     Type nType = type(qName, true);
 
     String idtf = "";
-    String parentIdtf = stack.peek().getUri().getIdentifier();
+    String parentIdtf = pathMap.get(stack.peek());
     if (stack.size() > 0 && parentIdtf != null) {
       idtf = parentIdtf;
     }
@@ -96,6 +100,7 @@ public class AndroidHandler extends AbstractHandler {
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
+    pathMap.put(en, idtf);
     // TODO correctly set the start line with locator stack
     en.setRange(
         new Range(
@@ -130,7 +135,7 @@ public class AndroidHandler extends AbstractHandler {
           en.setQualifiedName(resName);
 
           URI inline = new URI();
-          inline.setIdentifier(URI.checkInvalidCh(resName));
+          inline.setIdentifier(URI.checkInvalidCh(value));
           en.getUri().setProtocol(Protocol.DEF);
           en.getUri().setInline(inline);
 
@@ -144,7 +149,7 @@ public class AndroidHandler extends AbstractHandler {
             en.setQualifiedName(identifier);
 
             URI inline = new URI();
-            inline.setIdentifier(URI.checkInvalidCh(identifier));
+            inline.setIdentifier(URI.checkInvalidCh(value));
             en.getUri().setProtocol(Protocol.DEF);
             en.getUri().setInline(inline);
 
