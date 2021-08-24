@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class JdtGeneratorTest {
   private static final JdtGenerator generator = new JdtGenerator();
 
@@ -18,11 +16,9 @@ public class JdtGeneratorTest {
   public void testMethodInvocation() throws IOException {
     try {
       List<String> filePaths = new ArrayList<>();
-      filePaths.add("src/test/resources/TestFor.java");
+      filePaths.add("src/test/resources/TestMethod.java");
       Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
-      String dot = GraphVizExporter.copyAsDot(graph);
-      assertThat(dot).startsWith("digraph");
-
+      GraphVizExporter.printAsDot(graph);
     } catch (IOException e) {
       e.printStackTrace();
     }

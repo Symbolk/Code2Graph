@@ -1,8 +1,10 @@
 package edu.pku.code2graph.gen.jdt;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.core.dom.*;
 
 import java.util.*;
+import java.lang.*;
 
 public class JdtService {
   /**
@@ -212,5 +214,31 @@ public class JdtService {
       }
     }
     return qname;
+  }
+
+  public static String getIdentifier(ASTNode node) {
+    List<String> list = new ArrayList<>();
+    while (node != null) {
+      SimpleName name = null;
+      if (node instanceof TypeDeclaration) {
+        name = ((TypeDeclaration) node).getName();
+      } else if (node instanceof MethodDeclaration) {
+        name = ((MethodDeclaration) node).getName();
+      } else if (node instanceof EnumDeclaration) {
+        name = ((EnumDeclaration) node).getName();
+      } else if (node instanceof EnumConstantDeclaration) {
+        name = ((EnumConstantDeclaration) node).getName();
+      } else if (node instanceof SingleVariableDeclaration) {
+        name = ((SingleVariableDeclaration) node).getName();
+      } else if (node instanceof VariableDeclarationFragment) {
+        name = ((VariableDeclarationFragment) node).getName();
+      }
+      if (name != null) {
+        list.add(name.getFullyQualifiedName());
+      }
+      node = node.getParent();
+    }
+    Collections.reverse(list);
+    return StringUtils.join(list, "/");
   }
 }

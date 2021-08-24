@@ -1,10 +1,6 @@
 package edu.pku.code2graph.gen.jdt;
 
-import edu.pku.code2graph.gen.jdt.model.EdgeType;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Range;
-import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -25,6 +21,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   // temporarily keep the current cu and file path
   protected CompilationUnit cu;
   protected String filePath;
+  protected String uriFilePath;
 
   // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
   // TODO include external type declaration or not?
@@ -34,10 +31,25 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
       new HashMap<>(); // should be ElementNode in theory, but use node to avoid casting when adding
   // edges
   protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
-  protected List<Triple<String, Type, String>> crossLangPool = new ArrayList<>();
 
   public AbstractJdtVisitor() {
     super(true);
+  }
+
+  protected ElementNode createElementNode(
+          Protocol protocol,
+          Type type,
+          String snippet,
+          String name,
+          String qname,
+          String identifier) {
+    URI uri = new URI(protocol, Language.JAVA, uriFilePath, identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""));
+    ElementNode node = new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
+    graph.addVertex(node);
+    if (protocol == Protocol.DEF) {
+      defPool.put(qname, node);
+    }
+    return node;
   }
 
   /** Build edges with cached data pool */
@@ -76,6 +88,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
 
   public void setFilePath(String filePath) {
     this.filePath = filePath;
+    this.uriFilePath = filePath.replace("\\", "/");
   }
 
   protected Range computeRange(ASTNode node) {
