@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin | Projects</title>
+</head>
+<body>
+    <table boder="1">
+        <tr data-th-each="${projects}">
+            <td><a data-th-href="@{${project.id}}" data-th-text="${project.name}">spring-framework</a></td>
+        </tr>
+    </table>
+</body>
+</html>

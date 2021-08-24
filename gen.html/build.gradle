@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+}
+
+group 'cn.edu.pku'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':xll')
+    testImplementation 'junit:junit:4.13.2'
+
+    // https://mvnrepository.com/artifact/org.jsoup/jsoup
+    implementation 'org.jsoup:jsoup:1.14.1'
+}

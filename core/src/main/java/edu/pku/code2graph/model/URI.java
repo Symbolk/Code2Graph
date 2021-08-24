@@ -4,6 +4,9 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
 public class URI {
@@ -20,6 +23,13 @@ public class URI {
     this.lang = Language.ANY;
     this.file = "";
     this.identifier = "";
+  }
+
+  public URI(Protocol protocol, Language lang, String file, String identifier) {
+    this.protocol = protocol;
+    this.lang = lang;
+    this.file = file;
+    this.identifier = identifier;
   }
 
   public URI(String source) {
@@ -104,5 +114,17 @@ public class URI {
       output.append("//").append(layer);
     }
     return output.append(">").toString();
+  }
+
+  private static List<String> pre =
+      Arrays.asList("\\@", "\\*", "\\(", "\\)", "\\/", "\\[", "\\]", "\\:");
+
+  public static String checkInvalidCh(String name) {
+    for (String ch : pre) {
+      Pattern p = Pattern.compile(ch);
+      Matcher m = p.matcher(name);
+      name = m.replaceAll("\\" + ch);
+    }
+    return name;
   }
 }
