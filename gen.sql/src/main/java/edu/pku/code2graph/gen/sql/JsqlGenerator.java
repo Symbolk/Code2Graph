@@ -32,6 +32,16 @@ public class JsqlGenerator extends Generator {
           }
         });
     GraphUtil.getUriMap().put(Language.SQL, hdl.getUriMap());
-    return null;
+    return hdl.getGraph();
+  }
+
+  public Graph<Node, Edge> generate(
+      String query, String filepath, Language lang, String identifier) {
+    StatementHandler hdl = new StatementHandler(true, lang, identifier);
+    Statements stmt = parser.parseLines(query);
+    hdl.setFilePath(filepath);
+    hdl.generateFrom(stmt);
+    GraphUtil.getUriMap().put(Language.SQL, hdl.getUriMap());
+    return hdl.getGraph();
   }
 }

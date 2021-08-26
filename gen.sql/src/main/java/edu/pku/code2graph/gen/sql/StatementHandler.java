@@ -42,8 +42,20 @@ public class StatementHandler {
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
   protected Map<URI, ElementNode> uriMap = new HashMap<>();
 
+  private boolean isInline = false;
+  private Language wrapLang;
+  private String wrapIdentifier;
+
   // temporarily save the current file path here
   protected String filePath;
+
+  public StatementHandler() {}
+
+  public StatementHandler(boolean inline, Language lang, String identifier) {
+    this.isInline = inline;
+    this.wrapLang = lang;
+    this.wrapIdentifier = identifier;
+  }
 
   public void generateFrom(Statements stmts) {
     //    stmts.accept(deParser);
@@ -351,7 +363,13 @@ public class StatementHandler {
                               + "/"
                               + (URI.checkInvalidCh(columnDataType.getColumnName()));
                       URI uri = new URI(Protocol.ANY, Language.SQL, filePath, idtf);
-                      en.setUri(uri);
+                      if (isInline) {
+                        URI wrapUri = new URI(Protocol.ANY, wrapLang, filePath, wrapIdentifier);
+                        wrapUri.setInline(uri);
+                        en.setUri(wrapUri);
+                      } else {
+                        en.setUri(uri);
+                      }
                       uriMap.put(en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
                     });
@@ -501,7 +519,13 @@ public class StatementHandler {
     findParentEdge(snode, en);
 
     URI uri = new URI(Protocol.USE, Language.SQL, filePath, identifierMap.get(en));
-    en.setUri(uri);
+    if (isInline) {
+      URI wrapUri = new URI(Protocol.ANY, wrapLang, filePath, wrapIdentifier);
+      wrapUri.setInline(uri);
+      en.setUri(wrapUri);
+    } else {
+      en.setUri(uri);
+    }
     uriMap.put(en.getUri(), en);
   }
 

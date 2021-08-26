@@ -2,10 +2,7 @@ import edu.pku.code2graph.gen.sql.JsqlGenerator;
 import edu.pku.code2graph.gen.sql.SqlParser;
 import edu.pku.code2graph.gen.sql.StatementHandler;
 import edu.pku.code2graph.io.GraphVizExporter;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.RelationNode;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -146,5 +143,33 @@ public class HandlerTest {
               }
             });
     assertThat(filePaths.size()).isEqualTo(inVertex.size());
+  }
+
+  @Test
+  public void testInline() {
+    JsqlGenerator generator = new JsqlGenerator();
+    GraphUtil.clearGraph();
+    String query = "SELECT * FROM Customers\n" + "WHERE Country='Germany' AND City='Berlin';";
+    String idtf = "Class/function/Select";
+    Language lang = Language.JAVA;
+    String filepath = "src/resources/test/what.java";
+    generator.generate(
+        query, filepath, lang, idtf);
+
+    List<ElementNode> countryNode = new ArrayList<>();
+    GraphUtil.getGraph()
+            .vertexSet()
+            .forEach(
+                    v -> {
+                      if (v instanceof ElementNode && ((ElementNode) v).getName().equals("Country")) {
+                        countryNode.add((ElementNode) v);
+                      }
+                    });
+    countryNode.forEach(node->{
+      assertThat(node.getUri().getIdentifier()).isEqualTo(idtf);
+      assertThat(node.getUri().getFile()).isEqualTo(filepath);
+      assertThat(node.getUri().getLang()).isEqualTo(lang);
+      assertThat(node.getUri().getInline().getIdentifier()).isEqualTo("Select/Where/=/Country");
+    });
   }
 }
