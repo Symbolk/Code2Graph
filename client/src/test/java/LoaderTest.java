@@ -9,8 +9,8 @@ import java.util.Objects;
 
 public class LoaderTest {
   private void projectTest(String repoName, String configName) {
-    String repoPath = Objects.requireNonNull(this.getClass().getResource(repoName)).toString().substring(6);
-    String configPath = Objects.requireNonNull(this.getClass().getResource(configName)).toString().substring(6);
+    String repoPath = Objects.requireNonNull(this.getClass().getResource(repoName)).getPath();
+    String configPath = Objects.requireNonNull(this.getClass().getResource(configName)).getPath();
     Code2Graph c2g = new Code2Graph("butterknife", repoPath, configPath);
     Graph<Node, Edge> graph = c2g.generateGraph();
     GraphVizExporter.printAsDot(graph);
