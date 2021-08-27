@@ -10,16 +10,15 @@ import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Detector;
 import edu.pku.code2graph.xll.Rule;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 
 import java.io.IOException;
+import java.util.*;
 
 import static edu.pku.code2graph.model.TypeSet.type;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 /** Java API client */
 public class Code2Graph {
