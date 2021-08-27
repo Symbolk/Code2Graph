@@ -11,7 +11,6 @@ import org.jgrapht.alg.util.Triple;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Visitor focusing on the entity granularity, at or above member level (cu/type/member) */
@@ -20,14 +19,14 @@ public class MemberVisitor extends AbstractJdtVisitor {
 
   @Override
   public boolean visit(CompilationUnit cu) {
-    ElementNode cuNode =
-        new ElementNode(
-            GraphUtil.nid(),
-            Language.JAVA,
+    ElementNode cuNode = createElementNode(
+            Protocol.ANY,
             NodeType.FILE,
             "",
             FileUtil.getFileNameFromPath(filePath),
-            filePath);
+            filePath,
+            "");
+
     // TODO get relative path if given a base path
     //    FileUtil.getRelativePath(
     //            basePath, cuNode.getQualifiedName());
@@ -51,16 +50,19 @@ public class MemberVisitor extends AbstractJdtVisitor {
       qname = JdtService.getTypeQNameFromParents(td);
     }
 
-    ElementNode node =
-        new ElementNode(
-            GraphUtil.nid(), Language.JAVA, type, td.toString(), td.getName().toString(), qname);
+    ElementNode node = createElementNode(
+            Protocol.DEF,
+            type,
+            td.toString(),
+            td.getName().toString(),
+            qname,
+            JdtService.getIdentifier(td));
+
     node.setRange(computeRange(td));
     setModifierAttr(node, td.modifiers());
     setTypeAttr(node, qname);
 
-    graph.addVertex(node);
-    defPool.put(qname, node);
-
+    System.out.println("edge");
     graph.addEdge(root, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
     if (tdBinding != null) {
       setPackageAttr(node, tdBinding.getPackage().getName());
@@ -108,20 +110,21 @@ public class MemberVisitor extends AbstractJdtVisitor {
       for (Initializer initializer : initializers) {
         if (!initializer.getBody().statements().isEmpty()) {
           String qname = parentQName + ".INIT";
-          ElementNode initNode =
-              new ElementNode(
-                  GraphUtil.nid(),
-                  Language.JAVA,
+
+          ElementNode initNode = createElementNode(
+                  Protocol.ANY,
                   NodeType.INIT_BLOCK_DECLARATION,
                   initializer.toString(),
                   node.getName() + ".INIT",
-                  qname);
+                  qname,
+                  JdtService.getIdentifier(initializer));
+                  
           initNode.setRange(computeRange(initializer));
           setPackageAttr(node, cu.getPackage().getName().getFullyQualifiedName());
 
-          graph.addVertex(initNode);
           defPool.put(qname, node);
 
+          System.out.println("edge");
           graph.addEdge(node, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
         }
       }
@@ -129,6 +132,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
 
     IVariableBinding[] fdBindings = binding.getDeclaredFields();
     for (IVariableBinding b : fdBindings) {
+      System.out.println("edge");
       usePool.add(Triple.of(node, EdgeType.CHILD, parentQName + "." + b.getName()));
     }
 
@@ -137,6 +141,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
       if (b.isDefaultConstructor()) {
         continue;
       }
+      System.out.println("edge");
       usePool.add(Triple.of(node, EdgeType.CHILD, JdtService.getMethodQNameFromBinding(b)));
     }
   }
@@ -150,20 +155,18 @@ public class MemberVisitor extends AbstractJdtVisitor {
       if (binding != null && binding.getDeclaringClass() != null) {
         qname = binding.getDeclaringClass().getQualifiedName() + "." + name;
       }
-      ElementNode node =
-          new ElementNode(
-              GraphUtil.nid(),
-              Language.JAVA,
+
+      ElementNode node = createElementNode(
+              Protocol.DEF,
               NodeType.FIELD_DECLARATION,
               fragment.toString(),
               name,
-              qname);
+              qname,
+              JdtService.getIdentifier(fragment));
+
       node.setRange(computeRange(fragment));
       setModifierAttr(node, fd.modifiers());
       root.getAttribute("package").ifPresent(pkg -> setPackageAttr(node, (String) pkg));
-
-      graph.addVertex(node);
-      defPool.put(qname, node);
 
       if (binding != null && binding.getType().isFromSource()) {
         usePool.add(Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
@@ -189,20 +192,18 @@ public class MemberVisitor extends AbstractJdtVisitor {
     if (mdBinding != null) {
       qname = JdtService.getMethodQNameFromBinding(mdBinding);
     }
-    ElementNode node =
-        new ElementNode(
-            GraphUtil.nid(),
-            Language.JAVA,
+
+    ElementNode node = createElementNode(
+            Protocol.DEF,
             NodeType.METHOD_DECLARATION,
             md.toString(),
             name,
-            qname);
+            qname,
+            JdtService.getIdentifier(md));
+
     node.setRange(computeRange(md));
     setModifierAttr(node, md.modifiers());
     root.getAttribute("package").ifPresent(pkg -> setPackageAttr(node, (String) pkg));
-
-    graph.addVertex(node);
-    defPool.put(qname, node);
 
     // return type
     if (mdBinding != null) {
@@ -223,19 +224,18 @@ public class MemberVisitor extends AbstractJdtVisitor {
         if (b != null && b.getVariableDeclaration() != null) {
           para_qname = qname + "." + para_name;
         }
-        ElementNode pn =
-            new ElementNode(
-                GraphUtil.nid(),
-                Language.JAVA,
+
+        ElementNode pn = createElementNode(
+                Protocol.DEF,
                 NodeType.VAR_DECLARATION,
                 p.toString(),
                 para_name,
-                para_qname);
+                para_qname,
+                JdtService.getIdentifier(p));
+  
         node.setRange(computeRange(p));
 
-        graph.addVertex(pn);
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.METHOD_PARAMETER));
-        defPool.put(para_qname, pn);
 
         ITypeBinding paraBinding = p.getType().resolveBinding();
         if (paraBinding != null) {
@@ -276,25 +276,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
                               variableBinding.getDeclaringClass().getQualifiedName()
                                   + "."
                                   + variableBinding.getName())));
-        }
-      }
-    }
-    // qn: R.a.b
-    if (qn.getQualifier().isQualifiedName()) { // R.a
-      QualifiedName qn2 = ((QualifiedName) qn.getQualifier());
-      String identifier = qn2.getName().getIdentifier();
-      if ("R".equals(qn2.getQualifier().toString())) { // R
-        if ("id".equals(identifier) || "layout".equals(identifier)) {
-          // qnames of the entities that may have relation with qn
-          Set<String> qNames = JdtService.processWrappedStatement(qn);
-          for (String qname : qNames) {
-            crossLangPool.add(Triple.of(qname, EdgeType.REFERENCE, qn.getFullyQualifiedName()));
-          }
-
-          // find ancestor entity name
-          Optional<String> parentEntityName = JdtService.findWrappedEntityName(qn);
-          parentEntityName.ifPresent(
-              s -> crossLangPool.add(Triple.of(s, EdgeType.REFERENCE, qn.getFullyQualifiedName())));
         }
       }
     }

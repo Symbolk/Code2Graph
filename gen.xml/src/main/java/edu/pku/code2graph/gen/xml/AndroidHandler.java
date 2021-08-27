@@ -10,19 +10,22 @@ import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.LocatorImpl;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Stack;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
 /**
- * Dedicated handler for view xml in Android code
- * Layout xml files are used to define the actual UI(User interface) of our application. It holds
- * all the elements(views) or the tools that we want to use in our application. Like the TextView’s,
- * Button’s and other UI elements.
+ * Dedicated handler for view xml in Android code Layout xml files are used to define the actual
+ * UI(User interface) of our application. It holds all the elements(views) or the tools that we want
+ * to use in our application. Like the TextView’s, Button’s and other UI elements.
  */
 public class AndroidHandler extends AbstractHandler {
   private Locator locator;
   private Stack<Locator> locatorStack = new Stack<>();
+
+  private Map<Node, String> pathMap = new HashMap<>();
 
   @Override
   public void setDocumentLocator(Locator locator) {
@@ -71,10 +74,13 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
+    URI uri = new URI(Protocol.DEF, Language.XML, filePath, null);
+
     ElementNode root =
-        new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName);
+        new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
+    uriMap.put(root.getUri(), root);
     logger.debug("Start Parsing {}", filePath);
     super.startDocument();
   }
@@ -84,8 +90,17 @@ public class AndroidHandler extends AbstractHandler {
       throws SAXException {
     Type nType = type(qName, true);
 
+    String idtf = "";
+    String parentIdtf = pathMap.get(stack.peek());
+    if (stack.size() > 0 && parentIdtf != null) {
+      idtf = parentIdtf;
+    }
+    idtf = idtf + (idtf.isEmpty() ? "" : "/") + URI.checkInvalidCh(qName);
+    URI xllUri = new URI(Protocol.DEF, Language.XML, filePath, idtf);
+
     // qname = tag/type name, name = identifier
-    ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "");
+    ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
+    pathMap.put(en, idtf);
     // TODO correctly set the start line with locator stack
     en.setRange(
         new Range(
@@ -94,6 +109,7 @@ public class AndroidHandler extends AbstractHandler {
             locator.getColumnNumber(),
             locator.getColumnNumber()));
     graph.addVertex(en);
+    uriMap.put(en.getUri(), en);
     if (stack.size() > 0) {
       // View is the child of ViewGroup
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));
@@ -104,6 +120,7 @@ public class AndroidHandler extends AbstractHandler {
       for (int i = 0; i < attributes.getLength(); i++) {
         String key = attributes.getQName(i);
         String value = attributes.getValue(i);
+        String idtfLayer = en.getUri().getIdentifier();
 
         // each attribute should only be processed once
         // either for def, or for ref
@@ -113,15 +130,29 @@ public class AndroidHandler extends AbstractHandler {
           // ref in java: R.qname.value
           // ref in xml: @qname/value
           String resName = "@" + qName + "/" + value;
+          en.getUri().setIdentifier(idtfLayer + "/name");
           en.setName(value);
           en.setQualifiedName(resName);
+
+          URI inline = new URI();
+          inline.setIdentifier(URI.checkInvalidCh(value));
+          en.getUri().setProtocol(Protocol.DEF);
+          en.getUri().setInline(inline);
+
           defPool.put(resName, en);
         } else if ("android:id".equals(key)) {
           // fr components
           if (value.startsWith("@+")) {
             en.setName(value);
+            en.getUri().setIdentifier(idtfLayer + "/" + URI.checkInvalidCh("android:id"));
             String identifier = value.replace("+", "");
             en.setQualifiedName(identifier);
+
+            URI inline = new URI();
+            inline.setIdentifier(URI.checkInvalidCh(value));
+            en.getUri().setProtocol(Protocol.DEF);
+            en.getUri().setInline(inline);
+
             defPool.put(identifier, en);
           }
         } else {

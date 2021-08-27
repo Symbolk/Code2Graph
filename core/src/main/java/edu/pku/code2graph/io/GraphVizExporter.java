@@ -1,9 +1,6 @@
 package edu.pku.code2graph.io;
 
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.RelationNode;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import org.jgrapht.Graph;
 import org.jgrapht.nio.Attribute;
@@ -41,6 +38,16 @@ public class GraphVizExporter {
                       ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
                       : v.getType().name + "(" + ((RelationNode) v).getSymbol() + ")"));
           map.put("shape", new NodeShapeAttribute(v));
+
+          if (v instanceof ElementNode) {
+            URI uri = ((ElementNode) v).getUri();
+            if (uri != null) {
+              String output = uri.toString();
+              map.put(
+                  "uri",
+                  DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
+            }
+          }
 
           return map;
         });
@@ -83,6 +90,16 @@ public class GraphVizExporter {
               "color",
               DefaultAttribute.createAttribute(
                   removed.contains(v) ? "red" : (added.contains(v) ? "green" : "grey")));
+
+          if (v instanceof ElementNode) {
+            URI uri = ((ElementNode) v).getUri();
+            if (uri != null) {
+              String output = uri.toString();
+              map.put(
+                      "uri",
+                      DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
+            }
+          }
 
           return map;
         });
