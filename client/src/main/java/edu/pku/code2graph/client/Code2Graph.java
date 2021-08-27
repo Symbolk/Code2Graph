@@ -20,6 +20,8 @@ import java.util.*;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
+import java.util.*;
+
 /** Java API client */
 public class Code2Graph {
   // meta info
@@ -28,7 +30,7 @@ public class Code2Graph {
   private String tempDir;
 
   private Graph<Node, Edge> graph;
-  private List<Pair<URI, URI>> xllLinks;
+  private List<Triple<URI, URI, Rule>> xllLinks;
 
   // components
   private Generators generator;
@@ -57,6 +59,10 @@ public class Code2Graph {
     this.graph = GraphUtil.initGraph();
     this.xllLinks = new ArrayList<>();
     this.supportedLanguages = new HashSet<>();
+    this.supportedLanguages.add(Language.JAVA);
+    this.supportedLanguages.add(Language.XML);
+    this.supportedLanguages.add(Language.HTML);
+    this.supportedLanguages.add(Language.SQL);
   }
 
   public Code2Graph(String repoName, String repoPath) {
@@ -91,7 +97,7 @@ public class Code2Graph {
     return graph;
   }
 
-  public List<Pair<URI, URI>> getXllLinks() {
+  public List<Triple<URI, URI, Rule>> getXllLinks() {
     return xllLinks;
   }
 
