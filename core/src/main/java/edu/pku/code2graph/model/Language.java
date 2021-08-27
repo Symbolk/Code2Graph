@@ -13,7 +13,7 @@ public enum Language {
   ANY("*"),
   OTHER("");
 
-  private String extension;
+  public String extension;
 
   Language(String extension) {
     this.extension = extension;

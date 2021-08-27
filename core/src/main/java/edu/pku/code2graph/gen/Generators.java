@@ -21,9 +21,7 @@
 package edu.pku.code2graph.gen;
 
 import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
@@ -34,7 +32,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -64,7 +61,7 @@ public class Generators extends Registry<String, Generator, Register> {
    * Dynamically assign generator according to the file type, and generate a single graph if null,
    * fallbacks to default generator
    *
-   * @param filePaths
+   * @param filePaths a list of file paths
    * @return a graph with subgraphs for each language
    * @throws UnsupportedOperationException
    * @throws IOException
@@ -73,12 +70,16 @@ public class Generators extends Registry<String, Generator, Register> {
       throws UnsupportedOperationException, IOException {
     if (filePaths.isEmpty()) {
       throw new UnsupportedOperationException("The given file paths are empty");
+    } else {
+      // a map from generator to file paths
+      Map<String, List<String>> filesMap = FileUtil.categorizeFilesByExtension(filePaths);
+      return generateFromFiles(filesMap);
     }
+  }
 
-    // a map from generator to file paths
-    Map<String, List<String>> filesMap = FileUtil.categorizeFilesByExtension(filePaths);
-
-    for (Map.Entry<String, List<String>> entry : filesMap.entrySet()) {
+  public Graph<Node, Edge> generateFromFiles(Map<String, List<String>> ext2FilePaths)
+      throws UnsupportedOperationException, IOException {
+    for (Map.Entry<String, List<String>> entry : ext2FilePaths.entrySet()) {
       Generator generator = get(entry.getValue().get(0));
       if (generator == null) {
         // for now just skip the file that cannot handle
@@ -89,7 +90,7 @@ public class Generators extends Registry<String, Generator, Register> {
     }
 
     //    GraphVizExporter.printAsDot(graph);
-    return  GraphUtil.getGraph();
+    return GraphUtil.getGraph();
   }
 
   public boolean has(String generator) {
