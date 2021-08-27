@@ -19,7 +19,7 @@ public class Evaluation {
     String repoName = "";
     String repoPath = "";
 
-    Code2Graph client = new Code2Graph(repoName, repoPath);
+    Code2Graph client = new Code2Graph(repoName, repoPath, "");
     client.setSupportedLanguages(
         new HashSet(Arrays.asList(Language.JAVA, Language.HTML, Language.XML)));
     testRename(client);

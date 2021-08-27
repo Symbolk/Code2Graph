@@ -10,9 +10,14 @@ import java.util.*;
 
 public class Detector {
   private final Map<Language, Map<URI, ElementNode>> uriMap;
+  private final Optional<Config> configOpt;
 
-  public Detector(Map<Language, Map<URI, ElementNode>> uriMap) {
+  public Detector(Map<Language, Map<URI, ElementNode>> uriMap, String path) {
     this.uriMap = uriMap;
+
+    // load config
+    ConfigLoader loader = new ConfigLoader();
+    this.configOpt = loader.load(path);
   }
 
   private interface MatchCallback {
@@ -49,15 +54,8 @@ public class Detector {
       return links;
     }
 
-    // load config
-    ConfigLoader loader = new ConfigLoader();
-    Optional<Config> configOpt =
-        loader.load(
-            Objects.requireNonNull(loader.getClass().getClassLoader().getResource("config.yml"))
-                .getPath());
     // create patterns and match
-
-    configOpt.ifPresent(config -> {
+    this.configOpt.ifPresent(config -> {
       for (Rule rule : config.getRules()) {
         link(rule, links);
       }

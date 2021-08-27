@@ -2,21 +2,37 @@ import edu.pku.code2graph.client.Code2Graph;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.xll.Config;
-import edu.pku.code2graph.xll.ConfigLoader;
 import org.jgrapht.Graph;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public class LoaderTest {
-  @Test
-  public void main() {
-    String repoPath = Objects.requireNonNull(this.getClass().getResource("android/butterknife/main")).toString().substring(6);
-    Code2Graph c2g = new Code2Graph("butterknife", repoPath);
+  private void projectTest(String repoName, String configName) {
+    String repoPath = Objects.requireNonNull(this.getClass().getResource(repoName)).toString().substring(6);
+    String configPath = Objects.requireNonNull(this.getClass().getResource(configName)).toString().substring(6);
+    Code2Graph c2g = new Code2Graph("butterknife", repoPath, configPath);
     Graph<Node, Edge> graph = c2g.generateGraph();
     GraphVizExporter.printAsDot(graph);
+  }
+
+  @Test
+  public void butterknifeTest() {
+    projectTest("android/butterknife/main", "android/config.yml");
+  }
+
+  @Test
+  public void databindingTest() {
+    projectTest("android/databinding/main", "android/config.yml");
+  }
+
+  @Test
+  public void findviewbyidTest() {
+    projectTest("android/findviewbyid/main", "android/config.yml");
+  }
+
+  @Test
+  public void viewbindingTest() {
+    projectTest("android/viewbinding/main", "android/config.yml");
   }
 }

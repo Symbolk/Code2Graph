@@ -96,9 +96,7 @@ public class URIPattern extends URI {
     String label = protocol.toString();
     if (!label.equals("any") && !label.equals(uri.getProtocol().toString())) return null;
 
-    // Part 3: match language (TBD)
-
-    // Part 4: match every layers
+    // Part 3: match every layers
     Map<String, String> captures = new HashMap<>();
     for (int i = 0; i < depth; ++i) {
       Map<String, String> cap = matchLayer(i, uri.getLayers().get(i));

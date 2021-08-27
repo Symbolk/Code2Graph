@@ -27,6 +27,7 @@ public class Code2Graph {
   // meta info
   private final String repoName;
   private final String repoPath;
+  private final String configPath;
   private String tempDir;
 
   private Graph<Node, Edge> graph;
@@ -65,15 +66,17 @@ public class Code2Graph {
     this.supportedLanguages.add(Language.SQL);
   }
 
-  public Code2Graph(String repoName, String repoPath) {
+  public Code2Graph(String repoName, String repoPath, String configPath) {
     this.repoName = repoName;
     this.repoPath = repoPath;
+    this.configPath = configPath;
     this.differ = new Differ(repoName, repoPath);
   }
 
-  public Code2Graph(String repoName, String repoPath, String tempDir) {
+  public Code2Graph(String repoName, String repoPath, String configPath, String tempDir) {
     this.repoName = repoName;
     this.repoPath = repoPath;
+    this.configPath = configPath;
     this.differ = new Differ(repoName, repoPath, tempDir);
   }
 
@@ -181,7 +184,7 @@ public class Code2Graph {
       // construct graph with intra-language nodes and edges
       Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
       // build cross-language linking (XLL) edges
-      Detector detector = new Detector(GraphUtil.getUriMap());
+      Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
       List<Triple<URI, URI, Rule>> links = detector.linkAll();
       // create uri-element map when create node
       Map<Language, Map<URI, ElementNode>> uriMap = GraphUtil.getUriMap();

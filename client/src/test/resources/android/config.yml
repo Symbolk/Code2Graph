@@ -1,0 +1,19 @@
+rules:
+ - - protocol: def
+     lang: Java
+     file: "*.java"
+     identifier: get(name:Capitalized)
+   - protocol: use
+     lang: Java
+     file: "*.java"
+     inline:
+       lang: SQL
+       identifier: "#{(name)}"
+ - - protocol: def
+     lang: Java
+     file: "*.java"
+     identifier: R.layout.(name)
+   - protocol: use
+     lang: Xml
+     file: "*.xml"
+     identifier: "@+id/(name)"
