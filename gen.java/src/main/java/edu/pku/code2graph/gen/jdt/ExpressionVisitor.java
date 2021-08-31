@@ -133,14 +133,14 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
   private void parseExtendsAndImplements(ITypeBinding binding, ElementNode node) {
     ITypeBinding parentType = binding.getSuperclass();
     if (parentType != null && parentType.isFromSource()) {
-      usePool.add(Triple.of(node, EdgeType.SUPER_CLASS, parentType.getQualifiedName()));
+      usePool.add(Triple.of(node, EdgeType.EXTENDED_CLASS, parentType.getQualifiedName()));
     }
     ITypeBinding[] interfaces = binding.getInterfaces();
     if (interfaces != null && interfaces.length > 0) {
       for (ITypeBinding anInterface : interfaces) {
         if (anInterface.isFromSource()) {
           usePool.add(
-                  Triple.of(node, EdgeType.EXTENDED_INTERFACE, anInterface.getQualifiedName()));
+                  Triple.of(node, EdgeType.IMPLEMENTED_INTERFACE, anInterface.getQualifiedName()));
         }
       }
     }
