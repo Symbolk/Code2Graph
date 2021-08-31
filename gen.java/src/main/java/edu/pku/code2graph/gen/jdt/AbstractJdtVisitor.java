@@ -2,6 +2,7 @@ package edu.pku.code2graph.gen.jdt;
 
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -37,14 +38,15 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   }
 
   protected ElementNode createElementNode(
-          Protocol protocol,
-          Type type,
-          String snippet,
-          String name,
-          String qname,
-          String identifier) {
-    URI uri = new URI(protocol, Language.JAVA, uriFilePath, identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""));
-    ElementNode node = new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
+      Protocol protocol, Type type, String snippet, String name, String qname, String identifier) {
+    URI uri =
+        new URI(
+            protocol,
+            Language.JAVA,
+            uriFilePath,
+            identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""));
+    ElementNode node =
+        new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
     graph.addVertex(node);
     if (protocol == Protocol.DEF) {
       defPool.put(qname, node);
@@ -88,7 +90,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
 
   public void setFilePath(String filePath) {
     this.filePath = filePath;
-    this.uriFilePath = filePath.replace("\\", "/");
+    this.uriFilePath = FilenameUtils.separatorsToUnix(filePath);
   }
 
   protected Range computeRange(ASTNode node) {

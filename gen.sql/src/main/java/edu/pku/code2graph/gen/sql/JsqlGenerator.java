@@ -3,12 +3,14 @@ package edu.pku.code2graph.gen.sql;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
-import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.GraphUtil;
 import net.sf.jsqlparser.statement.Statements;
+import org.apache.commons.io.FilenameUtils;
 import org.jgrapht.Graph;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +24,10 @@ public class JsqlGenerator extends Generator {
     List<Statements> stmtsList = new ArrayList<>();
     StatementHandler hdl = new StatementHandler();
     filePaths.forEach(
-        (file) -> {
+        (filePath) -> {
           try {
-            Statements stmts = parser.parseFile(file);
-            hdl.setFilePath(new File(file).getPath());
+            Statements stmts = parser.parseFile(filePath);
+            hdl.setFilePath(FilenameUtils.separatorsToUnix(filePath));
             hdl.generateFrom(stmts);
             stmtsList.add(stmts);
           } catch (IOException e) {

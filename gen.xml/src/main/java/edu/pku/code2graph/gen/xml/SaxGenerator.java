@@ -5,6 +5,7 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.io.FilenameUtils;
 import org.jgrapht.Graph;
 import org.xml.sax.SAXException;
 
@@ -13,6 +14,9 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +30,7 @@ public class SaxGenerator extends Generator {
       SAXParser parser = factory.newSAXParser();
       for (String filePath : filePaths) {
         File file = new File(filePath);
-        handler.setFilePath(file.getPath());
+        handler.setFilePath(FilenameUtils.separatorsToUnix(filePath));
         parser.parse(file, handler);
       }
 
