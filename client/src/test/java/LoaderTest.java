@@ -2,15 +2,14 @@ import edu.pku.code2graph.client.Code2Graph;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.util.FileUtil;
 import org.jgrapht.Graph;
 import org.junit.jupiter.api.Test;
 
-import java.util.Objects;
-
 public class LoaderTest {
   private void projectTest(String repoName, String configName) {
-    String repoPath = Objects.requireNonNull(this.getClass().getResource(repoName)).getPath();
-    String configPath = Objects.requireNonNull(this.getClass().getResource(configName)).getPath();
+    String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
+    String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
     Code2Graph c2g = new Code2Graph("butterknife", repoPath, configPath);
     Graph<Node, Edge> graph = c2g.generateGraph();
     GraphVizExporter.printAsDot(graph);

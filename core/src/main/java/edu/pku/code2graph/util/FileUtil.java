@@ -5,6 +5,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -250,5 +252,17 @@ public class FileUtil {
       e.printStackTrace();
     }
     return result;
+  }
+
+  public static String getPathFromURL(URL url) {
+    if (url == null) {
+      return "";
+    }
+    try {
+      return new File(url.toURI()).getAbsolutePath();
+    } catch (URISyntaxException e) {
+      e.printStackTrace();
+      return "";
+    }
   }
 }
