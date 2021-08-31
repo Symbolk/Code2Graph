@@ -8,6 +8,7 @@ import edu.pku.code2graph.util.GraphUtil;
 import net.sf.jsqlparser.statement.Statements;
 import org.jgrapht.Graph;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,7 @@ public class JsqlGenerator extends Generator {
         (file) -> {
           try {
             Statements stmts = parser.parseFile(file);
-            hdl.setFilePath(file);
+            hdl.setFilePath(new File(file).getPath());
             hdl.generateFrom(stmts);
             stmtsList.add(stmts);
           } catch (IOException e) {

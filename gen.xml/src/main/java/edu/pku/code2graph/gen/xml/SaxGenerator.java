@@ -25,8 +25,9 @@ public class SaxGenerator extends Generator {
       SAXParserFactory factory = SAXParserFactory.newInstance();
       SAXParser parser = factory.newSAXParser();
       for (String filePath : filePaths) {
-        handler.setFilePath(filePath);
-        parser.parse(new File(filePath), handler);
+        File file = new File(filePath);
+        handler.setFilePath(file.getPath());
+        parser.parse(file, handler);
       }
 
       handler.buildEdges();
