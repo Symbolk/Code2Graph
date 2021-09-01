@@ -9,7 +9,10 @@ import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -63,13 +66,18 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     node.setRange(computeRange(td));
 
-    if (td.isPackageMemberTypeDeclaration()) {
-      graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+    if (tdBinding != null) {
+      if (tdBinding.isTopLevel()) {
+        graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      }
+      parseAnnotations(td.modifiers(), node);
+      parseExtendsAndImplements(tdBinding, node);
+      parseMembers(td, tdBinding, node);
+    } else {
+      if (td.isPackageMemberTypeDeclaration()) {
+        graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      }
     }
-
-    parseAnnotations(td.modifiers(), node);
-    parseExtendsAndImplements(Objects.requireNonNull(tdBinding), node);
-    parseMembers(td, tdBinding, node);
 
     return true;
   }
@@ -88,14 +96,19 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             JdtService.getIdentifier(atd));
     node.setRange(computeRange(atd));
 
-    if (atd.isPackageMemberTypeDeclaration()) {
-      graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+    if (binding != null) {
+      if (binding.isTopLevel()) {
+        graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      }
+      parseAnnotations(atd.modifiers(), node);
+      parseExtendsAndImplements(binding, node);
+      parseMembers(atd, binding, node);
+    } else {
+      if (atd.isPackageMemberTypeDeclaration()) {
+        graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      }
     }
 
-    parseAnnotations(atd.modifiers(), node);
-    parseExtendsAndImplements(
-        Objects.requireNonNull(binding, "Declaration binding is null!"), node);
-    parseMembers(atd, binding, node);
     return true;
   }
 
@@ -114,14 +127,20 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     node.setRange(computeRange(ed));
 
-    if (ed.isPackageMemberTypeDeclaration()) {
-      graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+    parseAnnotations(ed.modifiers(), node);
+
+    if (edBinding != null) {
+      if (edBinding.isTopLevel()) {
+        graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      }
+      parseExtendsAndImplements(edBinding, node);
+      parseMembers(ed, edBinding, node);
+    } else {
+      if (ed.isPackageMemberTypeDeclaration()) {
+        graph.addEdge(cuNode, node, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+      }
     }
 
-    parseAnnotations(ed.modifiers(), node);
-    parseExtendsAndImplements(
-        Objects.requireNonNull(edBinding, "Declaration binding is null!"), node);
-    parseMembers(ed, edBinding, node);
     return true;
   }
 
