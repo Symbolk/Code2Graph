@@ -2,11 +2,11 @@ package com.github.test;
 
 import java.io.IOException;
 
-public class Test1 extends A implements B {
+public class TestMember extends A implements B {
   private A a, b;
 
   // constructor
-  public Test1() {
+  public TestMember() {
     super(0);
   }
 

@@ -16,14 +16,14 @@ public class EdgeType {
   public static final Type REFERENCE = type("reference");
 
   // roles for method declaration
-  public static final Type METHOD_PARAMETER = type("parameter");
-  public static final Type METHOD_RETURN = type("return_type");
+  public static final Type PARAMETER = type("parameter");
+  public static final Type RETURN_TYPE = type("return_type");
 
   // roles for method invocation
-  public static final Type METHOD_CALLER = type("caller");
-  public static final Type METHOD_CALLEE = type("callee");
+  public static final Type CALLER = type("caller");
+  public static final Type CALLEE = type("callee");
   public static final Type ACCESSOR = type("accessor");
-  public static final Type METHOD_ARGUMENT = type("argument");
+  public static final Type ARGUMENT = type("argument");
 
   // nesting
   public static final Type BODY = type("body");

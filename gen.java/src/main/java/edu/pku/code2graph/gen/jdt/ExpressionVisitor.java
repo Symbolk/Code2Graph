@@ -327,7 +327,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     if (mdBinding != null) {
       ITypeBinding tpBinding = mdBinding.getReturnType();
       if (tpBinding != null && tpBinding.isFromSource()) {
-        usePool.add(Triple.of(node, EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
+        usePool.add(Triple.of(node, EdgeType.RETURN_TYPE, tpBinding.getQualifiedName()));
       }
     }
 
@@ -354,7 +354,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 JdtService.getIdentifier(p));
 
         node.setRange(computeRange(p));
-        graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.METHOD_PARAMETER));
+        graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
 
         ITypeBinding paraBinding = p.getType().resolveBinding();
         if (paraBinding != null) {
@@ -483,6 +483,21 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
   }
 
   /**
+   * Process arguments of (super) method/constructor invocation
+   *
+   * @param node
+   * @param arguments
+   */
+  private void parseArguments(RelationNode node, List arguments) {
+    for (Object arg : arguments) {
+      if (arg instanceof Expression) {
+        graph.addEdge(
+            node, parseExpression((Expression) arg), new Edge(GraphUtil.eid(), EdgeType.ARGUMENT));
+      }
+    }
+  }
+
+  /**
    * Parse statement and return the created node
    *
    * @param stmt
@@ -499,8 +514,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             RelationNode node =
                 new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
             node.setRange(computeRange(stmt));
-
             graph.addVertex(node);
+
             for (Object st : block.statements()) {
               parseStatement((Statement) st)
                   .ifPresent(
@@ -509,6 +524,50 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             }
             return Optional.of(node);
           }
+        }
+        // it is strange that constructor invocations is statement instead of expression
+      case ASTNode.SUPER_CONSTRUCTOR_INVOCATION:
+        {
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.SUPER_CONSTRUCTOR_INVOCATION,
+                  stmt.toString());
+          node.setRange(computeRange(stmt));
+          graph.addVertex(node);
+
+          SuperConstructorInvocation ci = (SuperConstructorInvocation) stmt;
+          IMethodBinding constructorBinding = ci.resolveConstructorBinding();
+          if (constructorBinding != null) {
+            usePool.add(
+                Triple.of(
+                    node,
+                    EdgeType.REFERENCE,
+                    constructorBinding.getDeclaringClass().getQualifiedName()));
+          }
+          parseArguments(node, ci.arguments());
+          break;
+        }
+      case ASTNode.CONSTRUCTOR_INVOCATION:
+        {
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(), Language.JAVA, NodeType.CONSTRUCTOR_INVOCATION, stmt.toString());
+          node.setRange(computeRange(stmt));
+          graph.addVertex(node);
+
+          ConstructorInvocation ci = (ConstructorInvocation) stmt;
+          IMethodBinding constructorBinding = ci.resolveConstructorBinding();
+          if (constructorBinding != null) {
+            usePool.add(
+                Triple.of(
+                    node,
+                    EdgeType.REFERENCE,
+                    constructorBinding.getDeclaringClass().getQualifiedName()));
+          }
+          parseArguments(node, ci.arguments());
+          break;
         }
       case ASTNode.RETURN_STATEMENT:
         {
@@ -965,7 +1024,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.THIS_EXPRESSION:
         {
           root.setType(NodeType.THIS);
-//          ThisExpression te = (ThisExpression) exp;
+          //          ThisExpression te = (ThisExpression) exp;
           break;
         }
       case ASTNode.VARIABLE_DECLARATION_EXPRESSION:
@@ -1000,8 +1059,22 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           }
           break;
         }
+      case ASTNode.SUPER_FIELD_ACCESS:
+        {
+          root.setType(NodeType.SUPER_FIELD_ACCESS);
+          SuperFieldAccess fa = (SuperFieldAccess) exp;
+
+          IVariableBinding faBinding = fa.resolveFieldBinding();
+          if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
+            usePool.add(
+                Triple.of(
+                    root,
+                    EdgeType.REFERENCE,
+                    faBinding.getDeclaringClass().getQualifiedName() + "." + faBinding.getName()));
+          }
+          break;
+        }
       case ASTNode.FIELD_ACCESS:
-        //      case ASTNode.SUPER_FIELD_ACCESS:
         {
           root.setType(NodeType.FIELD_ACCESS);
           FieldAccess fa = (FieldAccess) exp;
@@ -1017,19 +1090,19 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           break;
         }
       case ASTNode.CLASS_INSTANCE_CREATION:
-        //      case ASTNode.CONSTRUCTOR_INVOCATION:
         {
           root.setType(NodeType.TYPE_INSTANTIATION);
-          IMethodBinding constructorBinding =
-              ((ClassInstanceCreation) exp).resolveConstructorBinding();
+
+          ClassInstanceCreation cic = (ClassInstanceCreation) exp;
+          IMethodBinding constructorBinding = cic.resolveConstructorBinding();
           if (constructorBinding != null) {
             usePool.add(
                 Triple.of(
                     root,
                     EdgeType.DATA_TYPE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
-            // TODO: parse argument expressions
           }
+          parseArguments(root, cic.arguments());
           break;
         }
       case ASTNode.SUPER_METHOD_INVOCATION:
@@ -1037,11 +1110,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           SuperMethodInvocation mi = (SuperMethodInvocation) exp;
           root.setType(NodeType.SUPER_METHOD_INVOCATION);
 
-          List<Expression> arguments = mi.arguments();
-          for (Expression arg : arguments) {
-            graph.addEdge(
-                root, parseExpression(arg), new Edge(GraphUtil.eid(), EdgeType.METHOD_ARGUMENT));
-          }
+          parseArguments(root, mi.arguments());
           // find the method declaration in super class
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           if (mdBinding != null) {
@@ -1049,12 +1118,11 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             JdtService.findWrappedMethodName(mi)
                 .ifPresent(
                     name -> {
-                      usePool.add(Triple.of(root, EdgeType.METHOD_CALLER, name));
+                      usePool.add(Triple.of(root, EdgeType.CALLER, name));
                     });
             // get callee qname
             usePool.add(
-                Triple.of(
-                    root, EdgeType.METHOD_CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
+                Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
           }
           break;
         }
@@ -1071,11 +1139,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 new Edge(GraphUtil.eid(), EdgeType.ACCESSOR));
           }
 
-          List<Expression> arguments = mi.arguments();
-          for (Expression arg : arguments) {
-            graph.addEdge(
-                root, parseExpression(arg), new Edge(GraphUtil.eid(), EdgeType.METHOD_ARGUMENT));
-          }
+          parseArguments(root, mi.arguments());
 
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           // only internal invocation (or consider types, fields and local?)
@@ -1084,12 +1148,11 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             JdtService.findWrappedMethodName(mi)
                 .ifPresent(
                     name -> {
-                      usePool.add(Triple.of(root, EdgeType.METHOD_CALLER, name));
+                      usePool.add(Triple.of(root, EdgeType.CALLER, name));
                     });
             // get callee qname
             usePool.add(
-                Triple.of(
-                    root, EdgeType.METHOD_CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
+                Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
           }
           break;
         }
