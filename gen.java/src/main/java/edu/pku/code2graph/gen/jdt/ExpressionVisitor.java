@@ -918,7 +918,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
-          if (binding != null && binding instanceof IVariableBinding) {
+          if (binding == null) {
+            // an unresolved identifier
+            root.setType(NodeType.SIMPLE_NAME);
+            usePool.add(
+                Triple.of(root, EdgeType.REFERENCE, ((SimpleName) exp).getFullyQualifiedName()));
+          } else if (binding instanceof IVariableBinding) {
             IVariableBinding varBinding = (IVariableBinding) binding;
             if (varBinding.isField()) {
               root.setType(NodeType.FIELD_ACCESS);
@@ -959,9 +964,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         }
       case ASTNode.THIS_EXPRESSION:
         {
-          //          root.setType(NodeType.);
-          ThisExpression te = (ThisExpression) exp;
-          te.getQualifier();
+          root.setType(NodeType.THIS);
+//          ThisExpression te = (ThisExpression) exp;
           break;
         }
       case ASTNode.VARIABLE_DECLARATION_EXPRESSION:
@@ -997,6 +1001,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           break;
         }
       case ASTNode.FIELD_ACCESS:
+        //      case ASTNode.SUPER_FIELD_ACCESS:
         {
           root.setType(NodeType.FIELD_ACCESS);
           FieldAccess fa = (FieldAccess) exp;
@@ -1012,6 +1017,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           break;
         }
       case ASTNode.CLASS_INSTANCE_CREATION:
+        //      case ASTNode.CONSTRUCTOR_INVOCATION:
         {
           root.setType(NodeType.TYPE_INSTANTIATION);
           IMethodBinding constructorBinding =
@@ -1023,6 +1029,32 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                     EdgeType.DATA_TYPE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
             // TODO: parse argument expressions
+          }
+          break;
+        }
+      case ASTNode.SUPER_METHOD_INVOCATION:
+        {
+          SuperMethodInvocation mi = (SuperMethodInvocation) exp;
+          root.setType(NodeType.SUPER_METHOD_INVOCATION);
+
+          List<Expression> arguments = mi.arguments();
+          for (Expression arg : arguments) {
+            graph.addEdge(
+                root, parseExpression(arg), new Edge(GraphUtil.eid(), EdgeType.METHOD_ARGUMENT));
+          }
+          // find the method declaration in super class
+          IMethodBinding mdBinding = mi.resolveMethodBinding();
+          if (mdBinding != null) {
+            // get caller qname
+            JdtService.findWrappedMethodName(mi)
+                .ifPresent(
+                    name -> {
+                      usePool.add(Triple.of(root, EdgeType.METHOD_CALLER, name));
+                    });
+            // get callee qname
+            usePool.add(
+                Triple.of(
+                    root, EdgeType.METHOD_CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
           }
           break;
         }
