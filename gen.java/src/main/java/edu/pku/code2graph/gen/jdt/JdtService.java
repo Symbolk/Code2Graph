@@ -122,7 +122,6 @@ public class JdtService {
             getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
       } else if (parent instanceof TypeDeclaration) {
         ITypeBinding tdBinding = ((TypeDeclaration) parent).resolveBinding();
-        // isFromSource
         return Optional.of(tdBinding.getQualifiedName());
       } else if (parent instanceof Initializer && parent.getParent() instanceof TypeDeclaration) {
         // initializer block
