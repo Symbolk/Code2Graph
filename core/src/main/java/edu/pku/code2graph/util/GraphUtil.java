@@ -68,11 +68,31 @@ public class GraphUtil {
     uriMap = new HashMap<>();
   }
 
+  /**
+   * Add one single uri to the urimap
+   *
+   * @param language
+   * @param uri
+   * @param node
+   */
   public static void addURI(Language language, URI uri, ElementNode node) {
     if (!uriMap.containsKey(language)) {
       uriMap.put(language, new HashMap<URI, ElementNode>());
     }
     uriMap.get(language).put(uri, node);
+  }
+
+  /**
+   * Add a collection of uris into the existing urimap
+   *
+   * @param language
+   * @param map
+   */
+  public static void addURIs(Language language, Map<URI, ElementNode> map) {
+    map.forEach(
+        (key, value) -> {
+          addURI(language, key, value);
+        });
   }
 
   public static Map<Language, Map<URI, ElementNode>> getUriMap() {
