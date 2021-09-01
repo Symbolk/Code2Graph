@@ -563,7 +563,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
           parseArguments(node, ci.arguments());
-          break;
+          return Optional.of(node);
         }
       case ASTNode.CONSTRUCTOR_INVOCATION:
         {
@@ -583,7 +583,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
           parseArguments(node, ci.arguments());
-          break;
+          return Optional.of(node);
         }
       case ASTNode.RETURN_STATEMENT:
         {
