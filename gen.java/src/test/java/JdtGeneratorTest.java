@@ -41,4 +41,12 @@ public class JdtGeneratorTest {
     Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
     GraphVizExporter.printAsDot(graph);
   }
+
+  @Test
+  public void testEnum() throws IOException {
+    List<String> filePaths = new ArrayList<>();
+    filePaths.add("src/test/resources/TestEnum.java");
+    Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
+    GraphVizExporter.printAsDot(graph);
+  }
 }
