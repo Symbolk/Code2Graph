@@ -12,6 +12,7 @@ public class NodeType {
   public static final Type CLASS_DECLARATION = type("class_declaration", true);
   public static final Type INTERFACE_DECLARATION = type("interface_declaration", true);
   public static final Type ENUM_DECLARATION = type("enum_declaration", true);
+  public static final Type ANNOTATION_DECLARATION = type("annotation_declaration");
 
   // members
   public static final Type INIT_BLOCK_DECLARATION = type("init_block_declaration", true);
@@ -27,6 +28,7 @@ public class NodeType {
   public static final Type BLOCK = type("block");
 
   // expression
+  public static final Type ANNOTATION= type("annotation");
   public static final Type ASSIGNMENT = type("assignment");
   public static final Type INFIX = type("infix");
   public static final Type PREFIX = type("prefix");

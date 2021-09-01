@@ -8,6 +8,7 @@ public class EdgeType {
   // type hierarchy
   public static final Type EXTENDED_CLASS = type("extended_class");
   public static final Type IMPLEMENTED_INTERFACE = type("implemented_interface");
+  public static final Type ANNOTATION = type("annotation");
   public static final Type THROWN_EXCEPTION = type("thrown_exception");
 
   // type and source
