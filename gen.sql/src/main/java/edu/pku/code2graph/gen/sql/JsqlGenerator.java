@@ -34,7 +34,7 @@ public class JsqlGenerator extends Generator {
             e.printStackTrace();
           }
         });
-    GraphUtil.getUriMap().put(Language.SQL, hdl.getUriMap());
+    GraphUtil.addURIs(Language.SQL, hdl.getUriMap());
     return hdl.getGraph();
   }
 
@@ -44,7 +44,7 @@ public class JsqlGenerator extends Generator {
     Statements stmt = parser.parseLines(query);
     hdl.setFilePath(filepath);
     hdl.generateFrom(stmt);
-    GraphUtil.getUriMap().put(Language.SQL, hdl.getUriMap());
+    GraphUtil.addURIs(Language.SQL, hdl.getUriMap());
     return hdl.getGraph();
   }
 }
