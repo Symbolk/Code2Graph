@@ -4,7 +4,9 @@ import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
 import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.Graph;
@@ -20,6 +22,9 @@ public class JdtGenerator extends Generator {
 
   @Override
   protected Graph<Node, Edge> generate(List<String> filePaths) {
+    // create uri map for java
+    GraphUtil.getUriMap().put(Language.JAVA, new HashMap<>());
+
     // the absolute file path of the compilation units to create ASTs for
     String[] srcPaths = new String[filePaths.size()];
     filePaths.toArray(srcPaths);

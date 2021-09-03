@@ -48,6 +48,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     ElementNode node =
         new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
     graph.addVertex(node);
+    GraphUtil.getUriMap().get(Language.JAVA).put(uri, node);
     if (protocol == Protocol.DEF) {
       defPool.put(qname, node);
     }
