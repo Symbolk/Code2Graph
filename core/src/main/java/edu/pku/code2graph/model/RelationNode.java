@@ -14,6 +14,7 @@ public class RelationNode extends Node {
     super(id, language, type, snippet);
   }
 
+  // symbol: +/-/*// of expressions, or symbol for viz
   public RelationNode(Integer id, Language language, Type type, String snippet, String symbol) {
     super(id, language, type, snippet);
     this.symbol = symbol;

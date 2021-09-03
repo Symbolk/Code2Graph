@@ -12,6 +12,7 @@ public class NodeType {
   public static final Type CLASS_DECLARATION = type("class_declaration", true);
   public static final Type INTERFACE_DECLARATION = type("interface_declaration", true);
   public static final Type ENUM_DECLARATION = type("enum_declaration", true);
+  public static final Type ANNOTATION_DECLARATION = type("annotation_declaration");
 
   // members
   public static final Type INIT_BLOCK_DECLARATION = type("init_block_declaration", true);
@@ -19,21 +20,28 @@ public class NodeType {
   public static final Type ENUM_CONSTANT_DECLARATION = type("enum_const_declaration", true);
   public static final Type METHOD_DECLARATION = type("method_declaration", true);
   public static final Type VAR_DECLARATION = type("variable_declaration");
-  public static final Type LITERAL = type("literal");
+  public static final Type SIMPLE_NAME = type("simple_name");
   public static final Type QUALIFIED_NAME = type("qualified_name");
+  public static final Type LITERAL = type("literal");
+  public static final Type THIS = type("this");
 
   // Relations
   // block
   public static final Type BLOCK = type("block");
 
   // expression
+  public static final Type ANNOTATION = type("annotation");
   public static final Type ASSIGNMENT = type("assignment");
   public static final Type INFIX = type("infix");
   public static final Type PREFIX = type("prefix");
   public static final Type POSTFIX = type("postfix");
 
   public static final Type FIELD_ACCESS = type("field_access");
+  public static final Type SUPER_FIELD_ACCESS = type("super_field_access");
   public static final Type METHOD_INVOCATION = type("method_invocation");
+  public static final Type SUPER_METHOD_INVOCATION = type("super_method_invocation");
+  public static final Type CONSTRUCTOR_INVOCATION = type("constructor_invocation");
+  public static final Type SUPER_CONSTRUCTOR_INVOCATION = type("super_constructor_invocation");
   public static final Type PARAMETER_ACCESS = type("parameter_access");
   public static final Type CONSTANT_ACCESS = type("constant_access");
   public static final Type LOCAL_VAR_ACCESS = type("local_var_access");

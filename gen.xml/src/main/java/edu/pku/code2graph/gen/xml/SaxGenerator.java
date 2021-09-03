@@ -36,7 +36,7 @@ public class SaxGenerator extends Generator {
 
       handler.buildEdges();
 
-      GraphUtil.getUriMap().put(Language.XML, handler.getUriMap());
+      GraphUtil.addURIs(Language.XML, handler.getUriMap());
     } catch (SAXException | IOException | ParserConfigurationException e) {
       e.printStackTrace();
     }

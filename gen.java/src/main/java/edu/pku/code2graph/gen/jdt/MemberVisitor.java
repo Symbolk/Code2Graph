@@ -209,7 +209,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
     if (mdBinding != null) {
       ITypeBinding tpBinding = mdBinding.getReturnType();
       if (tpBinding != null && tpBinding.isFromSource()) {
-        usePool.add(Triple.of(node, EdgeType.METHOD_RETURN, tpBinding.getQualifiedName()));
+        usePool.add(Triple.of(node, EdgeType.RETURN_TYPE, tpBinding.getQualifiedName()));
       }
     }
 
@@ -235,7 +235,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
   
         node.setRange(computeRange(p));
 
-        graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.METHOD_PARAMETER));
+        graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
 
         ITypeBinding paraBinding = p.getType().resolveBinding();
         if (paraBinding != null) {
@@ -346,7 +346,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
               name -> {
                 Node callerNode = defPool.get(name);
                 if (callerNode != null) {
-                  usePool.add(Triple.of(callerNode, EdgeType.METHOD_CALLER, calleeSign));
+                  usePool.add(Triple.of(callerNode, EdgeType.CALLER, calleeSign));
                 }
               });
       //      // get callee qname

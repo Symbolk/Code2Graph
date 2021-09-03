@@ -152,6 +152,7 @@ public class GraphVizExporter {
     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
     Transferable transferable = new StringSelection(dot);
     clipboard.setContents(transferable, null);
+    System.out.println("Graph in dot format has been copied!");
     return dot;
   }
 

@@ -95,7 +95,6 @@ public class JdtService {
   public static Optional<String> findWrappedEntityName(ASTNode node) {
     ASTNode parent = node.getParent();
     while (parent != null) {
-      //      if (parent instanceof BodyDeclaration) {
       if (parent instanceof VariableDeclarationFragment
           && parent.getParent() instanceof FieldDeclaration) {
         IVariableBinding binding = ((VariableDeclarationFragment) parent).resolveBinding();
@@ -123,7 +122,6 @@ public class JdtService {
             getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
       } else if (parent instanceof TypeDeclaration) {
         ITypeBinding tdBinding = ((TypeDeclaration) parent).resolveBinding();
-        // isFromSource
         return Optional.of(tdBinding.getQualifiedName());
       } else if (parent instanceof Initializer && parent.getParent() instanceof TypeDeclaration) {
         // initializer block
@@ -232,6 +230,8 @@ public class JdtService {
         name = ((SingleVariableDeclaration) node).getName();
       } else if (node instanceof VariableDeclarationFragment) {
         name = ((VariableDeclarationFragment) node).getName();
+      }else if(node instanceof AnnotationTypeDeclaration) {
+        name = ((AnnotationTypeDeclaration) node).getName();
       }
       if (name != null) {
         list.add(name.getFullyQualifiedName());
