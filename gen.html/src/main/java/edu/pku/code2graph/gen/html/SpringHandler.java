@@ -22,15 +22,20 @@ public class SpringHandler extends AbstractHandler {
   }
 
   private void traverseChidren(Element ele) {
-    URI uri = new URI(Protocol.DEF, Language.HTML, filePath, getIdentifier(ele.tagName()));
+    URI uri =
+        new URI(
+            Protocol.DEF,
+            Language.HTML,
+            filePath,
+            ele instanceof Document ? "" : getIdentifier(ele.tagName()));
     ElementNode en =
         new ElementNode(
             GraphUtil.nid(),
             Language.HTML,
             ele instanceof Document ? type("file", true) : type("element", true),
             ele.toString(),
-            ele.tagName(),
-            ele.normalName(),
+            ele instanceof Document ? "" : ele.tagName(),
+            ele instanceof Document ? "" : ele.normalName(),
             uri);
     logger.debug(
         (ele instanceof Document) + "," + ele + "," + ele.tagName() + "," + ele.normalName());

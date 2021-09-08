@@ -31,9 +31,14 @@ public class StandardDialectParser {
         node.setEndIdx(e);
 
         while (!childrenPool.isEmpty()) {
-          DialectNode child = childrenPool.pop();
-          node.getChildren().add(child);
-          child.setParent(node);
+          DialectNode child = childrenPool.peek();
+          if (child.getStartIdx() >= s && child.getEndIdx() <= e) {
+            childrenPool.pop();
+            node.getChildren().add(child);
+            child.setParent(node);
+          } else {
+            break;
+          }
         }
 
         childrenPool.push(node);
