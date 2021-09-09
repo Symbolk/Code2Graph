@@ -32,9 +32,10 @@ public class AbstractHandler {
   public String getIdentifier(String self) {
     StringBuilder idtf = new StringBuilder();
     for (ElementNode node : stack) {
-      idtf.append(URI.checkInvalidCh(node.getName())).append("/");
+      if(!node.getName().isEmpty())
+        idtf.append(URI.checkInvalidCh(node.getName())).append("/");
     }
-    idtf.append(self);
+    idtf.append(URI.checkInvalidCh(self));
     return idtf.toString();
   }
 
