@@ -967,14 +967,9 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
-          if (qualifiedName.getQualifier().isQualifiedName()) {
-            //            GraphUtil.addURI(Language.JAVA, new
-            // URI(qualifiedName.getFullyQualifiedName()))
-          }
-          //        ITypeBinding typeBinding = qualifiedName.getQualifier().resolveTypeBinding();
-          //          if (typeBinding != null) {
-          //
-          //          }
+          URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+          root.setUri(uri);
+          GraphUtil.addURI(Language.JAVA, uri, root);
           break;
         }
       case ASTNode.SIMPLE_NAME:
@@ -982,7 +977,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           IBinding binding = ((SimpleName) exp).resolveBinding();
           URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, ((SimpleName) exp).getFullyQualifiedName());
           root.setUri(uri);
-          System.out.println(root.getId());
           GraphUtil.addURI(Language.JAVA, uri, root);
           if (binding == null) {
             // an unresolved identifier

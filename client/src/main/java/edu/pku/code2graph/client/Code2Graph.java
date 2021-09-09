@@ -187,7 +187,7 @@ public class Code2Graph {
       Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
       List<Triple<URI, URI, Rule>> links = detector.linkAll();
       // create uri-element map when create node
-      Map<Language, Map<URI, ElementNode>> uriMap = GraphUtil.getUriMap();
+      Map<Language, Map<URI, Node>> uriMap = GraphUtil.getUriMap();
       Type xllType = type("xll");
 
       for (Triple<URI, URI, Rule> link : links) {

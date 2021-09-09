@@ -23,11 +23,11 @@ rules:
      inline:
        lang: SQL
        identifier: "#{(name)}"
- - - protocol: def
+ - - protocol: use
      lang: Java
      file: "*.java"
-     identifier: R.layout.(name)
-   - protocol: use
+     identifier: R.id.(name)
+   - protocol: any
      lang: Xml
      file: "*.xml"
      identifier: "@+id/(name)"
