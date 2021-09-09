@@ -10,9 +10,8 @@ public class LoaderTest {
   private void projectTest(String repoName, String configName) {
     String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
     String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
-    Code2Graph c2g = new Code2Graph("butterknife", repoPath, configPath);
-    Graph<Node, Edge> graph = c2g.generateGraph();
-    GraphVizExporter.printAsDot(graph);
+    Code2Graph c2g = new Code2Graph(repoName, repoPath, configPath);
+    c2g.generateGraph();
   }
 
   @Test

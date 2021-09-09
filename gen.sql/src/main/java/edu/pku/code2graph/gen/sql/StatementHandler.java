@@ -40,7 +40,7 @@ public class StatementHandler {
   protected Logger logger = LoggerFactory.getLogger(StatementHandler.class);
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
-  protected Map<URI, ElementNode> uriMap = new HashMap<>();
+  protected Map<URI, Node> uriMap = new HashMap<>();
 
   private boolean isInline = false;
   private Language wrapLang;
@@ -62,7 +62,7 @@ public class StatementHandler {
     tablesNamesFinder.visit(stmts);
   }
 
-  public Map<URI, ElementNode> getUriMap() {
+  public Map<URI, Node> getUriMap() {
     return uriMap;
   }
 

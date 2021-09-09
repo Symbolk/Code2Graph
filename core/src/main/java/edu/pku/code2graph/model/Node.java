@@ -15,6 +15,7 @@ public abstract class Node implements Serializable {
   protected String snippet;
   protected Language language;
   protected Range range;
+  protected URI uri;
   // optional & additional attributes
   private Map<String, Object> attrs = new HashMap<>(5);
 
@@ -64,6 +65,14 @@ public abstract class Node implements Serializable {
 
   public void setRange(Range range) {
     this.range = range;
+  }
+
+  public URI getUri() {
+    return uri;
+  }
+
+  public void setUri(URI uri) {
+    this.uri = uri;
   }
 
   public abstract int hashSignature();

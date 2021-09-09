@@ -38,20 +38,18 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   }
 
   protected ElementNode createElementNode(
-      Protocol protocol, Type type, String snippet, String name, String qname, String identifier) {
+      Type type, String snippet, String name, String qname, String identifier) {
     URI uri =
         new URI(
-            protocol,
+            Protocol.DEF,
             Language.JAVA,
             uriFilePath,
             identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""));
     ElementNode node =
         new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
     graph.addVertex(node);
-    GraphUtil.getUriMap().get(Language.JAVA).put(uri, node);
-    if (protocol == Protocol.DEF) {
-      defPool.put(qname, node);
-    }
+    defPool.put(qname, node);
+    GraphUtil.addURI(Language.JAVA, uri, node);
     return node;
   }
 

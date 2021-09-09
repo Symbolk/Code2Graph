@@ -7,7 +7,6 @@ public class ElementNode extends Node {
 
   private String name;
   private String qualifiedName;
-  private URI uri;
 
   public ElementNode(
       Integer id, Language language, Type type, String snippet, String name, String qualifiedName) {
@@ -54,14 +53,6 @@ public class ElementNode extends Node {
     result = prime * result + ((type == null) ? 0 : type.hashCode());
     result = prime * result + ((qualifiedName == null) ? 0 : qualifiedName.hashCode());
     return result;
-  }
-
-  public URI getUri() {
-    return uri;
-  }
-
-  public void setUri(URI uri) {
-    this.uri = uri;
   }
 
 //  @Override

@@ -15,7 +15,7 @@ public class GraphUtil {
   private static Integer nodeCount;
   private static Integer edgeCount;
   // sets of URIs that possibly have XLL
-  private static Map<Language, Map<URI, ElementNode>> uriMap;
+  private static Map<Language, Map<URI, Node>> uriMap;
 
   static {
     graph = initGraph();
@@ -75,9 +75,9 @@ public class GraphUtil {
    * @param uri
    * @param node
    */
-  public static void addURI(Language language, URI uri, ElementNode node) {
+  public static void addURI(Language language, URI uri, Node node) {
     if (!uriMap.containsKey(language)) {
-      uriMap.put(language, new HashMap<URI, ElementNode>());
+      uriMap.put(language, new HashMap<>());
     }
     uriMap.get(language).put(uri, node);
   }
@@ -88,14 +88,14 @@ public class GraphUtil {
    * @param language
    * @param map
    */
-  public static void addURIs(Language language, Map<URI, ElementNode> map) {
+  public static void addURIs(Language language, Map<URI, Node> map) {
     map.forEach(
         (key, value) -> {
           addURI(language, key, value);
         });
   }
 
-  public static Map<Language, Map<URI, ElementNode>> getUriMap() {
+  public static Map<Language, Map<URI, Node>> getUriMap() {
     return uriMap;
   }
 }
