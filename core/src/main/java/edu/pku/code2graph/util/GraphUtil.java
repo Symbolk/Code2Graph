@@ -4,7 +4,9 @@ import edu.pku.code2graph.model.*;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GraphUtil {
@@ -15,7 +17,7 @@ public class GraphUtil {
   private static Integer nodeCount;
   private static Integer edgeCount;
   // sets of URIs that possibly have XLL
-  private static Map<Language, Map<URI, Node>> uriMap;
+  private static Map<Language, Map<URI, List<Node>>> uriMap;
 
   static {
     graph = initGraph();
@@ -76,10 +78,10 @@ public class GraphUtil {
    * @param node
    */
   public static void addURI(Language language, URI uri, Node node) {
-    if (!uriMap.containsKey(language)) {
-      uriMap.put(language, new HashMap<>());
-    }
-    uriMap.get(language).put(uri, node);
+    uriMap
+        .computeIfAbsent(language, k -> new HashMap<>())
+        .computeIfAbsent(uri, k -> new ArrayList<>())
+        .add(node);
   }
 
   /**
@@ -88,14 +90,16 @@ public class GraphUtil {
    * @param language
    * @param map
    */
-  public static void addURIs(Language language, Map<URI, Node> map) {
+  public static void addURIs(Language language, Map<URI, List<Node>> map) {
     map.forEach(
         (key, value) -> {
-          addURI(language, key, value);
+          value.forEach(v -> {
+            addURI(language, key, v);
+          });
         });
   }
 
-  public static Map<Language, Map<URI, Node>> getUriMap() {
+  public static Map<Language, Map<URI, List<Node>>> getUriMap() {
     return uriMap;
   }
 }

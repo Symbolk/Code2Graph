@@ -34,7 +34,7 @@ public class DocumentHandler extends AbstractHandler {
     logger.debug(uri.getIdentifier());
     graph.addVertex(en);
     stack.push(en);
-    uriMap.put(en.getUri(), en);
+    GraphUtil.addURI(Language.HTML, en.getUri(), en);
 
     if (!stack.isEmpty()) {
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));

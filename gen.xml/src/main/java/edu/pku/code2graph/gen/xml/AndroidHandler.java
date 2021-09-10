@@ -80,7 +80,7 @@ public class AndroidHandler extends AbstractHandler {
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
-    uriMap.put(root.getUri(), root);
+    GraphUtil.addURI(Language.XML, root.getUri(), root);
     logger.debug("Start Parsing {}", filePath);
     super.startDocument();
   }
@@ -109,7 +109,7 @@ public class AndroidHandler extends AbstractHandler {
             locator.getColumnNumber(),
             locator.getColumnNumber()));
     graph.addVertex(en);
-    uriMap.put(en.getUri(), en);
+    GraphUtil.addURI(Language.XML, en.getUri(), en);
     if (stack.size() > 0) {
       // View is the child of ViewGroup
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));

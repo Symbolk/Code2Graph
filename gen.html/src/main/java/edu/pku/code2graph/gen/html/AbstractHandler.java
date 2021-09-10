@@ -14,7 +14,6 @@ public class AbstractHandler {
   protected Logger logger = LoggerFactory.getLogger(DocumentHandler.class);
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
-  protected Map<URI, Node> uriMap = new HashMap<>();
 
   // temporarily save the current file path here
   protected String filePath;
@@ -36,9 +35,5 @@ public class AbstractHandler {
     }
     idtf.append(self);
     return idtf.toString();
-  }
-
-  public Map<URI, Node> getUriMap() {
-    return uriMap;
   }
 }

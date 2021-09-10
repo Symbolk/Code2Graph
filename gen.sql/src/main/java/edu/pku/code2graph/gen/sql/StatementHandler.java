@@ -40,7 +40,6 @@ public class StatementHandler {
   protected Logger logger = LoggerFactory.getLogger(StatementHandler.class);
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
-  protected Map<URI, Node> uriMap = new HashMap<>();
 
   private boolean isInline = false;
   private Language wrapLang;
@@ -60,10 +59,6 @@ public class StatementHandler {
   public void generateFrom(Statements stmts) {
     //    stmts.accept(deParser);
     tablesNamesFinder.visit(stmts);
-  }
-
-  public Map<URI, Node> getUriMap() {
-    return uriMap;
   }
 
   //  private Stack<Tuple2<Statement, SimpleNode>> rootNode;
@@ -370,7 +365,7 @@ public class StatementHandler {
                       } else {
                         en.setUri(uri);
                       }
-                      uriMap.put(en.getUri(), en);
+                      GraphUtil.addURI(Language.SQL, en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
                     });
           }
@@ -526,7 +521,7 @@ public class StatementHandler {
     } else {
       en.setUri(uri);
     }
-    uriMap.put(en.getUri(), en);
+    GraphUtil.addURI(Language.SQL, en.getUri(), en);
   }
 
   private void findParentEdge(SimpleNode snode, Node node) {

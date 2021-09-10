@@ -1,4 +1,3 @@
-import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.xll.*;
 import org.junit.jupiter.api.Test;
 import edu.pku.code2graph.model.URI;
@@ -15,7 +14,7 @@ public class LinkerTest {
 
   private void matchTest(int ruleIndex, int patternIndex, String source) {
     URI uri = new URI(source);
-    URIPattern pattern = config.getRules().get(ruleIndex).getIndex(patternIndex);
+    URIPattern pattern = config.getRules().get(ruleIndex).getPattern(patternIndex);
     System.out.println(pattern);
     System.out.println(uri);
     System.out.println(pattern.match(uri));

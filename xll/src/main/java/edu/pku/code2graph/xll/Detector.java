@@ -9,10 +9,10 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.*;
 
 public class Detector {
-  private final Map<Language, Map<URI, Node>> uriMap;
+  private final Map<Language, Map<URI, List<Node>>> uriMap;
   private final Optional<Config> configOpt;
 
-  public Detector(Map<Language, Map<URI, Node>> uriMap, String path) {
+  public Detector(Map<Language, Map<URI, List<Node>>> uriMap, String path) {
     this.uriMap = uriMap;
 
     // load config
@@ -25,7 +25,7 @@ public class Detector {
   }
 
   private void match(URIPattern pattern, MatchCallback callback) {
-    Map<URI, Node> uris = uriMap.get(pattern.getLang());
+    Map<URI, List<Node>> uris = uriMap.get(pattern.getLang());
     if (uris == null) return;
     for (URI uri: uris.keySet()) {
       Map<String, String> captures = pattern.match(uri);

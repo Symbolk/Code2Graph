@@ -17,7 +17,6 @@ public class AbstractHandler extends DefaultHandler {
   protected Logger logger = LoggerFactory.getLogger(AbstractHandler.class);
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
-  protected Map<URI, Node> uriMap = new HashMap<>();
 
   // temporarily save the current file path here
   protected String filePath;
@@ -39,9 +38,6 @@ public class AbstractHandler extends DefaultHandler {
 
   public Graph<Node, Edge> getGraph() {
     return graph;
-  }
-  public Map<URI, Node> getUriMap() {
-    return uriMap;
   }
 
   public void setFilePath(String filePath) {

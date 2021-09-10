@@ -185,18 +185,22 @@ public class Code2Graph {
       Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
       List<Link> links = detector.linkAll();
       // create uri-element map when create node
-      Map<Language, Map<URI, Node>> uriMap = GraphUtil.getUriMap();
+      Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
       Type xllType = type("xll");
 
       for (Link link : links) {
         System.out.println(link);
         // get nodes by URI
-        Node source = uriMap.get(link.getLeft().getLang()).get(link.getLeft());
-        Node target = uriMap.get(link.getLeft().getLang()).get(link.getLeft());
+        List<Node> source = uriMap.get(link.getLeft().getLang()).get(link.getLeft());
+        List<Node> target = uriMap.get(link.getRight().getLang()).get(link.getRight());
         Double weight = 1.0D;
 
         // create XLL edge
-        graph.addEdge(source, target, new Edge(GraphUtil.eid(), xllType, weight, false, true));
+        for (Node left : source) {
+          for (Node right : target) {
+            graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
+          }
+        }
       }
 
     } catch (IOException e) {
