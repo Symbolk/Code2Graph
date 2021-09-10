@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class URIPattern extends URI {
   private final Map<String, Token> tokens = new HashMap<>();
-  private List<List<String>> layerTokens;
+  private final List<List<String>> layerTokens = new ArrayList<>();
 
   {
     type = "Pattern";
@@ -27,8 +27,7 @@ public class URIPattern extends URI {
     if (pattern.inline != null) {
       this.inline = new URIPattern((URIPattern) pattern.inline);
     }
-    this.layers = pattern.getLayers();
-    this.layerTokens = pattern.layerTokens;
+    this.getLayers();
   }
 
   public URIPattern(Map<String, Object> pattern) {
@@ -40,7 +39,6 @@ public class URIPattern extends URI {
     if (pattern.get("inline") != null) {
       this.inline = new URIPattern((Map<String, Object>) pattern.get("inline"));
     }
-    this.layerTokens = new ArrayList<>();
     this.getLayers();
   }
 

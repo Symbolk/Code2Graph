@@ -7,30 +7,45 @@ import org.jgrapht.Graph;
 import org.junit.jupiter.api.Test;
 
 public class LoaderTest {
-  private void projectTest(String repoName, String configName) {
+  private Graph<Node, Edge> load(String repoName, String configName) {
     String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
     String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
     Code2Graph c2g = new Code2Graph(repoName, repoPath, configPath);
-    c2g.generateGraph();
+    return c2g.generateGraph();
   }
 
   @Test
   public void butterknifeTest() {
-    projectTest("android/butterknife/main", "android/config.yml");
+    load("android/butterknife/main", "android/config.yml");
   }
 
   @Test
   public void databindingTest() {
-    projectTest("android/databinding/main", "android/config.yml");
+    load("android/databinding/main", "android/config.yml");
   }
 
   @Test
   public void findviewbyidTest() {
-    projectTest("android/findviewbyid/main", "android/config.yml");
+    load("android/findviewbyid/main", "android/config.yml");
   }
 
   @Test
   public void viewbindingTest() {
-    projectTest("android/viewbinding/main", "android/config.yml");
+    load("android/viewbinding/main", "android/config.yml");
+  }
+
+  @Test
+  public void mybatisJavaTest() {
+    load("mybatis/embedded_in_java/main", "mybatis/config.yml");
+  }
+
+  @Test
+  public void mybatisXMLTest() {
+    load("mybatis/embedded_in_xml/main", "mybatis/config.yml");
+  }
+
+  @Test
+  public void saganTest() {
+    load("spring/sagan", "spring/config.yml");
   }
 }

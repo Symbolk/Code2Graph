@@ -155,6 +155,18 @@ public class AndroidHandler extends AbstractHandler {
 
             defPool.put(identifier, en);
           }
+        } else if ("id".equals(key)) {
+          // fr components
+          en.setName(value);
+          en.getUri().setIdentifier(idtfLayer + "/" + URI.checkInvalidCh("id"));
+          en.setQualifiedName(value);
+
+          URI inline = new URI();
+          inline.setIdentifier(URI.checkInvalidCh(value));
+          en.getUri().setProtocol(Protocol.DEF);
+          en.getUri().setInline(inline);
+
+          defPool.put(value, en);
         } else {
           // references
           if (value.startsWith("@") && !value.startsWith("@android:")) {
