@@ -74,7 +74,7 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
-    URI uri = new URI(Protocol.DEF, Language.XML, filePath, null);
+    URI uri = new URI(Protocol.DEF, Language.XML, filePath, "");
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);

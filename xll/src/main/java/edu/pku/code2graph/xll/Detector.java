@@ -28,9 +28,7 @@ public class Detector {
     Map<URI, Node> uris = uriMap.get(pattern.getLang());
     if (uris == null) return;
     for (URI uri: uris.keySet()) {
-      System.out.println(uri);
       Map<String, String> captures = pattern.match(uri);
-      System.out.println(captures);
       if (captures == null) continue;
       callback.action(uri, captures);
     }

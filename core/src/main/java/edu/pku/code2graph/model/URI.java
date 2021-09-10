@@ -117,7 +117,7 @@ public class URI {
   }
 
   private static List<String> pre =
-      Arrays.asList("\\@", "\\*", "\\(", "\\)", "\\/", "\\[", "\\]", "\\:");
+      Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
 
   public static String checkInvalidCh(String name) {
     for (String ch : pre) {
