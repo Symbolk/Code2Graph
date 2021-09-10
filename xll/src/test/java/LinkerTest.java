@@ -6,17 +6,29 @@ import edu.pku.code2graph.model.URI;
 import java.util.*;
 
 public class LinkerTest {
+  private Config config;
+
+  LinkerTest() {
+    Optional<Config> configOptional = new ConfigLoader().load("src/main/resources/config.yml");
+    config = configOptional.get();
+  }
+
+  private void matchTest(int ruleIndex, int patternIndex, String source) {
+    URI uri = new URI(source);
+    URIPattern pattern = config.getRules().get(ruleIndex).getIndex(patternIndex);
+    System.out.println(pattern);
+    System.out.println(uri);
+    System.out.println(pattern.match(uri));
+  }
+
   @Test
-  public void matchTest() {
-    URI uri = new URI("use:///Code2Graph/client/build/resources/test/android/butterknife/main/java/com/example/demo/MainActivity.java//R.id.button");
-    Optional<Config> config = new ConfigLoader().load("src/main/resources/config.yml");
-    config.ifPresent(value -> {
-      Rule rule = value.getRules().get(1);
-      URIPattern left = rule.getLeft();
-      System.out.println(left);
-      System.out.println(uri);
-      System.out.println(left.match(uri));
-    });
+  public void identifierTest() {
+    matchTest(1, 0,"use:///Code2Graph/client/build/resources/test/android/butterknife/main/java/com/example/demo/MainActivity.java//R.id.button");
+  }
+
+  @Test
+  public void inlineTest() {
+    matchTest(1, 1,"def://E:/code/Code2Graph/client/build/resources/test/android/butterknife/main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
   }
 
   @Test

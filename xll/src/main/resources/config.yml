@@ -30,7 +30,9 @@ rules:
    - protocol: any
      lang: Xml
      file: "*.xml"
-     identifier: "@+id/(name)"
+     identifier: "**"
+     inline:
+       identifier: '@+id\/(name)'
 # types of problems that does not need to be reported
 # 可以忽略的问题类型
 suppress:

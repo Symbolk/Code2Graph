@@ -6,4 +6,6 @@ rules:
    - protocol: any
      lang: Xml
      file: "*.xml"
-     identifier: "@+id/(name)"
+     identifier: "**"
+     inline:
+       identifier: '@+id\/(name)'

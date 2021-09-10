@@ -64,10 +64,12 @@ public class URIPattern extends URI {
     source = "**/" + source;
     source =
         source
+            .replaceAll("\\\\", "\\\\\\\\")
             .replaceAll("\\.", "\\\\.")
-            .replaceAll("\\{", "\\\\{")
+            .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
-            .replaceAll("\\*", "\\\\w+");
+            .replaceAll("\\*", "\\\\w+")
+            .replaceAll("\\{", "\\\\{");
     String[] segments = Token.regexp.split(source, -1);
     source = String.join("(\\w+)", segments);
     Pattern regexp = Pattern.compile(source);
