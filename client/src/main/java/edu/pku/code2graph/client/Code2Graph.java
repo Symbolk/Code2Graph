@@ -9,9 +9,7 @@ import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Detector;
-import edu.pku.code2graph.xll.Rule;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
+import edu.pku.code2graph.xll.Link;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 
@@ -31,7 +29,7 @@ public class Code2Graph {
   private String tempDir;
 
   private Graph<Node, Edge> graph;
-  private List<Triple<URI, URI, Rule>> xllLinks;
+  private List<Link> xllLinks;
 
   // components
   private Generators generator;
@@ -100,7 +98,7 @@ public class Code2Graph {
     return graph;
   }
 
-  public List<Triple<URI, URI, Rule>> getXllLinks() {
+  public List<Link> getXllLinks() {
     return xllLinks;
   }
 
@@ -185,12 +183,12 @@ public class Code2Graph {
       Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
       // build cross-language linking (XLL) edges
       Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
-      List<Triple<URI, URI, Rule>> links = detector.linkAll();
+      List<Link> links = detector.linkAll();
       // create uri-element map when create node
       Map<Language, Map<URI, Node>> uriMap = GraphUtil.getUriMap();
       Type xllType = type("xll");
 
-      for (Triple<URI, URI, Rule> link : links) {
+      for (Link link : links) {
         System.out.println(link);
         // get nodes by URI
         Node source = uriMap.get(link.getLeft().getLang()).get(link.getLeft());

@@ -4,6 +4,7 @@ import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.xll.Link;
 import edu.pku.code2graph.xll.Rule;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -44,7 +45,7 @@ public class Evaluation {
     System.out.println(graph.vertexSet().size());
     System.out.println(graph.edgeSet().size());
 
-    List<Triple<URI, URI, Rule>> xllLinks = client.getXllLinks();
+    List<Link> xllLinks = client.getXllLinks();
 
     // randomly pick a uri to rename
 

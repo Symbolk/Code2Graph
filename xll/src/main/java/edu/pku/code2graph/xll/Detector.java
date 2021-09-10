@@ -34,22 +34,22 @@ public class Detector {
     }
   }
 
-  public List<Triple<URI, URI, Rule>> link(Rule rule) {
+  public List<Link> link(Rule rule) {
     return link(rule, new ArrayList<>());
   }
 
-  public List<Triple<URI, URI, Rule>> link(Rule rule, List<Triple<URI, URI, Rule>> links) {
+  public List<Link> link(Rule rule, List<Link> links) {
     match(rule.getLeft(), (leftUri, leftCaps) -> {
       URIPattern pattern = rule.getRight().applyCaptures(leftCaps);
       match(pattern, (rightUri, rightCaps) -> {
-        links.add(new ImmutableTriple(leftUri, rightUri, rule));
+        links.add(new Link(leftUri, rule, rightUri));
       });
     });
     return links;
   }
 
-  public List<Triple<URI, URI, Rule>> linkAll() {
-    List<Triple<URI, URI, Rule>> links = new ArrayList<>();
+  public List<Link> linkAll() {
+    List<Link> links = new ArrayList<>();
     if (uriMap.isEmpty()) {
       return links;
     }
