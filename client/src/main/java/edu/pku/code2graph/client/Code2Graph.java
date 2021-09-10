@@ -191,8 +191,8 @@ public class Code2Graph {
       for (Link link : links) {
         System.out.println(link);
         // get nodes by URI
-        List<Node> source = uriMap.get(link.getLeft().getLang()).get(link.getLeft());
-        List<Node> target = uriMap.get(link.getRight().getLang()).get(link.getRight());
+        List<Node> source = uriMap.get(link.left.getLang()).get(link.left);
+        List<Node> target = uriMap.get(link.right.getLang()).get(link.right);
         Double weight = 1.0D;
 
         // create XLL edge
