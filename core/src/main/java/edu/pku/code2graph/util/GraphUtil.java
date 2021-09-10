@@ -84,21 +84,6 @@ public class GraphUtil {
         .add(node);
   }
 
-  /**
-   * Add a collection of uris into the existing urimap
-   *
-   * @param language
-   * @param map
-   */
-  public static void addURIs(Language language, Map<URI, List<Node>> map) {
-    map.forEach(
-        (key, value) -> {
-          value.forEach(v -> {
-            addURI(language, key, v);
-          });
-        });
-  }
-
   public static Map<Language, Map<URI, List<Node>>> getUriMap() {
     return uriMap;
   }

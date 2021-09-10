@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Group">
+  <select id="select" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+    SELECT
+       groupid,
+       groupname
+    FROM
+      GROUPP
+  </select>
+
+  <insert id="insertGroup" 
+          parameterType="org.mybatis.example.Group"
+          timeout="20">
+    INSERT INTO GROUPP (GROUPID, GROUPNAME) VALUES(#{groupid}, #{groupname})
+
+  </insert>
+
+</mapper>
