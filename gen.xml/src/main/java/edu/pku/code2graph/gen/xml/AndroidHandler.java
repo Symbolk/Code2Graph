@@ -74,13 +74,13 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
-    URI uri = new URI(Protocol.DEF, Language.XML, filePath, null);
+    URI uri = new URI(Protocol.DEF, Language.XML, filePath, "");
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
-    uriMap.put(root.getUri(), root);
+    GraphUtil.addURI(Language.XML, root.getUri(), root);
     logger.debug("Start Parsing {}", filePath);
     super.startDocument();
   }
@@ -109,7 +109,7 @@ public class AndroidHandler extends AbstractHandler {
             locator.getColumnNumber(),
             locator.getColumnNumber()));
     graph.addVertex(en);
-    uriMap.put(en.getUri(), en);
+    GraphUtil.addURI(Language.XML, en.getUri(), en);
     if (stack.size() > 0) {
       // View is the child of ViewGroup
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));
@@ -155,6 +155,18 @@ public class AndroidHandler extends AbstractHandler {
 
             defPool.put(identifier, en);
           }
+        } else if ("id".equals(key)) {
+          // fr components
+          en.setName(value);
+          en.getUri().setIdentifier(idtfLayer + "/" + URI.checkInvalidCh("id"));
+          en.setQualifiedName(value);
+
+          URI inline = new URI();
+          inline.setIdentifier(URI.checkInvalidCh(value));
+          en.getUri().setProtocol(Protocol.DEF);
+          en.getUri().setInline(inline);
+
+          defPool.put(value, en);
         } else {
           // references
           if (value.startsWith("@") && !value.startsWith("@android:")) {

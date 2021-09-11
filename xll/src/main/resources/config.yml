@@ -23,14 +23,16 @@ rules:
      inline:
        lang: SQL
        identifier: "#{(name)}"
- - - protocol: def
+ - - protocol: use
      lang: Java
      file: "*.java"
-     identifier: R.layout.(name)
-   - protocol: use
+     identifier: R.id.(name)
+   - protocol: any
      lang: Xml
      file: "*.xml"
-     identifier: "@+id/(name)"
+     identifier: "**"
+     inline:
+       identifier: '@+id\/(name)'
 # types of problems that does not need to be reported
 # 可以忽略的问题类型
 suppress:

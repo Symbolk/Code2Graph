@@ -116,8 +116,12 @@ public class URI {
     return output.append(">").toString();
   }
 
+  public boolean equals(URI uri) {
+    return toString().equals(uri.toString());
+  }
+
   private static List<String> pre =
-      Arrays.asList("\\@", "\\*", "\\(", "\\)", "\\/", "\\[", "\\]", "\\:");
+      Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
 
   public static String checkInvalidCh(String name) {
     for (String ch : pre) {

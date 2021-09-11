@@ -26,7 +26,6 @@ public class JsoupGenerator extends Generator {
       hdl.setFilePath(FilenameUtils.separatorsToUnix(filePaths.get(i)));
       hdl.generateFromDoc(docs.get(i));
     }
-    GraphUtil.addURIs(Language.HTML, hdl.getUriMap());
     return hdl.getGraph();
   }
 }

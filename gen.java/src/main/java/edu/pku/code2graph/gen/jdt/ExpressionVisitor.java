@@ -34,7 +34,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
   public boolean visit(CompilationUnit cu) {
     this.cuNode =
         createElementNode(
-            Protocol.ANY, NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath, "");
+            NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath, "");
 
     logger.debug("Start Parsing {}", filePath);
     return true;
@@ -57,7 +57,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     ElementNode node =
         createElementNode(
-            Protocol.DEF,
             type,
             td.toString(),
             td.getName().toString(),
@@ -88,7 +87,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         binding == null ? atd.getName().getFullyQualifiedName() : binding.getQualifiedName();
     ElementNode node =
         createElementNode(
-            Protocol.DEF,
             NodeType.ANNOTATION_DECLARATION,
             atd.toString(),
             atd.getName().toString(),
@@ -118,7 +116,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         edBinding == null ? ed.getName().getFullyQualifiedName() : edBinding.getQualifiedName();
     ElementNode node =
         createElementNode(
-            Protocol.DEF,
             NodeType.ENUM_DECLARATION,
             ed.toString(),
             ed.getName().toString(),
@@ -193,7 +190,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               ((AnnotationTypeMemberDeclaration) bodyDeclaration);
           ElementNode atmdNode =
               createElementNode(
-                  Protocol.DEF,
                   NodeType.ENUM_CONSTANT_DECLARATION,
                   atmd.toString(),
                   atmd.getName().toString(),
@@ -213,7 +209,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           EnumConstantDeclaration cst = (EnumConstantDeclaration) constantDeclaration;
           ElementNode cstNode =
               createElementNode(
-                  Protocol.DEF,
                   NodeType.ENUM_CONSTANT_DECLARATION,
                   cst.toString(),
                   cst.getName().toString(),
@@ -239,7 +234,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
           ElementNode initNode =
               createElementNode(
-                  Protocol.ANY,
                   NodeType.INIT_BLOCK_DECLARATION,
                   initializer.toString(),
                   node.getName() + ".INIT",
@@ -288,7 +282,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
       ElementNode node =
           createElementNode(
-              Protocol.DEF,
               NodeType.FIELD_DECLARATION,
               fragment.toString(),
               name,
@@ -327,7 +320,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     ElementNode node =
         createElementNode(
-            Protocol.DEF,
             NodeType.METHOD_DECLARATION,
             md.toString(),
             name,
@@ -362,7 +354,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
         ElementNode pn =
             createElementNode(
-                Protocol.DEF,
                 NodeType.VAR_DECLARATION,
                 p.toString(),
                 para_name,
@@ -610,7 +601,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
               ElementNode node =
                   createElementNode(
-                      Protocol.DEF,
                       NodeType.VAR_DECLARATION,
                       fragment.toString(),
                       name,
@@ -734,7 +724,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
           ElementNode pn =
               createElementNode(
-                  Protocol.DEF,
                   NodeType.VAR_DECLARATION,
                   p.toString(),
                   para_name,
@@ -978,19 +967,17 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
-          if (qualifiedName.getQualifier().isQualifiedName()) {
-            //            GraphUtil.addURI(Language.JAVA, new
-            // URI(qualifiedName.getFullyQualifiedName()))
-          }
-          //        ITypeBinding typeBinding = qualifiedName.getQualifier().resolveTypeBinding();
-          //          if (typeBinding != null) {
-          //
-          //          }
+          URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+          root.setUri(uri);
+          GraphUtil.addURI(Language.JAVA, uri, root);
           break;
         }
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
+          URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, ((SimpleName) exp).getFullyQualifiedName());
+          root.setUri(uri);
+          GraphUtil.addURI(Language.JAVA, uri, root);
           if (binding == null) {
             // an unresolved identifier
             root.setType(NodeType.SIMPLE_NAME);
@@ -1057,7 +1044,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
             ElementNode n =
                 createElementNode(
-                    Protocol.DEF,
                     NodeType.VAR_DECLARATION,
                     fragment.toString(),
                     name,

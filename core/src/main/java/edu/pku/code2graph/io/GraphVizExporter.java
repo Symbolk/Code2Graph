@@ -20,33 +20,33 @@ import java.util.Set;
 
 /** Convert graph to dot format of GraphViz */
 public class GraphVizExporter {
-
-  public static String exportAsDot(Graph<Node, Edge> graph) {
+  public static String exportAsDot(Graph<Node, Edge> graph, boolean print) {
     DOTExporter<Node, Edge> exporter = new DOTExporter<>();
 
     exporter.setVertexIdProvider(v -> v.getId().toString());
     exporter.setVertexAttributeProvider(
         v -> {
           Map<String, Attribute> map = new LinkedHashMap<>();
-          // new jgrapht API has no dedicated label provider setter
           map.put("id", DefaultAttribute.createAttribute(v.getId().toString()));
-          map.put("type", DefaultAttribute.createAttribute(v.getType().toString()));
-          map.put(
-              "label",
-              DefaultAttribute.createAttribute(
-                  v instanceof ElementNode
-                      ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
-                      : v.getType().name + "(" + ((RelationNode) v).getSymbol() + ")"));
-          map.put("shape", new NodeShapeAttribute(v));
 
-          if (v instanceof ElementNode) {
-            URI uri = ((ElementNode) v).getUri();
-            if (uri != null) {
-              String output = uri.toString();
-              map.put(
-                  "uri",
-                  DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
-            }
+          URI uri = v.getUri();
+          if (uri != null) {
+            String output = uri.toString();
+            map.put(
+                    "uri",
+                    DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
+          }
+
+          if (!print || uri == null) {
+            // new jgrapht API has no dedicated label provider setter
+            map.put("type", DefaultAttribute.createAttribute(v.getType().toString()));
+            map.put(
+                    "label",
+                    DefaultAttribute.createAttribute(
+                            v instanceof ElementNode
+                                    ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
+                                    : v.getType().name + "(" + ((RelationNode) v).getSymbol() + ")"));
+            map.put("shape", new NodeShapeAttribute(v));
           }
 
           return map;
@@ -66,6 +66,10 @@ public class GraphVizExporter {
     Writer writer = new StringWriter();
     exporter.exportGraph(graph, writer);
     return writer.toString();
+  }
+
+  public static String exportAsDot(Graph<Node, Edge> graph) {
+    return exportAsDot(graph, false);
   }
 
   public static String exportAsDot(
@@ -125,7 +129,7 @@ public class GraphVizExporter {
    * @param graph
    */
   public static void printAsDot(Graph<Node, Edge> graph) {
-    System.out.println(exportAsDot(graph));
+    System.out.println(exportAsDot(graph, true));
   }
 
   /**

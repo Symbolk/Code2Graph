@@ -1,7 +1,7 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
@@ -9,10 +9,10 @@ import org.apache.commons.lang3.tuple.Triple;
 import java.util.*;
 
 public class Detector {
-  private final Map<Language, Map<URI, ElementNode>> uriMap;
+  private final Map<Language, Map<URI, List<Node>>> uriMap;
   private final Optional<Config> configOpt;
 
-  public Detector(Map<Language, Map<URI, ElementNode>> uriMap, String path) {
+  public Detector(Map<Language, Map<URI, List<Node>>> uriMap, String path) {
     this.uriMap = uriMap;
 
     // load config
@@ -25,7 +25,7 @@ public class Detector {
   }
 
   private void match(URIPattern pattern, MatchCallback callback) {
-    Map<URI, ElementNode> uris = uriMap.get(pattern.getLang());
+    Map<URI, List<Node>> uris = uriMap.get(pattern.getLang());
     if (uris == null) return;
     for (URI uri: uris.keySet()) {
       Map<String, String> captures = pattern.match(uri);
@@ -34,22 +34,22 @@ public class Detector {
     }
   }
 
-  public List<Triple<URI, URI, Rule>> link(Rule rule) {
+  public List<Link> link(Rule rule) {
     return link(rule, new ArrayList<>());
   }
 
-  public List<Triple<URI, URI, Rule>> link(Rule rule, List<Triple<URI, URI, Rule>> links) {
+  public List<Link> link(Rule rule, List<Link> links) {
     match(rule.getLeft(), (leftUri, leftCaps) -> {
       URIPattern pattern = rule.getRight().applyCaptures(leftCaps);
       match(pattern, (rightUri, rightCaps) -> {
-        links.add(new ImmutableTriple(leftUri, rightUri, rule));
+        links.add(new Link(leftUri, rule, rightUri));
       });
     });
     return links;
   }
 
-  public List<Triple<URI, URI, Rule>> linkAll() {
-    List<Triple<URI, URI, Rule>> links = new ArrayList<>();
+  public List<Link> linkAll() {
+    List<Link> links = new ArrayList<>();
     if (uriMap.isEmpty()) {
       return links;
     }

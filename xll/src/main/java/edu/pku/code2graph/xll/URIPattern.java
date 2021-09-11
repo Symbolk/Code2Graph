@@ -27,6 +27,7 @@ public class URIPattern extends URI {
     if (pattern.inline != null) {
       this.inline = new URIPattern((URIPattern) pattern.inline);
     }
+    this.getLayers();
   }
 
   public URIPattern(Map<String, Object> pattern) {
@@ -38,6 +39,7 @@ public class URIPattern extends URI {
     if (pattern.get("inline") != null) {
       this.inline = new URIPattern((Map<String, Object>) pattern.get("inline"));
     }
+    this.getLayers();
   }
 
   @Override
@@ -64,9 +66,11 @@ public class URIPattern extends URI {
     source = "**/" + source;
     source =
         source
+            .replaceAll("\\\\", "\\\\\\\\")
+            .replaceAll("\\.", "\\\\.")
+            .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
             .replaceAll("\\*", "\\\\w+")
-            .replaceAll("\\.", "\\\\.")
             .replaceAll("\\{", "\\\\{");
     String[] segments = Token.regexp.split(source, -1);
     source = String.join("(\\w+)", segments);

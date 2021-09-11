@@ -90,7 +90,7 @@ public class SpringHandler extends AbstractHandler {
             current.getName(),
             uri);
     graph.addVertex(en);
-    uriMap.put(en.getUri(), en);
+    GraphUtil.addURI(Language.HTML, en.getUri(), en);
 
     for (DialectNode child : node.getChildren()) {
       ElementNode childNode = (ElementNode) DialectNodeToGnode(child, attrName, curIdtf);

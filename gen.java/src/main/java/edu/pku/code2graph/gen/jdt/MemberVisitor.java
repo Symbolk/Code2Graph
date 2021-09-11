@@ -20,7 +20,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
   @Override
   public boolean visit(CompilationUnit cu) {
     ElementNode cuNode = createElementNode(
-            Protocol.ANY,
             NodeType.FILE,
             "",
             FileUtil.getFileNameFromPath(filePath),
@@ -51,7 +50,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
     }
 
     ElementNode node = createElementNode(
-            Protocol.DEF,
             type,
             td.toString(),
             td.getName().toString(),
@@ -112,7 +110,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
           String qname = parentQName + ".INIT";
 
           ElementNode initNode = createElementNode(
-                  Protocol.ANY,
                   NodeType.INIT_BLOCK_DECLARATION,
                   initializer.toString(),
                   node.getName() + ".INIT",
@@ -157,7 +154,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
       }
 
       ElementNode node = createElementNode(
-              Protocol.DEF,
               NodeType.FIELD_DECLARATION,
               fragment.toString(),
               name,
@@ -194,7 +190,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
     }
 
     ElementNode node = createElementNode(
-            Protocol.DEF,
             NodeType.METHOD_DECLARATION,
             md.toString(),
             name,
@@ -226,7 +221,6 @@ public class MemberVisitor extends AbstractJdtVisitor {
         }
 
         ElementNode pn = createElementNode(
-                Protocol.DEF,
                 NodeType.VAR_DECLARATION,
                 p.toString(),
                 para_name,
