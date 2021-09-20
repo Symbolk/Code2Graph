@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static org.eclipse.core.internal.registry.RegistryProperties.empty;
 
 /**
  * Visitor focusing on the entity granularity, at or above expression level
@@ -455,8 +454,25 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           if (returnExpr != null
               && !returnExpr.trim().isEmpty()
               && pathRegex.matcher(returnExpr).find()) {
-            currentTemplate = returnExpr;
+            currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
             return Optional.of(returnExpr);
+          }
+        } else if (expression != null
+            && expression.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION) {
+          // For specific repos
+          if (!((ClassInstanceCreation) expression).arguments().isEmpty()
+              && ((Expression) ((ClassInstanceCreation) expression).arguments().get(0))
+                      .getNodeType()
+                  == ASTNode.STRING_LITERAL) {
+            Pattern pathRegex = Pattern.compile("[\\w-/]+");
+            String returnExpr =
+                ((Expression) ((ClassInstanceCreation) expression).arguments().get(0)).toString();
+            if (returnExpr != null
+                && !returnExpr.trim().isEmpty()
+                && pathRegex.matcher(returnExpr).find()) {
+              currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+              return Optional.of(returnExpr);
+            }
           }
         }
       }
@@ -558,8 +574,13 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       if (arg instanceof Expression) {
         RelationNode rn = parseExpression((Expression) arg);
         graph.addEdge(node, rn, new Edge(GraphUtil.eid(), EdgeType.ARGUMENT));
+        if (rn.getUri() == null) continue;
         if (currentTemplate != "" && addedToMap && !javaURIS.containsKey(currentTemplate)) {
-          javaURIS.put(currentTemplate, Arrays.asList(rn.getUri()));
+          javaURIS.put(currentTemplate, new ArrayList<>());
+          javaURIS.get(currentTemplate).add(rn.getUri());
+        } else if (currentTemplate != "" && addedToMap) {
+          if (!javaURIS.get(currentTemplate).contains(rn.getUri()))
+            javaURIS.get(currentTemplate).add(rn.getUri());
         }
       }
     }
@@ -750,6 +771,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                           parseExpression((Expression) upd),
                           new Edge(GraphUtil.eid(), EdgeType.UPDATER)));
 
+          // For parse error in specific repo
+          if ((forStatement.getExpression() == null)) return Optional.of(node);
           graph.addEdge(
               node,
               parseExpression(forStatement.getExpression()),
@@ -1014,7 +1037,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     // simple name may be self-field access
     switch (exp.getNodeType()) {
       case ASTNode.NUMBER_LITERAL:
-      case ASTNode.STRING_LITERAL:
       case ASTNode.CHARACTER_LITERAL:
       case ASTNode.BOOLEAN_LITERAL:
       case ASTNode.NULL_LITERAL:
@@ -1022,6 +1044,20 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
+          break;
+        }
+      case ASTNode.STRING_LITERAL:
+        {
+          root.setSymbol(exp.toString());
+          root.setType(NodeType.LITERAL);
+          URI uri =
+              new URI(
+                  Protocol.USE,
+                  Language.JAVA,
+                  uriFilePath,
+                  exp.toString().substring(1, exp.toString().length() - 1));
+          root.setUri(uri);
+          GraphUtil.addURI(Language.JAVA, uri, root);
           break;
         }
       case ASTNode.QUALIFIED_NAME:
@@ -1207,7 +1243,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 new Edge(GraphUtil.eid(), EdgeType.ACCESSOR));
           }
 
-          Boolean addedToMap = exp.toString().contains("addAttribute");
+          Boolean addedToMap =
+              exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute");
           parseArguments(root, mi.arguments(), addedToMap);
 
           IMethodBinding mdBinding = mi.resolveMethodBinding();

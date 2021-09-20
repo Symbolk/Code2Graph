@@ -6,4 +6,6 @@ dependencies {
     implementation project(':gen.java')
     implementation project(':gen.xml')
     implementation project(':gen.kotlin')
+    implementation project(':gen.html')
+    implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.25.0'
 }

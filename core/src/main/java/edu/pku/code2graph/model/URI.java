@@ -83,6 +83,14 @@ public class URI {
     return inline;
   }
 
+  public String getSymbol() {
+    String[] split;
+    if (inline == null) split = identifier.split("//");
+    else split = inline.identifier.split("//");
+    split = split[split.length - 1].split("/");
+    return split[split.length - 1];
+  }
+
   public void setProtocol(Protocol protocol) {
     this.protocol = protocol;
   }
@@ -120,8 +128,7 @@ public class URI {
     return toString().equals(uri.toString());
   }
 
-  private static List<String> pre =
-      Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
+  private static List<String> pre = Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
 
   public static String checkInvalidCh(String name) {
     for (String ch : pre) {
