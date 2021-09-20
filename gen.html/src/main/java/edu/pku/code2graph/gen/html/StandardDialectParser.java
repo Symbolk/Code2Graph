@@ -20,8 +20,16 @@ public class StandardDialectParser {
       if (source.charAt(i) == '(' || source.charAt(i) == ')') continue;
       if (i + 2 <= sourceLen && metaChar.contains(source.substring(i, i + 2))) {
         startPoint.push(i);
+        i++;
+      } else if (source.charAt(i) == '{') {
+        startPoint.push(i);
       } else if (source.charAt(i) == '}') {
+        if (startPoint.empty()) {
+          continue;
+        }
         int s = startPoint.pop(), e = i;
+
+        if (source.charAt(s) == '}') continue;
 
         String snippet = source.substring(s, e + 1);
         String name = snippet.substring(2, snippet.length() - 1).trim();
