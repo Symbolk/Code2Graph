@@ -65,6 +65,7 @@ public class Code2Graph {
   }
 
   public Code2Graph(String repoName, String repoPath, String configPath) {
+    FileUtil.setRootPath(repoPath);
     this.repoName = repoName;
     this.repoPath = repoPath;
     this.configPath = configPath;
@@ -72,6 +73,7 @@ public class Code2Graph {
   }
 
   public Code2Graph(String repoName, String repoPath, String configPath, String tempDir) {
+    FileUtil.setRootPath(repoPath);
     this.repoName = repoName;
     this.repoPath = repoPath;
     this.configPath = configPath;

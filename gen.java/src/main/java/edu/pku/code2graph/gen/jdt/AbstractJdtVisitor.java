@@ -1,6 +1,7 @@
 package edu.pku.code2graph.gen.jdt;
 
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -89,7 +90,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
 
   public void setFilePath(String filePath) {
     this.filePath = filePath;
-    this.uriFilePath = FilenameUtils.separatorsToUnix(filePath);
+    this.uriFilePath = FileUtil.getRelativePath(filePath);
   }
 
   protected Range computeRange(ASTNode node) {

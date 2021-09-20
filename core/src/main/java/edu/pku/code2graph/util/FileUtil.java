@@ -90,6 +90,23 @@ public class FileUtil {
     return Paths.get(filePath).getParent().getFileName().toString();
   }
 
+  private static String rootPath;
+
+  public static void setRootPath(String rootPath) {
+    FileUtil.rootPath = rootPath;
+  }
+
+  /**
+   * Get path relative to the root path
+   *
+   * @param absolutePath
+   * @param rootPath
+   * @return
+   */
+  public static String getRelativePath(String absolutePath) {
+    return FilenameUtils.separatorsToUnix(FileUtil.getRelativePath(rootPath, absolutePath));
+  }
+
   /**
    * Get path relative to the root path
    *

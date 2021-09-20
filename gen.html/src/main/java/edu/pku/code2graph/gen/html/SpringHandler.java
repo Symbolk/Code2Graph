@@ -26,7 +26,7 @@ public class SpringHandler extends AbstractHandler {
         new URI(
             Protocol.DEF,
             Language.HTML,
-            filePath,
+                uriFilePath,
             ele instanceof Document ? "" : getIdentifier(ele.tagName()));
     ElementNode en =
         new ElementNode(
@@ -75,10 +75,10 @@ public class SpringHandler extends AbstractHandler {
 
   public Node DialectNodeToGnode(DialectNode node, String attrName, String parentIdtf) {
     DialectNode current = node;
-    URI uri = new URI(Protocol.USE, Language.HTML, filePath, getIdentifier(attrName));
+    URI uri = new URI(Protocol.USE, Language.HTML, uriFilePath, getIdentifier(attrName));
     String curIdtf =
         parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + URI.checkInvalidCh(current.getName());
-    URI inline = new URI(Protocol.USE, Language.OTHER, filePath, curIdtf);
+    URI inline = new URI(Protocol.USE, Language.OTHER, uriFilePath, curIdtf);
     uri.setInline(inline);
     ElementNode en =
         new ElementNode(
