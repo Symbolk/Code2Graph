@@ -156,10 +156,11 @@ public class SpringExtractor {
     }
   }
 
-  public void generateInstances(String repoPath) throws IOException {
+  public List<Pair<URI, URI>> generateInstances(String repoPath) throws IOException {
     extractHtmlUri(repoPath);
     extractJavaUri(repoPath);
     findPairs();
+    return uriPairs;
   }
 
   public void writeToFile(String filePath) throws IOException {

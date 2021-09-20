@@ -15,7 +15,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
 /**
  * Visitor focusing on the entity granularity, at or above expression level
  * (cu/type/member/statement/expression)
@@ -467,6 +466,21 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             Pattern pathRegex = Pattern.compile("[\\w-/]+");
             String returnExpr =
                 ((Expression) ((ClassInstanceCreation) expression).arguments().get(0)).toString();
+            if (returnExpr != null
+                && !returnExpr.trim().isEmpty()
+                && pathRegex.matcher(returnExpr).find()) {
+              currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+              return Optional.of(returnExpr);
+            }
+          }
+        } else if (expression != null && expression.getNodeType() == ASTNode.METHOD_INVOCATION) {
+          // For specific repos
+          if (!((MethodInvocation) expression).arguments().isEmpty()
+              && ((Expression) ((MethodInvocation) expression).arguments().get(0)).getNodeType()
+                  == ASTNode.STRING_LITERAL) {
+            Pattern pathRegex = Pattern.compile("[\\w-/]+");
+            String returnExpr =
+                ((Expression) ((MethodInvocation) expression).arguments().get(0)).toString();
             if (returnExpr != null
                 && !returnExpr.trim().isEmpty()
                 && pathRegex.matcher(returnExpr).find()) {
