@@ -39,7 +39,7 @@ public class GeneralHandler extends AbstractHandler {
 
   @Override
   public void endDocument() throws SAXException {
-    logger.debug("\nEnd Parsing {}", filePath);
+    logger.debug("\nEnd Parsing {}", uriFilePath);
     super.endDocument();
   }
 
@@ -66,7 +66,7 @@ public class GeneralHandler extends AbstractHandler {
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName);
     graph.addVertex(root);
     stack.push(root);
-    logger.debug("Start Parsing {}", filePath);
+    logger.debug("Start Parsing {}", uriFilePath);
     super.startDocument();
   }
 

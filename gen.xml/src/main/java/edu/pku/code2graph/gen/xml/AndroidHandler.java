@@ -47,7 +47,7 @@ public class AndroidHandler extends AbstractHandler {
 
   @Override
   public void endDocument() throws SAXException {
-    logger.debug("\nEnd Parsing {}", filePath);
+    logger.debug("\nEnd Parsing {}", uriFilePath);
     super.endDocument();
   }
 
@@ -74,14 +74,14 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
-    URI uri = new URI(Protocol.DEF, Language.XML, filePath, "");
+    URI uri = new URI(Protocol.DEF, Language.XML, uriFilePath, "");
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
     GraphUtil.addURI(Language.XML, root.getUri(), root);
-    logger.debug("Start Parsing {}", filePath);
+    logger.debug("Start Parsing {}", uriFilePath);
     super.startDocument();
   }
 
@@ -96,7 +96,7 @@ public class AndroidHandler extends AbstractHandler {
       idtf = parentIdtf;
     }
     idtf = idtf + (idtf.isEmpty() ? "" : "/") + URI.checkInvalidCh(qName);
-    URI xllUri = new URI(Protocol.DEF, Language.XML, filePath, idtf);
+    URI xllUri = new URI(Protocol.DEF, Language.XML, uriFilePath, idtf);
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
