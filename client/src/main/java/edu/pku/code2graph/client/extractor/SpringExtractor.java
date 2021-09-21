@@ -1,5 +1,6 @@
 package edu.pku.code2graph.client.extractor;
 
+import com.csvreader.CsvWriter;
 import edu.pku.code2graph.gen.html.JsoupGenerator;
 import edu.pku.code2graph.gen.html.model.NodeType;
 import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
@@ -7,6 +8,7 @@ import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -21,6 +23,7 @@ import org.jgrapht.Graph;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.List;
 
@@ -140,8 +143,6 @@ public class SpringExtractor {
     for (String key : javaURIS.keySet()) {
       if (uri.getFile().contains(key)) {
         for (URI val : javaURIS.get(key)) {
-          String sym1 = val.getSymbol();
-          String sym2 = uri.getSymbol();
           if (val.getSymbol().equals(uri.getSymbol())) {
             uriPairs.add(new ImmutablePair<>(uri, val));
           }
@@ -156,7 +157,9 @@ public class SpringExtractor {
     }
   }
 
-  public List<Pair<URI, URI>> generateInstances(String repoPath) throws IOException {
+  public List<Pair<URI, URI>> generateInstances(String repoRoot, String repoPath)
+      throws IOException {
+    FileUtil.setRootPath(repoRoot);
     extractHtmlUri(repoPath);
     extractJavaUri(repoPath);
     findPairs();
@@ -168,10 +171,17 @@ public class SpringExtractor {
     if (!outFile.exists()) {
       outFile.createNewFile();
     }
-    FileWriter fw = new FileWriter(outFile);
+    CsvWriter writer = new CsvWriter(filePath, ',', Charset.forName("UTF-8"));
+    String[] headers = {"HTML", "JAVA"};
+    writer.writeRecord(headers);
     for (Pair<URI, URI> pair : uriPairs) {
-      fw.write(pair.getLeft() + "," + pair.getRight() + "\n");
+      String left = pair.getLeft().toString(), right = pair.getRight().toString();
+      String[] record = {
+        left.substring(5, left.length() - 1), right.substring(5, right.length() - 1)
+      };
+      writer.writeRecord(record);
     }
+    writer.close();
   }
 
   private void findExtInRepo(String path, List<String> exts, List<String> filePaths) {
