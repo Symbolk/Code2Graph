@@ -1,6 +1,7 @@
 package edu.pku.code2graph.gen.xml;
 
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
@@ -20,6 +21,7 @@ public class AbstractHandler extends DefaultHandler {
 
   // temporarily save the current file path here
   protected String filePath;
+  protected String uriFilePath;
 
   // unified identifier: @type/id
   protected Map<String, Node> defPool = new HashMap<>();
@@ -42,5 +44,6 @@ public class AbstractHandler extends DefaultHandler {
 
   public void setFilePath(String filePath) {
     this.filePath = filePath;
+    this.uriFilePath = FileUtil.getRelativePath(filePath);
   }
 }

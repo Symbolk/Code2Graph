@@ -2,6 +2,7 @@ package edu.pku.code2graph.gen.sql;
 
 import edu.pku.code2graph.gen.sql.model.NodeType;
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.parser.SimpleNode;
@@ -47,6 +48,7 @@ public class StatementHandler {
 
   // temporarily save the current file path here
   protected String filePath;
+  protected String uriFilePath;
 
   public StatementHandler() {}
 
@@ -357,9 +359,9 @@ public class StatementHandler {
                               + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
                               + "/"
                               + (URI.checkInvalidCh(columnDataType.getColumnName()));
-                      URI uri = new URI(Protocol.ANY, Language.SQL, filePath, idtf);
+                      URI uri = new URI(Protocol.ANY, Language.SQL, uriFilePath, idtf);
                       if (isInline) {
-                        URI wrapUri = new URI(Protocol.ANY, wrapLang, filePath, wrapIdentifier);
+                        URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
                         wrapUri.setInline(uri);
                         en.setUri(wrapUri);
                       } else {
@@ -513,9 +515,9 @@ public class StatementHandler {
     nodePool.put(snode, en);
     findParentEdge(snode, en);
 
-    URI uri = new URI(Protocol.USE, Language.SQL, filePath, identifierMap.get(en));
+    URI uri = new URI(Protocol.USE, Language.SQL, uriFilePath, identifierMap.get(en));
     if (isInline) {
-      URI wrapUri = new URI(Protocol.ANY, wrapLang, filePath, wrapIdentifier);
+      URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
       wrapUri.setInline(uri);
       en.setUri(wrapUri);
     } else {
@@ -588,5 +590,6 @@ public class StatementHandler {
 
   public void setFilePath(String filePath) {
     this.filePath = filePath;
+    this.uriFilePath = FileUtil.getRelativePath(filePath);
   }
 }

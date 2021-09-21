@@ -1,6 +1,7 @@
 package edu.pku.code2graph.gen.html;
 
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ public class AbstractHandler {
 
   // temporarily save the current file path here
   protected String filePath;
+  protected String uriFilePath;
 
   protected Stack<ElementNode> stack = new Stack<>();
 
@@ -26,6 +28,7 @@ public class AbstractHandler {
 
   public void setFilePath(String filePath) {
     this.filePath = filePath;
+    this.uriFilePath = FileUtil.getRelativePath(filePath);
   }
 
   public String getIdentifier(String self) {
