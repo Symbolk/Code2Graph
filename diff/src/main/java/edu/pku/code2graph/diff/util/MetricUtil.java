@@ -200,4 +200,15 @@ public class MetricUtil {
       return numArray[middle + 1];
     }
   }
+
+  /**
+   * Compute the percentage of numerator in denominator
+   *
+   * @param numerator
+   * @param denominator
+   * @return
+   */
+  public static double computeProportion(int numerator, int denominator) {
+    return denominator == 0 ? 0D : MetricUtil.formatDouble((double) numerator * 100 / denominator);
+  }
 }

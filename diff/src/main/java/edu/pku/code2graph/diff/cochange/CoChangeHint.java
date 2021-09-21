@@ -433,8 +433,8 @@ public class CoChangeHint {
     }
 
     // precision and recall
-    double precision = computeMetric(correctNum, outputNum);
-    double recall = computeMetric(correctNum, groundTruthNum);
+    double precision = MetricUtil.computeProportion(correctNum, outputNum);
+    double recall = MetricUtil.computeProportion(correctNum, groundTruthNum);
     System.out.print(message + ": " + "Precision=" + precision + " Recall=" + recall + " ");
     System.out.println();
 
@@ -468,10 +468,6 @@ public class CoChangeHint {
       }
     }
     return false;
-  }
-
-  private static double computeMetric(int a, int b) {
-    return b == 0 ? 0D : MetricUtil.formatDouble((double) a * 100 / b);
   }
 
   /**

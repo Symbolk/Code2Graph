@@ -18,8 +18,6 @@ import java.util.*;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
-import java.util.*;
-
 /** Java API client */
 public class Code2Graph {
   // meta info
@@ -186,12 +184,12 @@ public class Code2Graph {
       // build cross-language linking (XLL) edges
       Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
       List<Link> links = detector.linkAll();
+      this.xllLinks = links;
       // create uri-element map when create node
       Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
       Type xllType = type("xll");
 
       for (Link link : links) {
-        System.out.println(link);
         // get nodes by URI
         List<Node> source = uriMap.get(link.left.getLang()).get(link.left);
         List<Node> target = uriMap.get(link.right.getLang()).get(link.right);
@@ -213,6 +211,10 @@ public class Code2Graph {
   }
 
   public Map<Language, Set<URI>> crossLanguageRename(Language lang, URI uri) {
+    // def --> uses
+    // use --> def --> uses
+    // use --> uses
+
     // traverse xll links
 
     // return suggested renaming uris
