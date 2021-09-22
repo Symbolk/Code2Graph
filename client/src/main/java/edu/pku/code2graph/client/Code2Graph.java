@@ -12,6 +12,8 @@ import edu.pku.code2graph.xll.Detector;
 import edu.pku.code2graph.xll.Link;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
@@ -20,10 +22,12 @@ import static edu.pku.code2graph.model.TypeSet.type;
 
 /** Java API client */
 public class Code2Graph {
+  private static Logger logger = LoggerFactory.getLogger(Code2Graph.class);
+
   // meta info
   private final String repoName;
   private final String repoPath;
-  private final String configPath;
+  private final String configPath; // path of the xll configuration
   private String tempDir;
 
   private Graph<Node, Edge> graph;
@@ -120,7 +124,7 @@ public class Code2Graph {
   public void compareGraphs(String commitID) {
     if (commitID.isEmpty()) {
       // TODO check commit id validity
-      System.out.println("Invalid commit id: " + commitID);
+      logger.error("Invalid commit id: " + commitID);
     }
     try {
       differ.buildGraphs(commitID);
@@ -179,11 +183,22 @@ public class Code2Graph {
    */
   public Graph<Node, Edge> generateGraph(Map<String, List<String>> ext2FilePaths) {
     try {
+      logger.info("#languages = {}", ext2FilePaths.size());
+      for (Map.Entry<String, List<String>> entry : ext2FilePaths.entrySet()) {
+        logger.info("- #{} = {}", entry.getKey(), entry.getValue().size());
+      }
+
       // construct graph with intra-language nodes and edges
+      logger.info("start building graph");
       Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
+      logger.info("#nodes: " + graph.vertexSet().size());
+      logger.info("#edges: " + graph.edgeSet().size());
+
       // build cross-language linking (XLL) edges
+      logger.info("start detecting xll");
       Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
       List<Link> links = detector.linkAll();
+      logger.info("#xll = {}", links.size());
       this.xllLinks = links;
       // create uri-element map when create node
       Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
