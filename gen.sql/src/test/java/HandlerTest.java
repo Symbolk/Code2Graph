@@ -125,6 +125,34 @@ public class HandlerTest {
   }
 
   @Test
+  public void testAlterDrop() {
+    String sql =
+        "ALTER TABLE project ADD raw_boot_config MEDIUMTEXT;\n"
+            + "ALTER TABLE project ADD rendered_boot_config MEDIUMTEXT;\n"
+            + "\n"
+            + "ALTER TABLE project ADD raw_overview MEDIUMTEXT;\n"
+            + "ALTER TABLE project ADD rendered_overview MEDIUMTEXT;\n"
+            + "\n"
+            + "ALTER TABLE project DROP COLUMN is_aggregator;\n"
+            + "ALTER TABLE project ADD parent_project_id VARCHAR(255) DEFAULT NULL;\n"
+            + "\n"
+            + "ALTER TABLE project ADD display_order INT NOT NULL DEFAULT 255;\n"
+            + "\n"
+            + "CREATE TABLE project_sample_list (\n"
+            + "  title          VARCHAR(255),\n"
+            + "  description    VARCHAR(255),\n"
+            + "  url            VARCHAR(255),\n"
+            + "  display_order  INT NOT NULL,\n"
+            + "  project_id     VARCHAR(128) NOT NULL,\n"
+            + "  PRIMARY KEY (project_id, display_order)\n"
+            + ");";
+    SqlParser parser = new SqlParser();
+    StatementHandler hdl = new StatementHandler();
+    hdl.generateFrom(parser.parseLines(sql));
+    GraphVizExporter.printAsDot(GraphUtil.getGraph());
+  }
+
+  @Test
   public void testGenerator() throws IOException {
     JsqlGenerator generator = new JsqlGenerator();
     GraphUtil.clearGraph();
@@ -153,23 +181,23 @@ public class HandlerTest {
     String idtf = "Class/function/Select";
     Language lang = Language.JAVA;
     String filepath = "src/resources/test/what.java";
-    generator.generate(
-        query, filepath, lang, idtf);
+    generator.generate(query, filepath, lang, idtf);
 
     List<ElementNode> countryNode = new ArrayList<>();
     GraphUtil.getGraph()
-            .vertexSet()
-            .forEach(
-                    v -> {
-                      if (v instanceof ElementNode && ((ElementNode) v).getName().equals("Country")) {
-                        countryNode.add((ElementNode) v);
-                      }
-                    });
-    countryNode.forEach(node->{
-      assertThat(node.getUri().getIdentifier()).isEqualTo(idtf);
-      assertThat(node.getUri().getFile()).isEqualTo(filepath);
-      assertThat(node.getUri().getLang()).isEqualTo(lang);
-      assertThat(node.getUri().getInline().getIdentifier()).isEqualTo("Select/Where/=/Country");
-    });
+        .vertexSet()
+        .forEach(
+            v -> {
+              if (v instanceof ElementNode && ((ElementNode) v).getName().equals("Country")) {
+                countryNode.add((ElementNode) v);
+              }
+            });
+    countryNode.forEach(
+        node -> {
+          assertThat(node.getUri().getIdentifier()).isEqualTo(idtf);
+          assertThat(node.getUri().getFile()).isEqualTo(filepath);
+          assertThat(node.getUri().getLang()).isEqualTo(lang);
+          assertThat(node.getUri().getInline().getIdentifier()).isEqualTo("Select/Where/=/Country");
+        });
   }
 }
