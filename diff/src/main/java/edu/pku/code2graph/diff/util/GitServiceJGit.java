@@ -139,7 +139,13 @@ public class GitServiceJGit implements GitService {
 
   @Override
   public List<String> getCommitsChangedFile(
-      String repoDir, String filePath, String fromCommit, int... maxNumber) {
+      String repoDir, String filePath, String beforeCommit, int... maxNumber) {
+    return new ArrayList<>();
+  }
+
+  @Override
+  public List<String> getCommitsChangedLineRange(
+      String repoDir, String filePath, int startLine, int endLine) {
     return new ArrayList<>();
   }
 }

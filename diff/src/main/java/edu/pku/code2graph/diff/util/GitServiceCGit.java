@@ -691,9 +691,13 @@ public class GitServiceCGit implements GitService {
 
   @Override
   public List<String> getCommitsChangedFile(
-      String repoDir, String filePath, String fromCommit, int... maxNumber) {
+      String repoDir, String filePath, String beforeCommit, int... maxNumber) {
     String output = "";
-    if (maxNumber.length == 1) {
+    if (maxNumber.length == 0) {
+      output =
+          SysUtil.runSystemCommand(
+              repoDir, StandardCharsets.UTF_8, "git", "rev-list", beforeCommit, filePath);
+    } else if (maxNumber.length == 1) {
       output =
           SysUtil.runSystemCommand(
               repoDir,
@@ -702,14 +706,40 @@ public class GitServiceCGit implements GitService {
               "rev-list",
               "--max-count",
               String.valueOf(maxNumber[0]),
-              fromCommit,
+              beforeCommit,
               filePath);
     } else {
-      output =
-          SysUtil.runSystemCommand(
-              repoDir, StandardCharsets.UTF_8, "git", "rev-list", fromCommit, filePath);
+      logger.error("The maxNumber argument should be empty or one single number!");
+      return new ArrayList<>();
     }
 
     return DiffUtil.convertStringToList(output);
+  }
+
+  @Override
+  public List<String> getCommitsChangedLineRange(
+      String repoDir, String filePath, int startLine, int endLine) {
+    String output = "";
+    // git log --pretty=format:"%H" -u -L <start_line_number>,<ending_line_number>:<filename>
+    // --no-patch
+    // git log--format=format:%H -u -L <start_line_number>,<ending_line_number>:<filename>
+    // --no-patch
+    output =
+        SysUtil.runSystemCommand(
+            repoDir,
+            StandardCharsets.UTF_8,
+            "git",
+            "log",
+            "--format=format:%H",
+            "-u",
+            "-L",
+            startLine + "," + endLine,
+            ":" + filePath,
+            "--no-patch");
+    if (output.trim().startsWith("fatal")) {
+      return new ArrayList<>();
+    } else {
+      return DiffUtil.convertStringToList(output);
+    }
   }
 }
