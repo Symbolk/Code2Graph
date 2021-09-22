@@ -15,7 +15,9 @@ dependencies {
     implementation project(':diff')
     implementation project(':gen.java')
     implementation project(':gen.xml')
+    implementation project(':gen.sql')
     implementation project(':gen.kotlin')
+    implementation project(':gen.html')
 }
 
 build.finalizedBy(installDist)

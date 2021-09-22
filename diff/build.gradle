@@ -9,7 +9,9 @@ dependencies {
     implementation project(':core')
     implementation project(':gen.java')
     implementation project(':gen.xml')
+    implementation project(':gen.sql')
     implementation project(':gen.kotlin')
+    implementation project(':gen.html')
 
 //    implementation fileTree(dir: 'lib', include: ['gumtree.jar'])
     implementation 'fr.inria.gforge.spoon.labs:gumtree-spoon-ast-diff:1.34'
