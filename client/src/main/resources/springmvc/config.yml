@@ -1,0 +1,19 @@
+rules:
+  - - protocol: use
+      lang: Java
+      file: "*.java"
+      identifier: R.id.(name)
+    - protocol: any
+      lang: Xml
+      file: "*.xml"
+      identifier: "**"
+      inline:
+        identifier: '@+id\/(name)'
+  - - protocol: use
+      lang: Java
+      file: "*.java"
+      identifier: R.layout.(name)
+    - protocol: any
+      lang: Xml
+      file: "(name).xml"
+      identifier: ""
