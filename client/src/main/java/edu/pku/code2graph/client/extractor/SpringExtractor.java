@@ -9,7 +9,6 @@ import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jdt.core.JavaCore;
@@ -94,7 +93,7 @@ public class SpringExtractor extends AbstractExtractor {
     parser.setResolveBindings(true);
     parser.setBindingsRecovery(true);
 
-    AbstractJdtVisitor visitor = new ExpressionVisitor(javaURIS);
+    AbstractJdtVisitor visitor = new SpringExpressionVisitor(javaURIS);
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");

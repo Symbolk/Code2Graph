@@ -27,12 +27,12 @@ import java.util.stream.Collectors;
  *
  * <p>5. create edges
  */
-public class ExpressionVisitor extends AbstractJdtVisitor {
+public class SpringExpressionVisitor extends AbstractJdtVisitor {
   private ElementNode cuNode;
   private Map<String, List<URI>> javaURIS;
   private String currentTemplate;
 
-  public ExpressionVisitor(Map<String, List<URI>> uris) {
+  public SpringExpressionVisitor(Map<String, List<URI>> uris) {
     super();
     javaURIS = uris;
   }
