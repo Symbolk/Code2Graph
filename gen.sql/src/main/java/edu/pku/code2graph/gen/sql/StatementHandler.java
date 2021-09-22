@@ -340,7 +340,7 @@ public class StatementHandler {
         }
 
         private void deparseAlterExpression(AlterExpression expr, Node parent) {
-          if (!expr.getColDataTypeList().isEmpty()) {
+          if (expr.getColDataTypeList() != null && !expr.getColDataTypeList().isEmpty()) {
             expr.getColDataTypeList()
                 .forEach(
                     columnDataType -> {
@@ -370,6 +370,28 @@ public class StatementHandler {
                       GraphUtil.addURI(Language.SQL, en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
                     });
+          } else if (expr.getColumnName() != null) {
+            String colName = expr.getColumnName();
+            ElementNode en =
+                new ElementNode(
+                    GraphUtil.nid(), Language.SQL, NodeType.Column, colName, colName, colName);
+            graph.addVertex(en);
+            String idtf = "";
+            idtf =
+                idtf
+                    + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
+                    + "/"
+                    + (URI.checkInvalidCh(colName));
+            URI uri = new URI(Protocol.ANY, Language.SQL, uriFilePath, idtf);
+            if (isInline) {
+              URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
+              wrapUri.setInline(uri);
+              en.setUri(wrapUri);
+            } else {
+              en.setUri(uri);
+            }
+            GraphUtil.addURI(Language.SQL, en.getUri(), en);
+            graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
           }
         }
 
