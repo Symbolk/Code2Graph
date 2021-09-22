@@ -8,4 +8,5 @@ dependencies {
     implementation project(':gen.kotlin')
     implementation project(':gen.html')
     implementation 'org.eclipse.jdt:org.eclipse.jdt.core:3.25.0'
+    implementation 'net.sourceforge.javacsv:javacsv:2.0'
 }

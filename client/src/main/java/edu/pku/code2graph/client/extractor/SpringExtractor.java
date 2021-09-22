@@ -7,8 +7,8 @@ import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jdt.core.JavaCore;
@@ -19,15 +19,13 @@ import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.jgrapht.Graph;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-public class SpringExtractor {
+public class SpringExtractor extends AbstractExtractor {
   public List<URI> htmlURIS = new ArrayList<>();
   public Map<String, List<URI>> javaURIS = new HashMap<>();
-  public List<Pair<URI, URI>> uriPairs = new ArrayList<>();
 
   private static final String JRE_PATH =
       System.getProperty("java.home") + File.separator + "lib/rt.jar";
@@ -95,7 +93,7 @@ public class SpringExtractor {
     parser.setResolveBindings(true);
     parser.setBindingsRecovery(true);
 
-    AbstractJdtVisitor visitor = new ExpressionVisitor(javaURIS);
+    AbstractJdtVisitor visitor = new SpringExpressionVisitor(javaURIS);
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");
@@ -122,26 +120,10 @@ public class SpringExtractor {
     }
   }
 
-  private static List<URI> removeDuplicateOutputField(List<URI> list) {
-    Set<URI> set =
-        new TreeSet<>(
-            (a, b) -> {
-              int compareToResult = 1; // ==0表示重复
-              if (StringUtils.equals(a.toString(), b.toString())) {
-                compareToResult = 0;
-              }
-              return compareToResult;
-            });
-    set.addAll(list);
-    return new ArrayList<>(set);
-  }
-
   private void findPairByHtmlUri(URI uri) {
     for (String key : javaURIS.keySet()) {
       if (uri.getFile().contains(key)) {
         for (URI val : javaURIS.get(key)) {
-          String sym1 = val.getSymbol();
-          String sym2 = uri.getSymbol();
           if (val.getSymbol().equals(uri.getSymbol())) {
             uriPairs.add(new ImmutablePair<>(uri, val));
           }
@@ -156,48 +138,12 @@ public class SpringExtractor {
     }
   }
 
-  public void generateInstances(String repoPath) throws IOException {
+  public List<Pair<URI, URI>> generateInstances(String repoRoot, String repoPath)
+      throws IOException {
+    FileUtil.setRootPath(repoRoot);
     extractHtmlUri(repoPath);
     extractJavaUri(repoPath);
     findPairs();
-  }
-
-  public void writeToFile(String filePath) throws IOException {
-    File outFile = new File(filePath);
-    if (!outFile.exists()) {
-      outFile.createNewFile();
-    }
-    FileWriter fw = new FileWriter(outFile);
-    for (Pair<URI, URI> pair : uriPairs) {
-      fw.write(pair.getLeft() + "," + pair.getRight() + "\n");
-    }
-  }
-
-  private void findExtInRepo(String path, List<String> exts, List<String> filePaths) {
-    File file = new File(path);
-    LinkedList<File> list = new LinkedList<>();
-    if (file.exists()) {
-      if (null == file.listFiles()) {
-        return;
-      }
-      list.addAll(Arrays.asList(file.listFiles()));
-      while (!list.isEmpty()) {
-        File[] files = list.removeFirst().listFiles();
-        if (null == files) {
-          continue;
-        }
-        for (File f : files) {
-          if (f.isDirectory()) {
-            list.add(f);
-          } else {
-            for (String ext : exts) {
-              if (f.getName().length() > ext.length() && f.getName().endsWith(ext)) {
-                filePaths.add(f.getAbsolutePath());
-              }
-            }
-          }
-        }
-      }
-    }
+    return uriPairs;
   }
 }
