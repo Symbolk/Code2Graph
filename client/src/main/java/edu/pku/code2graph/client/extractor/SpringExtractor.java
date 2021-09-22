@@ -48,7 +48,7 @@ public class SpringExtractor extends AbstractExtractor {
       }
     }
 
-    removeDuplicateOutputField(htmlURIS);
+    htmlURIS = removeDuplicateOutputField(htmlURIS);
     GraphUtil.clearGraph();
   }
 
