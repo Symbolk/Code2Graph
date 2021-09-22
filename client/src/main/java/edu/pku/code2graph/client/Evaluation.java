@@ -1,46 +1,69 @@
 package edu.pku.code2graph.client;
 
+import edu.pku.code2graph.diff.RepoAnalyzer;
+import edu.pku.code2graph.diff.model.DiffFile;
+import edu.pku.code2graph.diff.util.GitService;
+import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.Range;
+import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
 import org.jgrapht.Graph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Evaluation {
+  private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
+
   // test one repo at a time
-  private static String repoName = "";
-  private static String repoPath = "";
+  private static String framework = "springmvc";
+  private static String repoName = "sagan";
+  private static String repoPath =
+      System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
+  private static String configPath =
+      System.getProperty("user.home")
+          + "/coding/dev/Code2Graph/client/src/main/resources/android/config.yml";
+  //      FileUtil.getPathFromURL(
+  //          Evaluation.class.getClassLoader().getResource(framework + "/config.yml"));
+
   private static Code2Graph client = null;
+  private static List<Link> xllLinks = new ArrayList<>();
+
+  private static GitService gitService = new GitServiceCGit();
+  private static RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
   public static void main(String[] args) {
+    BasicConfigurator.configure();
+//    org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
+
     // set up
-    repoName = "";
-    repoPath = "";
-    client = new Code2Graph(repoName, repoPath, "");
+    client = new Code2Graph(repoName, repoPath, configPath);
     client.setSupportedLanguages(
-        new HashSet(Arrays.asList(Language.JAVA, Language.HTML, Language.XML)));
+        new HashSet(Arrays.asList(Language.JAVA, Language.HTML, Language.XML, Language.SQL)));
+
+    logger.info("Generating graph for repo: " + repoName);
+    Graph<Node, Edge> graph = client.generateGraph();
+    xllLinks = client.getXllLinks();
+    // export to csv files
 
     // run evaluation
-    testXLLDetection();
+    //    testXLLDetection();
+    testCochange();
   }
 
   /** Run the experiments on real repo, and compare the results with the ground truth */
   private static void testXLLDetection() {
     // load ground truth by reading csv
     Set<Link> groundTruth = new HashSet<Link>();
-
-    // detect xll
-    Graph<Node, Edge> graph = client.generateGraph();
-    System.out.println(graph.vertexSet().size());
-    System.out.println(graph.edgeSet().size());
-    List<Link> xllLinks = client.getXllLinks();
 
     // compare
     Set<Link> output = new HashSet<>(xllLinks);
@@ -50,8 +73,8 @@ public class Evaluation {
     double precision = MetricUtil.computeProportion(intersectionNum, output.size());
     double recall = MetricUtil.computeProportion(intersectionNum, groundTruth.size());
 
-    System.out.println("Precision = " + precision);
-    System.out.println("Recall = " + recall);
+    logger.info("Precision = " + precision);
+    logger.info("Recall = " + recall);
   }
 
   /** Metric: compare output with ground truth and calculate the precision and recall */
@@ -59,9 +82,7 @@ public class Evaluation {
     return Pair.of(1.0, 1.0);
   }
 
-  /**
-   * Rely on identifier transformation
-   */
+  /** Rely on identifier transformation */
   private static void testRename() {
     // randomly sample 20% named xll
 
