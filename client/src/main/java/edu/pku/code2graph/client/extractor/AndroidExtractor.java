@@ -1,8 +1,7 @@
 package edu.pku.code2graph.client.extractor;
 
-import edu.pku.code2graph.gen.html.JsoupGenerator;
-import edu.pku.code2graph.gen.html.model.NodeType;
 import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
+import edu.pku.code2graph.gen.xml.SaxGenerator;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
@@ -23,34 +22,12 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
-public class SpringExtractor extends AbstractExtractor {
-  public List<URI> htmlURIS = new ArrayList<>();
+public class AndroidExtractor extends AbstractExtractor {
+  public List<URI> xmlURIS = new ArrayList<>();
   public Map<String, List<URI>> javaURIS = new HashMap<>();
 
   private static final String JRE_PATH =
       System.getProperty("java.home") + File.separator + "lib/rt.jar";
-
-  public void extractHtmlUri(String repoPath) throws IOException {
-    GraphUtil.clearGraph();
-
-    List<String> filePaths = new ArrayList<>();
-    List<String> exts = Arrays.asList(".html", ".jsp");
-    findExtInRepo(repoPath, exts, filePaths);
-
-    JsoupGenerator generator = new JsoupGenerator();
-    Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
-    for (Node node : graph.vertexSet()) {
-      if (node instanceof ElementNode
-          && node.getType().equals(NodeType.INLINE_VAR)
-          && !((ElementNode) node).getName().contains("$")) {
-        System.out.println(((ElementNode) node).getName());
-        htmlURIS.add(node.getUri());
-      }
-    }
-
-    htmlURIS = removeDuplicateOutputField(htmlURIS);
-    GraphUtil.clearGraph();
-  }
 
   public void extractJavaUri(String repoPath) {
     GraphUtil.clearGraph();
@@ -93,7 +70,10 @@ public class SpringExtractor extends AbstractExtractor {
     parser.setResolveBindings(true);
     parser.setBindingsRecovery(true);
 
-    AbstractJdtVisitor visitor = new SpringExpressionVisitor(javaURIS);
+    Map<String, List<String>> layMap = new HashMap<>();
+    Map<String, List<URI>> idMap = new HashMap<>();
+
+    AbstractJdtVisitor visitor = new AndroidExpressionVisitor(layMap, idMap);
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");
@@ -113,36 +93,87 @@ public class SpringExtractor extends AbstractExtractor {
         },
         null);
 
-    for (String key : javaURIS.keySet()) {
-      List<URI> uris = removeDuplicateOutputField(javaURIS.get(key));
-      javaURIS.get(key).clear();
-      javaURIS.put(key, uris);
-    }
-  }
-
-  private void findPairByHtmlUri(URI uri) {
-    for (String key : javaURIS.keySet()) {
-      if (uri.getFile().contains(key)) {
-        for (URI val : javaURIS.get(key)) {
-          if (val.getSymbol().equals(uri.getSymbol())) {
-            uriPairs.add(new ImmutablePair<>(uri, val));
+    for (String fileName : filePaths) {
+      List<String> layouts = layMap.get(fileName);
+      List<URI> ids = idMap.get(fileName);
+      if (ids == null || ids.isEmpty()) continue;
+      if (layouts == null || layouts.isEmpty()) {
+        if (!javaURIS.containsKey("")) javaURIS.put("", new ArrayList<>());
+        for (URI id : ids) {
+          javaURIS.get("").add(id);
+        }
+      } else {
+        for (String layout : layouts) {
+          if (!javaURIS.containsKey(layout)) javaURIS.put(layout, new ArrayList<>());
+          for (URI id : ids) {
+            javaURIS.get(layout).add(id);
           }
         }
       }
     }
+
+    for (String layout : javaURIS.keySet()) {
+      List<URI> uris = removeDuplicateOutputField(javaURIS.get(layout));
+      javaURIS.get(layout).clear();
+      javaURIS.put(layout, uris);
+    }
+
+    GraphUtil.clearGraph();
+  }
+
+  public void extractXmlUri(String repoPath) throws IOException {
+    GraphUtil.clearGraph();
+
+    List<String> filePaths = new ArrayList<>();
+    List<String> exts = Arrays.asList(".xml");
+    findExtInRepo(repoPath, exts, filePaths);
+
+    SaxGenerator generator = new SaxGenerator();
+    Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
+    for (Node node : graph.vertexSet()) {
+      if (node instanceof ElementNode
+          && node.getUri().getInline() != null
+          && node.getUri().getInline().getIdentifier().startsWith("@+id")) {
+        xmlURIS.add(node.getUri());
+      }
+    }
+
+    xmlURIS = removeDuplicateOutputField(xmlURIS);
+
+    GraphUtil.clearGraph();
+  }
+
+  private void findPairByXmlUri(URI uri) {
+    String layout = uri.getFile();
+    String[] split = layout.split("/");
+    layout = "R.layout." + split[split.length - 1];
+    layout = layout.substring(0, layout.length() - 4);
+    if(javaURIS.containsKey("")){
+      for (URI item : javaURIS.get("")) {
+        if (item.getSymbol().length() >= 5 && item.getSymbol().substring(5).equals(uri.getSymbol()))
+          uriPairs.add(new ImmutablePair<>(uri, item));
+      }
+    }
+
+    if (!javaURIS.containsKey(layout)) return;
+    for (URI item : javaURIS.get(layout)) {
+      if (item.getSymbol().length() >= 5
+          && item.getSymbol().substring(5).equals(uri.getSymbol()))
+        uriPairs.add(new ImmutablePair<>(uri, item));
+    }
   }
 
   private void findPairs() {
-    for (URI uri : htmlURIS) {
-      findPairByHtmlUri(uri);
+    for (URI uri : xmlURIS) {
+      findPairByXmlUri(uri);
     }
   }
 
   public List<Pair<URI, URI>> generateInstances(String repoRoot, String repoPath)
       throws IOException {
     FileUtil.setRootPath(repoRoot);
-    extractHtmlUri(repoPath);
     extractJavaUri(repoPath);
+    extractXmlUri(repoPath);
     findPairs();
     return uriPairs;
   }

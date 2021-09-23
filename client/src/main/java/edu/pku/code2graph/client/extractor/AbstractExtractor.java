@@ -13,13 +13,12 @@ import java.util.*;
 public class AbstractExtractor {
   public List<Pair<URI, URI>> uriPairs = new ArrayList<>();
 
-  public void writeToFile(String filePath) throws IOException {
+  public void writeToFile(String filePath, String[] headers) throws IOException {
     File outFile = new File(filePath);
     if (!outFile.exists()) {
       outFile.createNewFile();
     }
     CsvWriter writer = new CsvWriter(filePath, ',', Charset.forName("UTF-8"));
-    String[] headers = {"HTML", "JAVA"};
     writer.writeRecord(headers);
     for (Pair<URI, URI> pair : uriPairs) {
       String left = pair.getLeft().toString(), right = pair.getRight().toString();
@@ -33,14 +32,14 @@ public class AbstractExtractor {
 
   protected static List<URI> removeDuplicateOutputField(List<URI> list) {
     Set<URI> set =
-            new TreeSet<>(
-                    (a, b) -> {
-                      int compareToResult = 1; // ==0表示重复
-                      if (StringUtils.equals(a.toString(), b.toString())) {
-                        compareToResult = 0;
-                      }
-                      return compareToResult;
-                    });
+        new TreeSet<>(
+            (a, b) -> {
+              int compareToResult = 1; // ==0表示重复
+              if (StringUtils.equals(a.toString(), b.toString())) {
+                compareToResult = 0;
+              }
+              return compareToResult;
+            });
     set.addAll(list);
     return new ArrayList<>(set);
   }
@@ -54,8 +53,14 @@ public class AbstractExtractor {
       }
       list.addAll(Arrays.asList(file.listFiles()));
       while (!list.isEmpty()) {
-        File[] files = list.removeFirst().listFiles();
+        File root = list.removeFirst();
+        File[] files = root.listFiles();
         if (null == files) {
+          for (String ext : exts) {
+            if (root.getName().length() > ext.length() && root.getName().endsWith(ext)) {
+              filePaths.add(root.getAbsolutePath());
+            }
+          }
           continue;
         }
         for (File f : files) {
