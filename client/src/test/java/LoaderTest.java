@@ -1,51 +1,80 @@
 import edu.pku.code2graph.client.Code2Graph;
-import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.FileUtil;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
 import org.jgrapht.Graph;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class LoaderTest {
-  private Graph<Node, Edge> load(String repoName, String configName) {
+  private Graph<Node, Edge> generateGraph(String repoName, String configName) {
     String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
     String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
+    System.out.println("RepoPath: " + repoPath);
+    System.out.println("ConfigPath: " + configPath);
     Code2Graph c2g = new Code2Graph(repoName, repoPath, configPath);
+    String framework = configName.split("/")[0];
+    switch (framework) {
+      case "springmvc":
+        c2g.addSupportedLanguage(Language.JAVA);
+        c2g.addSupportedLanguage(Language.HTML);
+        break;
+      case "android":
+        c2g.addSupportedLanguage(Language.JAVA);
+        c2g.addSupportedLanguage(Language.XML);
+        break;
+      case "mybatis":
+        c2g.addSupportedLanguage(Language.JAVA);
+        c2g.addSupportedLanguage(Language.XML);
+        c2g.addSupportedLanguage(Language.SQL);
+        break;
+      default:
+        c2g.addSupportedLanguage(Language.JAVA);
+    }
     return c2g.generateGraph();
+  }
+
+  @BeforeAll
+  public static void setUpBeforeAll() {
+    BasicConfigurator.configure();
+    org.apache.log4j.Logger.getRootLogger().setLevel(Level.DEBUG);
   }
 
   @Test
   public void butterknifeTest() {
-    load("android/butterknife/main", "android/config.yml");
+    generateGraph("android/butterknife/main", "android/config.yml");
   }
 
   @Test
   public void databindingTest() {
-    load("android/databinding/main", "android/config.yml");
+    generateGraph("android/databinding/main", "android/config.yml");
   }
 
   @Test
   public void findviewbyidTest() {
-    load("android/findviewbyid/main", "android/config.yml");
+    generateGraph("android/findviewbyid/main", "android/config.yml");
   }
 
   @Test
   public void viewbindingTest() {
-    load("android/viewbinding/main", "android/config.yml");
+    generateGraph("android/viewbinding/main", "android/config.yml");
   }
 
   @Test
   public void mybatisJavaTest() {
-    load("mybatis/embedded_in_java/main", "mybatis/config.yml");
+    generateGraph("mybatis/embedded_in_java/main", "mybatis/config.yml");
   }
 
   @Test
   public void mybatisXMLTest() {
-    load("mybatis/embedded_in_xml/main", "mybatis/config.yml");
+    generateGraph("mybatis/embedded_in_xml/main", "mybatis/config.yml");
   }
 
   @Test
   public void saganTest() {
-    load("spring/sagan", "spring/config.yml");
+    generateGraph("springmvc/sagan", "springmvc/config.yml");
   }
 }

@@ -82,6 +82,10 @@ public class Code2Graph {
     this.supportedLanguages = supportedLanguages;
   }
 
+  public void addSupportedLanguage(Language supportedLanguage) {
+    this.supportedLanguages.add(supportedLanguage);
+  }
+
   public Set<Language> getSupportedLanguages() {
     return supportedLanguages;
   }
@@ -200,7 +204,10 @@ public class Code2Graph {
       Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
       Type xllType = type("xll");
 
+      int i = 0;
       for (Link link : links) {
+        i += 1;
+        logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
         // get nodes by URI
         List<Node> source = uriMap.get(link.left.getLang()).get(link.left);
         List<Node> target = uriMap.get(link.right.getLang()).get(link.right);
