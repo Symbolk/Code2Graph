@@ -171,7 +171,7 @@ public class GitServiceCGit implements GitService {
             "git",
             "diff",
             "--name-status",
-            commitID + "~",
+            getParentCommitID(repoPath, commitID),
             commitID);
     // early return
     if (output.trim().isEmpty()) {
@@ -587,7 +587,7 @@ public class GitServiceCGit implements GitService {
                 "--ignore-blank-lines",
                 "--ignore-space-change",
                 "-U0",
-                commitID + "~",
+                getParentCommitID(repoPath, commitID),
                 commitID)
             : SysUtil.runSystemCommand(
                 repoPath, StandardCharsets.UTF_8, "git", "diff", "-U0", commitID + "~", commitID);
@@ -616,11 +616,12 @@ public class GitServiceCGit implements GitService {
    * Get the file content at one specific commit
    *
    * @param relativePath
-   * @returnØØ
+   * @return
    */
   @Override
   public String getContentAtCommit(
       Charset charset, String repoDir, String relativePath, String commitID) {
+    // TOFIX: if there is any error, like not exist in this commit, error message will be content
     return SysUtil.runSystemCommand(repoDir, charset, "git", "show", commitID + ":" + relativePath);
   }
 
@@ -719,12 +720,11 @@ public class GitServiceCGit implements GitService {
   @Override
   public List<String> getCommitsChangedLineRange(
       String repoDir, String filePath, int startLine, int endLine) {
-    String output = "";
     // git log --pretty=format:"%H" -u -L <start_line_number>,<ending_line_number>:<filename>
     // --no-patch
     // git log--format=format:%H -u -L <start_line_number>,<ending_line_number>:<filename>
     // --no-patch
-    output =
+    String output =
         SysUtil.runSystemCommand(
             repoDir,
             StandardCharsets.UTF_8,
@@ -733,13 +733,31 @@ public class GitServiceCGit implements GitService {
             "--format=format:%H",
             "-u",
             "-L",
-            startLine + "," + endLine,
-            ":" + filePath,
+            startLine + "," + endLine + ":" + filePath,
             "--no-patch");
-    if (output.trim().startsWith("fatal")) {
+    if (output.trim().startsWith("fatal") || output.trim().isEmpty()) {
       return new ArrayList<>();
     } else {
       return DiffUtil.convertStringToList(output);
+    }
+  }
+
+  /**
+   * Return magic commit id for the very first commit, or commitID + "~"
+   *
+   * @param commitID
+   * @return
+   */
+  private String getParentCommitID(String repoDir, String commitID) {
+    // TODO: refactor GitService to save repoDir and fixed data
+    String firstCommitID =
+        SysUtil.runSystemCommand(
+                repoDir, StandardCharsets.UTF_8, "git", "rev-list", "--max-parents=0", "HEAD")
+            .trim();
+    if (commitID.equals(firstCommitID)) {
+      return "4b825dc642cb6eb9a060e54bf8d69288fbee4904"; // what the fck?
+    } else {
+      return commitID + "~";
     }
   }
 }
