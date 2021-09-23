@@ -1,0 +1,81 @@
+rules:
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: addAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '${(name)}'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: setAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '${(name)}'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: addAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '#{(name)}'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: setAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '#{(name)}'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: addAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '\*{(name)}'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: setAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '\*{(name)}'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: addAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '@{(name)}'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: setAttribute\("(name)",*\)
+    - protocol: use
+      lang: Html
+      file: "*.html"
+      identifier: "**"
+      inline:
+        identifier: '@{(name)}'
