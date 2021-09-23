@@ -47,7 +47,7 @@ public class Evaluation {
           + ".csv";
   private static String outputPath = gtPath.replace("groundtruth", "output");
 
-  private static Code2Graph client = null;
+  private static Code2Graph c2g = null;
   private static List<Link> xllLinks = new ArrayList<>();
 
   private static GitService gitService = new GitServiceCGit();
@@ -58,30 +58,28 @@ public class Evaluation {
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     // set up
-    client = new Code2Graph(repoName, repoPath, configPath);
-    Set<Language> languages = new HashSet<>();
+    c2g = new Code2Graph(repoName, repoPath, configPath);
     switch (framework) {
       case "springmvc":
-        languages.add(Language.JAVA);
-        languages.add(Language.HTML);
+        c2g.addSupportedLanguage(Language.JAVA);
+        c2g.addSupportedLanguage(Language.HTML);
         break;
       case "android":
-        languages.add(Language.JAVA);
-        languages.add(Language.XML);
+        c2g.addSupportedLanguage(Language.JAVA);
+        c2g.addSupportedLanguage(Language.XML);
         break;
       case "mybatis":
-        languages.add(Language.JAVA);
-        languages.add(Language.XML);
-        languages.add(Language.SQL);
+        c2g.addSupportedLanguage(Language.JAVA);
+        c2g.addSupportedLanguage(Language.XML);
+        c2g.addSupportedLanguage(Language.SQL);
         break;
       default:
-        languages.add(Language.JAVA);
+        c2g.addSupportedLanguage(Language.JAVA);
     }
-    client.setSupportedLanguages(languages);
 
     logger.info("Generating graph for repo: " + repoName);
-    Graph<Node, Edge> graph = client.generateGraph();
-    xllLinks = client.getXllLinks();
+    Graph<Node, Edge> graph = c2g.generateGraph();
+    xllLinks = c2g.getXllLinks();
 
     try {
       // export to csv files
