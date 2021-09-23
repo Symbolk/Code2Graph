@@ -60,10 +60,6 @@ public class Code2Graph {
     this.graph = GraphUtil.initGraph();
     this.xllLinks = new ArrayList<>();
     this.supportedLanguages = new HashSet<>();
-    this.supportedLanguages.add(Language.JAVA);
-    this.supportedLanguages.add(Language.XML);
-    this.supportedLanguages.add(Language.HTML);
-    this.supportedLanguages.add(Language.SQL);
   }
 
   public Code2Graph(String repoName, String repoPath, String configPath) {

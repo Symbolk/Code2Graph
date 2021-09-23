@@ -33,8 +33,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
   @Override
   public boolean visit(CompilationUnit cu) {
     this.cuNode =
-        createElementNode(
-            NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath, "");
+        createElementNode(NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath, "");
 
     logger.debug("Start Parsing {}", filePath);
     return true;
@@ -57,11 +56,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     ElementNode node =
         createElementNode(
-            type,
-            td.toString(),
-            td.getName().toString(),
-            qname,
-            JdtService.getIdentifier(td));
+            type, td.toString(), td.getName().toString(), qname, JdtService.getIdentifier(td));
 
     node.setRange(computeRange(td));
 
@@ -320,11 +315,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     ElementNode node =
         createElementNode(
-            NodeType.METHOD_DECLARATION,
-            md.toString(),
-            name,
-            qname,
-            JdtService.getIdentifier(md));
+            NodeType.METHOD_DECLARATION, md.toString(), name, qname, JdtService.getIdentifier(md));
 
     node.setRange(computeRange(md));
 
@@ -689,10 +680,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                           parseExpression((Expression) upd),
                           new Edge(GraphUtil.eid(), EdgeType.UPDATER)));
 
-          graph.addEdge(
-              node,
-              parseExpression(forStatement.getExpression()),
-              new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          if (forStatement.getExpression() != null) {
+            graph.addEdge(
+                node,
+                parseExpression(forStatement.getExpression()),
+                new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
           parseStatement(forStatement.getBody())
               .ifPresent(
                   body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
@@ -967,7 +960,9 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
-          URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+          URI uri =
+              new URI(
+                  Protocol.USE, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           break;
@@ -975,7 +970,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
-          URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, ((SimpleName) exp).getFullyQualifiedName());
+          URI uri =
+              new URI(
+                  Protocol.USE,
+                  Language.JAVA,
+                  uriFilePath,
+                  ((SimpleName) exp).getFullyQualifiedName());
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           if (binding == null) {

@@ -1,14 +1,13 @@
 package edu.pku.code2graph.client;
 
+import com.csvreader.CsvReader;
+import com.csvreader.CsvWriter;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Range;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,22 +17,35 @@ import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Evaluation {
   private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
 
   // test one repo at a time
-  private static String framework = "springmvc";
-  private static String repoName = "sagan";
+  private static String framework = "android";
+  private static String repoName = "DataBinding";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static String configPath =
-      System.getProperty("user.home")
-          + "/coding/dev/Code2Graph/client/src/main/resources/android/config.yml";
+      System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   //      FileUtil.getPathFromURL(
   //          Evaluation.class.getClassLoader().getResource(framework + "/config.yml"));
+  private static String gtPath =
+      System.getProperty("user.dir")
+          + "/client/src/main/resources/"
+          + framework
+          + "/groundtruth/"
+          + repoName
+          + ".csv";
+  private static String outputPath = gtPath.replace("groundtruth", "output");
 
   private static Code2Graph client = null;
   private static List<Link> xllLinks = new ArrayList<>();
@@ -43,27 +55,83 @@ public class Evaluation {
 
   public static void main(String[] args) {
     BasicConfigurator.configure();
-//    org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
+    org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     // set up
     client = new Code2Graph(repoName, repoPath, configPath);
-    client.setSupportedLanguages(
-        new HashSet(Arrays.asList(Language.JAVA, Language.HTML, Language.XML, Language.SQL)));
+    Set<Language> languages = new HashSet<>();
+    switch (framework) {
+      case "springmvc":
+        languages.add(Language.JAVA);
+        languages.add(Language.HTML);
+        break;
+      case "android":
+        languages.add(Language.JAVA);
+        languages.add(Language.XML);
+        break;
+      case "mybatis":
+        languages.add(Language.JAVA);
+        languages.add(Language.XML);
+        languages.add(Language.SQL);
+        break;
+      default:
+        languages.add(Language.JAVA);
+    }
+    client.setSupportedLanguages(languages);
 
     logger.info("Generating graph for repo: " + repoName);
     Graph<Node, Edge> graph = client.generateGraph();
     xllLinks = client.getXllLinks();
-    // export to csv files
 
-    // run evaluation
-    //    testXLLDetection();
-    testCochange();
+    try {
+      // export to csv files
+      exportXLLLinks(xllLinks, outputPath);
+
+      // run evaluation
+      testXLLDetection();
+      //      testCochange();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private static void exportXLLLinks(List<Link> xllLinks, String filePath) throws IOException {
+    File outFile = new File(filePath);
+    if (!outFile.exists()) {
+      outFile.createNewFile();
+    }
+    CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
+    String[] headers = {"left", "right"};
+
+    writer.writeRecord(headers);
+    for (Link link : xllLinks) {
+      String leftURI = link.left.toString(), rightURI = link.right.toString();
+      String left = leftURI.substring(5, leftURI.length() - 1),
+          right = rightURI.substring(5, rightURI.length() - 1);
+      // should rule be saved too?
+      String[] record = {left, right};
+      writer.writeRecord(record);
+    }
+    writer.close();
   }
 
   /** Run the experiments on real repo, and compare the results with the ground truth */
-  private static void testXLLDetection() {
+  private static void testXLLDetection() throws IOException {
     // load ground truth by reading csv
     Set<Link> groundTruth = new HashSet<Link>();
+
+    CsvReader reader = new CsvReader(gtPath);
+
+    reader.readHeaders();
+    String[] headers = reader.getHeaders();
+    if (headers.length != 2) {
+      logger.error("Ground Truth header num expected 2, but " + headers.length);
+      return;
+    }
+    while (reader.readRecord()) {
+      groundTruth.add(new Link(new URI(reader.get(headers[0])), new URI(reader.get(headers[1]))));
+    }
+    reader.close();
 
     // compare
     Set<Link> output = new HashSet<>(xllLinks);
