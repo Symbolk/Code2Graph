@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +50,7 @@ public class Evaluation {
           + "/groundtruth/"
           + repoName
           + ".csv";
-  private static String outputPath = gtPath.replace("groundtruth", "output");
+  private static String otPath = gtPath.replace("groundtruth", "output");
 
   private static Code2Graph c2g = null;
   private static List<Link> xllLinks = new ArrayList<>();
@@ -84,9 +86,9 @@ public class Evaluation {
 
     try {
       // for testXLLDetection, run once and save the output, then comment
-//      Graph<Node, Edge> graph = c2g.generateGraph();
-//      xllLinks = c2g.getXllLinks();
-//      exportXLLLinks(xllLinks, outputPath);
+      Graph<Node, Edge> graph = c2g.generateGraph();
+      xllLinks = c2g.getXllLinks();
+      exportXLLLinks(xllLinks, otPath);
 
       // compare by solely loading csv files
       testXLLDetection();
@@ -122,6 +124,16 @@ public class Evaluation {
 
   /** Run the experiments on real repo, and compare the results with the ground truth */
   private static void testXLLDetection() throws IOException {
+    if (Files.exists(Paths.get(gtPath))) {
+      logger.error("Ground truth file: {} does not exist!", gtPath);
+      return;
+    }
+
+    if (Files.exists(Paths.get(otPath))) {
+      logger.error("Output file: {} does not exist!" + otPath);
+      return;
+    }
+
     // load ground truth by reading csv
     CsvReader gtReader = new CsvReader(gtPath);
     gtReader.readHeaders();
@@ -140,7 +152,7 @@ public class Evaluation {
     gtReader.close();
 
     // load output by reading csv
-    CsvReader otReader = new CsvReader(outputPath);
+    CsvReader otReader = new CsvReader(otPath);
 
     otReader.readHeaders();
     String[] otHeaders = otReader.getHeaders();
