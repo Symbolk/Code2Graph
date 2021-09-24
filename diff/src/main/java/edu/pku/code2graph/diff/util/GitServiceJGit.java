@@ -152,7 +152,7 @@ public class GitServiceJGit implements GitService {
   }
 
   @Override
-  public String getCommitId(String repoDir) {
+  public String getHEADCommitId(String repoDir) {
     return "HEAD";
   }
 

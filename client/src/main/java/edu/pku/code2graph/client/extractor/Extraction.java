@@ -48,7 +48,7 @@ public class Extraction {
   }
 
   private static void addCommitIdToPath() {
-    String commitId = gitService.getCommitId(repoPath);
+    String commitId = gitService.getHEADCommitId(repoPath);
     if (commitId != null) {
       gtPath =
           System.getProperty("user.dir")

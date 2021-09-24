@@ -107,10 +107,11 @@ public interface GitService {
    * @param repoDir
    * @return
    */
-  String getCommitId(String repoDir);
+  String getHEADCommitId(String repoDir);
 
   /**
    * Checkout the repo to specific commitId
+   *
    * @param repoDir
    * @param commitId
    * @return success or not

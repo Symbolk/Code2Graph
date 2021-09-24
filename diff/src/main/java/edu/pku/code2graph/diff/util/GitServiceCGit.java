@@ -762,7 +762,7 @@ public class GitServiceCGit implements GitService {
   }
 
   @Override
-  public String getCommitId(String repoDir) {
+  public String getHEADCommitId(String repoDir) {
     String commitId =
         SysUtil.runSystemCommand(
             repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
@@ -773,7 +773,7 @@ public class GitServiceCGit implements GitService {
   public boolean checkoutByCommitId(String repoDir, String commitId) {
     SysUtil.runSystemCommand(
         repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
-    String curId = getCommitId(repoDir);
+    String curId = getHEADCommitId(repoDir);
     if (curId.equals(commitId)) return true;
     return false;
   }
