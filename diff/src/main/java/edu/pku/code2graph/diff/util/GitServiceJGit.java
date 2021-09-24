@@ -2,6 +2,7 @@ package edu.pku.code2graph.diff.util;
 
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.DiffHunk;
+import edu.pku.code2graph.util.SysUtil;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
@@ -11,6 +12,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -147,5 +149,13 @@ public class GitServiceJGit implements GitService {
   public List<String> getCommitsChangedLineRange(
       String repoDir, String filePath, int startLine, int endLine) {
     return new ArrayList<>();
+  }
+
+  @Override
+  public String getCommitId(String repoDir) {
+    String commitId =
+        SysUtil.runSystemCommand(
+            repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
+    return commitId;
   }
 }

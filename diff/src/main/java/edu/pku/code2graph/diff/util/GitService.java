@@ -100,4 +100,12 @@ public interface GitService {
    */
   List<String> getCommitsChangedLineRange(
       String repoDir, String filePath, int startLine, int endLine);
+
+  /**
+   * Get current commit id of repo
+   *
+   * @param repoDir
+   * @return
+   */
+  String getCommitId(String repoDir);
 }

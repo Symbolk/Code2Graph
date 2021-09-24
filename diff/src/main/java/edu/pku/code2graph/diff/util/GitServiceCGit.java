@@ -760,4 +760,12 @@ public class GitServiceCGit implements GitService {
       return commitID + "~";
     }
   }
+
+  @Override
+  public String getCommitId(String repoDir) {
+    String commitId =
+        SysUtil.runSystemCommand(
+            repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
+    return commitId;
+  }
 }
