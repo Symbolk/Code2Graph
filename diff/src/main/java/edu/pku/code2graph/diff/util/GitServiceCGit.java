@@ -768,4 +768,13 @@ public class GitServiceCGit implements GitService {
             repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
     return commitId;
   }
+
+  @Override
+  public boolean checkoutByCommitId(String repoDir, String commitId) {
+    SysUtil.runSystemCommand(
+        repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
+    String curId = getCommitId(repoDir);
+    if (curId.equals(commitId)) return true;
+    return false;
+  }
 }

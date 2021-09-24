@@ -153,9 +153,11 @@ public class GitServiceJGit implements GitService {
 
   @Override
   public String getCommitId(String repoDir) {
-    String commitId =
-        SysUtil.runSystemCommand(
-            repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
-    return commitId;
+    return "HEAD";
+  }
+
+  @Override
+  public boolean checkoutByCommitId(String repoDir, String commitId) {
+    return false;
   }
 }
