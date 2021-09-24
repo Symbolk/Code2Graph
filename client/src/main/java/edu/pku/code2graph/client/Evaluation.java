@@ -7,7 +7,10 @@ import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
-import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.Range;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,7 +34,7 @@ public class Evaluation {
 
   // test one repo at a time
   private static String framework = "android";
-  private static String repoName = "DataBinding";
+  private static String repoName = "NewPipe";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static String configPath =
@@ -78,14 +81,14 @@ public class Evaluation {
     }
 
     logger.info("Generating graph for repo: " + repoName);
-    Graph<Node, Edge> graph = c2g.generateGraph();
-    xllLinks = c2g.getXllLinks();
 
     try {
-      // export to csv files
-      exportXLLLinks(xllLinks, outputPath);
+      // for testXLLDetection, run once and save the output, then comment
+//      Graph<Node, Edge> graph = c2g.generateGraph();
+//      xllLinks = c2g.getXllLinks();
+//      exportXLLLinks(xllLinks, outputPath);
 
-      // run evaluation
+      // compare by solely loading csv files
       testXLLDetection();
       //      testCochange();
     } catch (Exception e) {
@@ -94,12 +97,16 @@ public class Evaluation {
   }
 
   private static void exportXLLLinks(List<Link> xllLinks, String filePath) throws IOException {
+    if (xllLinks.isEmpty()) {
+      return;
+    }
     File outFile = new File(filePath);
     if (!outFile.exists()) {
       outFile.createNewFile();
     }
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
-    String[] headers = {"left", "right"};
+    Link first = xllLinks.get(0);
+    String[] headers = {first.left.getLang().name(), first.right.getLang().name()};
 
     writer.writeRecord(headers);
     for (Link link : xllLinks) {
@@ -116,31 +123,49 @@ public class Evaluation {
   /** Run the experiments on real repo, and compare the results with the ground truth */
   private static void testXLLDetection() throws IOException {
     // load ground truth by reading csv
-    Set<Link> groundTruth = new HashSet<Link>();
-
-    CsvReader reader = new CsvReader(gtPath);
-
-    reader.readHeaders();
-    String[] headers = reader.getHeaders();
-    if (headers.length != 2) {
-      logger.error("Ground Truth header num expected 2, but " + headers.length);
+    CsvReader gtReader = new CsvReader(gtPath);
+    gtReader.readHeaders();
+    String[] gtHeaders = gtReader.getHeaders();
+    if (gtHeaders.length != 2) {
+      logger.error("Ground Truth header num expected 2, but " + gtHeaders.length);
       return;
     }
-    while (reader.readRecord()) {
-      groundTruth.add(new Link(new URI(reader.get(headers[0])), new URI(reader.get(headers[1]))));
+    Set<String> gtLines = new HashSet<>();
+    String leftLang = gtHeaders[0], rightLang = gtHeaders[1];
+    while (gtReader.readRecord()) {
+      gtLines.add(gtReader.get(leftLang) + "," + gtReader.get(rightLang));
+      //      groundTruth.add(new Link(new URI(gtReader.get(leftLang)), new
+      // URI(gtReader.get(rightLang))));
     }
-    reader.close();
+    gtReader.close();
+
+    // load output by reading csv
+    CsvReader otReader = new CsvReader(outputPath);
+
+    otReader.readHeaders();
+    String[] otHeaders = otReader.getHeaders();
+    if (otHeaders.length != 2) {
+      logger.error("Output header num expected 2, but " + otHeaders.length);
+      return;
+    }
+    Set<String> otLines = new HashSet<>();
+    while (otReader.readRecord()) {
+      otLines.add(otReader.get(leftLang) + "," + otReader.get(rightLang));
+    }
+    otReader.close();
 
     // compare
-    Set<Link> output = new HashSet<>(xllLinks);
-    int intersectionNum = MetricUtil.intersectSize(groundTruth, output);
+    logger.info("Expected {} XLL", gtLines.size());
+    logger.info("Detected {} XLL", otLines.size());
+    int intersectionNum = MetricUtil.intersectSize(gtLines, otLines);
+    logger.info("Correct {} XLL", intersectionNum);
 
     // compute precision/recall
-    double precision = MetricUtil.computeProportion(intersectionNum, output.size());
-    double recall = MetricUtil.computeProportion(intersectionNum, groundTruth.size());
+    double precision = MetricUtil.computeProportion(intersectionNum, otLines.size());
+    double recall = MetricUtil.computeProportion(intersectionNum, gtLines.size());
 
-    logger.info("Precision = " + precision);
-    logger.info("Recall = " + recall);
+    logger.info("Precision = {}%", precision);
+    logger.info("Recall = {}%", recall);
   }
 
   /** Metric: compare output with ground truth and calculate the precision and recall */
