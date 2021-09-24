@@ -49,6 +49,9 @@ public class LinkerTest {
       System.out.println(right.match(uri2));
       System.out.println();
 
+      List<Rule> subrules = rule.getSubrules();
+      System.out.println(subrules);
+
 //      List<URI> uris = new ArrayList<>();
 //      uris.add(uri1);
 //      uris.add(uri2);
