@@ -17,3 +17,11 @@ rules:
       lang: Xml
       file: "(name).xml"
       identifier: ""
+  - - protocol: use
+      lang: Java
+      file: "*.java"
+      identifier: (name)Binding
+    - protocol: any
+      lang: Xml
+      file: "(name).xml"
+      identifier: ""

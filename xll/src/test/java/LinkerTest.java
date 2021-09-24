@@ -49,7 +49,7 @@ public class LinkerTest {
       System.out.println(right.match(uri2));
       System.out.println();
 
-      List<Rule> subrules = rule.getSubrules();
+      List<Rule> subrules = rule.getSubRules();
       System.out.println(subrules);
 
 //      List<URI> uris = new ArrayList<>();

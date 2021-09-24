@@ -74,7 +74,8 @@ public class URIPattern extends URI {
             .replaceAll("\\{", "\\\\{");
     String[] segments = Token.regexp.split(source, -1);
     source = String.join("(\\w+)", segments);
-    Pattern regexp = Pattern.compile(source);
+    Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
+    target = target.replace("-", "").replace("_", "");
     Matcher matcher = regexp.matcher(target);
     if (!matcher.matches()) return null;
     Map<String, String> captures = new HashMap<>();

@@ -6,18 +6,18 @@ import java.util.Objects;
 
 public final class Link {
   public final URI left;
-  public final Rule middle;
+  public final Rule rule;
   public final URI right;
 
   public Link(final URI left, final URI right) {
     this.left = left;
-    this.middle = new Rule();
+    this.rule = null;
     this.right = right;
   }
 
-  public Link(final URI left, final Rule middle, final URI right) {
+  public Link(final URI left, final URI right, final Rule rule) {
     this.left = left;
-    this.middle = middle;
+    this.rule = rule;
     this.right = right;
   }
 

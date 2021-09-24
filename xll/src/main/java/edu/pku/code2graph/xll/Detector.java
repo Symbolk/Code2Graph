@@ -3,21 +3,19 @@ package edu.pku.code2graph.xll;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.*;
 
 public class Detector {
   private final Map<Language, Map<URI, List<Node>>> uriMap;
-  private final Optional<Config> configOpt;
+  private final Config config;
 
   public Detector(Map<Language, Map<URI, List<Node>>> uriMap, String path) {
     this.uriMap = uriMap;
 
     // load config
     ConfigLoader loader = new ConfigLoader();
-    this.configOpt = loader.load(path);
+    config = loader.load(path).get();
   }
 
   private interface MatchCallback {
@@ -42,7 +40,15 @@ public class Detector {
     match(rule.getLeft(), (leftUri, leftCaps) -> {
       URIPattern pattern = rule.getRight().applyCaptures(leftCaps);
       match(pattern, (rightUri, rightCaps) -> {
-        links.add(new Link(leftUri, rule, rightUri));
+        links.add(new Link(leftUri, rightUri, rule));
+        for (Rule subRule : rule.getSubRules()) {
+          URIPattern left = new URIPattern(subRule.getLeft());
+          URIPattern right = new URIPattern(subRule.getRight());
+          left.setFile(leftUri.getFile());
+          right.setFile(rightUri.getFile());
+          Rule newRule = new Rule(left, right, subRule.getSubRules());
+          link(newRule, links);
+        }
       });
     });
     return links;
@@ -55,11 +61,9 @@ public class Detector {
     }
 
     // create patterns and match
-    this.configOpt.ifPresent(config -> {
-      for (Rule rule : config.getRules()) {
-        link(rule, links);
-      }
-    });
+    for (Rule rule : config.getRules()) {
+      link(rule, links);
+    }
 
     return links;
   }
