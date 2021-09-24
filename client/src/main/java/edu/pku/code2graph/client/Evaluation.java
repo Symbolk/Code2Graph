@@ -167,17 +167,17 @@ public class Evaluation {
     otReader.close();
 
     // compare
-    logger.info("- #XLL expected: {}", gtLines.size());
-    logger.info("- #XLL detected: {}", otLines.size());
+    logger.info("- #xll expected = {}", gtLines.size());
+    logger.info("- #xll detected = {}", otLines.size());
     int intersectionNum = MetricUtil.intersectSize(gtLines, otLines);
-    logger.info("- #XLL correct: {}", intersectionNum);
+    logger.info("- #xll correct = {}", intersectionNum);
 
     // compute precision/recall
     double precision = MetricUtil.computeProportion(intersectionNum, otLines.size());
     double recall = MetricUtil.computeProportion(intersectionNum, gtLines.size());
 
-    logger.info("Precision: {}%", precision);
-    logger.info("Recall: {}%", recall);
+    logger.info("Precision = {}%", precision);
+    logger.info("Recall = {}%", recall);
   }
 
   /** Metric: compare output with ground truth and calculate the precision and recall */
