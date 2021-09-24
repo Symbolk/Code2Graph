@@ -43,13 +43,9 @@ public class Evaluation {
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   //      FileUtil.getPathFromURL(
   //          Evaluation.class.getClassLoader().getResource(framework + "/config.yml"));
-  private static String gtPath =
-      System.getProperty("user.dir")
-          + "/client/src/main/resources/"
-          + framework
-          + "/groundtruth/"
-          + repoName
-          + ".csv";
+  private static String gtDir =
+      System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/groundtruth";
+  private static String gtPath = gtDir + "/" + repoName + ".csv";
   private static String otPath = gtPath.replace("groundtruth", "output");
 
   private static Code2Graph c2g = null;
@@ -100,18 +96,24 @@ public class Evaluation {
   }
 
   private static void addCommitIdToPath() {
-    String commitId = gitService.getCommitId(repoPath);
+    File dir = new File(gtDir);
+    File[] files = dir.listFiles();
+    String commitId = null;
+    if (files != null) {
+      for (File f : files) {
+        String filename = f.getName();
+        if (!f.isDirectory() && filename.startsWith(repoName + ":")) {
+          commitId = filename.substring(0, filename.length() - 4).split(":")[1];
+          gtPath = f.getPath();
+        }
+      }
+    }
+
     if (commitId != null) {
-      gtPath =
-          System.getProperty("user.dir")
-              + "/client/src/main/resources/"
-              + framework
-              + "/groundtruth/"
-              + repoName
-              + ":"
-              + commitId.trim()
-              + ".csv";
       otPath = gtPath.replace("groundtruth", "output");
+      if (!gitService.checkoutByCommitId(repoPath, commitId)) {
+        logger.error("can't checkout to " + commitId);
+      }
     }
   }
 
