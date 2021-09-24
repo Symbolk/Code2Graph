@@ -63,6 +63,7 @@ public class Evaluation {
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     // set up
+    addCommitIdToPath();
     c2g = new Code2Graph(repoName, repoPath, configPath);
     switch (framework) {
       case "springmvc":
@@ -95,6 +96,22 @@ public class Evaluation {
       //      testCochange();
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  private static void addCommitIdToPath() {
+    String commitId = gitService.getCommitId(repoPath);
+    if (commitId != null) {
+      gtPath =
+          System.getProperty("user.dir")
+              + "/client/src/main/resources/"
+              + framework
+              + "/groundtruth/"
+              + repoName
+              + ":"
+              + commitId.trim()
+              + ".csv";
+      otPath = gtPath.replace("groundtruth", "output");
     }
   }
 
@@ -196,10 +213,7 @@ public class Evaluation {
     // compare, check or evaluate
   }
 
-  /**
-   * Co-change file prediction
-   * how to reduce noise? (xml --> java --> java, java)
-   */
+  /** Co-change file prediction how to reduce noise? (xml --> java --> java, java) */
   private static void testCochange() {
     // 1. for recent 20 historical multi-lang commits --> predict
 
@@ -211,16 +225,17 @@ public class Evaluation {
 
   }
 
-  /**
-   * Need to find 10-20 historical inconsistency-fixing commits
-   */
+  /** Need to find 10-20 historical inconsistency-fixing commits */
   private static void testLint() {
     // for the previous version (parent commit) of an cross-language inconsistency fixing commit
-    // 1. filter by keywords (miss/close/fix/resolve) --> find bug-introducing --> check multilingual
+    // 1. filter by keywords (miss/close/fix/resolve) --> find bug-introducing --> check
+    // multilingual
 
-    // 2. filter by diff size (#diff hunks<k & #diff files<n) --> 20% of all commits --> check if bug-fixing
+    // 2. filter by diff size (#diff hunks<k & #diff files<n) --> 20% of all commits --> check if
+    // bug-fixing
 
-    // 3.  given the output of cochange -> check later modification commits  --> check if made to fix cross-lang breaking
+    // 3.  given the output of cochange -> check later modification commits  --> check if made to
+    // fix cross-lang breaking
 
     // output problems (possible but not co-changed)
 

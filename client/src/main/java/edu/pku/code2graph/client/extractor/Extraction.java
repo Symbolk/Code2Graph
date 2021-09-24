@@ -5,6 +5,8 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import edu.pku.code2graph.diff.util.GitService;
+import edu.pku.code2graph.diff.util.GitServiceCGit;
 
 import java.io.IOException;
 
@@ -24,9 +26,13 @@ public class Extraction {
           + repoName
           + ".csv";
 
+  private static GitService gitService = new GitServiceCGit();
+
   public static void main(String[] args) throws IOException {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
+
+    addCommitIdToPath();
 
     logger.info("Generating groundtruth for repo: " + repoName);
 
@@ -38,6 +44,21 @@ public class Extraction {
         generateSpringGT();
         break;
       case "mybatis":
+    }
+  }
+
+  private static void addCommitIdToPath() {
+    String commitId = gitService.getCommitId(repoPath);
+    if (commitId != null) {
+      gtPath =
+          System.getProperty("user.dir")
+              + "/client/src/main/resources/"
+              + framework
+              + "/groundtruth/"
+              + repoName
+              + ":"
+              + commitId.trim()
+              + ".csv";
     }
   }
 
