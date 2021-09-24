@@ -143,12 +143,12 @@ public class Evaluation {
 
   /** Run the experiments on real repo, and compare the results with the ground truth */
   private static void testXLLDetection() throws IOException {
-    if (Files.exists(Paths.get(gtPath))) {
+    if (!Files.exists(Paths.get(gtPath))) {
       logger.error("Ground truth file: {} does not exist!", gtPath);
       return;
     }
 
-    if (Files.exists(Paths.get(otPath))) {
+    if (!Files.exists(Paths.get(otPath))) {
       logger.error("Output file: {} does not exist!" + otPath);
       return;
     }
