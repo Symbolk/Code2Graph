@@ -26,7 +26,7 @@ public class SpringHandler extends AbstractHandler {
         new URI(
             Protocol.DEF,
             Language.HTML,
-                uriFilePath,
+            uriFilePath,
             ele instanceof Document ? "" : getIdentifier(ele.tagName()));
     ElementNode en =
         new ElementNode(
@@ -61,10 +61,12 @@ public class SpringHandler extends AbstractHandler {
           graph.addVertex(rn);
           graph.addEdge(en, rn, new Edge(GraphUtil.eid(), NodeType.ATTR));
 
-          DialectNode dn = dialectParser.parseTree(attr.getValue());
-          if (dn != null) {
-            ElementNode attrEn = (ElementNode) DialectNodeToGnode(dn, attr.getKey(), "");
-            graph.addEdge(rn, attrEn, new Edge(GraphUtil.eid(), NodeType.INLINE));
+          List<DialectNode> dnodes = dialectParser.parseTreeToList(attr.getValue());
+          if (!dnodes.isEmpty()) {
+            for (DialectNode dn : dnodes) {
+              ElementNode attrEn = (ElementNode) DialectNodeToGnode(dn, attr.getKey(), "");
+              graph.addEdge(rn, attrEn, new Edge(GraphUtil.eid(), NodeType.INLINE));
+            }
           }
         });
 
