@@ -157,7 +157,7 @@ public class GitServiceJGit implements GitService {
   }
 
   @Override
-  public boolean checkoutByCommitId(String repoDir, String commitId) {
+  public boolean checkoutByCommitID(String repoDir, String commitID) {
     return false;
   }
 }
