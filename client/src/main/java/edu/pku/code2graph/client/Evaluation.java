@@ -79,12 +79,12 @@ public class Evaluation {
         c2g.addSupportedLanguage(Language.JAVA);
     }
 
-    logger.info("Generating graph for repo: " + repoName);
-
+    logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId(repoPath));
     try {
       // for testXLLDetection, run once and save the output, then comment
       Graph<Node, Edge> graph = c2g.generateGraph();
       xllLinks = c2g.getXllLinks();
+      logger.info("Exporting xll to file {}", repoName);
       exportXLLLinks(xllLinks, otPath);
 
       // compare by solely loading csv files
@@ -98,21 +98,23 @@ public class Evaluation {
   private static void addCommitIdToPath() {
     File dir = new File(gtDir);
     File[] files = dir.listFiles();
-    String commitId = null;
+    String commitID = null;
     if (files != null) {
       for (File f : files) {
         String filename = f.getName();
         if (!f.isDirectory() && filename.startsWith(repoName + ":")) {
-          commitId = filename.substring(0, filename.length() - 4).split(":")[1];
+          commitID = filename.substring(0, filename.length() - 4).split(":")[1];
           gtPath = f.getPath();
         }
       }
     }
 
-    if (commitId != null) {
+    if (commitID != null) {
       otPath = gtPath.replace("groundtruth", "output");
-      if (!gitService.checkoutByCommitId(repoPath, commitId)) {
-        logger.error("can't checkout to " + commitId);
+      if (!gitService.checkoutByCommitID(repoPath, commitID)) {
+        logger.error("Failed to checkout to {}", commitID);
+      } else {
+        logger.info("Successfully checkout to {}", commitID);
       }
     }
   }
@@ -186,10 +188,10 @@ public class Evaluation {
     otReader.close();
 
     // compare
-    logger.info("- #xll expected = {}", gtLines.size());
-    logger.info("- #xll detected = {}", otLines.size());
+    logger.info("- #xll_expected = {}", gtLines.size());
+    logger.info("- #xll_detected = {}", otLines.size());
     int intersectionNum = MetricUtil.intersectSize(gtLines, otLines);
-    logger.info("- #xll correct = {}", intersectionNum);
+    logger.info("- #xll_correct = {}", intersectionNum);
 
     // compute precision/recall
     double precision = MetricUtil.computeProportion(intersectionNum, otLines.size());
@@ -217,11 +219,54 @@ public class Evaluation {
 
   /** Co-change file prediction how to reduce noise? (xml --> java --> java, java) */
   private static void testCochange() {
-    // 1. for recent 20 historical multi-lang commits --> predict
+    logger.info("Testing cochange prediction for repo: " + repoName);
+    // 1. for recent 100 historical multi-lang commits --> predict
+    // gumtree diff to get the changed URI/diff line range to get the URI
 
-    // 2. sample 20%, find relevant commits --> filter  --> predict
+    // 2. for each xll, find relevant commits --> filter to get proper commits --> predict
+    var uriMap = GraphUtil.getUriMap();
+    int numCommits = 0;
 
-    // given changes in lang A, mask changes in lang B
+    for (Link link : xllLinks) {
+      // get line range of the first corresponding node
+      Language leftLang = link.left.getLang();
+      Language rightLang = link.right.getLang();
+      List<Node> nodes = uriMap.get(leftLang).getOrDefault(link.left, new ArrayList<>());
+      if (nodes.isEmpty()) {
+        continue;
+      }
+      Range range = nodes.get(0).getRange();
+
+      // get commits that changed the line range (range evolution history)
+      List<String> commits =
+          gitService.getCommitsChangedLineRange(
+              repoPath, link.left.getFile(), range.getStartLine(), range.getEndLine());
+
+      // extract the changed files in each commit
+      for (String commit : commits) {
+        List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commit);
+        // filter commits for supported lang
+        List<DiffFile> supportedLangDiffFiles =
+            diffFiles.stream()
+                .filter(
+                    f ->
+                        !f.getARelativePath().startsWith(".")
+                            && !f.getBRelativePath().startsWith(".") // filter hidden files
+                            && f.getFileType().extension.equals(rightLang.extension))
+                .collect(Collectors.toList());
+        if (supportedLangDiffFiles.isEmpty()) {
+          continue;
+        } else {
+          // count the number of valid commits
+          numCommits += 1;
+
+          // predict cochanged file in right
+
+        }
+      }
+    }
+
+    // given changes in lang left, mask changes in lang right
 
     // predict co-changes in B according to code coupling
 

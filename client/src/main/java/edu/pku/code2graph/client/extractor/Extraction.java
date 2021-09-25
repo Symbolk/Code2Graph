@@ -1,12 +1,12 @@
 package edu.pku.code2graph.client.extractor;
 
 import edu.pku.code2graph.client.Evaluation;
+import edu.pku.code2graph.diff.util.GitService;
+import edu.pku.code2graph.diff.util.GitServiceCGit;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import edu.pku.code2graph.diff.util.GitService;
-import edu.pku.code2graph.diff.util.GitServiceCGit;
 
 import java.io.IOException;
 
@@ -48,8 +48,8 @@ public class Extraction {
   }
 
   private static void addCommitIdToPath() {
-    String commitId = gitService.getHEADCommitId(repoPath);
-    if (commitId != null) {
+    String commitID = gitService.getHEADCommitId(repoPath);
+    if (commitID != null) {
       gtPath =
           System.getProperty("user.dir")
               + "/client/src/main/resources/"
@@ -57,7 +57,7 @@ public class Extraction {
               + "/groundtruth/"
               + repoName
               + ":"
-              + commitId.trim()
+              + commitID.trim()
               + ".csv";
     }
   }
