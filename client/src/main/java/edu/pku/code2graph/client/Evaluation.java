@@ -43,13 +43,9 @@ public class Evaluation {
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   //      FileUtil.getPathFromURL(
   //          Evaluation.class.getClassLoader().getResource(framework + "/config.yml"));
-  private static String gtPath =
-      System.getProperty("user.dir")
-          + "/client/src/main/resources/"
-          + framework
-          + "/groundtruth/"
-          + repoName
-          + ".csv";
+  private static String gtDir =
+      System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/groundtruth";
+  private static String gtPath = gtDir + "/" + repoName + ".csv";
   private static String otPath = gtPath.replace("groundtruth", "output");
 
   private static Code2Graph c2g = null;
@@ -63,6 +59,7 @@ public class Evaluation {
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     // set up
+    addCommitIdToPath();
     c2g = new Code2Graph(repoName, repoPath, configPath);
     switch (framework) {
       case "springmvc":
@@ -98,6 +95,28 @@ public class Evaluation {
     }
   }
 
+  private static void addCommitIdToPath() {
+    File dir = new File(gtDir);
+    File[] files = dir.listFiles();
+    String commitId = null;
+    if (files != null) {
+      for (File f : files) {
+        String filename = f.getName();
+        if (!f.isDirectory() && filename.startsWith(repoName + ":")) {
+          commitId = filename.substring(0, filename.length() - 4).split(":")[1];
+          gtPath = f.getPath();
+        }
+      }
+    }
+
+    if (commitId != null) {
+      otPath = gtPath.replace("groundtruth", "output");
+      if (!gitService.checkoutByCommitId(repoPath, commitId)) {
+        logger.error("can't checkout to " + commitId);
+      }
+    }
+  }
+
   private static void exportXLLLinks(List<Link> xllLinks, String filePath) throws IOException {
     if (xllLinks.isEmpty()) {
       return;
@@ -124,12 +143,12 @@ public class Evaluation {
 
   /** Run the experiments on real repo, and compare the results with the ground truth */
   private static void testXLLDetection() throws IOException {
-    if (Files.exists(Paths.get(gtPath))) {
+    if (!Files.exists(Paths.get(gtPath))) {
       logger.error("Ground truth file: {} does not exist!", gtPath);
       return;
     }
 
-    if (Files.exists(Paths.get(otPath))) {
+    if (!Files.exists(Paths.get(otPath))) {
       logger.error("Output file: {} does not exist!" + otPath);
       return;
     }
@@ -196,10 +215,7 @@ public class Evaluation {
     // compare, check or evaluate
   }
 
-  /**
-   * Co-change file prediction
-   * how to reduce noise? (xml --> java --> java, java)
-   */
+  /** Co-change file prediction how to reduce noise? (xml --> java --> java, java) */
   private static void testCochange() {
     // 1. for recent 20 historical multi-lang commits --> predict
 
@@ -211,16 +227,17 @@ public class Evaluation {
 
   }
 
-  /**
-   * Need to find 10-20 historical inconsistency-fixing commits
-   */
+  /** Need to find 10-20 historical inconsistency-fixing commits */
   private static void testLint() {
     // for the previous version (parent commit) of an cross-language inconsistency fixing commit
-    // 1. filter by keywords (miss/close/fix/resolve) --> find bug-introducing --> check multilingual
+    // 1. filter by keywords (miss/close/fix/resolve) --> find bug-introducing --> check
+    // multilingual
 
-    // 2. filter by diff size (#diff hunks<k & #diff files<n) --> 20% of all commits --> check if bug-fixing
+    // 2. filter by diff size (#diff hunks<k & #diff files<n) --> 20% of all commits --> check if
+    // bug-fixing
 
-    // 3.  given the output of cochange -> check later modification commits  --> check if made to fix cross-lang breaking
+    // 3.  given the output of cochange -> check later modification commits  --> check if made to
+    // fix cross-lang breaking
 
     // output problems (possible but not co-changed)
 
