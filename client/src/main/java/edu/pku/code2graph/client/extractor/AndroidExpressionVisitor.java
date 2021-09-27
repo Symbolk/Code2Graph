@@ -4,15 +4,14 @@ import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
 import edu.pku.code2graph.gen.jdt.JdtService;
 import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
-import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
 
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -687,10 +686,12 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
                           parseExpression((Expression) upd),
                           new Edge(GraphUtil.eid(), EdgeType.UPDATER)));
 
-          graph.addEdge(
-              node,
-              parseExpression(forStatement.getExpression()),
-              new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          if (forStatement.getExpression() != null) {
+            graph.addEdge(
+                node,
+                parseExpression(forStatement.getExpression()),
+                new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
           parseStatement(forStatement.getBody())
               .ifPresent(
                   body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
