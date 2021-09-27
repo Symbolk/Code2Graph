@@ -47,7 +47,6 @@ public class AndroidHandler extends AbstractHandler {
 
   @Override
   public void endDocument() throws SAXException {
-    logger.debug("End Parsing {}", uriFilePath);
     super.endDocument();
   }
 

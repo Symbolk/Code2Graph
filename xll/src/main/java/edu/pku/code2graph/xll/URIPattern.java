@@ -4,10 +4,7 @@ import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Protocol;
 import edu.pku.code2graph.model.URI;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,7 +72,11 @@ public class URIPattern extends URI {
     String[] segments = Token.regexp.split(source, -1);
     source = String.join("(\\w+)", segments);
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
-    target = target.replace("-", "").replace("_", "");
+    target =
+        target
+            .replace("-", "")
+            .replace("_", "")
+            .toLowerCase();
     Matcher matcher = regexp.matcher(target);
     if (!matcher.matches()) return null;
     Map<String, String> captures = new HashMap<>();
@@ -92,7 +93,7 @@ public class URIPattern extends URI {
    * @param uri uri
    * @return captures
    */
-  public Map<String, String> match(URI uri) {
+  public Capture match(URI uri) {
     // Part 1: match depth
     int depth = getLayers().size();
     if (uri.getLayers().size() < depth) return null;
@@ -102,17 +103,17 @@ public class URIPattern extends URI {
     if (!label.equals("any") && !label.equals(uri.getProtocol().toString())) return null;
 
     // Part 3: match every layers
-    Map<String, String> captures = new HashMap<>();
+    Capture capture = new Capture();
     for (int i = 0; i < depth; ++i) {
       Map<String, String> cap = matchLayer(i, uri.getLayers().get(i));
       if (cap == null) return null;
       for (String name : cap.keySet()) {
-        captures.put(name, cap.get(name));
+        capture.put(name, cap.get(name));
       }
     }
 
     // return captures
-    return captures;
+    return capture;
   }
 
   /**
@@ -135,7 +136,7 @@ public class URIPattern extends URI {
     return pattern;
   }
 
-  private static class Token {
+  private static final class Token {
     public static final Pattern regexp = Pattern.compile("\\((\\w+)(?::(\\w+))?\\)");
 
     public int level;
