@@ -198,7 +198,6 @@ public class Code2Graph {
       logger.info("start detecting xll");
       Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
       List<Link> links = detector.linkAll();
-      logger.info("#xll = {}", links.size());
       this.xllLinks = links;
       // create uri-element map when create node
       Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
