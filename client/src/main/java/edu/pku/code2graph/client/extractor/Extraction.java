@@ -14,7 +14,9 @@ public class Extraction {
   private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
 
   private static String framework = "android";
-  private static String repoName = "NewPipe";
+
+  // bilibili-android-client BookReader CloudReader XposedInstaller Douya Phonograph LeafPic EhViewer NewPipe AntennaPod
+  private static String repoName = "AntennaPod";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
 
@@ -45,6 +47,8 @@ public class Extraction {
         break;
       case "mybatis":
     }
+
+    logger.info("Saved groundtruth in file: " + gtPath);
   }
 
   private static void addCommitIdToPath() {
