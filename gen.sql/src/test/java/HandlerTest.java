@@ -3,6 +3,7 @@ import edu.pku.code2graph.gen.sql.SqlParser;
 import edu.pku.code2graph.gen.sql.StatementHandler;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -175,13 +176,24 @@ public class HandlerTest {
 
   @Test
   public void testInline() {
+    FileUtil.setRootPath("");
     JsqlGenerator generator = new JsqlGenerator();
     GraphUtil.clearGraph();
-    String query = "SELECT * FROM Customers\n" + "WHERE Country='Germany' AND City='Berlin';";
+    String query =
+        "insert into upms_log (log_id, description, username, \n"
+            + "      start_time, spend_time, base_path, \n"
+            + "      uri, url, method, user_agent, \n"
+            + "      ip, permissions, parameter, \n"
+            + "      result)\n"
+            + "    values (#{logId,jdbcType=INTEGER}, #{description,jdbcType=VARCHAR}, #{username,jdbcType=VARCHAR}, \n"
+            + "      #{startTime,jdbcType=BIGINT}, #{spendTime,jdbcType=INTEGER}, #{basePath,jdbcType=VARCHAR}, \n"
+            + "      #{uri,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR}, #{method,jdbcType=VARCHAR}, #{userAgent,jdbcType=VARCHAR}, \n"
+            + "      #{ip,jdbcType=VARCHAR}, #{permissions,jdbcType=VARCHAR}, #{parameter,jdbcType=LONGVARCHAR}, \n"
+            + "      #{result,jdbcType=LONGVARCHAR})";
     String idtf = "Class/function/Select";
     Language lang = Language.JAVA;
     String filepath = "src/resources/test/what.java";
-    generator.generate(query, filepath, lang, idtf);
+    Graph<Node, Edge> graph = generator.generate(query, filepath, lang, idtf);
 
     List<ElementNode> countryNode = new ArrayList<>();
     GraphUtil.getGraph()

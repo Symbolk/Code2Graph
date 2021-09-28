@@ -32,7 +32,9 @@ import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static edu.pku.code2graph.model.TypeSet.type;
@@ -74,17 +76,27 @@ public class StatementHandler {
 
   public static final Type CHILD = type("child");
 
+  private List<String> mybatisParamMark = Arrays.asList("\"#{", "\"${");
+
   private TablesNamesFinder tablesNamesFinder =
       new TablesNamesFinder() {
         @Override
         public void visit(Column el) {
           SimpleNode snode = el.getASTNode();
-          addElementNode(
-              el.toString(),
-              NodeType.Column,
-              el.getColumnName(),
-              el.getFullyQualifiedName(),
-              snode);
+          String name = el.getColumnName();
+          String qn = el.getFullyQualifiedName();
+          String snippet = el.toString();
+          Type type = NodeType.Column;
+          for (String mark : mybatisParamMark) {
+            if (name.startsWith(mark)) {
+              name = name.substring(1, name.length() - 1);
+              qn = qn.substring(1, qn.length() - 1);
+              snippet = snippet.substring(1, snippet.length() - 1);
+              type = NodeType.Parameter;
+              break;
+            }
+          }
+          addElementNode(snippet, type, name, qn, snode);
           super.visit(el);
         }
 
@@ -344,21 +356,24 @@ public class StatementHandler {
             expr.getColDataTypeList()
                 .forEach(
                     columnDataType -> {
+                      String name = columnDataType.getColumnName();
+                      Type type = NodeType.Column;
+                      for (String mark : mybatisParamMark) {
+                        if (name.startsWith(mark)) {
+                          name = name.substring(1, name.length() - 1);
+                          type = NodeType.Parameter;
+                          break;
+                        }
+                      }
                       ElementNode en =
-                          new ElementNode(
-                              GraphUtil.nid(),
-                              Language.SQL,
-                              NodeType.Column,
-                              columnDataType.getColumnName(),
-                              columnDataType.getColumnName(),
-                              columnDataType.getColumnName());
+                          new ElementNode(GraphUtil.nid(), Language.SQL, type, name, name, name);
                       graph.addVertex(en);
                       String idtf = "";
                       idtf =
                           idtf
                               + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
                               + "/"
-                              + (URI.checkInvalidCh(columnDataType.getColumnName()));
+                              + (URI.checkInvalidCh(name));
                       URI uri = new URI(Protocol.ANY, Language.SQL, uriFilePath, idtf);
                       if (isInline) {
                         URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
@@ -372,9 +387,16 @@ public class StatementHandler {
                     });
           } else if (expr.getColumnName() != null) {
             String colName = expr.getColumnName();
+            Type type = NodeType.Column;
+            for (String mark : mybatisParamMark) {
+              if (colName.startsWith(mark)) {
+                colName = colName.substring(1, colName.length() - 1);
+                type = NodeType.Parameter;
+                break;
+              }
+            }
             ElementNode en =
-                new ElementNode(
-                    GraphUtil.nid(), Language.SQL, NodeType.Column, colName, colName, colName);
+                new ElementNode(GraphUtil.nid(), Language.SQL, type, colName, colName, colName);
             graph.addVertex(en);
             String idtf = "";
             idtf =
@@ -445,12 +467,20 @@ public class StatementHandler {
         @Override
         public void visit(Column el) {
           SimpleNode snode = el.getASTNode();
-          addElementNode(
-              el.toString(),
-              NodeType.Column,
-              el.getColumnName(),
-              el.getFullyQualifiedName(),
-              snode);
+          String name = el.getColumnName();
+          String qn = el.getFullyQualifiedName();
+          String snippet = el.toString();
+          Type type = NodeType.Column;
+          for (String mark : mybatisParamMark) {
+            if (name.startsWith(mark)) {
+              name = name.substring(1, name.length() - 1);
+              qn = qn.substring(1, qn.length() - 1);
+              snippet = snippet.substring(1, snippet.length() - 1);
+              type = NodeType.Parameter;
+              break;
+            }
+          }
+          addElementNode(snippet, type, name, qn, snode);
           super.visit(el);
         }
       };
