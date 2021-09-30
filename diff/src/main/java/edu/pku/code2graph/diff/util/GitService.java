@@ -110,11 +110,11 @@ public interface GitService {
   String getHEADCommitId(String repoDir);
 
   /**
-   * Checkout the repo to specific commitId
+   * Checkout the repo to specific commitID
    *
    * @param repoDir
-   * @param commitId
+   * @param commitID
    * @return success or not
    */
-  boolean checkoutByCommitId(String repoDir, String commitId);
+  boolean checkoutByCommitID(String repoDir, String commitID);
 }

@@ -20,7 +20,7 @@ public class ConfigLoader {
       //      Map<String, Object> config = yaml.load(inputStream);
       Yaml yaml = new Yaml(new Constructor(Config.class));
       Config config = yaml.load(inputStream);
-      logger.info("Successfully loaded the config from " + path);
+      logger.debug("Using config from " + path);
       return Optional.of(config);
     } catch (FileNotFoundException e) {
       logger.error("Error when reading file: " + path);

@@ -202,6 +202,11 @@ public class Code2Graph {
       this.xllLinks = links;
       // create uri-element map when create node
       Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
+      for (Map.Entry<Language, Map<URI, List<Node>>> entry : uriMap.entrySet()) {
+        logger.info(
+            "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
+      }
+
       Type xllType = type("xll");
 
       int i = 0;

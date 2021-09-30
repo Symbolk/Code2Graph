@@ -1,13 +1,12 @@
 package edu.pku.code2graph.client.extractor;
 
 import edu.pku.code2graph.client.Evaluation;
-import edu.pku.code2graph.util.FileUtil;
+import edu.pku.code2graph.diff.util.GitService;
+import edu.pku.code2graph.diff.util.GitServiceCGit;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import edu.pku.code2graph.diff.util.GitService;
-import edu.pku.code2graph.diff.util.GitServiceCGit;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -16,8 +15,11 @@ import java.io.IOException;
 public class Extraction {
   private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
 
-  private static String framework = "mybatis";
-  private static String repoName = "newbee-mall";
+  private static String framework = "android";
+
+  // bilibili-android-client BookReader CloudReader XposedInstaller Douya Phonograph LeafPic
+  // EhViewer NewPipe AntennaPod
+  private static String repoName = "AntennaPod";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
 
@@ -51,11 +53,13 @@ public class Extraction {
         generateMybatisGT();
         break;
     }
+
+    logger.info("Saved groundtruth in file: " + gtPath);
   }
 
   private static void addCommitIdToPath() {
-    String commitId = gitService.getHEADCommitId(repoPath);
-    if (commitId != null) {
+    String commitID = gitService.getHEADCommitId(repoPath);
+    if (commitID != null) {
       gtPath =
           System.getProperty("user.dir")
               + "/client/src/main/resources/"
@@ -63,7 +67,7 @@ public class Extraction {
               + "/groundtruth/"
               + repoName
               + ":"
-              + commitId.trim()
+              + commitID.trim()
               + ".csv";
     }
   }
@@ -84,7 +88,6 @@ public class Extraction {
 
   private static void generateMybatisGT()
       throws IOException, ParserConfigurationException, SAXException {
-    FileUtil.setRootPath(repoPath);
     MybatisExtractor extractor = new MybatisExtractor();
     extractor.generateInstances(repoPath, repoPath);
     String[] headers = {"SQL", "JAVA"};
