@@ -32,10 +32,7 @@ import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
@@ -52,6 +49,10 @@ public class StatementHandler {
   protected String filePath;
   protected String uriFilePath;
 
+  public static Map<String, List<ElementNode>> idToIdentifierEn = new HashMap<>();
+  public static Map<String, List<RelationNode>> idToQueryRn = new HashMap<>();
+  private String currentQueryId;
+
   public StatementHandler() {}
 
   public StatementHandler(boolean inline, Language lang, String identifier) {
@@ -60,8 +61,9 @@ public class StatementHandler {
     this.wrapIdentifier = identifier;
   }
 
-  public void generateFrom(Statements stmts) {
+  public void generateFrom(Statements stmts, String queryId) {
     //    stmts.accept(deParser);
+    this.currentQueryId = queryId;
     tablesNamesFinder.visit(stmts);
   }
 
@@ -169,7 +171,7 @@ public class StatementHandler {
             }
           }
 
-          if (el.getWhere() != null) {
+          if (el.getWhere() != null && el.getWhere().getASTNode() != null) {
             SimpleNode whereNode = el.getWhere().getASTNode();
             RelationNode rn =
                 addRelationNode(whereNode.toString(), NodeType.Where, "Where", whereNode, true);
@@ -212,9 +214,21 @@ public class StatementHandler {
 
         @Override
         public void visit(Select el) {
-          SimpleNode snode = ((PlainSelect) el.getSelectBody()).getASTNode();
-          RelationNode rn = addRelationNode(el.toString(), NodeType.Select, "Select", snode, true);
-          rootNodePool.put(el, rn);
+          List<SelectBody> list = null;
+          if (!(el.getSelectBody() instanceof PlainSelect)) {
+            if (el.getSelectBody() instanceof SetOperationList) {
+              list = (((SetOperationList) el.getSelectBody()).getSelects());
+            }
+          } else {
+            list = Arrays.asList(el.getSelectBody());
+          }
+          for (SelectBody select : list) {
+            SimpleNode snode = ((PlainSelect) select).getASTNode();
+            RelationNode rn =
+                addRelationNode(select.toString(), NodeType.Select, "Select", snode, true);
+            rootNodePool.put(el, rn);
+            addToNodeMap(rn);
+          }
           super.visit(el);
         }
 
@@ -384,6 +398,8 @@ public class StatementHandler {
                       }
                       GraphUtil.addURI(Language.SQL, en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
+
+                      addToNodeMap(en);
                     });
           } else if (expr.getColumnName() != null) {
             String colName = expr.getColumnName();
@@ -414,6 +430,8 @@ public class StatementHandler {
             }
             GraphUtil.addURI(Language.SQL, en.getUri(), en);
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
+
+            addToNodeMap(en);
           }
         }
 
@@ -542,6 +560,8 @@ public class StatementHandler {
     graph.addVertex(rn);
     rootNodePool.put(el, rn);
 
+    addToNodeMap(rn);
+
     identifierMap.put(rn, symbol);
 
     return rn;
@@ -576,6 +596,8 @@ public class StatementHandler {
       en.setUri(uri);
     }
     GraphUtil.addURI(Language.SQL, en.getUri(), en);
+
+    addToNodeMap(en);
   }
 
   private void findParentEdge(SimpleNode snode, Node node) {
@@ -643,5 +665,23 @@ public class StatementHandler {
   public void setFilePath(String filePath) {
     this.filePath = filePath;
     this.uriFilePath = FileUtil.getRelativePath(filePath);
+  }
+
+  private void addToNodeMap(Node node) {
+    if (node instanceof ElementNode) {
+      ElementNode en = (ElementNode) node;
+      if (currentQueryId != null) {
+        if (!idToIdentifierEn.containsKey(currentQueryId))
+          idToIdentifierEn.put(currentQueryId, new ArrayList<>());
+        idToIdentifierEn.get(currentQueryId).add(en);
+      }
+    } else if (node instanceof RelationNode) {
+      RelationNode rn = (RelationNode) node;
+      if (currentQueryId != null) {
+        if (!idToQueryRn.containsKey(currentQueryId))
+          idToQueryRn.put(currentQueryId, new ArrayList<>());
+        idToQueryRn.get(currentQueryId).add(rn);
+      }
+    }
   }
 }

@@ -3,9 +3,8 @@ package edu.pku.code2graph.gen.sql;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.gen.Registry;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.util.GraphUtil;
 import net.sf.jsqlparser.statement.Statements;
 import org.apache.commons.io.FilenameUtils;
 import org.jgrapht.Graph;
@@ -14,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Register(id = "sql-jsql", accept = "\\.sql", priority = Registry.Priority.MAXIMUM)
 public class JsqlGenerator extends Generator {
@@ -28,7 +28,7 @@ public class JsqlGenerator extends Generator {
           try {
             Statements stmts = parser.parseFile(filePath);
             hdl.setFilePath(FilenameUtils.separatorsToUnix(filePath));
-            hdl.generateFrom(stmts);
+            hdl.generateFrom(stmts, null);
             stmtsList.add(stmts);
           } catch (IOException e) {
             e.printStackTrace();
@@ -37,13 +37,15 @@ public class JsqlGenerator extends Generator {
     return hdl.getGraph();
   }
 
+  // queryId: for mybatis xml mapper, be null in other scene
   public Graph<Node, Edge> generate(
-      String query, String filepath, Language lang, String identifier) {
+      String query, String filepath, Language lang, String identifier, String queryId) {
+    Graph<Node, Edge> graph = GraphUtil.getGraph();
     String newQuery = addQuotesToQuery(query);
     StatementHandler hdl = new StatementHandler(true, lang, identifier);
     Statements stmt = parser.parseLines(newQuery);
     hdl.setFilePath(filepath);
-    hdl.generateFrom(stmt);
+    if (stmt != null) hdl.generateFrom(stmt, queryId);
     //    for (Node n : hdl.getGraph().vertexSet()) {
     //      if (n instanceof ElementNode) {
     //        ElementNode en = (ElementNode) n;
@@ -57,6 +59,22 @@ public class JsqlGenerator extends Generator {
     //      }
     //    }
     return hdl.getGraph();
+  }
+
+  public Map<String, List<ElementNode>> getIdentifiers() {
+    return StatementHandler.idToIdentifierEn;
+  }
+
+  public void clearIdentifiers() {
+    StatementHandler.idToIdentifierEn.clear();
+  }
+
+  public Map<String, List<RelationNode>> getQueries() {
+    return StatementHandler.idToQueryRn;
+  }
+
+  public void clearQueries() {
+    StatementHandler.idToQueryRn.clear();
   }
 
   private List<String> paramMark = Arrays.asList("#{", "${");

@@ -25,7 +25,8 @@ public class SqlParser {
     try {
       return CCJSqlParserUtil.parseStatements(sqls);
     } catch (JSQLParserException e) {
-      e.printStackTrace();
+      //      e.printStackTrace();
+      logger.debug(sqls);
     }
     return null;
   }
