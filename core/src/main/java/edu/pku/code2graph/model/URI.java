@@ -91,6 +91,10 @@ public class URI {
     return split[split.length - 1];
   }
 
+  public int getIdentifierSegmentCount() {
+    return identifier.replaceAll("\\\\/", "").split("/").length;
+  }
+
   public void setProtocol(Protocol protocol) {
     this.protocol = protocol;
   }

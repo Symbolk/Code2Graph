@@ -29,4 +29,5 @@ public class NodeType {
   public static Type From = type("from");
   public static Type Join = type("join");
   public static Type Having = type("having");
+  public static Type Parameter = type("param");
 }

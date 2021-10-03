@@ -96,6 +96,10 @@ public class FileUtil {
     FileUtil.rootPath = rootPath;
   }
 
+  public static String getRootPath() {
+    return rootPath;
+  }
+
   /**
    * Get path relative to the root path
    *
