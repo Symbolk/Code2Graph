@@ -1,9 +1,9 @@
 rules:
-  - - protocol: def
+  - use:
       lang: Java
       file: '*.java'
       identifier: (namespace)Mapper/(method)
-    - protocol: any
+    def:
       lang: Xml
       file: "(namespace)Mapper.xml"
       identifier: id

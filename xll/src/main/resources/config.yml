@@ -3,46 +3,52 @@
 presets:
   - https://path/to/source/root/rule_file1.yml
   - https://path/to/source/root/rule_file2.yml
+
 # word_sep defines characters that needed to be omitted (specific to frameworks and projects)
 # word_sep定义了在跨语言代码匹配中应忽略或跳过的特殊字符（如PHP中变量前的$）
 word_sep: "$@#"
+
 # plugins are regex rules which can transform the format of identifiers, eg. camelCase -> snake_case
 # plugins定义了标识符在不同语言间形式变换的方法，如从驼峰命名变为蛇形命名
 plugins:
   - https://path/to/source/root/transformation_rules.yml
+
 # rules are user-defined XLL rules as a supplement or overwriting for the presets
 # rules包括了用户自定义的、用于补充或覆盖预定义的跨语言关联规则
 rules:
-  - - protocol: def
+  - def:
       lang: Java
       file: "*.java"
       identifier: get(name:Capitalized)
-    - protocol: use
+    use:
       lang: Java
       file: "*.java"
       inline:
         lang: SQL
         identifier: "#{(name)}"
-    - - - protocol: def
+    subrules:
+      - def:
           lang: Java
           file: "*.java"
           identifier: get(name:Capitalized)
-        - protocol: use
+        use:
           lang: Java
           file: "*.java"
           inline:
             lang: SQL
             identifier: "#{(name)}"
-  - - protocol: use
-      lang: Java
-      file: "*.java"
-      identifier: R.id.(name)
-    - protocol: any
+
+  - def:
       lang: Xml
       file: "*.xml"
       identifier: "**"
       inline:
         identifier: '@+id\/(name)'
+    use:
+      lang: Java
+      file: "*.java"
+      identifier: R.id.(name)
+
 # types of problems that does not need to be reported
 # 可以忽略的问题类型
 suppress:
