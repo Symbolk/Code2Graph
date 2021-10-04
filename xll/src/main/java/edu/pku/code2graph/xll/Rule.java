@@ -17,7 +17,9 @@ public class Rule {
 
   public Rule(Map<String, Object> rule) {
     this.def = (URIPattern) rule.get("def");
+    this.def.isRef = false;
     this.use = (URIPattern) rule.get("use");
+    this.def.isRef = true;
     this.subrules = (List<Rule>) rule.getOrDefault("subrules", new ArrayList());
   }
 }

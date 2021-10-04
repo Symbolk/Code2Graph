@@ -2,7 +2,6 @@ package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Protocol;
 import edu.pku.code2graph.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,10 +66,7 @@ public class Detector {
           }
         }
       }
-      // workaround: pending object rule format
-      if (rule.use.getProtocol() == Protocol.DEF) {
-        this.defs.addAll(uses);
-      }
+      this.defs.addAll(defs);
     }
   }
 

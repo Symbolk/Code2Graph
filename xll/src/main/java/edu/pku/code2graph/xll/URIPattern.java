@@ -1,7 +1,6 @@
 package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Protocol;
 import edu.pku.code2graph.model.URI;
 
 import java.util.*;
@@ -17,7 +16,7 @@ public class URIPattern extends URI {
   }
 
   public URIPattern(URIPattern pattern) {
-    this.protocol = pattern.protocol;
+    this.isRef = pattern.isRef;
     this.lang = pattern.lang;
     this.file = pattern.file;
     this.identifier = pattern.identifier;
@@ -28,8 +27,6 @@ public class URIPattern extends URI {
   }
 
   public URIPattern(Map<String, Object> pattern) {
-    this.protocol =
-        Protocol.valueOfLabel(pattern.getOrDefault("protocol", "any").toString().toLowerCase());
     this.lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
     this.file = (String) pattern.getOrDefault("file", "");
     this.identifier = (String) pattern.getOrDefault("identifier", "");
@@ -99,8 +96,7 @@ public class URIPattern extends URI {
     if (uri.getLayers().size() < depth) return null;
 
     // Part 2: match protocol
-    String label = protocol.toString();
-    if (!label.equals("any") && !label.equals(uri.getProtocol().toString())) return null;
+    if (!isRef && uri.isRef) return null;
 
     // Part 3: match every layers
     Capture capture = new Capture();
