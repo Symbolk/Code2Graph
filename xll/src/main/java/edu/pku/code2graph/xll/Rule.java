@@ -11,6 +11,10 @@ public class Rule extends ArrayList<Object> {
 
   public Rule() {}
 
+  public Rule(List<Object> list) {
+    super(list);
+  }
+
   public Rule(URIPattern left, URIPattern right, List<Rule> subRules) {
     this.left = left;
     this.right = right;
@@ -33,6 +37,6 @@ public class Rule extends ArrayList<Object> {
 
   public List<Rule> getSubRules() {
     if (subRules != null) return subRules;
-    return subRules = (List<Rule>) (Object) subList(2, size());
+    return subRules = subList(2, size()).stream().map(v -> new Rule((List<Object>) v)).toList();
   }
 }

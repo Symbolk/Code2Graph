@@ -10,6 +10,10 @@ public final class Capture extends HashMap<String, String> {
         return super.put(key, value);
     }
 
+    public int hashCode() {
+        return hash.hashCode();
+    }
+
     public boolean equals(Capture capture) {
         return hash.equals(capture.hash);
     }

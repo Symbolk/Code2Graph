@@ -68,7 +68,11 @@ public class URI {
   }
 
   public List<String> getLayers() {
-    if (layers != null) return layers;
+    return getLayers(false);
+  }
+
+  public List<String> getLayers(boolean forced) {
+    if (layers != null && !forced) return layers;
     layers = new ArrayList<>();
     URI p = this;
     parseLayer(file);
@@ -101,6 +105,7 @@ public class URI {
 
   public void setFile(String file) {
     this.file = file;
+    this.getLayers(true);
   }
 
   public void setIdentifier(String identifier) {

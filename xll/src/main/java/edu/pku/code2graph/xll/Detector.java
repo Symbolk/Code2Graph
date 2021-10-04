@@ -2,6 +2,7 @@ package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.Protocol;
 import edu.pku.code2graph.model.URI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class Detector {
+  private final Set<URI> defs = new HashSet<>();
   private final Map<Language, Map<URI, List<Node>>> uriMap;
   private final Config config;
   private final static Logger logger = LoggerFactory.getLogger(Detector.class);
@@ -27,6 +29,7 @@ public class Detector {
     Map<URI, List<Node>> uris = uriMap.get(pattern.getLang());
     if (uris == null) return hashMap;
     for (URI uri : uris.keySet()) {
+      if (defs.contains(uri)) continue;
       Capture capture = pattern.match(uri);
       if (capture == null) continue;
       hashMap.computeIfAbsent(capture, k -> new ArrayList<>()).add(uri);
@@ -42,7 +45,7 @@ public class Detector {
   public void linkRule(Rule rule, List<Link> links) {
     Map<Capture, List<URI>> leftMap = scan(rule.getLeft());
     Map<Capture, List<URI>> rightMap = scan(rule.getRight());
-    for (Capture capture: leftMap.keySet()) {
+    for (Capture capture : leftMap.keySet()) {
       List<URI> rightUris = rightMap.get(capture);
       if (rightUris == null) continue;
       List<URI> leftUris = leftMap.get(capture);
@@ -63,6 +66,10 @@ public class Detector {
             linkRule(newRule, links);
           }
         }
+      }
+      // workaround: pending object rule format
+      if (rule.getRight().getProtocol() == Protocol.DEF) {
+        defs.addAll(rightUris);
       }
     }
   }
