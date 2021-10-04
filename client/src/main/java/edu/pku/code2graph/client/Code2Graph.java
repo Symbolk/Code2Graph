@@ -191,16 +191,22 @@ public class Code2Graph {
       // construct graph with intra-language nodes and edges
       logger.info("start building graph");
       Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
-      logger.info("#nodes: " + graph.vertexSet().size());
-      logger.info("#edges: " + graph.edgeSet().size());
+      logger.info("- #nodes = " + graph.vertexSet().size());
+      logger.info("- #edges = " + graph.edgeSet().size());
 
       // build cross-language linking (XLL) edges
       logger.info("start detecting xll");
       Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
       List<Link> links = detector.linkAll();
+      logger.info("- #xll = {}", links.size());
       this.xllLinks = links;
       // create uri-element map when create node
       Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
+      for (Map.Entry<Language, Map<URI, List<Node>>> entry : uriMap.entrySet()) {
+        logger.info(
+            "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
+      }
+
       Type xllType = type("xll");
 
       int i = 0;

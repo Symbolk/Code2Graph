@@ -32,8 +32,7 @@ import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static edu.pku.code2graph.model.TypeSet.type;
 
@@ -50,6 +49,10 @@ public class StatementHandler {
   protected String filePath;
   protected String uriFilePath;
 
+  public static Map<String, List<ElementNode>> idToIdentifierEn = new HashMap<>();
+  public static Map<String, List<RelationNode>> idToQueryRn = new HashMap<>();
+  private String currentQueryId;
+
   public StatementHandler() {}
 
   public StatementHandler(boolean inline, Language lang, String identifier) {
@@ -58,8 +61,9 @@ public class StatementHandler {
     this.wrapIdentifier = identifier;
   }
 
-  public void generateFrom(Statements stmts) {
+  public void generateFrom(Statements stmts, String queryId) {
     //    stmts.accept(deParser);
+    this.currentQueryId = queryId;
     tablesNamesFinder.visit(stmts);
   }
 
@@ -74,17 +78,27 @@ public class StatementHandler {
 
   public static final Type CHILD = type("child");
 
+  private List<String> mybatisParamMark = Arrays.asList("\"#{", "\"${");
+
   private TablesNamesFinder tablesNamesFinder =
       new TablesNamesFinder() {
         @Override
         public void visit(Column el) {
           SimpleNode snode = el.getASTNode();
-          addElementNode(
-              el.toString(),
-              NodeType.Column,
-              el.getColumnName(),
-              el.getFullyQualifiedName(),
-              snode);
+          String name = el.getColumnName();
+          String qn = el.getFullyQualifiedName();
+          String snippet = el.toString();
+          Type type = NodeType.Column;
+          for (String mark : mybatisParamMark) {
+            if (name.startsWith(mark)) {
+              name = name.substring(1, name.length() - 1);
+              qn = qn.substring(1, qn.length() - 1);
+              snippet = snippet.substring(1, snippet.length() - 1);
+              type = NodeType.Parameter;
+              break;
+            }
+          }
+          addElementNode(snippet, type, name, qn, snode);
           super.visit(el);
         }
 
@@ -157,7 +171,7 @@ public class StatementHandler {
             }
           }
 
-          if (el.getWhere() != null) {
+          if (el.getWhere() != null && el.getWhere().getASTNode() != null) {
             SimpleNode whereNode = el.getWhere().getASTNode();
             RelationNode rn =
                 addRelationNode(whereNode.toString(), NodeType.Where, "Where", whereNode, true);
@@ -200,9 +214,21 @@ public class StatementHandler {
 
         @Override
         public void visit(Select el) {
-          SimpleNode snode = ((PlainSelect) el.getSelectBody()).getASTNode();
-          RelationNode rn = addRelationNode(el.toString(), NodeType.Select, "Select", snode, true);
-          rootNodePool.put(el, rn);
+          List<SelectBody> list = null;
+          if (!(el.getSelectBody() instanceof PlainSelect)) {
+            if (el.getSelectBody() instanceof SetOperationList) {
+              list = (((SetOperationList) el.getSelectBody()).getSelects());
+            }
+          } else {
+            list = Arrays.asList(el.getSelectBody());
+          }
+          for (SelectBody select : list) {
+            SimpleNode snode = ((PlainSelect) select).getASTNode();
+            RelationNode rn =
+                addRelationNode(select.toString(), NodeType.Select, "Select", snode, true);
+            rootNodePool.put(el, rn);
+            addToNodeMap(rn);
+          }
           super.visit(el);
         }
 
@@ -344,21 +370,24 @@ public class StatementHandler {
             expr.getColDataTypeList()
                 .forEach(
                     columnDataType -> {
+                      String name = columnDataType.getColumnName();
+                      Type type = NodeType.Column;
+                      for (String mark : mybatisParamMark) {
+                        if (name.startsWith(mark)) {
+                          name = name.substring(1, name.length() - 1);
+                          type = NodeType.Parameter;
+                          break;
+                        }
+                      }
                       ElementNode en =
-                          new ElementNode(
-                              GraphUtil.nid(),
-                              Language.SQL,
-                              NodeType.Column,
-                              columnDataType.getColumnName(),
-                              columnDataType.getColumnName(),
-                              columnDataType.getColumnName());
+                          new ElementNode(GraphUtil.nid(), Language.SQL, type, name, name, name);
                       graph.addVertex(en);
                       String idtf = "";
                       idtf =
                           idtf
                               + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
                               + "/"
-                              + (URI.checkInvalidCh(columnDataType.getColumnName()));
+                              + (URI.checkInvalidCh(name));
                       URI uri = new URI(Protocol.ANY, Language.SQL, uriFilePath, idtf);
                       if (isInline) {
                         URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
@@ -369,12 +398,21 @@ public class StatementHandler {
                       }
                       GraphUtil.addURI(Language.SQL, en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
+
+                      addToNodeMap(en);
                     });
           } else if (expr.getColumnName() != null) {
             String colName = expr.getColumnName();
+            Type type = NodeType.Column;
+            for (String mark : mybatisParamMark) {
+              if (colName.startsWith(mark)) {
+                colName = colName.substring(1, colName.length() - 1);
+                type = NodeType.Parameter;
+                break;
+              }
+            }
             ElementNode en =
-                new ElementNode(
-                    GraphUtil.nid(), Language.SQL, NodeType.Column, colName, colName, colName);
+                new ElementNode(GraphUtil.nid(), Language.SQL, type, colName, colName, colName);
             graph.addVertex(en);
             String idtf = "";
             idtf =
@@ -392,6 +430,8 @@ public class StatementHandler {
             }
             GraphUtil.addURI(Language.SQL, en.getUri(), en);
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
+
+            addToNodeMap(en);
           }
         }
 
@@ -445,12 +485,20 @@ public class StatementHandler {
         @Override
         public void visit(Column el) {
           SimpleNode snode = el.getASTNode();
-          addElementNode(
-              el.toString(),
-              NodeType.Column,
-              el.getColumnName(),
-              el.getFullyQualifiedName(),
-              snode);
+          String name = el.getColumnName();
+          String qn = el.getFullyQualifiedName();
+          String snippet = el.toString();
+          Type type = NodeType.Column;
+          for (String mark : mybatisParamMark) {
+            if (name.startsWith(mark)) {
+              name = name.substring(1, name.length() - 1);
+              qn = qn.substring(1, qn.length() - 1);
+              snippet = snippet.substring(1, snippet.length() - 1);
+              type = NodeType.Parameter;
+              break;
+            }
+          }
+          addElementNode(snippet, type, name, qn, snode);
           super.visit(el);
         }
       };
@@ -512,6 +560,8 @@ public class StatementHandler {
     graph.addVertex(rn);
     rootNodePool.put(el, rn);
 
+    addToNodeMap(rn);
+
     identifierMap.put(rn, symbol);
 
     return rn;
@@ -546,6 +596,8 @@ public class StatementHandler {
       en.setUri(uri);
     }
     GraphUtil.addURI(Language.SQL, en.getUri(), en);
+
+    addToNodeMap(en);
   }
 
   private void findParentEdge(SimpleNode snode, Node node) {
@@ -613,5 +665,23 @@ public class StatementHandler {
   public void setFilePath(String filePath) {
     this.filePath = filePath;
     this.uriFilePath = FileUtil.getRelativePath(filePath);
+  }
+
+  private void addToNodeMap(Node node) {
+    if (node instanceof ElementNode) {
+      ElementNode en = (ElementNode) node;
+      if (currentQueryId != null) {
+        if (!idToIdentifierEn.containsKey(currentQueryId))
+          idToIdentifierEn.put(currentQueryId, new ArrayList<>());
+        idToIdentifierEn.get(currentQueryId).add(en);
+      }
+    } else if (node instanceof RelationNode) {
+      RelationNode rn = (RelationNode) node;
+      if (currentQueryId != null) {
+        if (!idToQueryRn.containsKey(currentQueryId))
+          idToQueryRn.put(currentQueryId, new ArrayList<>());
+        idToQueryRn.get(currentQueryId).add(rn);
+      }
+    }
   }
 }
