@@ -3,9 +3,12 @@ package edu.pku.code2graph.gen.html;
 import edu.pku.code2graph.gen.html.model.DialectNode;
 import edu.pku.code2graph.gen.html.model.NodeType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StandardDialectParser {
   private Stack<Integer> startPoint = new Stack<>();
@@ -29,10 +32,10 @@ public class StandardDialectParser {
         }
         int s = startPoint.pop(), e = i;
 
-        if (source.charAt(s) == '}') continue;
+        if (source.charAt(s) == '{') continue;
 
         String snippet = source.substring(s, e + 1);
-        String name = snippet.substring(2, snippet.length() - 1).trim();
+        String name = snippet.trim();
         DialectNode node = new DialectNode(name, snippet, NodeType.VAR);
 
         node.setStartIdx(s);
@@ -56,6 +59,18 @@ public class StandardDialectParser {
       return null;
     }
     return childrenPool.pop();
+  }
+
+  public List<DialectNode> parseTreeToList(String source) {
+    List<DialectNode> nodeList = new ArrayList<>();
+    Pattern pattern = Pattern.compile("[$*#@~]\\{[a-zA-Z0-9-_.\\s]+}");
+    Matcher matcher = pattern.matcher(source);
+    while (matcher.find()) {
+      String e = matcher.group();
+      DialectNode node = new DialectNode(e, e, NodeType.VAR);
+      nodeList.add(node);
+    }
+    return nodeList;
   }
 
   private void clearAll() {

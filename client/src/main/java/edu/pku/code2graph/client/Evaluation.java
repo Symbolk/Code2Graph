@@ -7,7 +7,10 @@ import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
-import edu.pku.code2graph.model.*;
+import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.Range;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,21 +36,17 @@ public class Evaluation {
 
   // test one repo at a time
   private static String framework = "android";
-  private static String repoName = "DataBinding";
+  private static String repoName = "NewPipe";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   //      FileUtil.getPathFromURL(
   //          Evaluation.class.getClassLoader().getResource(framework + "/config.yml"));
-  private static String gtPath =
-      System.getProperty("user.dir")
-          + "/client/src/main/resources/"
-          + framework
-          + "/groundtruth/"
-          + repoName
-          + ".csv";
-  private static String outputPath = gtPath.replace("groundtruth", "output");
+  private static String gtDir =
+      System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/groundtruth";
+  private static String gtPath = gtDir + "/" + repoName + ".csv";
+  private static String otPath = gtPath.replace("groundtruth", "output");
 
   private static Code2Graph c2g = null;
   private static List<Link> xllLinks = new ArrayList<>();
@@ -58,6 +59,7 @@ public class Evaluation {
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     // set up
+    addCommitIdToPath();
     c2g = new Code2Graph(repoName, repoPath, configPath);
     switch (framework) {
       case "springmvc":
@@ -77,15 +79,15 @@ public class Evaluation {
         c2g.addSupportedLanguage(Language.JAVA);
     }
 
-    logger.info("Generating graph for repo: " + repoName);
-    Graph<Node, Edge> graph = c2g.generateGraph();
-    xllLinks = c2g.getXllLinks();
-
+    logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId(repoPath));
     try {
-      // export to csv files
-      exportXLLLinks(xllLinks, outputPath);
+      // for testXLLDetection, run once and save the output, then comment
+      Graph<Node, Edge> graph = c2g.generateGraph();
+      xllLinks = c2g.getXllLinks();
+      logger.info("Exporting xll to file {}", repoName);
+      exportXLLLinks(xllLinks, otPath);
 
-      // run evaluation
+      // compare by solely loading csv files
       testXLLDetection();
       //      testCochange();
     } catch (Exception e) {
@@ -93,13 +95,41 @@ public class Evaluation {
     }
   }
 
+  private static void addCommitIdToPath() {
+    File dir = new File(gtDir);
+    File[] files = dir.listFiles();
+    String commitID = null;
+    if (files != null) {
+      for (File f : files) {
+        String filename = f.getName();
+        if (!f.isDirectory() && filename.startsWith(repoName + ":")) {
+          commitID = filename.substring(0, filename.length() - 4).split(":")[1];
+          gtPath = f.getPath();
+        }
+      }
+    }
+
+    if (commitID != null) {
+      otPath = gtPath.replace("groundtruth", "output");
+      if (!gitService.checkoutByCommitID(repoPath, commitID)) {
+        logger.error("Failed to checkout to {}", commitID);
+      } else {
+        logger.info("Successfully checkout to {}", commitID);
+      }
+    }
+  }
+
   private static void exportXLLLinks(List<Link> xllLinks, String filePath) throws IOException {
+    if (xllLinks.isEmpty()) {
+      return;
+    }
     File outFile = new File(filePath);
     if (!outFile.exists()) {
       outFile.createNewFile();
     }
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
-    String[] headers = {"left", "right"};
+    Link first = xllLinks.get(0);
+    String[] headers = {first.left.getLang().name(), first.right.getLang().name()};
 
     writer.writeRecord(headers);
     for (Link link : xllLinks) {
@@ -115,32 +145,60 @@ public class Evaluation {
 
   /** Run the experiments on real repo, and compare the results with the ground truth */
   private static void testXLLDetection() throws IOException {
-    // load ground truth by reading csv
-    Set<Link> groundTruth = new HashSet<Link>();
-
-    CsvReader reader = new CsvReader(gtPath);
-
-    reader.readHeaders();
-    String[] headers = reader.getHeaders();
-    if (headers.length != 2) {
-      logger.error("Ground Truth header num expected 2, but " + headers.length);
+    if (!Files.exists(Paths.get(gtPath))) {
+      logger.error("Ground truth file: {} does not exist!", gtPath);
       return;
     }
-    while (reader.readRecord()) {
-      groundTruth.add(new Link(new URI(reader.get(headers[0])), new URI(reader.get(headers[1]))));
+
+    if (!Files.exists(Paths.get(otPath))) {
+      logger.error("Output file: {} does not exist!" + otPath);
+      return;
     }
-    reader.close();
+
+    // load ground truth by reading csv
+    CsvReader gtReader = new CsvReader(gtPath);
+    gtReader.readHeaders();
+    String[] gtHeaders = gtReader.getHeaders();
+    if (gtHeaders.length != 2) {
+      logger.error("Ground Truth header num expected 2, but " + gtHeaders.length);
+      return;
+    }
+    Set<String> gtLines = new HashSet<>();
+    String leftLang = gtHeaders[0], rightLang = gtHeaders[1];
+    while (gtReader.readRecord()) {
+      gtLines.add(gtReader.get(leftLang) + "," + gtReader.get(rightLang));
+      //      groundTruth.add(new Link(new URI(gtReader.get(leftLang)), new
+      // URI(gtReader.get(rightLang))));
+    }
+    gtReader.close();
+
+    // load output by reading csv
+    CsvReader otReader = new CsvReader(otPath);
+
+    otReader.readHeaders();
+    String[] otHeaders = otReader.getHeaders();
+    if (otHeaders.length != 2) {
+      logger.error("Output header num expected 2, but " + otHeaders.length);
+      return;
+    }
+    Set<String> otLines = new HashSet<>();
+    while (otReader.readRecord()) {
+      otLines.add(otReader.get(leftLang) + "," + otReader.get(rightLang));
+    }
+    otReader.close();
 
     // compare
-    Set<Link> output = new HashSet<>(xllLinks);
-    int intersectionNum = MetricUtil.intersectSize(groundTruth, output);
+    logger.info("- #xll_expected = {}", gtLines.size());
+    logger.info("- #xll_detected = {}", otLines.size());
+    int intersectionNum = MetricUtil.intersectSize(gtLines, otLines);
+    logger.info("- #xll_correct = {}", intersectionNum);
 
     // compute precision/recall
-    double precision = MetricUtil.computeProportion(intersectionNum, output.size());
-    double recall = MetricUtil.computeProportion(intersectionNum, groundTruth.size());
+    double precision = MetricUtil.computeProportion(intersectionNum, otLines.size());
+    double recall = MetricUtil.computeProportion(intersectionNum, gtLines.size());
 
-    logger.info("Precision = " + precision);
-    logger.info("Recall = " + recall);
+    logger.info("Precision = {}%", precision);
+    logger.info("Recall = {}%", recall);
   }
 
   /** Metric: compare output with ground truth and calculate the precision and recall */
@@ -159,31 +217,72 @@ public class Evaluation {
     // compare, check or evaluate
   }
 
-  /**
-   * Co-change file prediction
-   * how to reduce noise? (xml --> java --> java, java)
-   */
+  /** Co-change file prediction how to reduce noise? (xml --> java --> java, java) */
   private static void testCochange() {
-    // 1. for recent 20 historical multi-lang commits --> predict
+    logger.info("Testing cochange prediction for repo: " + repoName);
+    // 1. for recent 100 historical multi-lang commits --> predict
+    // gumtree diff to get the changed URI/diff line range to get the URI
 
-    // 2. sample 20%, find relevant commits --> filter  --> predict
+    // 2. for each xll, find relevant commits --> filter to get proper commits --> predict
+    var uriMap = GraphUtil.getUriMap();
+    int numCommits = 0;
 
-    // given changes in lang A, mask changes in lang B
+    for (Link link : xllLinks) {
+      // get line range of the first corresponding node
+      Language leftLang = link.left.getLang();
+      Language rightLang = link.right.getLang();
+      List<Node> nodes = uriMap.get(leftLang).getOrDefault(link.left, new ArrayList<>());
+      if (nodes.isEmpty()) {
+        continue;
+      }
+      Range range = nodes.get(0).getRange();
+
+      // get commits that changed the line range (range evolution history)
+      List<String> commits =
+          gitService.getCommitsChangedLineRange(
+              repoPath, link.left.getFile(), range.getStartLine(), range.getEndLine());
+
+      // extract the changed files in each commit
+      for (String commit : commits) {
+        List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commit);
+        // filter commits for supported lang
+        List<DiffFile> supportedLangDiffFiles =
+            diffFiles.stream()
+                .filter(
+                    f ->
+                        !f.getARelativePath().startsWith(".")
+                            && !f.getBRelativePath().startsWith(".") // filter hidden files
+                            && f.getFileType().extension.equals(rightLang.extension))
+                .collect(Collectors.toList());
+        if (supportedLangDiffFiles.isEmpty()) {
+          continue;
+        } else {
+          // count the number of valid commits
+          numCommits += 1;
+
+          // predict cochanged file in right
+
+        }
+      }
+    }
+
+    // given changes in lang left, mask changes in lang right
 
     // predict co-changes in B according to code coupling
 
   }
 
-  /**
-   * Need to find 10-20 historical inconsistency-fixing commits
-   */
+  /** Need to find 10-20 historical inconsistency-fixing commits */
   private static void testLint() {
     // for the previous version (parent commit) of an cross-language inconsistency fixing commit
-    // 1. filter by keywords (miss/close/fix/resolve) --> find bug-introducing --> check multilingual
+    // 1. filter by keywords (miss/close/fix/resolve) --> find bug-introducing --> check
+    // multilingual
 
-    // 2. filter by diff size (#diff hunks<k & #diff files<n) --> 20% of all commits --> check if bug-fixing
+    // 2. filter by diff size (#diff hunks<k & #diff files<n) --> 20% of all commits --> check if
+    // bug-fixing
 
-    // 3.  given the output of cochange -> check later modification commits  --> check if made to fix cross-lang breaking
+    // 3.  given the output of cochange -> check later modification commits  --> check if made to
+    // fix cross-lang breaking
 
     // output problems (possible but not co-changed)
 

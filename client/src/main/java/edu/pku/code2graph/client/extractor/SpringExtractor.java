@@ -40,9 +40,7 @@ public class SpringExtractor extends AbstractExtractor {
     JsoupGenerator generator = new JsoupGenerator();
     Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
     for (Node node : graph.vertexSet()) {
-      if (node instanceof ElementNode
-          && node.getType().equals(NodeType.INLINE_VAR)
-          && !((ElementNode) node).getName().contains("$")) {
+      if (node instanceof ElementNode && node.getType().equals(NodeType.INLINE_VAR)) {
         System.out.println(((ElementNode) node).getName());
         htmlURIS.add(node.getUri());
       }
@@ -121,10 +119,12 @@ public class SpringExtractor extends AbstractExtractor {
   }
 
   private void findPairByHtmlUri(URI uri) {
+    String sym = uri.getSymbol();
+    sym = sym.substring(2, sym.length() - 1);
     for (String key : javaURIS.keySet()) {
       if (uri.getFile().contains(key)) {
         for (URI val : javaURIS.get(key)) {
-          if (val.getSymbol().equals(uri.getSymbol())) {
+          if (val.getSymbol().equals(sym)) {
             uriPairs.add(new ImmutablePair<>(uri, val));
           }
         }
