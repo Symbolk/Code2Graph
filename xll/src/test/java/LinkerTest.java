@@ -14,7 +14,8 @@ public class LinkerTest {
 
   private void matchTest(int ruleIndex, int patternIndex, String source) {
     URI uri = new URI(source);
-    URIPattern pattern = config.getRules().get(ruleIndex).getPattern(patternIndex);
+    Rule rule = config.getRules().get(ruleIndex);
+    URIPattern pattern = patternIndex == 1 ? rule.use : rule.def;
     System.out.println(pattern);
     System.out.println(uri);
     System.out.println(pattern.match(uri));
@@ -35,22 +36,22 @@ public class LinkerTest {
     Optional<Config> config = new ConfigLoader().load("src/main/resources/config.yml");
     config.ifPresent(value -> {
       Rule rule = value.getRules().get(0);
-      URIPattern left = rule.getLeft();
+      URIPattern left = rule.def;
       URI uri1 = new URI("def://foo/bar.java//getFooBar");
       System.out.println(left);
       System.out.println(uri1);
       System.out.println(left.match(uri1));
       System.out.println();
 
-      URIPattern right = rule.getRight();
+      URIPattern right = rule.use;
       URI uri2 = new URI("def://foo/baz.java//Select//#{FooBar}");
       System.out.println(right);
       System.out.println(uri2);
       System.out.println(right.match(uri2));
       System.out.println();
 
-      List<Rule> subrules = rule.getSubRules();
-      System.out.println(subrules);
+      List<Rule> children = rule.subrules;
+      System.out.println(children);
 
 //      List<URI> uris = new ArrayList<>();
 //      uris.add(uri1);

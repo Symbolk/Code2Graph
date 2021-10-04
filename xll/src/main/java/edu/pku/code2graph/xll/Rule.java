@@ -4,39 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class Rule extends ArrayList<Object> {
-  private URIPattern left;
-  private URIPattern right;
-  private List<Rule> subRules;
+public class Rule {
+  public final URIPattern def;
+  public final URIPattern use;
+  public final List<Rule> subrules;
 
-  public Rule() {}
-
-  public Rule(List<Object> list) {
-    super(list);
+  public Rule(URIPattern def, URIPattern use, List<Rule> subrules) {
+    this.def = def;
+    this.use = use;
+    this.subrules = subrules;
   }
 
-  public Rule(URIPattern left, URIPattern right, List<Rule> subRules) {
-    this.left = left;
-    this.right = right;
-    this.subRules = subRules;
-  }
-
-  public URIPattern getPattern(int index) {
-    return new URIPattern((Map<String, Object>) get(index));
-  }
-
-  public URIPattern getLeft() {
-    if (left != null) return left;
-    return left = getPattern(0);
-  }
-
-  public URIPattern getRight() {
-    if (right != null) return right;
-    return right = getPattern(1);
-  }
-
-  public List<Rule> getSubRules() {
-    if (subRules != null) return subRules;
-    return subRules = subList(2, size()).stream().map(v -> new Rule((List<Object>) v)).toList();
+  public Rule(Map<String, Object> rule) {
+    this.def = (URIPattern) rule.get("def");
+    this.use = (URIPattern) rule.get("use");
+    this.subrules = (List<Rule>) rule.getOrDefault("subrules", new ArrayList());
   }
 }

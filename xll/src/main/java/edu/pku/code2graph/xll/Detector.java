@@ -43,33 +43,33 @@ public class Detector {
   }
 
   public void linkRule(Rule rule, List<Link> links) {
-    Map<Capture, List<URI>> leftMap = scan(rule.getLeft());
-    Map<Capture, List<URI>> rightMap = scan(rule.getRight());
-    for (Capture capture : leftMap.keySet()) {
-      List<URI> rightUris = rightMap.get(capture);
-      if (rightUris == null) continue;
-      List<URI> leftUris = leftMap.get(capture);
-      if (leftUris.size() > 1 && rightUris.size() > 1) {
+    Map<Capture, List<URI>> defMap = scan(rule.def);
+    Map<Capture, List<URI>> useMap = scan(rule.use);
+    for (Capture capture : defMap.keySet()) {
+      List<URI> uses = useMap.get(capture);
+      if (uses == null) continue;
+      List<URI> defs = defMap.get(capture);
+      if (defs.size() > 1) {
         System.out.println("ambiguous xll found by " + capture.toString());
-        System.out.println(formatUriList(leftUris));
-        System.out.println(formatUriList(rightUris));
+        System.out.println(formatUriList(defs));
+        System.out.println(formatUriList(uses));
       }
-      for (URI leftUri : leftUris) {
-        for (URI rightUri : rightUris) {
-          links.add(new Link(leftUri, rightUri, rule));
-          for (Rule subRule : rule.getSubRules()) {
-            URIPattern left = new URIPattern(subRule.getLeft());
-            URIPattern right = new URIPattern(subRule.getRight());
-            left.setFile(leftUri.getFile());
-            right.setFile(rightUri.getFile());
-            Rule newRule = new Rule(left, right, subRule.getSubRules());
+      for (URI def : defs) {
+        for (URI use : uses) {
+          links.add(new Link(def, use, rule));
+          for (Rule subRule : rule.subrules) {
+            URIPattern newDef = new URIPattern(subRule.def);
+            URIPattern newUse = new URIPattern(subRule.use);
+            newDef.setFile(newDef.getFile());
+            newUse.setFile(newUse.getFile());
+            Rule newRule = new Rule(newDef, newUse, subRule.subrules);
             linkRule(newRule, links);
           }
         }
       }
       // workaround: pending object rule format
-      if (rule.getRight().getProtocol() == Protocol.DEF) {
-        defs.addAll(rightUris);
+      if (rule.use.getProtocol() == Protocol.DEF) {
+        this.defs.addAll(uses);
       }
     }
   }
