@@ -116,7 +116,11 @@ public class StatementHandler {
               .forEach(
                   stmt -> {
                     clearForNextStatement();
-                    stmt.accept(this);
+                    try {
+                      stmt.accept(this);
+                    } catch (UnsupportedOperationException e) {
+                      logger.debug(stmt.toString());
+                    }
                   });
         }
 
