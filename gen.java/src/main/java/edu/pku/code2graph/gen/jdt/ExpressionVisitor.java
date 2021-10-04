@@ -962,7 +962,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           QualifiedName qualifiedName = (QualifiedName) exp;
           URI uri =
               new URI(
-                  Protocol.USE, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+                  true, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           break;
@@ -972,7 +972,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           IBinding binding = ((SimpleName) exp).resolveBinding();
           URI uri =
               new URI(
-                  Protocol.USE,
+                  true,
                   Language.JAVA,
                   uriFilePath,
                   ((SimpleName) exp).getFullyQualifiedName());

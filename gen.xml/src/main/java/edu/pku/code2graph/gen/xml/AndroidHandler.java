@@ -73,7 +73,7 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
-    URI uri = new URI(Protocol.DEF, Language.XML, uriFilePath, "");
+    URI uri = new URI(false, Language.XML, uriFilePath, "");
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
@@ -95,7 +95,7 @@ public class AndroidHandler extends AbstractHandler {
       idtf = parentIdtf;
     }
     idtf = idtf + (idtf.isEmpty() ? "" : "/") + URI.checkInvalidCh(qName);
-    URI xllUri = new URI(Protocol.DEF, Language.XML, uriFilePath, idtf);
+    URI xllUri = new URI(false, Language.XML, uriFilePath, idtf);
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
@@ -135,7 +135,6 @@ public class AndroidHandler extends AbstractHandler {
 
           URI inline = new URI();
           inline.setIdentifier(URI.checkInvalidCh(value));
-          en.getUri().setProtocol(Protocol.DEF);
           en.getUri().setInline(inline);
 
           defPool.put(resName, en);
@@ -149,7 +148,6 @@ public class AndroidHandler extends AbstractHandler {
 
             URI inline = new URI();
             inline.setIdentifier(URI.checkInvalidCh(value));
-            en.getUri().setProtocol(Protocol.DEF);
             en.getUri().setInline(inline);
 
             defPool.put(identifier, en);
@@ -162,7 +160,6 @@ public class AndroidHandler extends AbstractHandler {
 
           URI inline = new URI();
           inline.setIdentifier(URI.checkInvalidCh(value));
-          en.getUri().setProtocol(Protocol.DEF);
           en.getUri().setInline(inline);
 
           defPool.put(value, en);

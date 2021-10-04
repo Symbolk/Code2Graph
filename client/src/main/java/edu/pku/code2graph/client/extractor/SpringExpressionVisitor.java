@@ -1066,7 +1066,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           root.setType(NodeType.LITERAL);
           URI uri =
               new URI(
-                  Protocol.USE,
+                  true,
                   Language.JAVA,
                   uriFilePath,
                   exp.toString().substring(1, exp.toString().length() - 1));
@@ -1080,7 +1080,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           QualifiedName qualifiedName = (QualifiedName) exp;
           URI uri =
               new URI(
-                  Protocol.USE, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+                  true, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           break;
@@ -1090,7 +1090,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           IBinding binding = ((SimpleName) exp).resolveBinding();
           URI uri =
               new URI(
-                  Protocol.USE,
+                  true,
                   Language.JAVA,
                   uriFilePath,
                   ((SimpleName) exp).getFullyQualifiedName());

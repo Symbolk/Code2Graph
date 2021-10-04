@@ -42,7 +42,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
       Type type, String snippet, String name, String qname, String identifier) {
     URI uri =
         new URI(
-            Protocol.DEF,
+            false,
             Language.JAVA,
             uriFilePath,
             identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""));

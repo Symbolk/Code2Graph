@@ -39,7 +39,7 @@ public class MybatisMapperHandler extends AbstractHandler {
     if (!queryMap.containsKey(uriFilePath)) queryMap.put(uriFilePath, new HashMap<>());
 
     String name = FileUtil.getFileNameFromPath(filePath);
-    URI uri = new URI(Protocol.DEF, Language.XML, uriFilePath, "");
+    URI uri = new URI(false, Language.XML, uriFilePath, "");
     fileEle =
         new ElementNode(
             GraphUtil.nid(), Language.XML, type("file", true), "", name, uriFilePath, uri);
@@ -73,7 +73,7 @@ public class MybatisMapperHandler extends AbstractHandler {
             xmlToJavaMapper.put(uriFilePath, value);
           }
         }
-        URI mapperUri = new URI(Protocol.DEF, Language.XML, uriFilePath, "mapper");
+        URI mapperUri = new URI(false, Language.XML, uriFilePath, "mapper");
         mapperEle =
             new ElementNode(
                 GraphUtil.nid(), Language.XML, type("mapper", true), "", qName, qName, mapperUri);
@@ -106,7 +106,7 @@ public class MybatisMapperHandler extends AbstractHandler {
           }
         }
 
-        URI queryUri = new URI(Protocol.DEF, Language.XML, uriFilePath, "mapper/" + qName);
+        URI queryUri = new URI(false, Language.XML, uriFilePath, "mapper/" + qName);
         queryEle =
             new ElementNode(
                 GraphUtil.nid(), Language.XML, type("query", true), "", qName, qName, queryUri);

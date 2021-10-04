@@ -346,7 +346,7 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
           idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
           identifier = String.join("/", idtfSplit);
 
-          URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier);
+          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier);
           MybatisParam param =
               new MybatisParam(false, split[0], uri, p.getType().toString(), p.toString());
           paramMap.get(declaringClass).get(mdBinding.getName()).add(param);
@@ -354,7 +354,7 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
           methodParaList.add(uri);
         } else {
           identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
-          URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier);
+          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier);
           MybatisParam param =
               new MybatisParam(false, uri.getSymbol(), uri, p.getType().toString(), p.toString());
           paramMap.get(declaringClass).get(mdBinding.getName()).add(param);
@@ -932,7 +932,7 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
           QualifiedName qualifiedName = (QualifiedName) exp;
           URI uri =
               new URI(
-                  Protocol.USE, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+                  true, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
           root.setUri(uri);
           break;
         }
@@ -941,7 +941,7 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
           IBinding binding = ((SimpleName) exp).resolveBinding();
           URI uri =
               new URI(
-                  Protocol.USE,
+                  true,
                   Language.JAVA,
                   uriFilePath,
                   ((SimpleName) exp).getFullyQualifiedName());
