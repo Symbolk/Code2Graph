@@ -18,13 +18,13 @@ rules:
       identifier: ""
     subrules:
       - use:
-        lang: Java
-        identifier: R.id.(name)
-      - def:
-        lang: Xml
-        identifier: "**"
-        inline:
-          identifier: '@+id\/(name)'
+          lang: Java
+          identifier: R.id.(name)
+        def:
+          lang: Xml
+          identifier: "**"
+          inline:
+            identifier: '@+id\/(name)'
 
   - use:
       lang: Java
