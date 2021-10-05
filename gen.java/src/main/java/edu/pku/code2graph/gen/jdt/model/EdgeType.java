@@ -57,4 +57,7 @@ public class EdgeType {
 
   // throw
   public static final Type THROW = type("throw");
+
+  // sql
+  public static final Type INLINE_SQL = type("inline_sql_query");
 }
