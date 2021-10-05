@@ -1,5 +1,6 @@
 package edu.pku.code2graph.client.extractor;
 
+import edu.pku.code2graph.client.MybatisPreprocesser;
 import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
 import edu.pku.code2graph.gen.xml.MybatisMapperHandler;
 import edu.pku.code2graph.gen.xml.model.MybatisElement;
@@ -31,10 +32,8 @@ public class MybatisExtractor extends AbstractExtractor {
   private static final String JRE_PATH =
       System.getProperty("java.home") + File.separator + "lib/rt.jar";
 
-  private MybatisMapperHandler mybatisHandler = new MybatisMapperHandler();
-
   public List<Pair<URI, URI>> generateInstances(String repoRoot, String repoPath)
-      throws ParserConfigurationException, IOException, SAXException {
+      throws ParserConfigurationException, SAXException {
     FileUtil.setRootPath(repoRoot);
     extractFromJavaFile(repoPath);
     extractFromXmlFile(repoPath);
@@ -103,25 +102,11 @@ public class MybatisExtractor extends AbstractExtractor {
   }
 
   public void extractFromXmlFile(String repoPath)
-      throws ParserConfigurationException, SAXException, IOException {
-    List<String> filePaths = new ArrayList<>();
-    List<String> exts = Arrays.asList(".xml");
-    findExtInRepo(repoPath, exts, filePaths);
+      throws ParserConfigurationException, SAXException {
+    MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
 
-    SAXParserFactory factory = SAXParserFactory.newInstance();
-    SAXParser parser = factory.newSAXParser();
-    for (String filePath : filePaths) {
-      File file = new File(filePath);
-      mybatisHandler.setFilePath(FilenameUtils.separatorsToUnix(filePath));
-      try {
-        parser.parse(file, mybatisHandler);
-      } catch (SAXException e) {
-        System.out.println(filePath);
-      }
-    }
-
-    queryMap = mybatisHandler.getQueryMap();
-    xmlToJavaMapper = mybatisHandler.getXmlToJavaMapper();
+    queryMap = MybatisPreprocesser.getHandler().getQueryMap();
+    xmlToJavaMapper = MybatisPreprocesser.getHandler().getXmlToJavaMapper();
   }
 
   private void findPairs() {
