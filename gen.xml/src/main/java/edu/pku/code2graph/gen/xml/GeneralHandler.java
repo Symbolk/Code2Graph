@@ -39,7 +39,6 @@ public class GeneralHandler extends AbstractHandler {
 
   @Override
   public void endDocument() throws SAXException {
-    logger.debug("\nEnd Parsing {}", uriFilePath);
     super.endDocument();
   }
 

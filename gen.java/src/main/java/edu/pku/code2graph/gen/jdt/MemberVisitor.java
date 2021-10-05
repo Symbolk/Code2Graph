@@ -33,7 +33,7 @@ public class MemberVisitor extends AbstractJdtVisitor {
     graph.addVertex(cuNode);
     this.root = cuNode;
 
-    logger.debug("Start Parsing {}", filePath);
+    logger.debug("Start Parsing {}", uriFilePath);
     return true;
   }
 
