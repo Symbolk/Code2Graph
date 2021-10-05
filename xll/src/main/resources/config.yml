@@ -17,35 +17,35 @@ plugins:
 # rules包括了用户自定义的、用于补充或覆盖预定义的跨语言关联规则
 rules:
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: get(name:Capitalized)
     use:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       inline:
         lang: SQL
         identifier: "#{(name)}"
     subrules:
       - def:
-          lang: Java
+          lang: JAVA
           file: "*.java"
           identifier: get(name:Capitalized)
         use:
-          lang: Java
+          lang: JAVA
           file: "*.java"
           inline:
             lang: SQL
             identifier: "#{(name)}"
 
   - def:
-      lang: Xml
+      lang: XML
       file: "*.xml"
       identifier: "**"
       inline:
         identifier: '@+id\/(name)'
     use:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: R.id.(name)
 

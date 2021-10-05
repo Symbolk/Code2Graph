@@ -15,6 +15,8 @@ public class URIPattern extends URI {
     type = "Pattern";
   }
 
+  public URIPattern() {}
+
   public URIPattern(URIPattern pattern) {
     this.isRef = pattern.isRef;
     this.lang = pattern.lang;

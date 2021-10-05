@@ -9,6 +9,12 @@ public class Rule {
   public final URIPattern use;
   public final List<Rule> subrules;
 
+  public Rule() {
+    this.def = new URIPattern();
+    this.use = new URIPattern();
+    this.subrules = new ArrayList<>();
+  }
+
   public Rule(URIPattern def, URIPattern use, List<Rule> subrules) {
     this.def = def;
     this.use = use;
