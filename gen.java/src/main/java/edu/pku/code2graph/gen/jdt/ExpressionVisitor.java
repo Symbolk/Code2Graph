@@ -39,7 +39,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     this.cuNode =
         createElementNode(NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath, "");
 
-    logger.debug("Start Parsing {}", filePath);
+    logger.debug("Start Parsing {}", uriFilePath);
     return true;
   }
 

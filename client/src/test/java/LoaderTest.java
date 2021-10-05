@@ -1,4 +1,5 @@
 import edu.pku.code2graph.client.Code2Graph;
+import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
@@ -59,8 +60,13 @@ public class LoaderTest {
   }
 
   @Test
+  public void newpipeTest() {
+    generateGraph("android/newpipe/main", "android/config.yml");
+  }
+
+  @Test
   public void viewbindingTest() {
-    generateGraph("android/viewbinding/main", "android/config.yml");
+    GraphVizExporter.printAsDot(generateGraph("android/viewbinding/main", "android/config.yml"));
   }
 
   @Test

@@ -13,26 +13,36 @@ plugins:
 # rules are user-defined XLL rules as a supplement or overwriting for the presets
 # rules包括了用户自定义的、用于补充或覆盖预定义的跨语言关联规则
 rules:
- - - protocol: def
-     lang: Java
-     file: "*.java"
-     identifier: get(name:Capitalized)
-   - protocol: use
-     lang: Java
-     file: "*.java"
-     inline:
-       lang: SQL
-       identifier: "#{(name)}"
- - - protocol: use
-     lang: Java
-     file: "*.java"
-     identifier: R.id.(name)
-   - protocol: any
-     lang: Xml
-     file: "*.xml"
-     identifier: "**"
-     inline:
-       identifier: '@+id\/(name)'
+  - - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: get(name:Capitalized)
+    - protocol: use
+      lang: Java
+      file: "*.java"
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    - - - protocol: def
+          lang: Java
+          file: "*.java"
+          identifier: get(name:Capitalized)
+        - protocol: use
+          lang: Java
+          file: "*.java"
+          inline:
+            lang: SQL
+            identifier: "#{(name)}"
+  - - protocol: use
+      lang: Java
+      file: "*.java"
+      identifier: R.id.(name)
+    - protocol: any
+      lang: Xml
+      file: "*.xml"
+      identifier: "**"
+      inline:
+        identifier: '@+id\/(name)'
 # types of problems that does not need to be reported
 # 可以忽略的问题类型
 suppress:
