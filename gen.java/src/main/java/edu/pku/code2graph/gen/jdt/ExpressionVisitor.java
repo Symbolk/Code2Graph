@@ -339,6 +339,34 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       // create element nodes
       List<SingleVariableDeclaration> paras = md.parameters();
       for (SingleVariableDeclaration p : paras) {
+        if (p.toString().trim().startsWith("@Param")) {
+          String identifier = JdtService.getIdentifier(p);
+          String[] split = p.toString().trim().split(" ");
+          identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
+          String[] idtfSplit = identifier.split("/");
+          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
+          identifier = String.join("/", idtfSplit);
+
+          String para_qname = p.toString().trim();
+          String para_name = para_qname.substring(8, para_qname.length() - 2);
+
+          URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier);
+
+          ElementNode pn =
+              new ElementNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname,
+                  uri);
+
+          graph.addVertex(pn);
+          defPool.put(para_qname, pn);
+          GraphUtil.addURI(Language.JAVA, uri, pn);
+          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
+        }
         String para_name = p.getName().getFullyQualifiedName();
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
