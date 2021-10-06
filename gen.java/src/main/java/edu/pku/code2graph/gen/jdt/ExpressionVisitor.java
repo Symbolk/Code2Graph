@@ -347,7 +347,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
           identifier = String.join("/", idtfSplit);
 
-          String para_qname = p.toString().trim();
+          String para_qname = split[0];
           String para_name = para_qname.substring(8, para_qname.length() - 2);
 
           URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier);
