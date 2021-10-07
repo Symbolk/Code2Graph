@@ -1,87 +1,87 @@
 rules:
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: addAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '${(name)}'
 
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: setAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '${(name)}'
 
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: addAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '#{(name)}'
 
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: setAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '#{(name)}'
 
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: addAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '\*{(name)}'
 
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: setAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '\*{(name)}'
 
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: addAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '@{(name)}'
 
   - def:
-      lang: Java
+      lang: JAVA
       file: "*.java"
       identifier: setAttribute\("(name)",*\)
     use:
-      lang: Html
+      lang: HTML
       file: "*.html"
       identifier: "**"
       inline:

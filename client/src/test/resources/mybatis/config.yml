@@ -1,10 +1,10 @@
 rules:
   - use:
-      lang: Java
+      lang: JAVA
       file: '*.java'
       identifier: (namespace)Mapper/(method)
     def:
-      lang: Xml
+      lang: XML
       file: "(namespace)Mapper.xml"
       identifier: id
       inline:
