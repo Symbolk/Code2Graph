@@ -946,7 +946,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     // simple name may be self-field access
     switch (exp.getNodeType()) {
       case ASTNode.NUMBER_LITERAL:
-      case ASTNode.STRING_LITERAL:
       case ASTNode.CHARACTER_LITERAL:
       case ASTNode.BOOLEAN_LITERAL:
       case ASTNode.NULL_LITERAL:
@@ -954,6 +953,16 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
+          break;
+        }
+      case ASTNode.STRING_LITERAL:
+        {
+          root.setSymbol(exp.toString());
+          root.setType(NodeType.LITERAL);
+          URI inline = new URI(Protocol.USE, Language.ANY, "", exp.toString());
+          URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, "", inline);
+          root.setUri(uri);
+          GraphUtil.addURI(Language.ANY, uri, root);
           break;
         }
       case ASTNode.QUALIFIED_NAME:
