@@ -2,7 +2,6 @@ SQL,JAVA
 "any://src/main/resources/mapper/QuestionExtMapper.xml//mapper/update//Update/#{viewCount,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Question.java//Question/viewCount
 any://src/main/resources/mapper/QuestionExtMapper.xml//mapper/update//Update/Where/=/#{id},def://src/main/java/life/majiang/community/model/Question.java//Question/id
 "any://src/main/resources/mapper/QuestionExtMapper.xml//mapper/update//Update/#{commentCount,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Question.java//Question/commentCount
-any://src/main/resources/mapper/QuestionExtMapper.xml//mapper/update//Update/Where/=/#{id},def://src/main/java/life/majiang/community/model/Question.java//Question/id
 "any://src/main/resources/mapper/NavMapper.xml//mapper/update//Update/#{title,jdbcType=VARCHAR}",def://src/main/java/life/majiang/community/model/Nav.java//Nav/title
 "any://src/main/resources/mapper/NavMapper.xml//mapper/update//Update/#{url,jdbcType=VARCHAR}",def://src/main/java/life/majiang/community/model/Nav.java//Nav/url
 "any://src/main/resources/mapper/NavMapper.xml//mapper/update//Update/#{priority,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Nav.java//Nav/priority
@@ -62,11 +61,9 @@ any://src/main/resources/mapper/QuestionExtMapper.xml//mapper/update//Update/Whe
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{title,jdbcType=VARCHAR}",def://src/main/java/life/majiang/community/model/Question.java//Question/title
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{gmtCreate,jdbcType=BIGINT}",def://src/main/java/life/majiang/community/model/Question.java//Question/gmtCreate
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{gmtModified,jdbcType=BIGINT}",def://src/main/java/life/majiang/community/model/Question.java//Question/gmtModified
-"any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{creator,jdbcType=BIGINT}",def://src/main/java/life/majiang/community/model/Question.java//Question/creator
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{commentCount,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Question.java//Question/commentCount
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{viewCount,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Question.java//Question/viewCount
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{likeCount,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Question.java//Question/likeCount
-"any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{tag,jdbcType=VARCHAR}",def://src/main/java/life/majiang/community/model/Question.java//Question/tag
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/#{sticky,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Question.java//Question/sticky
 "any://src/main/resources/mapper/QuestionMapper.xml//mapper/update//Update/Where/=/#{id,jdbcType=BIGINT}",def://src/main/java/life/majiang/community/model/Question.java//Question/id
 "any://src/main/resources/mapper/CommentExtMapper.xml//mapper/update//Update/#{commentCount,jdbcType=INTEGER}",def://src/main/java/life/majiang/community/model/Comment.java//Comment/commentCount
