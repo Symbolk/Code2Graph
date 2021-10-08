@@ -123,12 +123,12 @@ public class Evaluation {
   }
 
   private static void exportXLLLinks(List<Link> xllLinks, String filePath) throws IOException {
-    if (xllLinks.isEmpty()) {
-      return;
-    }
     File outFile = new File(filePath);
     if (!outFile.exists()) {
       outFile.createNewFile();
+    }
+    if (xllLinks.isEmpty()) {
+      return;
     }
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
     Link first = xllLinks.get(0);
