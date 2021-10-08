@@ -33,20 +33,31 @@ public class GraphVizExporter {
           if (uri != null) {
             String output = uri.toString();
             map.put(
-                    "uri",
-                    DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
+                "uri", DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
           }
 
           if (!print || uri == null) {
             // new jgrapht API has no dedicated label provider setter
             map.put("type", DefaultAttribute.createAttribute(v.getType().toString()));
             map.put(
-                    "label",
-                    DefaultAttribute.createAttribute(
-                            v instanceof ElementNode
-                                    ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
-                                    : v.getType().name + "(" + ((RelationNode) v).getSymbol() + ")"));
+                "label",
+                DefaultAttribute.createAttribute(
+                    v instanceof ElementNode
+                        ? v.getType().name + "(" + ((ElementNode) v).getName() + ")"
+                        : v.getType().name + "(" + ((RelationNode) v).getSymbol() + ")"));
             map.put("shape", new NodeShapeAttribute(v));
+            map.put(
+                "style",
+                DefaultAttribute.createAttribute(v instanceof ElementNode ? "solid" : "dashed"));
+            //            map.put("fontcolor", DefaultAttribute.createAttribute("white"));
+            map.put(
+                "color",
+                DefaultAttribute.createAttribute(
+                    v instanceof ElementNode ? "red" : "blue"));
+            //            map.put(
+            //                "color",
+            //                DefaultAttribute.createAttribute(v instanceof ElementNode ? "red" :
+            // "green"));
           }
 
           return map;
@@ -100,8 +111,8 @@ public class GraphVizExporter {
             if (uri != null) {
               String output = uri.toString();
               map.put(
-                      "uri",
-                      DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
+                  "uri",
+                  DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
             }
           }
 
@@ -180,7 +191,7 @@ public class GraphVizExporter {
     public String getValue() {
       switch (node.getClass().getSimpleName()) {
         case "ElementNode":
-          return "folder";
+          return "ellipse";
           //        case "DataNode":
           //          return "note";
           //        case "OperationNode":
@@ -188,7 +199,7 @@ public class GraphVizExporter {
           //        case "BlockNode":
           //          return "component";
         case "RelationNode":
-          return "diamond";
+          return "hexagon";
         default:
           return "";
       }
