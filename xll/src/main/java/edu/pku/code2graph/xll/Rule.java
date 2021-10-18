@@ -3,6 +3,7 @@ package edu.pku.code2graph.xll;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Rule extends ArrayList<Object> {
   private URIPattern left;
@@ -37,6 +38,6 @@ public class Rule extends ArrayList<Object> {
 
   public List<Rule> getSubRules() {
     if (subRules != null) return subRules;
-    return subRules = subList(2, size()).stream().map(v -> new Rule((List<Object>) v)).toList();
+    return subRules = subList(2, size()).stream().map(v -> new Rule((List<Object>) v)).collect(Collectors.toList());
   }
 }

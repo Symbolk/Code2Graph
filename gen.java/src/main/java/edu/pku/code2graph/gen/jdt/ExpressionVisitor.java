@@ -2,17 +2,17 @@ package edu.pku.code2graph.gen.jdt;
 
 import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
+import edu.pku.code2graph.gen.sql.JsqlGenerator;
 import edu.pku.code2graph.model.Type;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.jdt.core.dom.*;
+import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +29,10 @@ import java.util.stream.Collectors;
  */
 public class ExpressionVisitor extends AbstractJdtVisitor {
   private ElementNode cuNode;
+
+  private List<String> annotationList = Arrays.asList("Select", "Update", "Insert", "Delete");
+
+  private JsqlGenerator generator = new JsqlGenerator();
 
   @Override
   public boolean visit(CompilationUnit cu) {
@@ -335,6 +339,34 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       // create element nodes
       List<SingleVariableDeclaration> paras = md.parameters();
       for (SingleVariableDeclaration p : paras) {
+        if (p.toString().trim().startsWith("@Param")) {
+          String identifier = JdtService.getIdentifier(p);
+          String[] split = p.toString().trim().split(" ");
+          identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
+          String[] idtfSplit = identifier.split("/");
+          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
+          identifier = String.join("/", idtfSplit);
+
+          String para_qname = split[0];
+          String para_name = para_qname.substring(8, para_qname.length() - 2);
+
+          URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier);
+
+          ElementNode pn =
+              new ElementNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname,
+                  uri);
+
+          graph.addVertex(pn);
+          defPool.put(para_qname, pn);
+          GraphUtil.addURI(Language.JAVA, uri, pn);
+          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
+        }
         String para_name = p.getName().getFullyQualifiedName();
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
@@ -402,6 +434,41 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       if (modifier instanceof Annotation) {
         Annotation annotation = (Annotation) modifier;
         // create node as a child of annotatedNode
+
+        String query = null, idtf = null, filepath = null;
+        Language lang = null;
+        if (annotationList.contains(((SimpleName) annotation.getTypeName()).getIdentifier())
+            && annotation instanceof SingleMemberAnnotation) {
+          query = ((SingleMemberAnnotation) annotation).getValue().toString();
+          query = query.substring(1, query.length() - 1);
+          if (annotatedNode.getUri() == null) {
+            query = null;
+          } else {
+            idtf =
+                annotatedNode.getUri().getIdentifier()
+                    + "/"
+                    + ((SimpleName) annotation.getTypeName()).getIdentifier();
+            lang = annotatedNode.getLanguage();
+            filepath = annotatedNode.getUri().getFile();
+          }
+        }
+
+        if (query != null) {
+          query = StringEscapeUtils.unescapeJava(query);
+          Graph<Node, Edge> graph =
+              generator.generate(query, FileUtil.getRootPath() + "/" + filepath, lang, idtf, "");
+
+          Map<String, List<RelationNode>> queryList = generator.getQueries();
+          if (annotatedNode != null && queryList.get("") != null) {
+            for (RelationNode rn : queryList.get("")) {
+              graph.addEdge(annotatedNode, rn, new Edge(GraphUtil.eid(), EdgeType.INLINE_SQL));
+            }
+          }
+
+          generator.clearQueries();
+          generator.clearIdentifiers();
+        }
+
         RelationNode node =
             new RelationNode(
                 GraphUtil.nid(),

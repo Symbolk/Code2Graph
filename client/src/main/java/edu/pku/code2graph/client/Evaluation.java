@@ -19,7 +19,9 @@ import org.apache.log4j.Level;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -54,7 +56,7 @@ public class Evaluation {
   private static GitService gitService = new GitServiceCGit();
   private static RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws ParserConfigurationException, SAXException {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
@@ -74,6 +76,7 @@ public class Evaluation {
         c2g.addSupportedLanguage(Language.JAVA);
         c2g.addSupportedLanguage(Language.XML);
         c2g.addSupportedLanguage(Language.SQL);
+        MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
         break;
       default:
         c2g.addSupportedLanguage(Language.JAVA);
@@ -120,12 +123,12 @@ public class Evaluation {
   }
 
   private static void exportXLLLinks(List<Link> xllLinks, String filePath) throws IOException {
-    if (xllLinks.isEmpty()) {
-      return;
-    }
     File outFile = new File(filePath);
     if (!outFile.exists()) {
       outFile.createNewFile();
+    }
+    if (xllLinks.isEmpty()) {
+      return;
     }
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
     Link first = xllLinks.get(0);

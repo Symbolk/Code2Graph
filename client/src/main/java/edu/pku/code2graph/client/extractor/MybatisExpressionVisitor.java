@@ -430,7 +430,8 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
 
         String query = null, idtf = null, filepath = null;
         Language lang = null;
-        if (annotationList.contains(((SimpleName) annotation.getTypeName()).getIdentifier())) {
+        if (annotationList.contains(((SimpleName) annotation.getTypeName()).getIdentifier())
+            && annotation instanceof SingleMemberAnnotation) {
           query = ((SingleMemberAnnotation) annotation).getValue().toString();
           query = query.substring(1, query.length() - 1);
           if (annotatedNode.getUri() == null) {

@@ -44,6 +44,21 @@ public class AbstractExtractor {
     return new ArrayList<>(set);
   }
 
+  protected static List<Pair<URI, URI>> removeDuplicateUriPair(List<Pair<URI, URI>> list) {
+    Set<Pair<URI, URI>> set =
+        new TreeSet<>(
+            (a, b) -> {
+              int compareToResult = 1; // ==0表示重复
+              if (StringUtils.equals(a.getLeft().toString(), b.getLeft().toString())
+                  && StringUtils.equals(a.getRight().toString(), b.getRight().toString())) {
+                compareToResult = 0;
+              }
+              return compareToResult;
+            });
+    set.addAll(list);
+    return new ArrayList<>(set);
+  }
+
   protected void findExtInRepo(String path, List<String> exts, List<String> filePaths) {
     File file = new File(path);
     LinkedList<File> list = new LinkedList<>();

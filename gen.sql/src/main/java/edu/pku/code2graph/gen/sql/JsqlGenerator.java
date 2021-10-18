@@ -28,8 +28,10 @@ public class JsqlGenerator extends Generator {
           try {
             Statements stmts = parser.parseFile(filePath);
             hdl.setFilePath(FilenameUtils.separatorsToUnix(filePath));
-            hdl.generateFrom(stmts, null);
-            stmtsList.add(stmts);
+            if(stmts!=null){
+              hdl.generateFrom(stmts, null);
+              stmtsList.add(stmts);
+            }
           } catch (IOException e) {
             e.printStackTrace();
           }

@@ -400,7 +400,7 @@ public class StatementHandler {
                       } else {
                         en.setUri(uri);
                       }
-                      GraphUtil.addURI(Language.SQL, en.getUri(), en);
+                      GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
                       addToNodeMap(en);
@@ -432,7 +432,7 @@ public class StatementHandler {
             } else {
               en.setUri(uri);
             }
-            GraphUtil.addURI(Language.SQL, en.getUri(), en);
+            GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
             addToNodeMap(en);
@@ -599,7 +599,7 @@ public class StatementHandler {
     } else {
       en.setUri(uri);
     }
-    GraphUtil.addURI(Language.SQL, en.getUri(), en);
+    GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
 
     addToNodeMap(en);
   }
