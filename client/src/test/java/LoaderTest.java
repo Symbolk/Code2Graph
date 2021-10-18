@@ -66,7 +66,7 @@ public class LoaderTest {
 
   @Test
   public void viewbindingTest() {
-    GraphVizExporter.printAsDot(generateGraph("android/viewbinding/main", "android/config.yml"));
+    generateGraph("android/viewbinding/main", "android/config.yml");
   }
 
   @Test
@@ -81,6 +81,6 @@ public class LoaderTest {
 
   @Test
   public void saganTest() {
-    generateGraph("springmvc/sagan", "springmvc/config.yml");
+    GraphVizExporter.printAsDot(generateGraph("springmvc/sagan", "springmvc/config.yml"));
   }
 }

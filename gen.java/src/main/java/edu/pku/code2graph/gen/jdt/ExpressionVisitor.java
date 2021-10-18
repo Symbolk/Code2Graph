@@ -1027,7 +1027,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
-          URI inline = new URI(Protocol.USE, Language.ANY, "", ((StringLiteral) exp).getLiteralValue());
+          String content = URI.checkInvalidCh(((StringLiteral) exp).getLiteralValue());
+          URI inline = new URI(Protocol.USE, Language.ANY, "", content);
           URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier, inline);
           root.setUri(uri);
           GraphUtil.addURI(Language.ANY, uri, root);
