@@ -431,84 +431,85 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
   private void parseAnnotations(List modifiers, ElementNode annotatedNode) {
     for (Object modifier : modifiers) {
-      if (modifier instanceof Annotation) {
-        Annotation annotation = (Annotation) modifier;
-        // create node as a child of annotatedNode
+      if (!(modifier instanceof Annotation)) continue;
+      Annotation annotation = (Annotation) modifier;
+      // create node as a child of annotatedNode
 
-        String query = null, idtf = null, filepath = null;
-        Language lang = null;
-        if (annotationList.contains(((SimpleName) annotation.getTypeName()).getIdentifier())
-            && annotation instanceof SingleMemberAnnotation) {
-          query = ((SingleMemberAnnotation) annotation).getValue().toString();
-          query = query.substring(1, query.length() - 1);
-          if (annotatedNode.getUri() == null) {
-            query = null;
-          } else {
-            idtf =
-                annotatedNode.getUri().getIdentifier()
-                    + "/"
-                    + ((SimpleName) annotation.getTypeName()).getIdentifier();
-            lang = annotatedNode.getLanguage();
-            filepath = annotatedNode.getUri().getFile();
+      String query = null, idtf = null, filepath = null;
+      Language lang = null;
+      if (annotationList.contains(((SimpleName) annotation.getTypeName()).getIdentifier())
+          && annotation instanceof SingleMemberAnnotation) {
+        query = ((SingleMemberAnnotation) annotation).getValue().toString();
+        query = query.substring(1, query.length() - 1);
+        if (annotatedNode.getUri() == null) {
+          query = null;
+        } else {
+          idtf =
+              annotatedNode.getUri().getIdentifier()
+                  + "/"
+                  + ((SimpleName) annotation.getTypeName()).getIdentifier();
+          lang = annotatedNode.getLanguage();
+          filepath = annotatedNode.getUri().getFile();
+        }
+      }
+
+      if (query != null) {
+        query = StringEscapeUtils.unescapeJava(query);
+        Graph<Node, Edge> graph =
+            generator.generate(query, FileUtil.getRootPath() + "/" + filepath, lang, idtf, "");
+
+        Map<String, List<RelationNode>> queryList = generator.getQueries();
+        if (annotatedNode != null && queryList.get("") != null) {
+          for (RelationNode rn : queryList.get("")) {
+            graph.addEdge(annotatedNode, rn, new Edge(GraphUtil.eid(), EdgeType.INLINE_SQL));
           }
         }
 
-        if (query != null) {
-          query = StringEscapeUtils.unescapeJava(query);
-          Graph<Node, Edge> graph =
-              generator.generate(query, FileUtil.getRootPath() + "/" + filepath, lang, idtf, "");
+        generator.clearQueries();
+        generator.clearIdentifiers();
+      }
 
-          Map<String, List<RelationNode>> queryList = generator.getQueries();
-          if (annotatedNode != null && queryList.get("") != null) {
-            for (RelationNode rn : queryList.get("")) {
-              graph.addEdge(annotatedNode, rn, new Edge(GraphUtil.eid(), EdgeType.INLINE_SQL));
-            }
-          }
+      RelationNode node =
+          new RelationNode(
+              GraphUtil.nid(),
+              Language.JAVA,
+              NodeType.ANNOTATION,
+              annotation.toString(),
+              annotation.getTypeName().getFullyQualifiedName());
+      node.setRange(computeRange(annotation));
 
-          generator.clearQueries();
-          generator.clearIdentifiers();
-        }
+      graph.addVertex(node);
+      graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
 
-        RelationNode node =
-            new RelationNode(
-                GraphUtil.nid(),
-                Language.JAVA,
-                NodeType.ANNOTATION,
-                annotation.toString(),
-                annotation.getTypeName().getFullyQualifiedName());
-        node.setRange(computeRange(annotation));
+      // check annotation type and possible refs
+      // add possible refs into use pool
+      ITypeBinding typeBinding = annotation.resolveTypeBinding();
+      String typeQName =
+          typeBinding == null
+              ? annotation.getTypeName().getFullyQualifiedName()
+              : typeBinding.getQualifiedName();
+      if (annotation.isMarkerAnnotation()) {
+        // @A
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
+      } else if (annotation.isSingleMemberAnnotation()) {
+        // @A(v)
+        Expression value = ((SingleMemberAnnotation) annotation).getValue();
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, value.toString()));
+        parseExpression(value);
+      } else if (annotation.isNormalAnnotation()) {
+        // @A(k=v)
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
 
-        graph.addVertex(node);
-        graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
-
-        // check annotation type and possible refs
-        // add possible refs into use pool
-        ITypeBinding typeBinding = annotation.resolveTypeBinding();
-        String typeQName =
-            typeBinding == null
-                ? annotation.getTypeName().getFullyQualifiedName()
-                : typeBinding.getQualifiedName();
-        if (annotation.isMarkerAnnotation()) {
-          // @A
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-        } else if (annotation.isSingleMemberAnnotation()) {
-          // @A(v)
-          Expression value = ((SingleMemberAnnotation) annotation).getValue();
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, value.toString()));
-        } else if (annotation.isNormalAnnotation()) {
-          // @A(k=v)
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-
-          for (Object value : ((NormalAnnotation) annotation).values()) {
-            if (value instanceof MemberValuePair) {
-              MemberValuePair pair = ((MemberValuePair) value);
-              ITypeBinding binding = pair.getValue().resolveTypeBinding();
-              String qname =
-                  binding == null ? pair.getValue().toString() : binding.getQualifiedName();
-              usePool.add(Triple.of(node, EdgeType.REFERENCE, qname));
-            }
-          }
+        for (Object _pair : ((NormalAnnotation) annotation).values()) {
+          if (!(_pair instanceof  MemberValuePair)) continue;
+          MemberValuePair pair = (MemberValuePair) _pair;
+          Expression innerValue = pair.getValue();
+          ITypeBinding binding = innerValue.resolveTypeBinding();
+          String qname =
+              binding == null ? innerValue.toString() : binding.getQualifiedName();
+          usePool.add(Triple.of(node, EdgeType.REFERENCE, qname));
+          parseExpression(innerValue);
         }
       }
     }
