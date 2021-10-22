@@ -2,17 +2,17 @@ package edu.pku.code2graph.gen.jdt;
 
 import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
+import edu.pku.code2graph.gen.sql.JsqlGenerator;
 import edu.pku.code2graph.model.Type;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.text.StringEscapeUtils;
 import org.eclipse.jdt.core.dom.*;
+import org.jgrapht.Graph;
 import org.jgrapht.alg.util.Triple;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +29,10 @@ import java.util.stream.Collectors;
  */
 public class ExpressionVisitor extends AbstractJdtVisitor {
   private ElementNode cuNode;
+
+  private List<String> annotationList = Arrays.asList("Select", "Update", "Insert", "Delete");
+
+  private JsqlGenerator generator = new JsqlGenerator();
 
   @Override
   public boolean visit(CompilationUnit cu) {
@@ -335,6 +339,34 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       // create element nodes
       List<SingleVariableDeclaration> paras = md.parameters();
       for (SingleVariableDeclaration p : paras) {
+        if (p.toString().trim().startsWith("@Param")) {
+          String identifier = JdtService.getIdentifier(p);
+          String[] split = p.toString().trim().split(" ");
+          identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
+          String[] idtfSplit = identifier.split("/");
+          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
+          identifier = String.join("/", idtfSplit);
+
+          String para_qname = split[0];
+          String para_name = para_qname.substring(8, para_qname.length() - 2);
+
+          URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier);
+
+          ElementNode pn =
+              new ElementNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname,
+                  uri);
+
+          graph.addVertex(pn);
+          defPool.put(para_qname, pn);
+          GraphUtil.addURI(Language.JAVA, uri, pn);
+          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
+        }
         String para_name = p.getName().getFullyQualifiedName();
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
@@ -399,49 +431,89 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
   private void parseAnnotations(List modifiers, ElementNode annotatedNode) {
     for (Object modifier : modifiers) {
-      if (modifier instanceof Annotation) {
-        Annotation annotation = (Annotation) modifier;
-        // create node as a child of annotatedNode
-        RelationNode node =
-            new RelationNode(
-                GraphUtil.nid(),
-                Language.JAVA,
-                NodeType.ANNOTATION,
-                annotation.toString(),
-                annotation.getTypeName().getFullyQualifiedName());
-        node.setRange(computeRange(annotation));
+      if (!(modifier instanceof Annotation)) continue;
+      Annotation annotation = (Annotation) modifier;
+      // create node as a child of annotatedNode
 
-        graph.addVertex(node);
-        graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
-
-        // check annotation type and possible refs
-        // add possible refs into use pool
-        ITypeBinding typeBinding = annotation.resolveTypeBinding();
-        String typeQName =
-            typeBinding == null
-                ? annotation.getTypeName().getFullyQualifiedName()
-                : typeBinding.getQualifiedName();
-        if (annotation.isMarkerAnnotation()) {
-          // @A
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-        } else if (annotation.isSingleMemberAnnotation()) {
-          // @A(v)
-          Expression value = ((SingleMemberAnnotation) annotation).getValue();
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, value.toString()));
-        } else if (annotation.isNormalAnnotation()) {
-          // @A(k=v)
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-
-          for (Object value : ((NormalAnnotation) annotation).values()) {
-            if (value instanceof MemberValuePair) {
-              MemberValuePair pair = ((MemberValuePair) value);
-              ITypeBinding binding = pair.getValue().resolveTypeBinding();
-              String qname =
-                  binding == null ? pair.getValue().toString() : binding.getQualifiedName();
-              usePool.add(Triple.of(node, EdgeType.REFERENCE, qname));
-            }
+      String query = null, idtf = null, filepath = null;
+      Language lang = null;
+      if (annotation.getTypeName() instanceof SimpleName) {
+        String anTypeSimpleName = ((SimpleName) annotation.getTypeName()).getIdentifier();
+        if (annotationList.contains(anTypeSimpleName)
+                && annotation instanceof SingleMemberAnnotation) {
+          query = ((SingleMemberAnnotation) annotation).getValue().toString();
+          query = query.substring(1, query.length() - 1);
+          if (annotatedNode.getUri() == null) {
+            query = null;
+          } else {
+            idtf = annotatedNode.getUri().getIdentifier() + "/" + anTypeSimpleName;
+            lang = annotatedNode.getLanguage();
+            filepath = annotatedNode.getUri().getFile();
           }
+        }
+      }
+
+      if (query != null) {
+        query = StringEscapeUtils.unescapeJava(query);
+        Graph<Node, Edge> graph =
+            generator.generate(query, FileUtil.getRootPath() + "/" + filepath, lang, idtf, "");
+
+        Map<String, List<RelationNode>> queryList = generator.getQueries();
+        if (annotatedNode != null && queryList.get("") != null) {
+          for (RelationNode rn : queryList.get("")) {
+            graph.addEdge(annotatedNode, rn, new Edge(GraphUtil.eid(), EdgeType.INLINE_SQL));
+          }
+        }
+
+        generator.clearQueries();
+        generator.clearIdentifiers();
+      }
+
+      identifier = annotation.getTypeName().getFullyQualifiedName();
+      RelationNode node =
+          new RelationNode(
+              GraphUtil.nid(),
+              Language.JAVA,
+              NodeType.ANNOTATION,
+              annotation.toString(),
+              identifier);
+      URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, identifier);
+      node.setRange(computeRange(annotation));
+      node.setUri(uri);
+      GraphUtil.addURI(Language.JAVA, uri, node);
+
+      graph.addVertex(node);
+      graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
+
+      // check annotation type and possible refs
+      // add possible refs into use pool
+      ITypeBinding typeBinding = annotation.resolveTypeBinding();
+      String typeQName =
+          typeBinding == null
+              ? annotation.getTypeName().getFullyQualifiedName()
+              : typeBinding.getQualifiedName();
+      if (annotation.isMarkerAnnotation()) {
+        // @A
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
+      } else if (annotation.isSingleMemberAnnotation()) {
+        // @A(v)
+        Expression value = ((SingleMemberAnnotation) annotation).getValue();
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, value.toString()));
+        parseExpression(value);
+      } else if (annotation.isNormalAnnotation()) {
+        // @A(k=v)
+        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
+
+        for (Object _pair : ((NormalAnnotation) annotation).values()) {
+          if (!(_pair instanceof  MemberValuePair)) continue;
+          MemberValuePair pair = (MemberValuePair) _pair;
+          Expression innerValue = pair.getValue();
+          ITypeBinding binding = innerValue.resolveTypeBinding();
+          String qname =
+              binding == null ? innerValue.toString() : binding.getQualifiedName();
+          usePool.add(Triple.of(node, EdgeType.REFERENCE, qname));
+          parseExpression(innerValue);
         }
       }
     }
@@ -946,7 +1018,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     // simple name may be self-field access
     switch (exp.getNodeType()) {
       case ASTNode.NUMBER_LITERAL:
-      case ASTNode.STRING_LITERAL:
       case ASTNode.CHARACTER_LITERAL:
       case ASTNode.BOOLEAN_LITERAL:
       case ASTNode.NULL_LITERAL:
@@ -954,6 +1025,17 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
+          break;
+        }
+      case ASTNode.STRING_LITERAL:
+        {
+          root.setSymbol(exp.toString());
+          root.setType(NodeType.LITERAL);
+          String content = URI.checkInvalidCh(((StringLiteral) exp).getLiteralValue());
+          URI inline = new URI(Protocol.DEF, Language.ANY, "", content);
+          URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier, inline);
+          root.setUri(uri);
+          GraphUtil.addURI(Language.JAVA, uri, root);
           break;
         }
       case ASTNode.QUALIFIED_NAME:
@@ -1130,6 +1212,11 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           MethodInvocation mi = (MethodInvocation) exp;
           root.setType(NodeType.METHOD_INVOCATION);
+
+          identifier = "." + mi.getName().getIdentifier();
+          URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, identifier);
+          root.setUri(uri);
+          GraphUtil.addURI(Language.JAVA, uri, root);
 
           // accessor
           if (mi.getExpression() != null) {

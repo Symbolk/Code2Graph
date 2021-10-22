@@ -116,7 +116,11 @@ public class StatementHandler {
               .forEach(
                   stmt -> {
                     clearForNextStatement();
-                    stmt.accept(this);
+                    try {
+                      stmt.accept(this);
+                    } catch (UnsupportedOperationException e) {
+                      logger.debug(stmt.toString());
+                    }
                   });
         }
 
@@ -396,7 +400,7 @@ public class StatementHandler {
                       } else {
                         en.setUri(uri);
                       }
-                      GraphUtil.addURI(Language.SQL, en.getUri(), en);
+                      GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
                       addToNodeMap(en);
@@ -428,7 +432,7 @@ public class StatementHandler {
             } else {
               en.setUri(uri);
             }
-            GraphUtil.addURI(Language.SQL, en.getUri(), en);
+            GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
             addToNodeMap(en);
@@ -595,7 +599,7 @@ public class StatementHandler {
     } else {
       en.setUri(uri);
     }
-    GraphUtil.addURI(Language.SQL, en.getUri(), en);
+    GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
 
     addToNodeMap(en);
   }

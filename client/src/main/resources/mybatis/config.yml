@@ -1,11 +1,144 @@
 rules:
-  - use:
+  - - protocol: any
       lang: Java
-      file: '*.java'
-      identifier: (namespace)Mapper/(method)
-    def:
-      lang: Xml
-      file: "(namespace)Mapper.xml"
-      identifier: id
+      file: '(filename).java'
+      identifier: (method)/Select
       inline:
-        identifier: '(method)'
+        identifier: "#{(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Java
+      file: '(filename).java'
+      identifier: (method)/Insert
+      inline:
+        identifier: "#{(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Java
+      file: '(filename).java'
+      identifier: (method)/Delete
+      inline:
+        identifier: "#{(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Java
+      file: '(filename).java'
+      identifier: (method)/Update
+      inline:
+        identifier: "#{(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Java
+      file: '(filename).java'
+      identifier: (method)/Select
+      inline:
+        identifier: "${(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Java
+      file: '(filename).java'
+      identifier: (method)/Insert
+      inline:
+        identifier: "${(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Java
+      file: '(filename).java'
+      identifier: (method)/Delete
+      inline:
+        identifier: "${(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Java
+      file: '(filename).java'
+      identifier: (method)/Update
+      inline:
+        identifier: "${(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "(filename).java"
+      identifier: (method)/(name)
+  - - protocol: any
+      lang: Xml
+      file: '*.xml'
+      identifier: mapper/**
+      inline:
+        identifier: "#{(name),jdbcType=*}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: (name)
+  - - protocol: any
+      lang: Xml
+      file: '*.xml'
+      identifier: mapper/**
+      inline:
+        identifier: "#{(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: (name)
+  - - protocol: any
+      lang: Xml
+      file: '*.xml'
+      identifier: mapper/**
+      inline:
+        identifier: "${(name),jdbcType=*}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: (name)
+  - - protocol: any
+      lang: Xml
+      file: '*.xml'
+      identifier: mapper/**
+      inline:
+        identifier: "${(name)}"
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: (name)
+  - - protocol: any
+      lang: Xml
+      file: '*.xml'
+      identifier: mapper/**
+      inline:
+        identifier: (name)
+        lang: Sql
+    - protocol: def
+      lang: Java
+      file: "*.java"
+      identifier: (name)

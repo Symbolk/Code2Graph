@@ -2,9 +2,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: addAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .addAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:
@@ -13,9 +15,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: setAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .setAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:
@@ -24,9 +28,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: addAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .addAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:
@@ -35,9 +41,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: setAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .setAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:
@@ -46,9 +54,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: addAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .addAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:
@@ -57,9 +67,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: setAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .setAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:
@@ -68,9 +80,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: addAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .addAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:
@@ -79,9 +93,11 @@ rules:
   - def:
       lang: JAVA
       file: "*.java"
-      identifier: setAttribute\("(name)",*\)
-    use:
-      lang: HTML
+      identifier: .setAttribute
+      inline:
+        identifier: '(name)'
+    - protocol: use
+      lang: Html
       file: "*.html"
       identifier: "**"
       inline:

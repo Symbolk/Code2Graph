@@ -32,6 +32,14 @@ public class URI {
     this.identifier = identifier;
   }
 
+  public URI(Protocol protocol, Language lang, String file, String identifier, URI inline) {
+    this.protocol = protocol;
+    this.lang = lang;
+    this.file = file;
+    this.identifier = identifier;
+    this.inline = inline;
+  }
+
   public URI(String source) {
     String[] result = source.split("//");
     this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");

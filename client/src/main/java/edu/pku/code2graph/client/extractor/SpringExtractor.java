@@ -120,7 +120,7 @@ public class SpringExtractor extends AbstractExtractor {
 
   private void findPairByHtmlUri(URI uri) {
     String sym = uri.getSymbol();
-    sym = sym.substring(2, sym.length() - 1);
+    sym = sym.substring(2, sym.length() - 1).trim();
     for (String key : javaURIS.keySet()) {
       if (uri.getFile().contains(key)) {
         for (URI val : javaURIS.get(key)) {

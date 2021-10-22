@@ -24,6 +24,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   protected CompilationUnit cu;
   protected String filePath;
   protected String uriFilePath;
+  protected String identifier;
 
   // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
   // TODO include external type declaration or not?
@@ -50,6 +51,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
         new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
     graph.addVertex(node);
     defPool.put(qname, node);
+    this.identifier = identifier;
     GraphUtil.addURI(Language.JAVA, uri, node);
     return node;
   }

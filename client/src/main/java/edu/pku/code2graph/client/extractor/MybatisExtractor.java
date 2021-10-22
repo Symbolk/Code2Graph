@@ -1,5 +1,6 @@
 package edu.pku.code2graph.client.extractor;
 
+import edu.pku.code2graph.client.MybatisPreprocesser;
 import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
 import edu.pku.code2graph.gen.xml.MybatisMapperHandler;
 import edu.pku.code2graph.gen.xml.model.MybatisElement;
@@ -31,10 +32,8 @@ public class MybatisExtractor extends AbstractExtractor {
   private static final String JRE_PATH =
       System.getProperty("java.home") + File.separator + "lib/rt.jar";
 
-  private MybatisMapperHandler mybatisHandler = new MybatisMapperHandler();
-
   public List<Pair<URI, URI>> generateInstances(String repoRoot, String repoPath)
-      throws ParserConfigurationException, IOException, SAXException {
+      throws ParserConfigurationException, SAXException {
     FileUtil.setRootPath(repoRoot);
     extractFromJavaFile(repoPath);
     extractFromXmlFile(repoPath);
@@ -103,25 +102,11 @@ public class MybatisExtractor extends AbstractExtractor {
   }
 
   public void extractFromXmlFile(String repoPath)
-      throws ParserConfigurationException, SAXException, IOException {
-    List<String> filePaths = new ArrayList<>();
-    List<String> exts = Arrays.asList(".xml");
-    findExtInRepo(repoPath, exts, filePaths);
+      throws ParserConfigurationException, SAXException {
+    MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
 
-    SAXParserFactory factory = SAXParserFactory.newInstance();
-    SAXParser parser = factory.newSAXParser();
-    for (String filePath : filePaths) {
-      File file = new File(filePath);
-      mybatisHandler.setFilePath(FilenameUtils.separatorsToUnix(filePath));
-      try {
-        parser.parse(file, mybatisHandler);
-      } catch (SAXException e) {
-        System.out.println(filePath);
-      }
-    }
-
-    queryMap = mybatisHandler.getQueryMap();
-    xmlToJavaMapper = mybatisHandler.getXmlToJavaMapper();
+    queryMap = MybatisPreprocesser.getHandler().getQueryMap();
+    xmlToJavaMapper = MybatisPreprocesser.getHandler().getXmlToJavaMapper();
   }
 
   private void findPairs() {
@@ -141,19 +126,23 @@ public class MybatisExtractor extends AbstractExtractor {
           if (name.contains(".")) {
             if (name.startsWith("#{") || name.startsWith("${"))
               name = name.substring(2, name.length() - 1);
-            if (paramsInJava == null) continue;
+            if (paramsInJava == null || paramsInJava.get(queryId) == null) continue;
             String[] tokens = name.split("\\.");
             if (tokens.length > 2) continue;
             List<MybatisParam> targetJavaParams = paramsInJava.get(queryId);
             for (MybatisParam param : targetJavaParams) {
-              if (param.symbol.equals(tokens[0])) {
+              String paramSymbol = param.symbol;
+              if (paramSymbol.startsWith("@Param(")) {
+                paramSymbol = paramSymbol.substring(8, paramSymbol.length() - 2);
+              }
+              if (paramSymbol.equals(tokens[0])) {
                 String className = param.className;
                 for (String classPackagePath : fieldMap.keySet()) {
                   if (classPackagePath.endsWith(className)) {
-                    if (fieldMap.get(classPackagePath).get(tokens[0]) != null)
+                    if (fieldMap.get(classPackagePath).get(tokens[1]) != null)
                       uriPairs.add(
                           new ImmutablePair<>(
-                              identifier, fieldMap.get(classPackagePath).get(tokens[0])));
+                              identifier, fieldMap.get(classPackagePath).get(tokens[1])));
                   }
                 }
               }
@@ -169,6 +158,19 @@ public class MybatisExtractor extends AbstractExtractor {
                     uriPairs.add(
                         new ImmutablePair<>(
                             identifier, fieldMap.get(classPackagePath).get(symbol)));
+                }
+              }
+            } else {
+              if (paramsInJava != null && paramsInJava.get(queryId) != null) {
+                List<MybatisParam> targetJavaParams = paramsInJava.get(queryId);
+                for (MybatisParam param : targetJavaParams) {
+                  String paramSymbol = param.symbol;
+                  if (paramSymbol.startsWith("@Param(")) {
+                    paramSymbol = paramSymbol.substring(8, paramSymbol.length() - 2);
+                  }
+                  if (paramSymbol.equals(symbol)) {
+                    uriPairs.add(new ImmutablePair<>(identifier, param.uri));
+                  }
                 }
               }
             }
@@ -187,5 +189,7 @@ public class MybatisExtractor extends AbstractExtractor {
         }
       }
     }
+
+    uriPairs = removeDuplicateUriPair(uriPairs);
   }
 }

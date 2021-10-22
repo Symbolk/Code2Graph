@@ -64,6 +64,8 @@ public class URIPattern extends URI {
         source
             .replaceAll("\\\\", "\\\\\\\\")
             .replaceAll("\\.", "\\\\.")
+            .replaceAll("\\^", "\\\\^")
+            .replaceAll("\\$", "\\\\\\$")
             .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
             .replaceAll("\\*", "\\\\w+")

@@ -17,6 +17,11 @@ SQL,JAVA
 "any://src/main/resources/mapper/MallUserMapper.xml//mapper/insert//Insert/#{isDeleted,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/MallUser.java//MallUser/isDeleted
 "any://src/main/resources/mapper/MallUserMapper.xml//mapper/insert//Insert/#{lockedFlag,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/MallUser.java//MallUser/lockedFlag
 "any://src/main/resources/mapper/MallUserMapper.xml//mapper/insert//Insert/#{createTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/MallUser.java//MallUser/createTime
+any://src/main/resources/mapper/MallUserMapper.xml//mapper/update//Update/#{lockStatus},"def://src/main/java/ltd/newbee/mall/dao/MallUserMapper.java//MallUserMapper/lockUserBatch/@Param\(""lockStatus""\)"
+any://src/main/resources/mapper/MallUserMapper.xml//mapper/select//Select/Where/=/#{loginName},"def://src/main/java/ltd/newbee/mall/dao/MallUserMapper.java//MallUserMapper/selectByLoginNameAndPasswd/@Param\(""loginName""\)"
+any://src/main/resources/mapper/MallUserMapper.xml//mapper/select//Select/Where/=/#{password},"def://src/main/java/ltd/newbee/mall/dao/MallUserMapper.java//MallUserMapper/selectByLoginNameAndPasswd/@Param\(""password""\)"
+"any://target/classes/mapper/IndexConfigMapper.xml//mapper/select//Select/Where/=/#{configType,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/IndexConfigMapper.java//IndexConfigMapper/selectByTypeAndGoodsId/@Param\(""configType""\)"
+"any://target/classes/mapper/IndexConfigMapper.xml//mapper/select//Select/Where/=/#{goodsId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/IndexConfigMapper.java//IndexConfigMapper/selectByTypeAndGoodsId/@Param\(""goodsId""\)"
 "any://target/classes/mapper/IndexConfigMapper.xml//mapper/update//Update/#{configName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/IndexConfig.java//IndexConfig/configName
 "any://target/classes/mapper/IndexConfigMapper.xml//mapper/update//Update/#{configType,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/IndexConfig.java//IndexConfig/configType
 "any://target/classes/mapper/IndexConfigMapper.xml//mapper/update//Update/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/IndexConfig.java//IndexConfig/goodsId
@@ -59,6 +64,8 @@ SQL,JAVA
 "any://target/classes/mapper/GoodsCategoryMapper.xml//mapper/insert//Insert/#{createUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/GoodsCategory.java//GoodsCategory/createUser
 "any://target/classes/mapper/GoodsCategoryMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/GoodsCategory.java//GoodsCategory/updateTime
 "any://target/classes/mapper/GoodsCategoryMapper.xml//mapper/insert//Insert/#{updateUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/GoodsCategory.java//GoodsCategory/updateUser
+"any://target/classes/mapper/GoodsCategoryMapper.xml//mapper/select//Select/Where/=/#{categoryName,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/GoodsCategoryMapper.java//GoodsCategoryMapper/selectByLevelAndName/@Param\(""categoryName""\)"
+"any://target/classes/mapper/GoodsCategoryMapper.xml//mapper/select//Select/Where/=/#{categoryLevel,jdbcType=TINYINT}","def://src/main/java/ltd/newbee/mall/dao/GoodsCategoryMapper.java//GoodsCategoryMapper/selectByLevelAndName/@Param\(""categoryLevel""\)"
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{orderId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/orderId
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{orderNo,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/orderNo
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{userId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/userId
@@ -72,6 +79,7 @@ SQL,JAVA
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{isDeleted,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/isDeleted
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{createTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/createTime
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/updateTime
+any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{orderStatus},"def://src/main/java/ltd/newbee/mall/dao/NewBeeMallOrderMapper.java//NewBeeMallOrderMapper/closeOrder/@Param\(""orderStatus""\)"
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{orderNo,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/orderNo
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{userId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/userId
 "any://src/main/resources/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{totalPrice,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/totalPrice
@@ -105,6 +113,8 @@ SQL,JAVA
 "any://src/main/resources/mapper/GoodsCategoryMapper.xml//mapper/insert//Insert/#{createUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/GoodsCategory.java//GoodsCategory/createUser
 "any://src/main/resources/mapper/GoodsCategoryMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/GoodsCategory.java//GoodsCategory/updateTime
 "any://src/main/resources/mapper/GoodsCategoryMapper.xml//mapper/insert//Insert/#{updateUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/GoodsCategory.java//GoodsCategory/updateUser
+"any://src/main/resources/mapper/GoodsCategoryMapper.xml//mapper/select//Select/Where/=/#{categoryName,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/GoodsCategoryMapper.java//GoodsCategoryMapper/selectByLevelAndName/@Param\(""categoryName""\)"
+"any://src/main/resources/mapper/GoodsCategoryMapper.xml//mapper/select//Select/Where/=/#{categoryLevel,jdbcType=TINYINT}","def://src/main/java/ltd/newbee/mall/dao/GoodsCategoryMapper.java//GoodsCategoryMapper/selectByLevelAndName/@Param\(""categoryLevel""\)"
 "any://src/main/resources/mapper/CarouselMapper.xml//mapper/update//Update/#{carouselUrl,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/carouselUrl
 "any://src/main/resources/mapper/CarouselMapper.xml//mapper/update//Update/#{redirectUrl,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/redirectUrl
 "any://src/main/resources/mapper/CarouselMapper.xml//mapper/update//Update/#{carouselRank,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/carouselRank
@@ -123,6 +133,8 @@ SQL,JAVA
 "any://src/main/resources/mapper/CarouselMapper.xml//mapper/insert//Insert/#{createUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/createUser
 "any://src/main/resources/mapper/CarouselMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/updateTime
 "any://src/main/resources/mapper/CarouselMapper.xml//mapper/insert//Insert/#{updateUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/updateUser
+"any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/select//Select/Where/=/#{newBeeMallUserId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallShoppingCartItemMapper.java//NewBeeMallShoppingCartItemMapper/selectByUserIdAndGoodsId/@Param\(""newBeeMallUserId""\)"
+"any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/select//Select/Where/=/#{goodsId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallShoppingCartItemMapper.java//NewBeeMallShoppingCartItemMapper/selectByUserIdAndGoodsId/@Param\(""goodsId""\)"
 "any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/update//Update/#{userId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/userId
 "any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/update//Update/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/goodsId
 "any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/update//Update/#{goodsCount,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/goodsCount
@@ -137,6 +149,7 @@ SQL,JAVA
 "any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/insert//Insert/#{isDeleted,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/isDeleted
 "any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/insert//Insert/#{createTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/createTime
 "any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/updateTime
+"any://target/classes/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/select//Select/Where/=/#{newBeeMallUserId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/dao/NewBeeMallShoppingCartItemMapper.java//NewBeeMallShoppingCartItemMapper/selectCountByUserId/newBeeMallUserId
 "any://src/main/resources/mapper/AdminUserMapper.xml//mapper/update//Update/#{loginUserName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/loginUserName
 "any://src/main/resources/mapper/AdminUserMapper.xml//mapper/update//Update/#{loginPassword,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/loginPassword
 "any://src/main/resources/mapper/AdminUserMapper.xml//mapper/update//Update/#{nickName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/nickName
@@ -147,6 +160,8 @@ SQL,JAVA
 "any://src/main/resources/mapper/AdminUserMapper.xml//mapper/insert//Insert/#{loginPassword,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/loginPassword
 "any://src/main/resources/mapper/AdminUserMapper.xml//mapper/insert//Insert/#{nickName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/nickName
 "any://src/main/resources/mapper/AdminUserMapper.xml//mapper/insert//Insert/#{locked,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/locked
+"any://src/main/resources/mapper/AdminUserMapper.xml//mapper/select//Select/Where/=/#{userName,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/AdminUserMapper.java//AdminUserMapper/login/@Param\(""userName""\)"
+"any://src/main/resources/mapper/AdminUserMapper.xml//mapper/select//Select/Where/=/#{password,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/AdminUserMapper.java//AdminUserMapper/login/@Param\(""password""\)"
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{orderId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/orderId
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{orderNo,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/orderNo
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{userId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/userId
@@ -160,6 +175,7 @@ SQL,JAVA
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{isDeleted,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/isDeleted
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{createTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/createTime
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/updateTime
+any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{orderStatus},"def://src/main/java/ltd/newbee/mall/dao/NewBeeMallOrderMapper.java//NewBeeMallOrderMapper/closeOrder/@Param\(""orderStatus""\)"
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{orderNo,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/orderNo
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{userId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/userId
 "any://target/classes/mapper/NewBeeMallOrderMapper.xml//mapper/update//Update/#{totalPrice,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrder.java//NewBeeMallOrder/totalPrice
@@ -191,6 +207,9 @@ SQL,JAVA
 "any://target/classes/mapper/MallUserMapper.xml//mapper/insert//Insert/#{isDeleted,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/MallUser.java//MallUser/isDeleted
 "any://target/classes/mapper/MallUserMapper.xml//mapper/insert//Insert/#{lockedFlag,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/MallUser.java//MallUser/lockedFlag
 "any://target/classes/mapper/MallUserMapper.xml//mapper/insert//Insert/#{createTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/MallUser.java//MallUser/createTime
+any://target/classes/mapper/MallUserMapper.xml//mapper/update//Update/#{lockStatus},"def://src/main/java/ltd/newbee/mall/dao/MallUserMapper.java//MallUserMapper/lockUserBatch/@Param\(""lockStatus""\)"
+any://target/classes/mapper/MallUserMapper.xml//mapper/select//Select/Where/=/#{loginName},"def://src/main/java/ltd/newbee/mall/dao/MallUserMapper.java//MallUserMapper/selectByLoginNameAndPasswd/@Param\(""loginName""\)"
+any://target/classes/mapper/MallUserMapper.xml//mapper/select//Select/Where/=/#{password},"def://src/main/java/ltd/newbee/mall/dao/MallUserMapper.java//MallUserMapper/selectByLoginNameAndPasswd/@Param\(""password""\)"
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsId
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{goodsName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsName
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{goodsIntro,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsIntro
@@ -206,6 +225,8 @@ SQL,JAVA
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{updateUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/updateUser
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/updateTime
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{goodsDetailContent,jdbcType=LONGVARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsDetailContent
+"any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/select//Select/Where/=/#{goodsName,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallGoodsMapper.java//NewBeeMallGoodsMapper/selectByCategoryIdAndName/@Param\(""goodsName""\)"
+"any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/select//Select/Where/=/#{goodsCategoryId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallGoodsMapper.java//NewBeeMallGoodsMapper/selectByCategoryIdAndName/@Param\(""goodsCategoryId""\)"
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsName
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsIntro,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsIntro
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsCoverImg,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsCoverImg
@@ -221,6 +242,7 @@ SQL,JAVA
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/updateTime
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsDetailContent,jdbcType=LONGVARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsDetailContent
 "any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/Where/=/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsId
+any://target/classes/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{sellStatus},"def://src/main/java/ltd/newbee/mall/dao/NewBeeMallGoodsMapper.java//NewBeeMallGoodsMapper/batchUpdateSellStatus/@Param\(""sellStatus""\)"
 "any://target/classes/mapper/NewBeeMallOrderItemMapper.xml//mapper/update//Update/#{orderId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/orderId
 "any://target/classes/mapper/NewBeeMallOrderItemMapper.xml//mapper/update//Update/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/goodsId
 "any://target/classes/mapper/NewBeeMallOrderItemMapper.xml//mapper/update//Update/#{goodsName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/goodsName
@@ -237,6 +259,8 @@ SQL,JAVA
 "any://target/classes/mapper/NewBeeMallOrderItemMapper.xml//mapper/insert//Insert/#{sellingPrice,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/sellingPrice
 "any://target/classes/mapper/NewBeeMallOrderItemMapper.xml//mapper/insert//Insert/#{goodsCount,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/goodsCount
 "any://target/classes/mapper/NewBeeMallOrderItemMapper.xml//mapper/insert//Insert/#{createTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/createTime
+"any://src/main/resources/mapper/IndexConfigMapper.xml//mapper/select//Select/Where/=/#{configType,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/IndexConfigMapper.java//IndexConfigMapper/selectByTypeAndGoodsId/@Param\(""configType""\)"
+"any://src/main/resources/mapper/IndexConfigMapper.xml//mapper/select//Select/Where/=/#{goodsId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/IndexConfigMapper.java//IndexConfigMapper/selectByTypeAndGoodsId/@Param\(""goodsId""\)"
 "any://src/main/resources/mapper/IndexConfigMapper.xml//mapper/update//Update/#{configName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/IndexConfig.java//IndexConfig/configName
 "any://src/main/resources/mapper/IndexConfigMapper.xml//mapper/update//Update/#{configType,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/IndexConfig.java//IndexConfig/configType
 "any://src/main/resources/mapper/IndexConfigMapper.xml//mapper/update//Update/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/IndexConfig.java//IndexConfig/goodsId
@@ -269,6 +293,8 @@ SQL,JAVA
 "any://target/classes/mapper/AdminUserMapper.xml//mapper/insert//Insert/#{loginPassword,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/loginPassword
 "any://target/classes/mapper/AdminUserMapper.xml//mapper/insert//Insert/#{nickName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/nickName
 "any://target/classes/mapper/AdminUserMapper.xml//mapper/insert//Insert/#{locked,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/AdminUser.java//AdminUser/locked
+"any://target/classes/mapper/AdminUserMapper.xml//mapper/select//Select/Where/=/#{userName,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/AdminUserMapper.java//AdminUserMapper/login/@Param\(""userName""\)"
+"any://target/classes/mapper/AdminUserMapper.xml//mapper/select//Select/Where/=/#{password,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/AdminUserMapper.java//AdminUserMapper/login/@Param\(""password""\)"
 "any://target/classes/mapper/CarouselMapper.xml//mapper/update//Update/#{carouselUrl,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/carouselUrl
 "any://target/classes/mapper/CarouselMapper.xml//mapper/update//Update/#{redirectUrl,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/redirectUrl
 "any://target/classes/mapper/CarouselMapper.xml//mapper/update//Update/#{carouselRank,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/carouselRank
@@ -287,6 +313,8 @@ SQL,JAVA
 "any://target/classes/mapper/CarouselMapper.xml//mapper/insert//Insert/#{createUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/createUser
 "any://target/classes/mapper/CarouselMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/updateTime
 "any://target/classes/mapper/CarouselMapper.xml//mapper/insert//Insert/#{updateUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/Carousel.java//Carousel/updateUser
+"any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/select//Select/Where/=/#{newBeeMallUserId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallShoppingCartItemMapper.java//NewBeeMallShoppingCartItemMapper/selectByUserIdAndGoodsId/@Param\(""newBeeMallUserId""\)"
+"any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/select//Select/Where/=/#{goodsId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallShoppingCartItemMapper.java//NewBeeMallShoppingCartItemMapper/selectByUserIdAndGoodsId/@Param\(""goodsId""\)"
 "any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/update//Update/#{userId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/userId
 "any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/update//Update/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/goodsId
 "any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/update//Update/#{goodsCount,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/goodsCount
@@ -301,6 +329,7 @@ SQL,JAVA
 "any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/insert//Insert/#{isDeleted,jdbcType=TINYINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/isDeleted
 "any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/insert//Insert/#{createTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/createTime
 "any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallShoppingCartItem.java//NewBeeMallShoppingCartItem/updateTime
+"any://src/main/resources/mapper/NewBeeMallShoppingCartItemMapper.xml//mapper/select//Select/Where/=/#{newBeeMallUserId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/dao/NewBeeMallShoppingCartItemMapper.java//NewBeeMallShoppingCartItemMapper/selectCountByUserId/newBeeMallUserId
 "any://src/main/resources/mapper/NewBeeMallOrderItemMapper.xml//mapper/update//Update/#{orderId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/orderId
 "any://src/main/resources/mapper/NewBeeMallOrderItemMapper.xml//mapper/update//Update/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/goodsId
 "any://src/main/resources/mapper/NewBeeMallOrderItemMapper.xml//mapper/update//Update/#{goodsName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallOrderItem.java//NewBeeMallOrderItem/goodsName
@@ -332,6 +361,8 @@ SQL,JAVA
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{updateUser,jdbcType=INTEGER}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/updateUser
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/updateTime
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/insert//Insert/#{goodsDetailContent,jdbcType=LONGVARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsDetailContent
+"any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/select//Select/Where/=/#{goodsName,jdbcType=VARCHAR}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallGoodsMapper.java//NewBeeMallGoodsMapper/selectByCategoryIdAndName/@Param\(""goodsName""\)"
+"any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/select//Select/Where/=/#{goodsCategoryId,jdbcType=BIGINT}","def://src/main/java/ltd/newbee/mall/dao/NewBeeMallGoodsMapper.java//NewBeeMallGoodsMapper/selectByCategoryIdAndName/@Param\(""goodsCategoryId""\)"
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsName,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsName
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsIntro,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsIntro
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsCoverImg,jdbcType=VARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsCoverImg
@@ -347,3 +378,4 @@ SQL,JAVA
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{updateTime,jdbcType=TIMESTAMP}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/updateTime
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{goodsDetailContent,jdbcType=LONGVARCHAR}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsDetailContent
 "any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/Where/=/#{goodsId,jdbcType=BIGINT}",def://src/main/java/ltd/newbee/mall/entity/NewBeeMallGoods.java//NewBeeMallGoods/goodsId
+any://src/main/resources/mapper/NewBeeMallGoodsMapper.xml//mapper/update//Update/#{sellStatus},"def://src/main/java/ltd/newbee/mall/dao/NewBeeMallGoodsMapper.java//NewBeeMallGoodsMapper/batchUpdateSellStatus/@Param\(""sellStatus""\)"
