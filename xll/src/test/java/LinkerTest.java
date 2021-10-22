@@ -26,8 +26,18 @@ public class LinkerTest {
   }
 
   @Test
-  public void inlineTest() {
+  public void inlineTest1() {
     matchTest(1, 1,"def://E:/code/Code2Graph/client/build/resources/test/android/butterknife/main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
+  }
+
+  @Test
+  public void inlineTest2() {
+    matchTest(2, 1,"use://blog/new.html//html/body/form/data-th-object//${postForm}");
+  }
+
+  @Test
+  public void inlineTest3() {
+    matchTest(2, 0,"def://BlogAdminController.java//.addAttribute//postForm");
   }
 
   @Test

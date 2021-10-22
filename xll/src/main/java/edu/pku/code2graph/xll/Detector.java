@@ -45,6 +45,11 @@ public class Detector {
   public void linkRule(Rule rule, List<Link> links) {
     Map<Capture, List<URI>> leftMap = scan(rule.getLeft());
     Map<Capture, List<URI>> rightMap = scan(rule.getRight());
+    if (rule.getRight().getInline().getIdentifier().startsWith("$")) {
+      System.out.println(rule);
+      System.out.println(leftMap);
+      System.out.println(rightMap);
+    }
     for (Capture capture : leftMap.keySet()) {
       List<URI> rightUris = rightMap.get(capture);
       if (rightUris == null) continue;
