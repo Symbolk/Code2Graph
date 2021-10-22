@@ -1257,9 +1257,23 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
                 new Edge(GraphUtil.eid(), EdgeType.ACCESSOR));
           }
 
-          Boolean addedToMap =
-              exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute");
-          parseArguments(root, mi.arguments(), addedToMap);
+          if (exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute")) {
+            //          parseArguments(root, mi.arguments(), addedToMap);
+            String identifier = "." + mi.getName().getIdentifier();
+            URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, identifier);
+            String arg = mi.arguments().get(0).toString();
+            uri.setInline(
+                new URI(
+                    Protocol.USE, Language.SQL, uriFilePath, arg.substring(1, arg.length() - 1)));
+
+            if (currentTemplate != "" && !javaURIS.containsKey(currentTemplate)) {
+              javaURIS.put(currentTemplate, new ArrayList<>());
+              javaURIS.get(currentTemplate).add(uri);
+            } else if (currentTemplate != "") {
+              if (!javaURIS.get(currentTemplate).contains(uri))
+                javaURIS.get(currentTemplate).add(uri);
+            }
+          }
 
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           // only internal invocation (or consider types, fields and local?)
