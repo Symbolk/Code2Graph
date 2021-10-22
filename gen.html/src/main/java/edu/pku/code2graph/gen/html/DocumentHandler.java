@@ -29,9 +29,6 @@ public class DocumentHandler extends AbstractHandler {
             ele.tagName(),
             ele.normalName(),
             uri);
-    logger.debug(
-        (ele instanceof Document) + "," + ele + "," + ele.tagName() + "," + ele.normalName());
-    logger.debug(uri.getIdentifier());
     graph.addVertex(en);
     stack.push(en);
     GraphUtil.addURI(Language.HTML, en.getUri(), en);

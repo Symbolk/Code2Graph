@@ -469,14 +469,18 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         generator.clearIdentifiers();
       }
 
+      identifier = annotation.getTypeName().getFullyQualifiedName();
       RelationNode node =
           new RelationNode(
               GraphUtil.nid(),
               Language.JAVA,
               NodeType.ANNOTATION,
               annotation.toString(),
-              annotation.getTypeName().getFullyQualifiedName());
+              identifier);
+      URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, identifier);
       node.setRange(computeRange(annotation));
+      node.setUri(uri);
+      GraphUtil.addURI(Language.JAVA, uri, node);
 
       graph.addVertex(node);
       graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
@@ -1028,10 +1032,10 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
           String content = URI.checkInvalidCh(((StringLiteral) exp).getLiteralValue());
-          URI inline = new URI(Protocol.USE, Language.ANY, "", content);
+          URI inline = new URI(Protocol.DEF, Language.ANY, "", content);
           URI uri = new URI(Protocol.DEF, Language.JAVA, uriFilePath, identifier, inline);
           root.setUri(uri);
-          GraphUtil.addURI(Language.ANY, uri, root);
+          GraphUtil.addURI(Language.JAVA, uri, root);
           break;
         }
       case ASTNode.QUALIFIED_NAME:
@@ -1208,6 +1212,11 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           MethodInvocation mi = (MethodInvocation) exp;
           root.setType(NodeType.METHOD_INVOCATION);
+
+          identifier = "." + mi.getName().getIdentifier();
+          URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, identifier);
+          root.setUri(uri);
+          GraphUtil.addURI(Language.JAVA, uri, root);
 
           // accessor
           if (mi.getExpression() != null) {
