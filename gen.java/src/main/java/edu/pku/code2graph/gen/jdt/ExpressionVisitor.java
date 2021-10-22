@@ -437,19 +437,19 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
       String query = null, idtf = null, filepath = null;
       Language lang = null;
-      if (annotationList.contains(((SimpleName) annotation.getTypeName()).getIdentifier())
-          && annotation instanceof SingleMemberAnnotation) {
-        query = ((SingleMemberAnnotation) annotation).getValue().toString();
-        query = query.substring(1, query.length() - 1);
-        if (annotatedNode.getUri() == null) {
-          query = null;
-        } else {
-          idtf =
-              annotatedNode.getUri().getIdentifier()
-                  + "/"
-                  + ((SimpleName) annotation.getTypeName()).getIdentifier();
-          lang = annotatedNode.getLanguage();
-          filepath = annotatedNode.getUri().getFile();
+      if (annotation.getTypeName() instanceof SimpleName) {
+        String anTypeSimpleName = ((SimpleName) annotation.getTypeName()).getIdentifier();
+        if (annotationList.contains(anTypeSimpleName)
+                && annotation instanceof SingleMemberAnnotation) {
+          query = ((SingleMemberAnnotation) annotation).getValue().toString();
+          query = query.substring(1, query.length() - 1);
+          if (annotatedNode.getUri() == null) {
+            query = null;
+          } else {
+            idtf = annotatedNode.getUri().getIdentifier() + "/" + anTypeSimpleName;
+            lang = annotatedNode.getLanguage();
+            filepath = annotatedNode.getUri().getFile();
+          }
         }
       }
 
