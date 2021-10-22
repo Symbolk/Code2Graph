@@ -45,20 +45,10 @@ public class Detector {
   public void linkRule(Rule rule, List<Link> links) {
     Map<Capture, List<URI>> leftMap = scan(rule.getLeft());
     Map<Capture, List<URI>> rightMap = scan(rule.getRight());
-    if (rule.getRight().getInline().getIdentifier().startsWith("$")) {
-      System.out.println(rule);
-      System.out.println(leftMap);
-      System.out.println(rightMap);
-    }
     for (Capture capture : leftMap.keySet()) {
       List<URI> rightUris = rightMap.get(capture);
       if (rightUris == null) continue;
       List<URI> leftUris = leftMap.get(capture);
-      if (leftUris.size() > 1 && rightUris.size() > 1) {
-        System.out.println("ambiguous xll found by " + capture.toString());
-        System.out.println(formatUriList(leftUris));
-        System.out.println(formatUriList(rightUris));
-      }
       for (URI leftUri : leftUris) {
         for (URI rightUri : rightUris) {
           links.add(new Link(leftUri, rightUri, rule));
