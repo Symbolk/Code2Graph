@@ -16,6 +16,14 @@ public class URIPattern extends URI {
     type = "Pattern";
   }
 
+  public URIPattern(String source) {
+    super(source);
+    if (inline != null) {
+      inline = new URIPattern(inline.toString().substring(1, inline.toString().length() - 1));
+    }
+    this.getLayers();
+  }
+
   public URIPattern(URIPattern pattern) {
     this.protocol = pattern.protocol;
     this.lang = pattern.lang;
@@ -65,6 +73,8 @@ public class URIPattern extends URI {
         source
             .replaceAll("\\\\", "\\\\\\\\")
             .replaceAll("\\.", "\\\\.")
+            .replaceAll("\\^", "\\\\^")
+            .replaceAll("\\$", "\\\\\\$")
             .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
             .replaceAll("\\*", "\\\\w+")

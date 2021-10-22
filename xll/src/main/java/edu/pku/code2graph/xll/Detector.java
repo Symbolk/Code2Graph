@@ -49,11 +49,6 @@ public class Detector {
       List<URI> rightUris = rightMap.get(capture);
       if (rightUris == null) continue;
       List<URI> leftUris = leftMap.get(capture);
-      if (leftUris.size() > 1 && rightUris.size() > 1) {
-        System.out.println("ambiguous xll found by " + capture.toString());
-        System.out.println(formatUriList(leftUris));
-        System.out.println(formatUriList(rightUris));
-      }
       for (URI leftUri : leftUris) {
         for (URI rightUri : rightUris) {
           links.add(new Link(leftUri, rightUri, rule));

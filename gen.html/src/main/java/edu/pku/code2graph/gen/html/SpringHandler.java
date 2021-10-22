@@ -37,9 +37,6 @@ public class SpringHandler extends AbstractHandler {
             ele instanceof Document ? "" : ele.tagName(),
             ele instanceof Document ? "" : ele.normalName(),
             uri);
-    logger.debug(
-        (ele instanceof Document) + "," + ele + "," + ele.tagName() + "," + ele.normalName());
-    logger.debug(uri.getIdentifier());
     graph.addVertex(en);
     stack.push(en);
 
