@@ -44,18 +44,24 @@ rules:
       identifier: "**"
       inline:
         identifier: '@+id\/(name)'
-  - - protocol: def
+    use:
+      lang: JAVA
+      file: "*.java"
+      identifier: R.id.(name)
+
+  - def:
       lang: Java
       file: "*.java"
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '${(name)}'
+
 # types of problems that does not need to be reported
 # 可以忽略的问题类型
 suppress:

@@ -5,7 +5,7 @@ rules:
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
@@ -18,7 +18,7 @@ rules:
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
@@ -31,7 +31,7 @@ rules:
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
@@ -44,7 +44,7 @@ rules:
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
@@ -57,7 +57,7 @@ rules:
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
@@ -70,7 +70,7 @@ rules:
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
@@ -83,7 +83,7 @@ rules:
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
@@ -96,7 +96,7 @@ rules:
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
