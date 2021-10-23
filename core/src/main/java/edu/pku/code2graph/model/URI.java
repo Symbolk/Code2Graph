@@ -32,8 +32,8 @@ public class URI {
     this.identifier = identifier;
   }
 
-  public URI(Protocol protocol, Language lang, String file, String identifier, URI inline) {
-    this.protocol = protocol;
+  public URI(boolean isRef, Language lang, String file, String identifier, URI inline) {
+    this.isRef = isRef;
     this.lang = lang;
     this.file = file;
     this.identifier = identifier;

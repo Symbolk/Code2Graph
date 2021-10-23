@@ -2,6 +2,7 @@ package edu.pku.code2graph.xll;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Config {
   private List<String> presets;
@@ -11,12 +12,13 @@ public class Config {
   private List<Rule> rules;
   private List<String> suppress;
 
-  public Config() {
-    presets = new ArrayList<>();
-    word_sep = "";
-    plugins = new ArrayList<>();
-    rules = new ArrayList<>();
-    suppress = new ArrayList<>();
+  public Config(Map<String, Object> config) {
+    Object rules_raw = config.getOrDefault("rules", new ArrayList<>());
+    rules = ((List<Map<String, Object>>) rules_raw).stream().map(Rule::new).toList();
+    presets = (List<String>) config.getOrDefault("presets", new ArrayList<>());
+    word_sep = (String) config.getOrDefault("word_sep", "");
+    plugins = (List<String>) config.getOrDefault("plugins", new ArrayList<>());
+    suppress = (List<String>) config.getOrDefault("suppress", new ArrayList<>());
   }
 
   public List<String> getPresets() {
