@@ -1260,11 +1260,11 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           if (exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute")) {
             //          parseArguments(root, mi.arguments(), addedToMap);
             String identifier = "." + mi.getName().getIdentifier();
-            URI uri = new URI(Protocol.USE, Language.JAVA, uriFilePath, identifier);
+            URI uri = new URI(true, Language.JAVA, uriFilePath, identifier);
             String arg = mi.arguments().get(0).toString();
             uri.setInline(
                 new URI(
-                    Protocol.USE, Language.SQL, uriFilePath, arg.substring(1, arg.length() - 1)));
+                    true, Language.SQL, uriFilePath, arg.substring(1, arg.length() - 1)));
 
             if (currentTemplate != "" && !javaURIS.containsKey(currentTemplate)) {
               javaURIS.put(currentTemplate, new ArrayList<>());
