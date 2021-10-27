@@ -29,7 +29,7 @@ public class URIPattern extends URI {
   }
 
   public URIPattern(Map<String, Object> pattern) {
-    this.lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toUpperCase());
+    this.lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
     this.file = (String) pattern.getOrDefault("file", "");
     this.identifier = (String) pattern.getOrDefault("identifier", "");
     if (pattern.get("inline") != null) {

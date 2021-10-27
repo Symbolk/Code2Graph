@@ -22,4 +22,15 @@ public class Rule {
     this.use.isRef = true;
     this.subrules = (List<Rule>) rule.getOrDefault("subrules", new ArrayList());
   }
+
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("(");
+    output.append(def.toString());
+    output.append(", ");
+    output.append(use.toString());
+    output.append(")");
+    return output.toString();
+  }
 }
