@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class LoaderTest {
-  private Graph<Node, Edge> generateGraph(String repoName, String configName) {
+  private void generateGraph(String repoName, String configName) {
     String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
     String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
     System.out.println("RepoPath: " + repoPath);
@@ -35,7 +35,7 @@ public class LoaderTest {
       default:
         c2g.addSupportedLanguage(Language.JAVA);
     }
-    return c2g.generateGraph();
+    GraphVizExporter.printAsDot(c2g.generateGraph());
   }
 
   @BeforeAll
@@ -81,6 +81,6 @@ public class LoaderTest {
 
   @Test
   public void saganTest() {
-    GraphVizExporter.printAsDot(generateGraph("springmvc/sagan", "springmvc/config.yml"));
+    generateGraph("springmvc/sagan", "springmvc/config.yml");
   }
 }

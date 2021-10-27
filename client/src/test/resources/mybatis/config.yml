@@ -1,10 +1,10 @@
 rules:
-  - - protocol: def
-      lang: Java
+  - use:
+      lang: JAVA
       file: '*.java'
       identifier: (namespace)Mapper/(method)
-    - protocol: any
-      lang: Xml
+    def:
+      lang: XML
       file: "(namespace)Mapper.xml"
       identifier: id
       inline:

@@ -3,41 +3,34 @@ package edu.pku.code2graph.xll;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-public class Rule extends ArrayList<Object> {
-  private URIPattern left;
-  private URIPattern right;
-  private List<Rule> subRules;
+public class Rule {
+  public final URIPattern def;
+  public final URIPattern use;
+  public final List<Rule> subrules;
 
-  public Rule() {}
-
-  public Rule(List<Object> list) {
-    super(list);
+  public Rule(URIPattern def, URIPattern use, List<Rule> subrules) {
+    this.def = def;
+    this.use = use;
+    this.subrules = subrules;
   }
 
-  public Rule(URIPattern left, URIPattern right, List<Rule> subRules) {
-    this.left = left;
-    this.right = right;
-    this.subRules = subRules;
+  public Rule(Map<String, Object> rule) {
+    this.def = new URIPattern((Map<String, Object>) rule.get("def"));
+    this.def.isRef = false;
+    this.use = new URIPattern((Map<String, Object>) rule.get("use"));
+    this.use.isRef = true;
+    this.subrules = (List<Rule>) rule.getOrDefault("subrules", new ArrayList());
   }
 
-  public URIPattern getPattern(int index) {
-    return new URIPattern((Map<String, Object>) get(index));
-  }
-
-  public URIPattern getLeft() {
-    if (left != null) return left;
-    return left = getPattern(0);
-  }
-
-  public URIPattern getRight() {
-    if (right != null) return right;
-    return right = getPattern(1);
-  }
-
-  public List<Rule> getSubRules() {
-    if (subRules != null) return subRules;
-    return subRules = subList(2, size()).stream().map(v -> new Rule((List<Object>) v)).collect(Collectors.toList());
+  @Override
+  public String toString() {
+    StringBuilder output = new StringBuilder();
+    output.append("(");
+    output.append(def.toString());
+    output.append(", ");
+    output.append(use.toString());
+    output.append(")");
+    return output.toString();
   }
 }

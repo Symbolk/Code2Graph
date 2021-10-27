@@ -1,34 +1,35 @@
 rules:
-  - - protocol: use
-      lang: Java
+  - use:
+      lang: JAVA
       file: "*.java"
       identifier: R.layout.(name)
-    - protocol: def
-      lang: Xml
+    def:
+      lang: XML
       file: "(name).xml"
       identifier: ""
-  - - protocol: use
-      lang: Java
+
+  - use:
+      lang: JAVA
       file: "*.java"
       identifier: (name)Binding
-    - protocol: def
-      lang: Xml
+    def:
+      lang: XML
       file: "(name).xml"
       identifier: ""
-    - - protocol: use
-        lang: Java
-        identifier: R.id.(name)
-      - protocol: def
-        lang: Xml
-        identifier: "**"
-        inline:
-          identifier: '@+id\/(name)'
-  - - protocol: use
-      lang: Java
+    subrules:
+      - use:
+          identifier: R.id.(name)
+        def:
+          identifier: "**"
+          inline:
+            identifier: '@+id\/(name)'
+
+  - use:
+      lang: JAVA
       file: "*.java"
       identifier: R.id.(name)
-    - protocol: def
-      lang: Xml
+    def:
+      lang: XML
       file: "*.xml"
       identifier: "**"
       inline:

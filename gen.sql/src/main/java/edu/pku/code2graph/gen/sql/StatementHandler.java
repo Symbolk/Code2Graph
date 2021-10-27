@@ -392,9 +392,9 @@ public class StatementHandler {
                               + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
                               + "/"
                               + (URI.checkInvalidCh(name));
-                      URI uri = new URI(Protocol.ANY, Language.SQL, uriFilePath, idtf);
+                      URI uri = new URI(false, Language.SQL, uriFilePath, idtf);
                       if (isInline) {
-                        URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
+                        URI wrapUri = new URI(false, wrapLang, uriFilePath, wrapIdentifier);
                         wrapUri.setInline(uri);
                         en.setUri(wrapUri);
                       } else {
@@ -424,9 +424,9 @@ public class StatementHandler {
                     + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
                     + "/"
                     + (URI.checkInvalidCh(colName));
-            URI uri = new URI(Protocol.ANY, Language.SQL, uriFilePath, idtf);
+            URI uri = new URI(false, Language.SQL, uriFilePath, idtf);
             if (isInline) {
-              URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
+              URI wrapUri = new URI(false, wrapLang, uriFilePath, wrapIdentifier);
               wrapUri.setInline(uri);
               en.setUri(wrapUri);
             } else {
@@ -591,9 +591,9 @@ public class StatementHandler {
     nodePool.put(snode, en);
     findParentEdge(snode, en);
 
-    URI uri = new URI(Protocol.USE, Language.SQL, uriFilePath, identifierMap.get(en));
+    URI uri = new URI(true, Language.SQL, uriFilePath, identifierMap.get(en));
     if (isInline) {
-      URI wrapUri = new URI(Protocol.ANY, wrapLang, uriFilePath, wrapIdentifier);
+      URI wrapUri = new URI(false, wrapLang, uriFilePath, wrapIdentifier);
       wrapUri.setInline(uri);
       en.setUri(wrapUri);
     } else {

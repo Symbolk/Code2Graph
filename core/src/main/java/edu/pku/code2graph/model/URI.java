@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
 public class URI {
-  protected Protocol protocol;
+  public boolean isRef;
   protected Language lang;
   protected String file;
   protected String identifier;
@@ -19,21 +19,21 @@ public class URI {
   protected String type = "URI";
 
   public URI() {
-    this.protocol = Protocol.ANY;
+    this.isRef = false;
     this.lang = Language.ANY;
     this.file = "";
     this.identifier = "";
   }
 
-  public URI(Protocol protocol, Language lang, String file, String identifier) {
-    this.protocol = protocol;
+  public URI(boolean isRef, Language lang, String file, String identifier) {
+    this.isRef = isRef;
     this.lang = lang;
     this.file = file;
     this.identifier = identifier;
   }
 
-  public URI(Protocol protocol, Language lang, String file, String identifier, URI inline) {
-    this.protocol = protocol;
+  public URI(boolean isRef, Language lang, String file, String identifier, URI inline) {
+    this.isRef = isRef;
     this.lang = lang;
     this.file = file;
     this.identifier = identifier;
@@ -42,8 +42,7 @@ public class URI {
 
   public URI(String source) {
     String[] result = source.split("//");
-    this.protocol =
-        Protocol.valueOfLabel(result[0].substring(0, result[0].length() - 1).toLowerCase());
+    this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");
     this.lang = Language.valueOfLabel(FilenameUtils.getExtension(result[1]).toLowerCase());
     this.file = result[1];
     this.identifier = result[2];
@@ -57,10 +56,6 @@ public class URI {
 
   protected void parseLayer(String source) {
     layers.add(source);
-  }
-
-  public Protocol getProtocol() {
-    return protocol;
   }
 
   public Language getLang() {
@@ -107,10 +102,6 @@ public class URI {
     return identifier.replaceAll("\\\\/", "").split("/").length;
   }
 
-  public void setProtocol(Protocol protocol) {
-    this.protocol = protocol;
-  }
-
   public void setLang(Language lang) {
     this.lang = lang;
   }
@@ -133,7 +124,7 @@ public class URI {
     StringBuilder output = new StringBuilder();
     output.append(type);
     output.append(" <");
-    output.append(protocol.toString());
+    output.append(isRef ? "use" : "def");
     output.append(":");
     for (String layer : getLayers()) {
       output.append("//").append(layer);

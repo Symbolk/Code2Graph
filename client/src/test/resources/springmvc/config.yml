@@ -1,95 +1,102 @@
 rules:
-  - - protocol: def
-      lang: Java
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '${(name)}'
-  - - protocol: def
-      lang: Java
+
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '${(name)}'
-  - - protocol: def
-      lang: Java
+
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '#{(name)}'
-  - - protocol: def
-      lang: Java
+
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '#{(name)}'
-  - - protocol: def
-      lang: Java
+
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '\*{(name)}'
-  - - protocol: def
-      lang: Java
+
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '\*{(name)}'
-  - - protocol: def
-      lang: Java
+
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .addAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
       inline:
         identifier: '@{(name)}'
-  - - protocol: def
-      lang: Java
+
+  - def:
+      lang: JAVA
       file: "*.java"
       identifier: .setAttribute
       inline:
         identifier: '(name)'
-    - protocol: use
+    use:
       lang: Html
       file: "*.html"
       identifier: "**"
