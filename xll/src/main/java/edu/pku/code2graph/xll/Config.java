@@ -5,20 +5,30 @@ import java.util.List;
 import java.util.Map;
 
 public class Config {
+  public List<List<Step>> jobs;
   private List<String> presets;
   private String word_sep;
   private List<String> plugins;
-  // FIXME: represent rules as objects
   private List<Rule> rules;
   private List<String> suppress;
 
   public Config(Map<String, Object> config) {
+    Object jobs_raw = config.getOrDefault("rules", new ArrayList<>());
+    jobs = ((List<List<Map<String, Object>>>) jobs_raw).stream().map(job -> job.stream().map(Step::new).toList()).toList();
     Object rules_raw = config.getOrDefault("rules", new ArrayList<>());
     rules = ((List<Map<String, Object>>) rules_raw).stream().map(Rule::new).toList();
     presets = (List<String>) config.getOrDefault("presets", new ArrayList<>());
     word_sep = (String) config.getOrDefault("word_sep", "");
     plugins = (List<String>) config.getOrDefault("plugins", new ArrayList<>());
     suppress = (List<String>) config.getOrDefault("suppress", new ArrayList<>());
+  }
+
+  public List<List<Step>> getJobs() {
+    return jobs;
+  }
+
+  public void setJobs(List<List<Step>> jobs) {
+    this.jobs = jobs;
   }
 
   public List<String> getPresets() {

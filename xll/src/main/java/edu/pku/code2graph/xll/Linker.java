@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class Detector {
+public class Linker {
   private final Set<URI> defs = new HashSet<>();
   private final Map<Language, Map<URI, List<Node>>> uriMap;
   private final Config config;
-  private final static Logger logger = LoggerFactory.getLogger(Detector.class);
+  private final static Logger logger = LoggerFactory.getLogger(Linker.class);
 
-  public Detector(Map<Language, Map<URI, List<Node>>> uriMap, String path) {
+  public Linker(Map<Language, Map<URI, List<Node>>> uriMap, String path) {
     this.uriMap = uriMap;
 
     // load config

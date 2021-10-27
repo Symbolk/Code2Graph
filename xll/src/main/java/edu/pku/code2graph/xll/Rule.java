@@ -1,18 +1,15 @@
 package edu.pku.code2graph.xll;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class Rule {
   public final URIPattern def;
   public final URIPattern use;
-  public final List<Rule> subrules;
 
-  public Rule(URIPattern def, URIPattern use, List<Rule> subrules) {
+  public Rule(URIPattern def, URIPattern use) {
     this.def = def;
     this.use = use;
-    this.subrules = subrules;
   }
 
   public Rule(Map<String, Object> rule) {
@@ -20,7 +17,6 @@ public class Rule {
     this.def.isRef = false;
     this.use = new URIPattern((Map<String, Object>) rule.get("use"));
     this.use.isRef = true;
-    this.subrules = (List<Rule>) rule.getOrDefault("subrules", new ArrayList());
   }
 
   @Override

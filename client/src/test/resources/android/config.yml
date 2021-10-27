@@ -1,5 +1,15 @@
+jobs:
+  - mode: sequence
+    steps:
+      - r-layout
+      - r-id
+  - - view-binding
+    - r-id
+  - - r-id
+
 rules:
-  - use:
+  r-layout:
+    use:
       lang: JAVA
       file: "*.java"
       identifier: R.layout.(name)
@@ -8,23 +18,32 @@ rules:
       file: "(name).xml"
       identifier: ""
 
-  - use:
+  temp1:
+    use:
       lang: JAVA
-      file: "*.java"
-      identifier: (name)Binding
+      file: '*.java'
+      identifier: '*[type=(name)]'
     def:
       lang: XML
-      file: "(name).xml"
-      identifier: ""
-    subrules:
-      - use:
-          identifier: R.id.(name)
-        def:
-          identifier: "**"
-          inline:
-            identifier: '@+id\/(name)'
+      file: '*.xml'
+      identifier: data/class
+      inline:
+        identifier: (name)
 
-  - use:
+  temp2:
+    use:
+      lang: JAVA
+      file: '*.java'
+      identifier: '.(name)'
+    def:
+      lang: XML
+      file: "*.xml"
+      identifier: "**"
+      inline:
+        identifier: '@+id\/(name)'
+
+  r-id:
+    use:
       lang: JAVA
       file: "*.java"
       identifier: R.id.(name)
@@ -34,3 +53,13 @@ rules:
       identifier: "**"
       inline:
         identifier: '@+id\/(name)'
+
+  view-binding:
+    use:
+      lang: JAVA
+      file: "*.java"
+      identifier: (name)Binding
+    def:
+      lang: XML
+      file: "(name).xml"
+      identifier: ""

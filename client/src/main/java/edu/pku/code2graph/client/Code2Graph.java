@@ -8,7 +8,7 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.xll.Detector;
+import edu.pku.code2graph.xll.Linker;
 import edu.pku.code2graph.xll.Link;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
@@ -196,8 +196,8 @@ public class Code2Graph {
 
       // build cross-language linking (XLL) edges
       logger.info("start detecting xll");
-      Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
-      List<Link> links = detector.linkAll();
+      Linker linker = new Linker(GraphUtil.getUriMap(), configPath);
+      List<Link> links = linker.linkAll();
       logger.info("- #xll = {}", links.size());
       this.xllLinks = links;
       // create uri-element map when create node
