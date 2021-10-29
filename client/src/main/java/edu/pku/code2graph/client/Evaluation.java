@@ -7,6 +7,7 @@ import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
@@ -56,34 +57,36 @@ public class Evaluation {
   private static GitService gitService = new GitServiceCGit();
   private static RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
-  public static void main(String[] args) throws ParserConfigurationException, SAXException {
+  public static void main(String[] args) {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     // set up
     addCommitIdToPath();
-    c2g = new Code2Graph(repoName, repoPath, configPath);
-    switch (framework) {
-      case "springmvc":
-        c2g.addSupportedLanguage(Language.JAVA);
-        c2g.addSupportedLanguage(Language.HTML);
-        break;
-      case "android":
-        c2g.addSupportedLanguage(Language.JAVA);
-        c2g.addSupportedLanguage(Language.XML);
-        break;
-      case "mybatis":
-        c2g.addSupportedLanguage(Language.JAVA);
-        c2g.addSupportedLanguage(Language.XML);
-        c2g.addSupportedLanguage(Language.SQL);
-        MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
-        break;
-      default:
-        c2g.addSupportedLanguage(Language.JAVA);
-    }
 
-    logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId(repoPath));
     try {
+      c2g = new Code2Graph(repoName, repoPath, configPath);
+      switch (framework) {
+        case "springmvc":
+          c2g.addSupportedLanguage(Language.JAVA);
+          c2g.addSupportedLanguage(Language.HTML);
+          break;
+        case "android":
+          c2g.addSupportedLanguage(Language.JAVA);
+          c2g.addSupportedLanguage(Language.XML);
+          break;
+        case "mybatis":
+          c2g.addSupportedLanguage(Language.JAVA);
+          c2g.addSupportedLanguage(Language.XML);
+          c2g.addSupportedLanguage(Language.SQL);
+          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+          break;
+        default:
+          c2g.addSupportedLanguage(Language.JAVA);
+      }
+
+      logger.info(
+          "Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId(repoPath));
       // for testXLLDetection, run once and save the output, then comment
       Graph<Node, Edge> graph = c2g.generateGraph();
       xllLinks = c2g.getXllLinks();
@@ -92,8 +95,8 @@ public class Evaluation {
 
       // compare by solely loading csv files
       testXLLDetection();
-      //      testCochange();
-    } catch (Exception e) {
+      //            testCochange();
+    } catch (ParserConfigurationException | SAXException | NonexistPathException | IOException e) {
       e.printStackTrace();
     }
   }

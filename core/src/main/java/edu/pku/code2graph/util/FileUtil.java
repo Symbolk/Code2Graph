@@ -16,6 +16,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FileUtil {
+  public static boolean checkExists(String path) {
+    return (new File(path)).exists();
+  }
+
   /**
    * Create a folder if not exists
    *

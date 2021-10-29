@@ -2,6 +2,7 @@ package edu.pku.code2graph.client;
 
 import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.diff.model.ChangeType;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -60,21 +61,22 @@ public class Code2Graph {
     this.supportedLanguages = new HashSet<>();
   }
 
-  public Code2Graph(String repoName, String repoPath) {
+  public Code2Graph(String repoName, String repoPath) throws NonexistPathException {
+    if (!FileUtil.checkExists(repoPath)) {
+      throw new NonexistPathException("Repo", repoPath);
+    }
     FileUtil.setRootPath(repoPath);
     this.repoName = repoName;
     this.repoPath = repoPath;
   }
 
-  public Code2Graph(String repoName, String repoPath, String xllConfigPath) {
-    FileUtil.setRootPath(repoPath);
-    this.repoName = repoName;
-    this.repoPath = repoPath;
+  public Code2Graph(String repoName, String repoPath, String xllConfigPath)
+      throws NonexistPathException {
+    this(repoName, repoPath);
+    if (!FileUtil.checkExists(xllConfigPath)) {
+      throw new NonexistPathException("XLL config", repoPath);
+    }
     this.xllConfigPath = xllConfigPath;
-  }
-
-  public void setSupportedLanguages(Set<Language> supportedLanguages) {
-    this.supportedLanguages = supportedLanguages;
   }
 
   public void addSupportedLanguage(Language supportedLanguage) {
