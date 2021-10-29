@@ -27,15 +27,13 @@ public class Code2Graph {
   // meta info
   private final String repoName;
   private final String repoPath;
-  private final String configPath; // path of the xll configuration
-  private String tempDir;
+  private String xllConfigPath; // optional: path for the xll configuration
 
   private Graph<Node, Edge> graph;
   private List<Link> xllLinks;
 
   // components
   private Generators generator;
-  private Differ differ;
 
   // options
   private Set<Language> supportedLanguages;
@@ -62,20 +60,17 @@ public class Code2Graph {
     this.supportedLanguages = new HashSet<>();
   }
 
-  public Code2Graph(String repoName, String repoPath, String configPath) {
+  public Code2Graph(String repoName, String repoPath) {
     FileUtil.setRootPath(repoPath);
     this.repoName = repoName;
     this.repoPath = repoPath;
-    this.configPath = configPath;
-    this.differ = new Differ(repoName, repoPath);
   }
 
-  public Code2Graph(String repoName, String repoPath, String configPath, String tempDir) {
+  public Code2Graph(String repoName, String repoPath, String xllConfigPath) {
     FileUtil.setRootPath(repoPath);
     this.repoName = repoName;
     this.repoPath = repoPath;
-    this.configPath = configPath;
-    this.differ = new Differ(repoName, repoPath, tempDir);
+    this.xllConfigPath = xllConfigPath;
   }
 
   public void setSupportedLanguages(Set<Language> supportedLanguages) {
@@ -107,8 +102,9 @@ public class Code2Graph {
   }
 
   /** Compare the old (A) and new (B) version graphs of the working tree */
-  public void compareGraphs() {
+  public void compareGraphs(String diffTempDir) {
     try {
+      Differ differ = new Differ(repoName, repoPath, diffTempDir);
       differ.buildGraphs();
       differ.compareGraphs();
     } catch (IOException e) {
@@ -116,17 +112,10 @@ public class Code2Graph {
     }
   }
 
-  /**
-   * Compare the old (A) and new (B) version graphs of a commit
-   *
-   * @param commitID
-   */
-  public void compareGraphs(String commitID) {
-    if (commitID.isEmpty()) {
-      // TODO check commit id validity
-      logger.error("Invalid commit id: " + commitID);
-    }
+  /** Compare the old (A) and new (B) version graphs of a commit */
+  public void compareGraphs(String diffTempDir, String commitID) {
     try {
+      Differ differ = new Differ(repoName, repoPath, diffTempDir);
       differ.buildGraphs(commitID);
       differ.compareGraphs();
     } catch (IOException e) {
@@ -195,33 +184,35 @@ public class Code2Graph {
       logger.info("- #edges = " + graph.edgeSet().size());
 
       // build cross-language linking (XLL) edges
-      logger.info("start detecting xll");
-      Detector detector = new Detector(GraphUtil.getUriMap(), configPath);
-      List<Link> links = detector.linkAll();
-      logger.info("- #xll = {}", links.size());
-      this.xllLinks = links;
-      // create uri-element map when create node
-      Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
-      for (Map.Entry<Language, Map<URI, List<Node>>> entry : uriMap.entrySet()) {
-        logger.info(
-            "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
-      }
+      if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
+        logger.info("start detecting xll");
+        Detector detector = new Detector(GraphUtil.getUriMap(), xllConfigPath);
+        List<Link> links = detector.linkAll();
+        logger.info("- #xll = {}", links.size());
+        this.xllLinks = links;
+        // create uri-element map when create node
+        Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
+        for (Map.Entry<Language, Map<URI, List<Node>>> entry : uriMap.entrySet()) {
+          logger.info(
+              "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
+        }
 
-      Type xllType = type("xll");
+        Type xllType = type("xll");
 
-      int i = 0;
-      for (Link link : links) {
-        i += 1;
-        logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
-        // get nodes by URI
-        List<Node> source = uriMap.get(link.left.getLang()).get(link.left);
-        List<Node> target = uriMap.get(link.right.getLang()).get(link.right);
-        Double weight = 1.0D;
+        int i = 0;
+        for (Link link : links) {
+          i += 1;
+          logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
+          // get nodes by URI
+          List<Node> source = uriMap.get(link.left.getLang()).get(link.left);
+          List<Node> target = uriMap.get(link.right.getLang()).get(link.right);
+          Double weight = 1.0D;
 
-        // create XLL edge
-        for (Node left : source) {
-          for (Node right : target) {
-            graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
+          // create XLL edge
+          for (Node left : source) {
+            for (Node right : target) {
+              graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
+            }
           }
         }
       }

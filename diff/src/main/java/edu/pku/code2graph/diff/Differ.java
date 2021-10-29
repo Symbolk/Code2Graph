@@ -118,6 +118,12 @@ public class Differ {
    * @param commitID
    */
   public void buildGraphs(String commitID) throws IOException {
+    if (commitID.isEmpty()) {
+      // TODO check commit id validity and throw exception
+      logger.error("Invalid commit id: " + commitID);
+      return;
+    }
+
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     diffFiles = repoAnalyzer.analyzeCommit(commitID);
     diffHunks = repoAnalyzer.getDiffHunks();

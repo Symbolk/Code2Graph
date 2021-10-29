@@ -1,14 +1,13 @@
 package edu.pku.code2graph.client;
 
-import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
+import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import org.apache.log4j.BasicConfigurator;
 import org.jgrapht.Graph;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,14 +29,16 @@ public class Main {
 
   private static void testDiff() {
     Code2Graph client =
-        new Code2Graph("cxf", System.getProperty("user.home") + "/coding/data/repos/cxf", tempDir);
+        new Code2Graph("cxf", System.getProperty("user.home") + "/coding/data/repos/cxf");
 
     // TODO: create a root project node if necessary
-    client.compareGraphs("ed4faad");
+    client.compareGraphs(tempDir, "ed4faad");
   }
 
   private static void testFiles() {
-    Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"), tempDir);
+    Code2Graph client = new Code2Graph("Code2Graph", System.getProperty("user.dir"));
+
+    client.addSupportedLanguage(Language.JAVA);
 
     // specify
     //    Generator generator = new JdtGenerator();
