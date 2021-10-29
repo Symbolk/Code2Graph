@@ -3,6 +3,7 @@ package edu.pku.code2graph.xll;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Config {
   private List<String> presets;
@@ -14,7 +15,7 @@ public class Config {
 
   public Config(Map<String, Object> config) {
     Object rules_raw = config.getOrDefault("rules", new ArrayList<>());
-    rules = ((List<Map<String, Object>>) rules_raw).stream().map(Rule::new).toList();
+    rules = ((List<Map<String, Object>>) rules_raw).stream().map(Rule::new).collect(Collectors.toList());;
     presets = (List<String>) config.getOrDefault("presets", new ArrayList<>());
     word_sep = (String) config.getOrDefault("word_sep", "");
     plugins = (List<String>) config.getOrDefault("plugins", new ArrayList<>());
