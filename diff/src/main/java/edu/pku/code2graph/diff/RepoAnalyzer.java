@@ -29,10 +29,10 @@ public class RepoAnalyzer {
    */
   public List<DiffFile> analyzeWorkingTree() {
     // analyze the diff files and hunks
-    GitService gitService = new GitServiceCGit();
-    ArrayList<DiffFile> diffFiles = gitService.getChangedFilesInWorkingTree(this.repoPath);
+    GitService gitService = new GitServiceCGit(repoPath);
+    ArrayList<DiffFile> diffFiles = gitService.getChangedFilesInWorkingTree();
     if (!diffFiles.isEmpty()) {
-      this.diffHunks = gitService.getDiffHunksInWorkingTree(this.repoPath, diffFiles);
+      this.diffHunks = gitService.getDiffHunksInWorkingTree(diffFiles);
       this.diffFiles = diffFiles;
     }
     return diffFiles;
@@ -45,11 +45,11 @@ public class RepoAnalyzer {
    */
   public List<DiffFile> analyzeCommit(String commitID) {
     // analyze the diff files and hunks
-    GitServiceCGit gitService = new GitServiceCGit();
+    GitServiceCGit gitService = new GitServiceCGit(repoPath);
     gitService.setIgnoreWhiteChanges(true);
-    ArrayList<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(this.repoPath, commitID);
+    ArrayList<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commitID);
     if (!diffFiles.isEmpty()) {
-      this.diffHunks = gitService.getDiffHunksAtCommit(this.repoPath, commitID, diffFiles);
+      this.diffHunks = gitService.getDiffHunksAtCommit(commitID, diffFiles);
       this.diffFiles = diffFiles;
     }
     return diffFiles;

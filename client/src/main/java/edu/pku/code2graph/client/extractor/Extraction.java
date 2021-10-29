@@ -31,7 +31,7 @@ public class Extraction {
           + repoName
           + ".csv";
 
-  private static GitService gitService = new GitServiceCGit();
+  private static GitService gitService = new GitServiceCGit(repoPath);
 
   public static void main(String[] args)
       throws IOException, ParserConfigurationException, SAXException {
@@ -58,7 +58,7 @@ public class Extraction {
   }
 
   private static void addCommitIdToPath() {
-    String commitID = gitService.getHEADCommitId(repoPath);
+    String commitID = gitService.getHEADCommitId();
     if (commitID != null) {
       gtPath =
           System.getProperty("user.dir")

@@ -18,6 +18,11 @@ import java.util.List;
 /** Implementation of helper functions based on the output of git commands. */
 public class GitServiceCGit implements GitService {
   private boolean ignoreWhiteChanges = false;
+  private final String repoPath;
+
+  public GitServiceCGit(String repoPath) {
+    this.repoPath = repoPath;
+  }
 
   public void setIgnoreWhiteChanges(boolean ignoreWhiteChanges) {
     this.ignoreWhiteChanges = ignoreWhiteChanges;
@@ -29,7 +34,7 @@ public class GitServiceCGit implements GitService {
    * @return
    */
   @Override
-  public ArrayList<DiffFile> getChangedFilesInWorkingTree(String repoPath) {
+  public ArrayList<DiffFile> getChangedFilesInWorkingTree() {
     // unstage the staged files first
     //    SysUtil.runSystemCommand(repoPath, "git", "restore", "--staged", ".");
     SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "HEAD", ".");
@@ -69,9 +74,7 @@ public class GitServiceCGit implements GitService {
                   charset,
                   relativePath,
                   relativePath,
-                  (fileType == FileType.BIN
-                      ? ""
-                      : getContentAtHEAD(charset, repoPath, relativePath)),
+                  (fileType == FileType.BIN ? "" : getContentAtHEAD(charset, relativePath)),
                   (fileType == FileType.BIN ? "" : FileUtil.readFileToString(absolutePath)));
           break;
         case ADDED:
@@ -90,7 +93,7 @@ public class GitServiceCGit implements GitService {
           break;
         case DELETED:
           // charset and filetype of the deleted is hard to detect
-          if (checkBinaryFileByDiff(repoPath, relativePath, charset)) {
+          if (checkBinaryFileByDiff(relativePath, charset)) {
             fileType = FileType.BIN;
           }
           DiffFile =
@@ -101,9 +104,7 @@ public class GitServiceCGit implements GitService {
                   StandardCharsets.UTF_8,
                   relativePath,
                   "",
-                  (fileType == FileType.BIN
-                      ? ""
-                      : getContentAtHEAD(charset, repoPath, relativePath)),
+                  (fileType == FileType.BIN ? "" : getContentAtHEAD(charset, relativePath)),
                   "");
           break;
         case RENAMED:
@@ -123,7 +124,7 @@ public class GitServiceCGit implements GitService {
                     charset,
                     oldPath,
                     newPath,
-                    (fileType == FileType.BIN ? "" : getContentAtHEAD(charset, repoPath, oldPath)),
+                    (fileType == FileType.BIN ? "" : getContentAtHEAD(charset, oldPath)),
                     (fileType == FileType.BIN ? "" : FileUtil.readFileToString(newAbsPath)));
           } else if (temp.length == 3) {
             // CXX/RXX aaa bbb
@@ -140,7 +141,7 @@ public class GitServiceCGit implements GitService {
                     charset,
                     oldPath,
                     newPath,
-                    (fileType == FileType.BIN ? "" : getContentAtHEAD(charset, repoPath, oldPath)),
+                    (fileType == FileType.BIN ? "" : getContentAtHEAD(charset, oldPath)),
                     (fileType == FileType.BIN ? "" : FileUtil.readFileToString(newAbsPath)));
           }
           break;
@@ -161,7 +162,7 @@ public class GitServiceCGit implements GitService {
    * @return
    */
   @Override
-  public ArrayList<DiffFile> getChangedFilesAtCommit(String repoPath, String commitID) {
+  public ArrayList<DiffFile> getChangedFilesAtCommit(String commitID) {
     // git diff <start_commit> <end_commit>
     // on Windows the ~ character must be used instead of ^
     String output =
@@ -171,7 +172,7 @@ public class GitServiceCGit implements GitService {
             "git",
             "diff",
             "--name-status",
-            getParentCommitID(repoPath, commitID),
+            getParentCommitID(commitID),
             commitID);
     // early return
     if (output.trim().isEmpty()) {
@@ -203,10 +204,10 @@ public class GitServiceCGit implements GitService {
                   relativePath,
                   (fileType == FileType.BIN
                       ? ""
-                      : getContentAtCommit(charset, repoPath, relativePath, commitID + "~")),
+                      : getContentAtCommit(charset, relativePath, commitID + "~")),
                   (fileType == FileType.BIN
                       ? ""
-                      : getContentAtCommit(charset, repoPath, relativePath, commitID)));
+                      : getContentAtCommit(charset, relativePath, commitID)));
           break;
         case ADDED:
         case UNTRACKED:
@@ -221,7 +222,7 @@ public class GitServiceCGit implements GitService {
                   "",
                   (fileType == FileType.BIN
                       ? ""
-                      : getContentAtCommit(charset, repoPath, relativePath, commitID)));
+                      : getContentAtCommit(charset, relativePath, commitID)));
           break;
         case DELETED:
           diffFile =
@@ -234,7 +235,7 @@ public class GitServiceCGit implements GitService {
                   "",
                   (fileType == FileType.BIN
                       ? ""
-                      : getContentAtCommit(charset, repoPath, relativePath, commitID + "~")),
+                      : getContentAtCommit(charset, relativePath, commitID + "~")),
                   "");
           break;
         case RENAMED:
@@ -254,10 +255,10 @@ public class GitServiceCGit implements GitService {
                     newPath,
                     (fileType == FileType.BIN
                         ? ""
-                        : getContentAtCommit(charset, repoPath, oldPath, commitID + "~")),
+                        : getContentAtCommit(charset, oldPath, commitID + "~")),
                     (fileType == FileType.BIN
                         ? ""
-                        : getContentAtCommit(charset, repoPath, newPath, commitID)));
+                        : getContentAtCommit(charset, newPath, commitID)));
           } else if (temp.length == 3) {
             // CXX/RXX aaa bbb
             String oldPath = temp[1];
@@ -273,10 +274,10 @@ public class GitServiceCGit implements GitService {
                     newPath,
                     (fileType == FileType.BIN
                         ? ""
-                        : getContentAtCommit(charset, repoPath, oldPath, commitID + "~")),
+                        : getContentAtCommit(charset, oldPath, commitID + "~")),
                     (fileType == FileType.BIN
                         ? ""
-                        : getContentAtCommit(charset, repoPath, newPath, commitID)));
+                        : getContentAtCommit(charset, newPath, commitID)));
           }
           break;
         default:
@@ -291,7 +292,7 @@ public class GitServiceCGit implements GitService {
   }
 
   @Override
-  public List<DiffHunk> getDiffHunksInWorkingTree(String repoPath, List<DiffFile> diffFiles) {
+  public List<DiffHunk> getDiffHunksInWorkingTree(List<DiffFile> diffFiles) {
     // unstage the staged files first
     //    SysUtil.runSystemCommand(repoPath, "git", "reset", "--mixed");
     SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "HEAD", ".");
@@ -346,7 +347,7 @@ public class GitServiceCGit implements GitService {
       diffs = parser.parse(new ByteArrayInputStream(diffOutput.toString().getBytes()));
     }
 
-    return generateDiffHunks(repoPath, diffs, diffFiles);
+    return generateDiffHunks(diffs, diffFiles);
   }
 
   private DiffHunk createDiffHunkForBinaryFile(DiffFile diffFile) {
@@ -392,8 +393,7 @@ public class GitServiceCGit implements GitService {
    * @param diffs
    * @return
    */
-  private List<DiffHunk> generateDiffHunks(
-      String repoPath, List<Diff> diffs, List<DiffFile> diffFiles) {
+  private List<DiffHunk> generateDiffHunks(List<Diff> diffs, List<DiffFile> diffFiles) {
     List<DiffHunk> allDiffHunks = new ArrayList<>();
     // one file, one diff
     // UNTRACKED/ADDED files won't be shown in the diff
@@ -566,13 +566,11 @@ public class GitServiceCGit implements GitService {
   /**
    * Get the diff hunks between one commit and its previous commit
    *
-   * @param repoPath
    * @param commitID
    * @return
    */
   @Override
-  public List<DiffHunk> getDiffHunksAtCommit(
-      String repoPath, String commitID, List<DiffFile> diffFiles) {
+  public List<DiffHunk> getDiffHunksAtCommit(String commitID, List<DiffFile> diffFiles) {
     // git diff <start_commit> <end_commit>
     // on Windows the ~ character must be used instead of ^
     String diffOutput =
@@ -587,7 +585,7 @@ public class GitServiceCGit implements GitService {
                 "--ignore-blank-lines",
                 "--ignore-space-change",
                 "-U0",
-                getParentCommitID(repoPath, commitID),
+                getParentCommitID(commitID),
                 commitID)
             : SysUtil.runSystemCommand(
                 repoPath, StandardCharsets.UTF_8, "git", "diff", "-U0", commitID + "~", commitID);
@@ -598,7 +596,7 @@ public class GitServiceCGit implements GitService {
       diffs = parser.parse(new ByteArrayInputStream(diffOutput.getBytes()));
     }
 
-    return generateDiffHunks(repoPath, diffs, diffFiles);
+    return generateDiffHunks(diffs, diffFiles);
   }
 
   /**
@@ -608,8 +606,8 @@ public class GitServiceCGit implements GitService {
    * @return
    */
   @Override
-  public String getContentAtHEAD(Charset charset, String repoDir, String relativePath) {
-    return SysUtil.runSystemCommand(repoDir, charset, "git", "show", "HEAD:" + relativePath);
+  public String getContentAtHEAD(Charset charset, String relativePath) {
+    return SysUtil.runSystemCommand(repoPath, charset, "git", "show", "HEAD:" + relativePath);
   }
 
   /**
@@ -619,10 +617,10 @@ public class GitServiceCGit implements GitService {
    * @return
    */
   @Override
-  public String getContentAtCommit(
-      Charset charset, String repoDir, String relativePath, String commitID) {
+  public String getContentAtCommit(Charset charset, String relativePath, String commitID) {
     // TOFIX: if there is any error, like not exist in this commit, error message will be content
-    return SysUtil.runSystemCommand(repoDir, charset, "git", "show", commitID + ":" + relativePath);
+    return SysUtil.runSystemCommand(
+        repoPath, charset, "git", "show", commitID + ":" + relativePath);
   }
 
   /**
@@ -646,10 +644,8 @@ public class GitServiceCGit implements GitService {
 
   /**
    * Make the working dir clean by dropping all the changes (which are backed up in tempDir/current)
-   *
-   * @param repoPath
    */
-  public boolean clearWorkingTree(String repoPath) {
+  public boolean clearWorkingTree() {
     SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "reset", "--hard");
     String status =
         SysUtil.runSystemCommand(
@@ -659,27 +655,27 @@ public class GitServiceCGit implements GitService {
   }
 
   @Override
-  public String getCommitterName(String repoDir, String commitID) {
+  public String getCommitterName(String commitID) {
     // git show HEAD | grep Author
     // git log -1 --format='%an' HASH
     // git show -s --format='%an' HASH
     return SysUtil.runSystemCommand(
-            repoDir, StandardCharsets.UTF_8, "git", "show", "-s", "--format='%an'", commitID)
+            repoPath, StandardCharsets.UTF_8, "git", "show", "-s", "--format='%an'", commitID)
         .trim()
         .replaceAll("'", "");
   }
 
   @Override
-  public String getCommitterEmail(String repoDir, String commitID) {
+  public String getCommitterEmail(String commitID) {
     // git log -1 --format='%ae' HASH
     // git show -s --format='%ae' HASH
     return SysUtil.runSystemCommand(
-            repoDir, StandardCharsets.UTF_8, "git", "show", "-s", "--format='%ae'", commitID)
+            repoPath, StandardCharsets.UTF_8, "git", "show", "-s", "--format='%ae'", commitID)
         .trim()
         .replaceAll("'", "");
   }
 
-  private boolean checkBinaryFileByDiff(String repoPath, String filePath, Charset charset) {
+  private boolean checkBinaryFileByDiff(String filePath, Charset charset) {
     String output =
         SysUtil.runSystemCommand(repoPath, charset, "git", "diff", "-U0", "--", filePath);
     // e.g. Binary files a/11.png and /dev/null differ
@@ -692,16 +688,16 @@ public class GitServiceCGit implements GitService {
 
   @Override
   public List<String> getCommitsChangedFile(
-      String repoDir, String filePath, String beforeCommit, int... maxNumber) {
+      String filePath, String beforeCommit, int... maxNumber) {
     String output = "";
     if (maxNumber.length == 0) {
       output =
           SysUtil.runSystemCommand(
-              repoDir, StandardCharsets.UTF_8, "git", "rev-list", beforeCommit, filePath);
+              repoPath, StandardCharsets.UTF_8, "git", "rev-list", beforeCommit, filePath);
     } else if (maxNumber.length == 1) {
       output =
           SysUtil.runSystemCommand(
-              repoDir,
+              repoPath,
               StandardCharsets.UTF_8,
               "git",
               "rev-list",
@@ -718,15 +714,14 @@ public class GitServiceCGit implements GitService {
   }
 
   @Override
-  public List<String> getCommitsChangedLineRange(
-      String repoDir, String filePath, int startLine, int endLine) {
+  public List<String> getCommitsChangedLineRange(String filePath, int startLine, int endLine) {
     // git log --pretty=format:"%H" -u -L <start_line_number>,<ending_line_number>:<filename>
     // --no-patch
     // git log--format=format:%H -u -L <start_line_number>,<ending_line_number>:<filename>
     // --no-patch
     String output =
         SysUtil.runSystemCommand(
-            repoDir,
+            repoPath,
             StandardCharsets.UTF_8,
             "git",
             "log",
@@ -748,11 +743,11 @@ public class GitServiceCGit implements GitService {
    * @param commitID
    * @return
    */
-  private String getParentCommitID(String repoDir, String commitID) {
+  private String getParentCommitID(String commitID) {
     // TODO: refactor GitService to save repoDir and fixed data
     String firstCommitID =
         SysUtil.runSystemCommand(
-                repoDir, StandardCharsets.UTF_8, "git", "rev-list", "--max-parents=0", "HEAD")
+                repoPath, StandardCharsets.UTF_8, "git", "rev-list", "--max-parents=0", "HEAD")
             .trim();
     if (commitID.equals(firstCommitID)) {
       return "4b825dc642cb6eb9a060e54bf8d69288fbee4904"; // what the fck?
@@ -762,17 +757,17 @@ public class GitServiceCGit implements GitService {
   }
 
   @Override
-  public String getHEADCommitId(String repoDir) {
+  public String getHEADCommitId() {
     String output =
         SysUtil.runSystemCommand(
-            repoDir, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
+            repoPath, StandardCharsets.UTF_8, "git", "rev-parse", "--short", "HEAD");
     return output.trim();
   }
 
   @Override
-  public boolean checkoutByCommitID(String repoDir, String commitID) {
-    SysUtil.runSystemCommand(repoDir, StandardCharsets.UTF_8, "git", "checkout", "-f", commitID);
-    String curId = getHEADCommitId(repoDir);
+  public boolean checkoutByCommitID(String commitID) {
+    SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "checkout", "-f", commitID);
+    String curId = getHEADCommitId();
     return curId.equals(commitID);
   }
 }

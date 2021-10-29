@@ -2,7 +2,6 @@ package edu.pku.code2graph.diff.util;
 
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.DiffHunk;
-import edu.pku.code2graph.util.SysUtil;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryBuilder;
@@ -12,7 +11,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -23,41 +21,45 @@ import java.util.List;
  * faster due to the saving for spawning OS process in shell script.
  */
 public class GitServiceJGit implements GitService {
+  private final String repoPath;
+
+  public GitServiceJGit(String repoPath) {
+    this.repoPath = repoPath;
+  }
+
   @Override
-  public ArrayList<DiffFile> getChangedFilesInWorkingTree(String repoPath) {
+  public ArrayList<DiffFile> getChangedFilesInWorkingTree() {
     return null;
   }
 
   @Override
-  public ArrayList<DiffFile> getChangedFilesAtCommit(String repoPath, String commitID) {
+  public ArrayList<DiffFile> getChangedFilesAtCommit(String commitID) {
     return null;
   }
 
   @Override
-  public List<DiffHunk> getDiffHunksInWorkingTree(String repoPath, List<DiffFile> diffFiles) {
+  public List<DiffHunk> getDiffHunksInWorkingTree(List<DiffFile> diffFiles) {
     return null;
   }
 
   @Override
-  public List<DiffHunk> getDiffHunksAtCommit(
-      String repoPath, String commitID, List<DiffFile> diffFiles) {
+  public List<DiffHunk> getDiffHunksAtCommit(String commitID, List<DiffFile> diffFiles) {
     return null;
   }
 
   @Override
-  public String getContentAtHEAD(Charset charset, String repoDir, String relativePath) {
+  public String getContentAtHEAD(Charset charset, String relativePath) {
     return null;
   }
 
   @Override
-  public String getContentAtCommit(
-      Charset charset, String repoDir, String relativePath, String commitID) {
+  public String getContentAtCommit(Charset charset, String relativePath, String commitID) {
     return null;
   }
 
   @Override
-  public String getCommitterName(String repoDir, String commitID) {
-    RevCommit commit = getCommitFromID(repoDir, commitID);
+  public String getCommitterName(String commitID) {
+    RevCommit commit = getCommitFromID(commitID);
     if (null != commit) {
       return commit.getAuthorIdent().getName();
     }
@@ -65,16 +67,16 @@ public class GitServiceJGit implements GitService {
   }
 
   @Override
-  public String getCommitterEmail(String repoDir, String commitID) {
-    RevCommit commit = getCommitFromID(repoDir, commitID);
+  public String getCommitterEmail(String commitID) {
+    RevCommit commit = getCommitFromID(commitID);
     if (null != commit) {
       return commit.getAuthorIdent().getEmailAddress();
     }
     return "";
   }
 
-  private RevCommit getCommitFromID(String repoDir, String commitID) {
-    Path path = Paths.get(repoDir);
+  private RevCommit getCommitFromID(String commitID) {
+    Path path = Paths.get(repoPath);
     try (Git git = Git.open(path.toFile())) {
       Repository repository = git.getRepository();
       RevWalk walk = new RevWalk(repository);
@@ -141,23 +143,22 @@ public class GitServiceJGit implements GitService {
 
   @Override
   public List<String> getCommitsChangedFile(
-      String repoDir, String filePath, String beforeCommit, int... maxNumber) {
+      String filePath, String beforeCommit, int... maxNumber) {
     return new ArrayList<>();
   }
 
   @Override
-  public List<String> getCommitsChangedLineRange(
-      String repoDir, String filePath, int startLine, int endLine) {
+  public List<String> getCommitsChangedLineRange(String filePath, int startLine, int endLine) {
     return new ArrayList<>();
   }
 
   @Override
-  public String getHEADCommitId(String repoDir) {
+  public String getHEADCommitId() {
     return "HEAD";
   }
 
   @Override
-  public boolean checkoutByCommitID(String repoDir, String commitID) {
+  public boolean checkoutByCommitID(String commitID) {
     return false;
   }
 }

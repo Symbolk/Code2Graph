@@ -81,7 +81,7 @@ public class CoChangeHint {
     repoName = Config.repoName;
     repoPath = Config.repoPath;
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
-    GitService gitService = new GitServiceCGit();
+    GitService gitService = new GitServiceCGit(repoPath);
 
     System.out.printf("Processing repo: %s at %s %n", repoName, repoPath);
     List<String> dataFilePaths =
@@ -777,7 +777,7 @@ public class CoChangeHint {
     Counter<Triple<String, String, String>> membersCounter = new Counter<>();
 
     // note that here "HEAD" is the tested commit, since we have checkout to it before
-    List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, path, "HEAD", 10);
+    List<String> commitIDs = gitService.getCommitsChangedFile(path, "HEAD", 10);
     int numAllCommits = commitIDs.size();
     // count the number of co-change commits
 
@@ -868,7 +868,7 @@ public class CoChangeHint {
     Map<String, Integer> commitCounter = new HashMap<>();
     for (String xmlFilePath : xmlDiffs.keySet()) {
       // note that here "HEAD" is the tested commit, since we have checkout to it before
-      List<String> commitIDs = gitService.getCommitsChangedFile(repoPath, xmlFilePath, "HEAD", 10);
+      List<String> commitIDs = gitService.getCommitsChangedFile(xmlFilePath, "HEAD", 10);
       for (String commitID : commitIDs) {
         commitCounter.merge(commitID, 1, Integer::sum);
       }

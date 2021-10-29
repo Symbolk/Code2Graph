@@ -54,7 +54,7 @@ public class Evaluation {
   private static Code2Graph c2g = null;
   private static List<Link> xllLinks = new ArrayList<>();
 
-  private static GitService gitService = new GitServiceCGit();
+  private static GitService gitService = new GitServiceCGit(repoPath);
   private static RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
 
   public static void main(String[] args) {
@@ -85,8 +85,7 @@ public class Evaluation {
           c2g.addSupportedLanguage(Language.JAVA);
       }
 
-      logger.info(
-          "Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId(repoPath));
+      logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
       Graph<Node, Edge> graph = c2g.generateGraph();
       xllLinks = c2g.getXllLinks();
@@ -117,7 +116,7 @@ public class Evaluation {
 
     if (commitID != null) {
       otPath = gtPath.replace("groundtruth", "output");
-      if (!gitService.checkoutByCommitID(repoPath, commitID)) {
+      if (!gitService.checkoutByCommitID(commitID)) {
         logger.error("Failed to checkout to {}", commitID);
       } else {
         logger.info("Successfully checkout to {}", commitID);
