@@ -5,11 +5,14 @@ import edu.pku.code2graph.diff.textualdiffparser.api.DiffParser;
 import edu.pku.code2graph.diff.textualdiffparser.api.UnifiedDiffParser;
 import edu.pku.code2graph.diff.textualdiffparser.api.model.Diff;
 import edu.pku.code2graph.diff.textualdiffparser.api.model.Line;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.SysUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -20,7 +23,15 @@ public class GitServiceCGit implements GitService {
   private boolean ignoreWhiteChanges = false;
   private final String repoPath;
 
-  public GitServiceCGit(String repoPath) {
+  public GitServiceCGit(String repoPath)
+      throws NonexistPathException, IOException, InvalidRepoException {
+    if (!FileUtil.checkExists(repoPath)) {
+      throw new NonexistPathException("Repo", repoPath);
+    }
+    // check if the given path is the root of a git repo
+    if (!FileUtil.isSubDirectory(".git", repoPath)) {
+      throw new InvalidRepoException(repoPath);
+    }
     this.repoPath = repoPath;
   }
 

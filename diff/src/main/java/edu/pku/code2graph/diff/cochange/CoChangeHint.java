@@ -9,6 +9,8 @@ import edu.pku.code2graph.diff.util.Counter;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -70,7 +72,8 @@ public class CoChangeHint {
             });
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args)
+      throws IOException, NonexistPathException, InvalidRepoException {
 
     List<String> focusList = new ArrayList<>();
     //    focusList.add("111a0f9f171341f2c35f1c10cdddcb9dcf53f405");

@@ -7,6 +7,7 @@ import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
+import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
@@ -51,21 +52,23 @@ public class Evaluation {
   private static String gtPath = gtDir + "/" + repoName + ".csv";
   private static String otPath = gtPath.replace("groundtruth", "output");
 
-  private static Code2Graph c2g = null;
+  private static Code2Graph c2g;
   private static List<Link> xllLinks = new ArrayList<>();
 
-  private static GitService gitService = new GitServiceCGit(repoPath);
-  private static RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
+  private static GitService gitService;
+  private static RepoAnalyzer repoAnalyzer;
 
   public static void main(String[] args) {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     // set up
-    addCommitIdToPath();
-
     try {
+      gitService = new GitServiceCGit(repoPath);
+      repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
       c2g = new Code2Graph(repoName, repoPath, configPath);
+
+      addCommitIdToPath();
       switch (framework) {
         case "springmvc":
           c2g.addSupportedLanguage(Language.JAVA);
@@ -95,7 +98,11 @@ public class Evaluation {
       // compare by solely loading csv files
       testXLLDetection();
       //            testCochange();
-    } catch (ParserConfigurationException | SAXException | NonexistPathException | IOException e) {
+    } catch (ParserConfigurationException
+        | SAXException
+        | NonexistPathException
+        | IOException
+        | InvalidRepoException e) {
       e.printStackTrace();
     }
   }

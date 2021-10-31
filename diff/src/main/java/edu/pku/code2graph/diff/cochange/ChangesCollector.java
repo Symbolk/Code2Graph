@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.FileType;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.util.FileUtil;
 import org.apache.log4j.PropertyConfigurator;
 import org.json.simple.JSONArray;
@@ -20,9 +22,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-/**
- * Collect xml and java changes/diffs in each commit as the Ground Truth
- */
+/** Collect xml and java changes/diffs in each commit as the Ground Truth */
 public class ChangesCollector {
 
   static Logger logger = LoggerFactory.getLogger(ChangesCollector.class);
@@ -39,12 +39,13 @@ public class ChangesCollector {
     repoPath = Config.repoPath;
     try {
       collectChangesForRepo();
-    } catch (IOException e) {
+    } catch (IOException | NonexistPathException | InvalidRepoException e) {
       e.printStackTrace();
     }
   }
 
-  private static void collectChangesForRepo() throws IOException {
+  private static void collectChangesForRepo()
+      throws IOException, NonexistPathException, InvalidRepoException {
 
     List<String> focusList = new ArrayList<>();
     //    focusList.add("111a0f9f171341f2c35f1c10cdddcb9dcf53f405");
