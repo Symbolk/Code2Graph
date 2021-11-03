@@ -252,7 +252,7 @@ public class Evaluation {
       // get commits that changed the line range (range evolution history)
       List<String> commits =
           gitService.getCommitsChangedLineRange(
-              repoPath, link.left.getFile(), range.getStartLine(), range.getEndLine());
+              link.left.getFile(), range.getStartLine(), range.getEndLine());
 
       // extract the changed files in each commit
       for (String commit : commits) {
