@@ -29,9 +29,11 @@ public class GitServiceCGit implements GitService {
       throw new NonexistPathException("Repo", repoPath);
     }
     // check if the given path is the root of a git repo
-    if (!FileUtil.isSubDirectory(".git", repoPath)) {
+    File file = new File(repoPath + File.separator + ".git");
+    if (!file.exists() || !file.isDirectory()) {
       throw new InvalidRepoException(repoPath);
     }
+
     this.repoPath = repoPath;
   }
 

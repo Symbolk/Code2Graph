@@ -20,23 +20,6 @@ public class FileUtil {
     return (new File(path)).exists();
   }
 
-  public static boolean isSubDirectory(String childPath, String basePath) throws IOException {
-    File base = new File(basePath);
-    File child = new File(childPath);
-
-    base = base.getCanonicalFile();
-    child = child.getCanonicalFile();
-
-    File parentFile = child;
-    while (parentFile != null) {
-      if (base.equals(parentFile)) {
-        return true;
-      }
-      parentFile = parentFile.getParentFile();
-    }
-    return false;
-  }
-
   /**
    * Create a folder if not exists
    *
