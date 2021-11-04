@@ -3,7 +3,6 @@ package edu.pku.code2graph.client;
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import edu.pku.code2graph.diff.RepoAnalyzer;
-import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
@@ -12,7 +11,7 @@ import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.Range;
+import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,11 +28,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class Evaluation {
   private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
@@ -146,8 +141,7 @@ public class Evaluation {
     writer.writeRecord(headers);
     for (Link link : xllLinks) {
       String leftURI = link.left.toString(), rightURI = link.right.toString();
-      String left = leftURI.substring(5, leftURI.length() - 1),
-          right = rightURI.substring(5, rightURI.length() - 1);
+      String left = prettifyURI(link.left), right = prettifyURI(link.right);
       // should rule be saved too?
       String[] record = {left, right};
       writer.writeRecord(record);
@@ -230,58 +224,100 @@ public class Evaluation {
   }
 
   /** Co-change file prediction how to reduce noise? (xml --> java --> java, java) */
-  private static void testCochange() {
+  private static void testCochange() throws IOException {
     logger.info("Testing cochange prediction for repo: " + repoName);
+    // load xll links from output
+    CsvReader otReader = new CsvReader(gtPath);
+
+    otReader.readHeaders();
+    String[] otHeaders = otReader.getHeaders();
+    if (otHeaders.length != 2) {
+      logger.error("Output header num expected 2, but " + otHeaders.length);
+      return;
+    }
+    Set<Link> links = new HashSet<>();
+    while (otReader.readRecord()) {
+      links.add(new Link(new URI(otReader.get(0)), new URI(otReader.get(1))));
+    }
+    otReader.close();
+
     // 1. for recent 100 historical multi-lang commits --> predict
     // gumtree diff to get the changed URI/diff line range to get the URI
 
+    // CIA --> EC + SC
     // 2. for each xll, find relevant commits --> filter to get proper commits --> predict
-    var uriMap = GraphUtil.getUriMap();
-    int numCommits = 0;
+    // A --> conf-commits(A&B) | commits(A) 4/5
+    // mybatis --> analyze --> insights
+    // 1. co-change suggestion 2. mining confidence
+
+    String filePath = otPath.replace(".csv", ".conf.csv");
+    File outFile = new File(filePath);
+    if (!outFile.exists()) {
+      outFile.createNewFile();
+    }
+    CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
+    String[] headers = {"confLR", "confRL", "left", "right"};
+
+    writer.writeRecord(headers);
+    List<String[]> results = new ArrayList<>();
 
     for (Link link : xllLinks) {
       // get line range of the first corresponding node
       Language leftLang = link.left.getLang();
       Language rightLang = link.right.getLang();
-      List<Node> nodes = uriMap.get(leftLang).getOrDefault(link.left, new ArrayList<>());
-      if (nodes.isEmpty()) {
-        continue;
-      }
-      Range range = nodes.get(0).getRange();
 
-      // get commits that changed the line range (range evolution history)
-      List<String> commits =
-          gitService.getCommitsChangedLineRange(
-              link.left.getFile(), range.getStartLine(), range.getEndLine());
+      List<String> commitsLeft = getHistoricalCommitsChanged(link.left);
+      List<String> commitsRight = getHistoricalCommitsChanged(link.right);
+      int intersectionNum =
+          MetricUtil.intersectSize(new HashSet<>(commitsLeft), new HashSet<>(commitsRight));
 
-      // extract the changed files in each commit
-      for (String commit : commits) {
-        List<DiffFile> diffFiles = repoAnalyzer.analyzeCommit(commit);
-        // filter commits for supported lang
-        List<DiffFile> supportedLangDiffFiles =
-            diffFiles.stream()
-                .filter(
-                    f ->
-                        !f.getARelativePath().startsWith(".")
-                            && !f.getBRelativePath().startsWith(".") // filter hidden files
-                            && f.getFileType().extension.equals(rightLang.extension))
-                .collect(Collectors.toList());
-        if (supportedLangDiffFiles.isEmpty()) {
-          continue;
-        } else {
-          // count the number of valid commits
-          numCommits += 1;
+      // compute the confidence from l to r and r to l
+      // l --> r = l&r/l
+      double confLR = MetricUtil.computeProportion(intersectionNum, commitsLeft.size());
+      double confRL = MetricUtil.computeProportion(intersectionNum, commitsRight.size());
 
-          // predict cochanged file in right
-
-        }
-      }
+      // prepend results to the link
+      String[] record = {confLR + "", confRL + "", prettifyURI(link.left), prettifyURI(link.right)};
+      System.out.println(Arrays.toString(record));
+      results.add(record);
     }
 
-    // given changes in lang left, mask changes in lang right
+    // save to csv file
+    for (String[] record : results) {
+      writer.writeRecord(record);
+    }
+    writer.close();
 
-    // predict co-changes in B according to code coupling
+    // check commits that did not co-change highly-confident links for inconsistency checking
 
+    // discuss whether patterns can be mined from highly-confident co-changes
+
+  }
+
+  private static String prettifyURI(URI uri) {
+    return uri.toString().substring(5, uri.toString().length() - 1);
+  }
+
+  /**
+   * Get the historical commits that ever changed the uri
+   *
+   * @param uri
+   * @return
+   */
+  private static List<String> getHistoricalCommitsChanged(URI uri) {
+
+    List<Node> nodes =
+        GraphUtil.getUriMap().get(uri.getLang()).getOrDefault(uri, new ArrayList<>());
+    if (nodes.isEmpty()) {
+      return new ArrayList<>();
+    }
+    // TODO: use full range
+    //    Range range = nodes.get(0).getRange();
+
+    // get commits that changed the line range (range evolution history)
+    return gitService.getCommitsChangedFile(uri.getFile(), "HEAD");
+    //    return gitService.getCommitsChangedLineRange(
+    //        repoPath, uri.getFile(), range.getStartLine(), range.getEndLine());
   }
 
   /** Need to find 10-20 historical inconsistency-fixing commits */
