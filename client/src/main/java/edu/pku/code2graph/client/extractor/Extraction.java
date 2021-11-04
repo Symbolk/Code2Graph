@@ -3,6 +3,8 @@ package edu.pku.code2graph.client.extractor;
 import edu.pku.code2graph.client.Evaluation;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
@@ -31,12 +33,18 @@ public class Extraction {
           + repoName
           + ".csv";
 
-  private static GitService gitService = new GitServiceCGit();
+  private static GitService gitService;
 
   public static void main(String[] args)
       throws IOException, ParserConfigurationException, SAXException {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
+
+    try {
+      gitService = new GitServiceCGit(repoPath);
+    } catch (NonexistPathException | IOException | InvalidRepoException e) {
+      e.printStackTrace();
+    }
 
     addCommitIdToPath();
 
@@ -58,7 +66,7 @@ public class Extraction {
   }
 
   private static void addCommitIdToPath() {
-    String commitID = gitService.getHEADCommitId(repoPath);
+    String commitID = gitService.getHEADCommitId();
     if (commitID != null) {
       gtPath =
           System.getProperty("user.dir")

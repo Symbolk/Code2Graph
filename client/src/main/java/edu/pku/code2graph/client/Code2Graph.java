@@ -2,6 +2,7 @@ package edu.pku.code2graph.client;
 
 import edu.pku.code2graph.diff.Differ;
 import edu.pku.code2graph.diff.model.ChangeType;
+import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
@@ -109,7 +110,7 @@ public class Code2Graph {
       Differ differ = new Differ(repoName, repoPath, diffTempDir);
       differ.buildGraphs();
       differ.compareGraphs();
-    } catch (IOException e) {
+    } catch (NonexistPathException | InvalidRepoException | IOException e) {
       e.printStackTrace();
     }
   }
@@ -120,7 +121,7 @@ public class Code2Graph {
       Differ differ = new Differ(repoName, repoPath, diffTempDir);
       differ.buildGraphs(commitID);
       differ.compareGraphs();
-    } catch (IOException e) {
+    } catch (NonexistPathException | InvalidRepoException | IOException e) {
       e.printStackTrace();
     }
   }

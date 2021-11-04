@@ -5,6 +5,8 @@ import edu.pku.code2graph.diff.model.DiffHunk;
 import edu.pku.code2graph.diff.model.Mapping;
 import edu.pku.code2graph.diff.model.Version;
 import edu.pku.code2graph.diff.util.MetricUtil;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -83,8 +85,7 @@ public class Differ {
   }
 
   /** Analyze changes in working directory */
-  public void buildGraphs() throws IOException {
-
+  public void buildGraphs() throws IOException, NonexistPathException, InvalidRepoException {
     RepoAnalyzer repoAnalyzer = new RepoAnalyzer(repoName, repoPath);
     diffFiles = repoAnalyzer.analyzeWorkingTree();
     diffHunks = repoAnalyzer.getDiffHunks();
@@ -117,7 +118,8 @@ public class Differ {
    *
    * @param commitID
    */
-  public void buildGraphs(String commitID) throws IOException {
+  public void buildGraphs(String commitID)
+      throws IOException, NonexistPathException, InvalidRepoException {
     if (commitID.isEmpty()) {
       // TODO check commit id validity and throw exception
       logger.error("Invalid commit id: " + commitID);
