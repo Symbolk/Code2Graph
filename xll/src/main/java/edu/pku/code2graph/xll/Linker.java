@@ -10,10 +10,24 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class Linker {
-  private final Set<URI> defs = new HashSet<>();
   private final Map<Language, Map<URI, List<Node>>> uriMap;
   private final Config config;
   private final static Logger logger = LoggerFactory.getLogger(Linker.class);
+
+  /**
+   * visited def uris
+   */
+  private Set<URI> visited;
+
+  /**
+   * matched xlls
+   */
+  private List<Link> links;
+
+  /**
+   * variable contexts
+   */
+  private Map<String, Set<Capture>> contexts;
 
   public Linker(Map<Language, Map<URI, List<Node>>> uriMap, String path) {
     this.uriMap = uriMap;
@@ -28,7 +42,7 @@ public class Linker {
     Map<URI, List<Node>> uris = uriMap.get(pattern.getLang());
     if (uris == null) return hashMap;
     for (URI uri : uris.keySet()) {
-      if (defs.contains(uri)) continue;
+      if (visited.contains(uri)) continue;
       Capture capture = pattern.match(uri);
       if (capture == null) continue;
       hashMap.computeIfAbsent(capture, k -> new ArrayList<>()).add(uri);
@@ -41,44 +55,62 @@ public class Linker {
     return "[ " + String.join(",\n  ", segments.toArray(String[]::new)) + " ]";
   }
 
-  public void linkRule(Rule rule, List<Link> links) {
-    Map<Capture, List<URI>> defMap = scan(rule.def);
+  private void linkRule(Rule rule, Map<String, String> variables, Set<Capture> captures) {
+    // TODO apply variables for rule
+
+    // scan for use patterns
     Map<Capture, List<URI>> useMap = scan(rule.use);
+    if (useMap.size() == 0) return;
+
+    // scan for def patterns
+    Map<Capture, List<URI>> defMap = scan(rule.def);
     for (Capture capture : defMap.keySet()) {
+      // def capture should match use capture
       List<URI> uses = useMap.get(capture);
       if (uses == null) continue;
+
+      // check ambiguous xlls
       List<URI> defs = defMap.get(capture);
       if (defs.size() > 1) {
         System.out.println("ambiguous xll found by " + capture.toString());
         System.out.println(formatUriList(defs));
         System.out.println(formatUriList(uses));
       }
+
+      // update runtime properties
+      captures.add(capture);
       for (URI def : defs) {
         for (URI use : uses) {
           links.add(new Link(def, use, rule));
-          for (Rule subRule : rule.subrules) {
-            URIPattern newDef = new URIPattern(subRule.def);
-            URIPattern newUse = new URIPattern(subRule.use);
-            newDef.setFile(newDef.getFile());
-            newUse.setFile(newUse.getFile());
-            Rule newRule = new Rule(newDef, newUse, subRule.subrules);
-            linkRule(newRule, links);
-          }
         }
+        visited.add(def);
       }
-      this.defs.addAll(defs);
     }
   }
 
   public List<Link> linkAll() {
-    List<Link> links = new ArrayList<>();
-    if (uriMap.isEmpty()) {
-      return links;
-    }
+    // initialize runtime properties
+    links = new ArrayList<>();
+    contexts = new HashMap<>();
+    visited = new HashSet<>();
 
     // create patterns and match
-    for (Rule rule : config.getRules()) {
-      linkRule(rule, links);
+    for (Map.Entry<String, List<String>> entry : config.getFlow().entrySet()) {
+      Rule rule = config.getRules().get(entry.getKey());
+      Set<Capture> captures = new HashSet<>();
+      contexts.put(entry.getKey(), captures);
+
+      // collect all available contexts
+      Set<Capture> localContext = new HashSet<>();
+      for (String prevKey : entry.getValue()) {
+        Set<Capture> globalContext = contexts.get(prevKey);
+        localContext.addAll(globalContext);
+      }
+
+      // link rule for each context
+      for (Capture variables : localContext) {
+        linkRule(rule, variables, captures);
+      }
     }
 
     logger.info("#xll = {}", links.size());

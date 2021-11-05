@@ -1,34 +1,33 @@
 package edu.pku.code2graph.xll;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Config {
-  public List<List<Step>> jobs;
+  public Map<String, List<String>> flow;
   private List<String> presets;
-  private String word_sep;
+  private String wordSep;
   private List<String> plugins;
-  private List<Rule> rules;
+  private Map<String, Rule> rules;
   private List<String> suppress;
 
   public Config(Map<String, Object> config) {
-    Object jobs_raw = config.getOrDefault("rules", new ArrayList<>());
-    jobs = ((List<List<Map<String, Object>>>) jobs_raw).stream().map(job -> job.stream().map(Step::new).toList()).toList();
-    Object rules_raw = config.getOrDefault("rules", new ArrayList<>());
-    rules = ((List<Map<String, Object>>) rules_raw).stream().map(Rule::new).toList();
+    flow = (Map<String, List<String>>) config.get("flow");
+    Map<String, Object> rules_raw = (Map<String, Object>) config.get("rules");
+    rules = new HashMap<>();
+    for (Map.Entry<String, Object> entry : rules_raw.entrySet()) {
+      rules.put(entry.getKey(), new Rule((Map<String, Object>) entry.getValue()));
+    }
     presets = (List<String>) config.getOrDefault("presets", new ArrayList<>());
-    word_sep = (String) config.getOrDefault("word_sep", "");
+    wordSep = (String) config.getOrDefault("word_sep", "");
     plugins = (List<String>) config.getOrDefault("plugins", new ArrayList<>());
     suppress = (List<String>) config.getOrDefault("suppress", new ArrayList<>());
   }
 
-  public List<List<Step>> getJobs() {
-    return jobs;
-  }
-
-  public void setJobs(List<List<Step>> jobs) {
-    this.jobs = jobs;
+  public Map<String, List<String>> getFlow() {
+    return flow;
   }
 
   public List<String> getPresets() {
@@ -36,14 +35,14 @@ public class Config {
   }
 
   public String getWord_sep() {
-    return word_sep;
+    return wordSep;
   }
 
   public List<String> getPlugins() {
     return plugins;
   }
 
-  public List<Rule> getRules() {
+  public Map<String, Rule> getRules() {
     return rules;
   }
 
@@ -51,19 +50,23 @@ public class Config {
     return suppress;
   }
 
+  public void setFlow(Map<String, List<String>> flow) {
+    this.flow = flow;
+  }
+
   public void setPresets(List<String> presets) {
     this.presets = presets;
   }
 
-  public void setWord_sep(String word_sep) {
-    this.word_sep = word_sep;
+  public void setWordSep(String word_sep) {
+    this.wordSep = word_sep;
   }
 
   public void setPlugins(List<String> plugins) {
     this.plugins = plugins;
   }
 
-  public void setRules(List<Rule> rules) {
+  public void setRules(Map<String, Rule> rules) {
     this.rules = rules;
   }
 
@@ -77,7 +80,7 @@ public class Config {
         + "presets="
         + presets
         + ", word_sep='"
-        + word_sep
+        + wordSep
         + '\''
         + ", plugins="
         + plugins
