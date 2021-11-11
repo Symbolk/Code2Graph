@@ -2,13 +2,15 @@ package edu.pku.code2graph.client;
 
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.model.DiffFile;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import org.apache.log4j.PropertyConfigurator;
 
 import java.util.List;
 
 public class WiseAdapt {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws NonexistPathException, InvalidRepoException {
     PropertyConfigurator.configure("log4j.properties");
 
     // input commit id

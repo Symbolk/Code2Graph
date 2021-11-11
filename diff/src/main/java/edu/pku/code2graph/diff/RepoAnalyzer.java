@@ -4,7 +4,11 @@ import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.model.DiffHunk;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
+import edu.pku.code2graph.util.FileUtil;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +19,11 @@ public class RepoAnalyzer {
   private List<DiffFile> diffFiles;
   private List<DiffHunk> diffHunks;
 
-  public RepoAnalyzer(String repoName, String repoPath) {
+  public RepoAnalyzer(String repoName, String repoPath)
+      throws NonexistPathException, InvalidRepoException {
+    if (!FileUtil.checkExists(repoPath)) {
+      throw new NonexistPathException("Repo", repoPath);
+    }
     this.repoName = repoName;
     this.repoPath = repoPath;
     this.diffFiles = new ArrayList<>();
@@ -29,12 +37,17 @@ public class RepoAnalyzer {
    */
   public List<DiffFile> analyzeWorkingTree() {
     // analyze the diff files and hunks
-    GitService gitService = new GitServiceCGit();
-    ArrayList<DiffFile> diffFiles = gitService.getChangedFilesInWorkingTree(this.repoPath);
-    if (!diffFiles.isEmpty()) {
-      this.diffHunks = gitService.getDiffHunksInWorkingTree(this.repoPath, diffFiles);
-      this.diffFiles = diffFiles;
+    try {
+      GitService gitService = new GitServiceCGit(repoPath);
+      ArrayList<DiffFile> diffFiles = gitService.getChangedFilesInWorkingTree();
+      if (!diffFiles.isEmpty()) {
+        this.diffHunks = gitService.getDiffHunksInWorkingTree(diffFiles);
+        this.diffFiles = diffFiles;
+      }
+    } catch (NonexistPathException | IOException | InvalidRepoException e) {
+      e.printStackTrace();
     }
+
     return diffFiles;
   }
 
@@ -45,12 +58,16 @@ public class RepoAnalyzer {
    */
   public List<DiffFile> analyzeCommit(String commitID) {
     // analyze the diff files and hunks
-    GitServiceCGit gitService = new GitServiceCGit();
-    gitService.setIgnoreWhiteChanges(true);
-    ArrayList<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(this.repoPath, commitID);
-    if (!diffFiles.isEmpty()) {
-      this.diffHunks = gitService.getDiffHunksAtCommit(this.repoPath, commitID, diffFiles);
-      this.diffFiles = diffFiles;
+    try {
+      GitServiceCGit gitService = new GitServiceCGit(repoPath);
+      gitService.setIgnoreWhiteChanges(true);
+      ArrayList<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commitID);
+      if (!diffFiles.isEmpty()) {
+        this.diffHunks = gitService.getDiffHunksAtCommit(commitID, diffFiles);
+        this.diffFiles = diffFiles;
+      }
+    } catch (NonexistPathException | IOException | InvalidRepoException e) {
+      e.printStackTrace();
     }
     return diffFiles;
   }

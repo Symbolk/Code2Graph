@@ -1,17 +1,15 @@
 import edu.pku.code2graph.client.Code2Graph;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.io.GraphVizExporter;
-import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.FileUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
-import org.jgrapht.Graph;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class LoaderTest {
-  private void generateGraph(String repoName, String configName) {
+  private void generateGraph(String repoName, String configName) throws NonexistPathException {
     String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
     String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
     System.out.println("RepoPath: " + repoPath);
