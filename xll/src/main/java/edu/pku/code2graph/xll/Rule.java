@@ -6,6 +6,8 @@ import java.util.Map;
 public class Rule {
   public final URIPattern def;
   public final URIPattern use;
+  public List<String> shared;
+  public List<String> fields;
 
   public Rule(URIPattern def, URIPattern use) {
     this.def = def;

@@ -3,6 +3,8 @@ package edu.pku.code2graph.xll;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +22,7 @@ public class Linker {
   private Set<URI> visited;
 
   /**
-   * matched xlls
+   * matched links
    */
   private List<Link> links;
 
@@ -37,17 +39,20 @@ public class Linker {
     config = loader.load(path).get();
   }
 
-  private Map<Capture, List<URI>> scan(URIPattern pattern) {
-    Map<Capture, List<URI>> hashMap = new HashMap<>();
+  private Map<Capture, Pair<List<URI>, Set<Capture>>> scan(URIPattern pattern, Map<String, String> variables) {
+    Map<Capture, Pair<List<URI>, Set<Capture>>> result = new HashMap<>();
     Map<URI, List<Node>> uris = uriMap.get(pattern.getLang());
-    if (uris == null) return hashMap;
+    if (uris == null) return result;
     for (URI uri : uris.keySet()) {
       if (visited.contains(uri)) continue;
-      Capture capture = pattern.match(uri);
+      Capture capture = pattern.match(uri, variables);
       if (capture == null) continue;
-      hashMap.computeIfAbsent(capture, k -> new ArrayList<>()).add(uri);
+      Pair<List<URI>, Set<Capture>> pair = result
+          .computeIfAbsent(capture, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
+      pair.getLeft().add(uri);
+      pair.getRight().add(capture);
     }
-    return hashMap;
+    return result;
   }
 
   private String formatUriList(List<URI> list) {
@@ -55,37 +60,49 @@ public class Linker {
     return "[ " + String.join(",\n  ", segments.toArray(String[]::new)) + " ]";
   }
 
-  private void linkRule(Rule rule, Map<String, String> variables, Set<Capture> captures) {
-    // TODO apply variables for rule
+  private Set<Capture> linkRule(Rule rule, Capture variables) {
+    Set<Capture> results = new HashSet<>();
 
     // scan for use patterns
-    Map<Capture, List<URI>> useMap = scan(rule.use);
-    if (useMap.size() == 0) return;
+    Map<Capture, Pair<List<URI>, Set<Capture>>> useMap = scan(rule.use, variables);
+    if (useMap.size() == 0) return results;
 
     // scan for def patterns
-    Map<Capture, List<URI>> defMap = scan(rule.def);
+    Map<Capture, Pair<List<URI>, Set<Capture>>> defMap = scan(rule.def, variables);
     for (Capture capture : defMap.keySet()) {
       // def capture should match use capture
-      List<URI> uses = useMap.get(capture);
+      Pair<List<URI>, Set<Capture>> uses = useMap.get(capture);
       if (uses == null) continue;
 
-      // check ambiguous xlls
-      List<URI> defs = defMap.get(capture);
-      if (defs.size() > 1) {
+      // check ambiguous links
+      Pair<List<URI>, Set<Capture>> defs = defMap.get(capture);
+      if (defs.getLeft().size() > 1) {
         System.out.println("ambiguous xll found by " + capture.toString());
-        System.out.println(formatUriList(defs));
-        System.out.println(formatUriList(uses));
+        System.out.println(formatUriList(defs.getLeft()));
+        System.out.println(formatUriList(uses.getLeft()));
       }
 
-      // update runtime properties
-      captures.add(capture);
-      for (URI def : defs) {
-        for (URI use : uses) {
+      // generate links
+      for (URI use : uses.getLeft()) {
+        for (URI def : defs.getLeft()) {
           links.add(new Link(def, use, rule));
         }
-        visited.add(def);
+        visited.add(use);
+      }
+
+      // generate results
+      for (Capture use : uses.getRight()) {
+        for (Capture def : defs.getRight()) {
+          Capture result = new Capture();
+          result.putAll(variables);
+          result.putAll(def);
+          result.putAll(use);
+          results.add(result);
+        }
       }
     }
+
+    return results;
   }
 
   public List<Link> linkAll() {
@@ -109,7 +126,7 @@ public class Linker {
 
       // link rule for each context
       for (Capture variables : localContext) {
-        linkRule(rule, variables, captures);
+        captures.addAll(linkRule(rule, variables));
       }
     }
 

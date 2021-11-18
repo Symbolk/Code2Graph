@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class URIPattern extends URI {
-  private final Map<String, Token> tokens = new HashMap<>();
+  private final List<Token> anchors = new ArrayList<>();
   private final List<List<String>> layerTokens = new ArrayList<>();
 
   {
@@ -44,10 +44,10 @@ public class URIPattern extends URI {
     if (source == null) {
       source = "**";
     } else {
-      Matcher matcher = Token.regexp.matcher(source);
+      Matcher matcher = Token.anchor.matcher(source);
       while (matcher.find()) {
         Token token = new Token(matcher, layers.size());
-        tokens.put(token.name, token);
+        anchors.add(token);
         layer.add(token.name);
       }
     }
@@ -55,7 +55,7 @@ public class URIPattern extends URI {
     super.parseLayer(source);
   }
 
-  private Map<String, String> matchLayer(int level, String target) {
+  private Map<String, String> matchLayer(int level, String target, Map<String, String> variables) {
     String source = layers.get(level);
     if (source.equals("**")) return new HashMap<>();
     List<String> names = layerTokens.get(level);
@@ -70,7 +70,7 @@ public class URIPattern extends URI {
             .replaceAll("\\*\\*/", "(?:.+/)?")
             .replaceAll("\\*", "\\\\w+")
             .replaceAll("\\{", "\\\\{");
-    String[] segments = Token.regexp.split(source, -1);
+    String[] segments = Token.variable.split(source, -1);
     source = String.join("(\\w+)", segments);
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
     target =
@@ -94,7 +94,7 @@ public class URIPattern extends URI {
    * @param uri uri
    * @return captures
    */
-  public Capture match(URI uri) {
+  public Capture match(URI uri, Map<String, String> variables) {
     // Part 1: match depth
     int depth = getLayers().size();
     if (uri.getLayers().size() < depth) return null;
@@ -105,7 +105,7 @@ public class URIPattern extends URI {
     // Part 3: match every layers
     Capture capture = new Capture();
     for (int i = 0; i < depth; ++i) {
-      Map<String, String> cap = matchLayer(i, uri.getLayers().get(i));
+      Map<String, String> cap = matchLayer(i, uri.getLayers().get(i), variables);
       if (cap == null) return null;
       for (String name : cap.keySet()) {
         capture.put(name, cap.get(name));
@@ -125,11 +125,11 @@ public class URIPattern extends URI {
   public URIPattern applyCaptures(Map<String, String> captures) {
     URIPattern pattern = new URIPattern(this);
     for (String name : captures.keySet()) {
-      Token token = tokens.get(name);
+      Token token = anchors.get(name);
       if (token != null) {
         String source = pattern.getLayers().get(token.level);
         pattern.getLayers().set(token.level, token.replace(source, captures.get(name)));
-        pattern.tokens.remove(name);
+        pattern.anchors.remove(name);
         pattern.layerTokens.get(token.level).remove(name);
       }
     }
@@ -137,7 +137,8 @@ public class URIPattern extends URI {
   }
 
   private static final class Token {
-    public static final Pattern regexp = Pattern.compile("\\((\\w+)(?::(\\w+))?\\)");
+    public static final Pattern variable = Pattern.compile("\\((\\w+)(?::(\\w+))?\\)");
+    public static final Pattern anchor = Pattern.compile("\\(&(\\w+)(?::(\\w+))?\\)");
 
     public int level;
     public int start;
