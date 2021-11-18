@@ -19,7 +19,8 @@ public class DocumentHandler extends AbstractHandler {
   }
 
   private void traverseChidren(Element ele) {
-    URI uri = new URI(false, Language.HTML, uriFilePath, getIdentifier(ele.tagName()));
+    URI uri = new URI(false, uriFilePath);
+    uri.addLayer(getIdentifier(ele.tagName()), Language.HTML);
     ElementNode en =
         new ElementNode(
             GraphUtil.nid(),

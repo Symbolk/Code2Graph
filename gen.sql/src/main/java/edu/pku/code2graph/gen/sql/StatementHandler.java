@@ -392,14 +392,12 @@ public class StatementHandler {
                               + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
                               + "/"
                               + (URI.checkInvalidCh(name));
-                      URI uri = new URI(false, Language.SQL, uriFilePath, idtf);
+                      URI uri = new URI(false, uriFilePath);
                       if (isInline) {
-                        URI wrapUri = new URI(false, wrapLang, uriFilePath, wrapIdentifier);
-                        wrapUri.setInline(uri);
-                        en.setUri(wrapUri);
-                      } else {
-                        en.setUri(uri);
+                        uri.addLayer(wrapIdentifier, wrapLang);
                       }
+                      uri.addLayer(idtf, Language.SQL);
+                      en.setUri(uri);
                       GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
@@ -424,14 +422,12 @@ public class StatementHandler {
                     + (URI.checkInvalidCh(((RelationNode) parent).getSymbol()))
                     + "/"
                     + (URI.checkInvalidCh(colName));
-            URI uri = new URI(false, Language.SQL, uriFilePath, idtf);
+            URI uri = new URI(false, uriFilePath);
             if (isInline) {
-              URI wrapUri = new URI(false, wrapLang, uriFilePath, wrapIdentifier);
-              wrapUri.setInline(uri);
-              en.setUri(wrapUri);
-            } else {
-              en.setUri(uri);
+              uri.addLayer(wrapIdentifier, wrapLang);
             }
+            uri.addLayer(idtf, Language.SQL);
+            en.setUri(uri);
             GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
@@ -591,14 +587,12 @@ public class StatementHandler {
     nodePool.put(snode, en);
     findParentEdge(snode, en);
 
-    URI uri = new URI(true, Language.SQL, uriFilePath, identifierMap.get(en));
+    URI uri = new URI(true, uriFilePath);
     if (isInline) {
-      URI wrapUri = new URI(false, wrapLang, uriFilePath, wrapIdentifier);
-      wrapUri.setInline(uri);
-      en.setUri(wrapUri);
-    } else {
-      en.setUri(uri);
+      uri.addLayer(wrapIdentifier, wrapLang);
     }
+    uri.addLayer(identifierMap.get(en), Language.SQL);
+    en.setUri(uri);
     GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
 
     addToNodeMap(en);

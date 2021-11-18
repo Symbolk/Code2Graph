@@ -966,9 +966,8 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
-          URI uri =
-              new URI(
-                  true, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(qualifiedName.getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
 
@@ -988,12 +987,8 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
-          URI uri =
-              new URI(
-                  true,
-                  Language.JAVA,
-                  uriFilePath,
-                  ((SimpleName) exp).getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(((SimpleName) exp).getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           if (binding == null) {

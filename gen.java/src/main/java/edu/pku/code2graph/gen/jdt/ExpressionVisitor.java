@@ -350,7 +350,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           String para_qname = split[0];
           String para_name = para_qname.substring(8, para_qname.length() - 2);
 
-          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier);
+          URI uri = new URI(false, uriFilePath);
+          uri.addLayer(identifier, Language.JAVA);
 
           ElementNode pn =
               new ElementNode(
@@ -477,7 +478,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               NodeType.ANNOTATION,
               annotation.toString(),
               identifier);
-      URI uri = new URI(true, Language.JAVA, uriFilePath, identifier);
+      URI uri = new URI(true, uriFilePath);
+      uri.addLayer(identifier, Language.JAVA);
       node.setRange(computeRange(annotation));
       node.setUri(uri);
       GraphUtil.addURI(Language.JAVA, uri, node);
@@ -1032,8 +1034,9 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
           String content = URI.checkInvalidCh(((StringLiteral) exp).getLiteralValue());
-          URI inline = new URI(false, Language.ANY, "", content);
-          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier, inline);
+          URI uri = new URI(false, uriFilePath);
+          uri.addLayer(identifier, Language.JAVA);
+          uri.addLayer(content);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           break;
@@ -1042,9 +1045,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
-          URI uri =
-              new URI(
-                  true, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(qualifiedName.getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           break;
@@ -1052,12 +1054,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
-          URI uri =
-              new URI(
-                  true,
-                  Language.JAVA,
-                  uriFilePath,
-                  ((SimpleName) exp).getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(((SimpleName) exp).getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           if (binding == null) {
@@ -1214,7 +1212,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setType(NodeType.METHOD_INVOCATION);
 
           identifier = "." + mi.getName().getIdentifier();
-          URI uri = new URI(true, Language.JAVA, uriFilePath, identifier);
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(identifier, Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
 

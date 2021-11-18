@@ -1064,12 +1064,8 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
-          URI uri =
-              new URI(
-                  true,
-                  Language.JAVA,
-                  uriFilePath,
-                  exp.toString().substring(1, exp.toString().length() - 1));
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(exp.toString().substring(1, exp.toString().length() - 1), Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           break;
@@ -1078,9 +1074,8 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
-          URI uri =
-              new URI(
-                  true, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(qualifiedName.getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           break;
@@ -1088,12 +1083,8 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
-          URI uri =
-              new URI(
-                  true,
-                  Language.JAVA,
-                  uriFilePath,
-                  ((SimpleName) exp).getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(((SimpleName) exp).getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           GraphUtil.addURI(Language.JAVA, uri, root);
           if (binding == null) {
@@ -1260,11 +1251,10 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           if (exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute")) {
             //          parseArguments(root, mi.arguments(), addedToMap);
             String identifier = "." + mi.getName().getIdentifier();
-            URI uri = new URI(true, Language.JAVA, uriFilePath, identifier);
             String arg = mi.arguments().get(0).toString();
-            uri.setInline(
-                new URI(
-                    true, Language.SQL, uriFilePath, arg.substring(1, arg.length() - 1)));
+            URI uri = new URI(true, uriFilePath);
+            uri.addLayer(identifier, Language.JAVA);
+            uri.addLayer(arg.substring(1, arg.length() - 1), Language.SQL);
 
             if (currentTemplate != "" && !javaURIS.containsKey(currentTemplate)) {
               javaURIS.put(currentTemplate, new ArrayList<>());

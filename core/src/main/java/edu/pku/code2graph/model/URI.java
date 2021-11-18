@@ -9,31 +9,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
-public class URI {
-  public boolean isRef;
-  protected Language lang;
-  protected String file;
-  protected String identifier;
-  protected URI inline;
-  protected List<String> layers;
-  protected String type = "URI";
+public class URI extends URILike {
+  {
+    type = "Pattern";
+  }
 
   public URI() {
-    this.isRef = false;
-    this.lang = Language.ANY;
-    this.file = "";
-    this.identifier = "";
+    this(false, "");
+  }
+
+  public URI(boolean isRef, String file) {
+    this.isRef = isRef;
+    this.layers.add(new Layer(file));
   }
 
   public URI(boolean isRef, Language lang, String file, String identifier) {
     this.isRef = isRef;
-    this.lang = lang;
-    this.file = file;
-    this.identifier = identifier;
+    this.layers.add(new Layer(file));
+    this.layers.add(new Layer(identifier, lang));
   }
 
   public URI(boolean isRef, Language lang, String file, String identifier, URI inline) {
     this.isRef = isRef;
+    this.layers.add(new Layer(file));
+    this.layers.add(new Layer(identifier, lang));
     this.lang = lang;
     this.file = file;
     this.identifier = identifier;
@@ -52,6 +51,14 @@ public class URI {
       p = p.inline;
       p.identifier = result[i];
     }
+  }
+
+  public void addLayer(String identifier) {
+    this.addLayer(identifier, Language.ANY);
+  }
+
+  public void addLayer(String identifier, Language language) {
+    this.layers.add(new Layer(identifier, language));
   }
 
   protected void parseLayer(String source) {
@@ -113,27 +120,6 @@ public class URI {
 
   public void setIdentifier(String identifier) {
     this.identifier = identifier;
-  }
-
-  public void setInline(URI inline) {
-    this.inline = inline;
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder output = new StringBuilder();
-    output.append(type);
-    output.append(" <");
-    output.append(isRef ? "use" : "def");
-    output.append(":");
-    for (String layer : getLayers()) {
-      output.append("//").append(layer);
-    }
-    return output.append(">").toString();
-  }
-
-  public boolean equals(URI uri) {
-    return toString().equals(uri.toString());
   }
 
   private static List<String> pre = Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
