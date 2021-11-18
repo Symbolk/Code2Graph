@@ -39,7 +39,7 @@ public class Linker {
     config = loader.load(path).get();
   }
 
-  private Map<Capture, Pair<List<URI>, Set<Capture>>> scan(URIPattern pattern, Map<String, String> variables) {
+  private Map<Capture, Pair<List<URI>, Set<Capture>>> scan(URIPattern pattern, Capture variables) {
     Map<Capture, Pair<List<URI>, Set<Capture>>> result = new HashMap<>();
     Map<URI, List<Node>> uris = uriMap.get(pattern.getLang());
     if (uris == null) return result;

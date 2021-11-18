@@ -1,8 +1,8 @@
 package edu.pku.code2graph.model;
 
 public class Layer {
-    private Language language;
-    private String identifier;
+    protected Language language;
+    protected String identifier;
 
     public Layer(String identifier, Language language) {
         this.language = language;

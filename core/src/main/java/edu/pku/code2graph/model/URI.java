@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
-public class URI extends URILike {
+public class URI extends URILike<Layer> {
   {
     type = "Pattern";
   }
@@ -30,7 +30,7 @@ public class URI extends URILike {
     String identifier = result[2];
     addLayer(identifier, lang);
     for (int i = 3; i < result.length; ++i) {
-      this.addLayer(result[i]);
+      addLayer(result[i]);
     }
   }
 
@@ -40,8 +40,16 @@ public class URI extends URILike {
 
   public Layer addLayer(String identifier, Language language) {
     Layer layer = new Layer(identifier, language);
-    this.layers.add(layer);
+    layers.add(layer);
     return layer;
+  }
+
+  public int getLayerCount() {
+    return layers.size();
+  }
+
+  public Layer getLayer(int index) {
+    return layers.get(index);
   }
 
   // hack code
