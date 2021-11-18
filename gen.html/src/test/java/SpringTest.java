@@ -91,15 +91,15 @@ public class SpringTest {
             break;
           case "${projects}":
             assertThat(uri.getIdentifier()).isEqualTo("html/body/table/tbody/tr/data-th-each");
-            assertThat(uri.getInline().getIdentifier()).isEqualTo("${projects}");
+            assertThat(uri.getInlineIdentifier()).isEqualTo("${projects}");
             break;
           case "${project.id}":
             assertThat(uri.getIdentifier()).isEqualTo("html/body/table/tbody/tr/td/a/data-th-href");
-            assertThat(uri.getInline().getIdentifier()).isEqualTo("${project.id}");
+            assertThat(uri.getInlineIdentifier()).isEqualTo("${project.id}");
             break;
           case "${project.name}":
             assertThat(uri.getIdentifier()).isEqualTo("html/body/table/tbody/tr/td/a/data-th-text");
-            assertThat(uri.getInline().getIdentifier()).isEqualTo("${project.name}");
+            assertThat(uri.getInlineIdentifier()).isEqualTo("${project.name}");
             break;
         }
       }

@@ -97,7 +97,7 @@ public class AndroidHandler extends AbstractHandler {
     }
     idtf = idtf + (idtf.isEmpty() ? "" : "/") + URI.checkInvalidCh(qName);
     URI xllUri = new URI(false, uriFilePath);
-    xllUri.addLayer(idtf, Language.XML);
+    Layer layer = xllUri.addLayer(idtf, Language.XML);
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
@@ -129,7 +129,7 @@ public class AndroidHandler extends AbstractHandler {
           // ref in java: R.qname.value
           // ref in xml: @qname/value
           String resName = "@" + qName + "/" + value;
-          xllUri.setIdentifier(idtf + "/name");
+          layer.setIdentifier(idtf + "/name");
           en.setName(value);
           en.setQualifiedName(resName);
 
@@ -139,7 +139,7 @@ public class AndroidHandler extends AbstractHandler {
           // fr components
           if (value.startsWith("@+")) {
             en.setName(value);
-            xllUri.setIdentifier(idtf + "/" + URI.checkInvalidCh("android:id"));
+            layer.setIdentifier(idtf + "/" + URI.checkInvalidCh("android:id"));
             String identifier = value.replace("+", "");
             en.setQualifiedName(identifier);
 
@@ -149,7 +149,7 @@ public class AndroidHandler extends AbstractHandler {
         } else if ("id".equals(key)) {
           // fr components
           en.setName(value);
-          xllUri.setIdentifier(idtf + "/" + URI.checkInvalidCh("id"));
+          layer.setIdentifier(idtf + "/" + URI.checkInvalidCh("id"));
           en.setQualifiedName(value);
 
           xllUri.addLayer(URI.checkInvalidCh(value));

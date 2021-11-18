@@ -132,8 +132,7 @@ public class AndroidExtractor extends AbstractExtractor {
     Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
     for (Node node : graph.vertexSet()) {
       if (node instanceof ElementNode
-          && node.getUri().getInline() != null
-          && node.getUri().getInline().getIdentifier().startsWith("@+id")) {
+          && node.getUri().getInlineIdentifier().startsWith("@+id")) {
         xmlURIS.add(node.getUri());
       }
     }
