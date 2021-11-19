@@ -3,6 +3,7 @@ package edu.pku.code2graph.client.extractor;
 import com.csvreader.CsvWriter;
 import edu.pku.code2graph.model.URI;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.File;
@@ -20,8 +21,13 @@ public class AbstractExtractor {
     }
     CsvWriter writer = new CsvWriter(filePath, ',', Charset.forName("UTF-8"));
     writer.writeRecord(headers);
+    Set<Pair<String, String>> pairSet = new HashSet<>();
     for (Pair<URI, URI> pair : uriPairs) {
       String left = pair.getLeft().toString(), right = pair.getRight().toString();
+      pairSet.add(new ImmutablePair<>(left, right));
+    }
+    for (Pair<String, String> pair : pairSet) {
+      String left = pair.getLeft(), right = pair.getRight();
       String[] record = {
         left.substring(5, left.length() - 1), right.substring(5, right.length() - 1)
       };
