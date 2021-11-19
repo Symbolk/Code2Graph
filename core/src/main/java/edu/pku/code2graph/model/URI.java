@@ -9,10 +9,6 @@ import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
 public class URI extends URILike<Layer> {
-  {
-    type = "URI";
-  }
-
   public URI() {
     this(false, "");
   }

@@ -12,10 +12,6 @@ public class URIPattern extends URILike<LayerPattern> {
   public final Set<String> symbols = new HashSet<>();
   public final Set<String> anchors = new HashSet<>();
 
-  {
-    type = "Pattern";
-  }
-
   public URIPattern(boolean isRef, String file) {
     this.isRef = isRef;
     addLayer(file, Language.OTHER);

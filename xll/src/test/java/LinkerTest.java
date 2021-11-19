@@ -4,16 +4,10 @@ import edu.pku.code2graph.xll.*;
 import org.junit.jupiter.api.Test;
 import edu.pku.code2graph.model.URI;
 
+import java.io.IOException;
 import java.util.*;
 
 public class LinkerTest {
-  private Config config;
-
-  LinkerTest() {
-    Optional<Config> configOptional = new ConfigLoader().load("src/main/resources/config.yml");
-    config = configOptional.get();
-  }
-
   @Test
   public void matchTest1() {
     URITree tree = new URITree();
@@ -56,30 +50,21 @@ public class LinkerTest {
   }
 
   @Test
-  public void generalTest() {
-    Optional<Config> config = new ConfigLoader().load("src/main/resources/config.yml");
-    config.ifPresent(value -> {
-      Rule rule = value.getRules().get(0);
-      URIPattern left = rule.def;
-      URI uri1 = new URI("def://foo/bar.java//getFooBar");
-      System.out.println(left);
-      System.out.println(uri1);
-      System.out.println(left.match(uri1));
-      System.out.println();
+  public void loaderTest() throws IOException {
+    Config config = Config.load("src/main/resources/config.yml");
+    Rule rule = config.getRules().get("rule1");
+    URIPattern left = rule.def;
+    URI uri1 = new URI("def://foo/bar.java//getFooBar");
+    System.out.println(left);
+    System.out.println(uri1);
+    System.out.println(left.match(uri1));
+    System.out.println();
 
-      URIPattern right = rule.use;
-      URI uri2 = new URI("def://foo/baz.java//Select//#{FooBar}");
-      System.out.println(right);
-      System.out.println(uri2);
-      System.out.println(right.match(uri2));
-      System.out.println();
-
-//      List<URI> uris = new ArrayList<>();
-//      uris.add(uri1);
-//      uris.add(uri2);
-//      Map<Language, List<URI>> uriMap = new HashMap<>();
-//      uriMap.put(Language.JAVA, uris);
-//      System.out.println("Total links: " + new Detector(uriMap).link(rule));
-    });
-  }
+    URIPattern right = rule.use;
+    URI uri2 = new URI("def://foo/baz.java//Select//#{FooBar}");
+    System.out.println(right);
+    System.out.println(uri2);
+    System.out.println(right.match(uri2));
+    System.out.println();
+  };
 }

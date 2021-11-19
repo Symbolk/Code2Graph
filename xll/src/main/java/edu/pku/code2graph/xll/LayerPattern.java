@@ -9,7 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LayerPattern extends Layer {
-  private final boolean pass;
+  private boolean pass;
+  private String source;
   private final List<Token> tokens = new ArrayList<>();
 
   public final List<String> anchors = new ArrayList<>();
@@ -21,7 +22,7 @@ public class LayerPattern extends Layer {
     pass = identifier.equals("**");
     if (pass) return;
 
-    this.identifier =
+    source =
         ("**/" + identifier)
             .replaceAll("\\\\", "\\\\\\\\")
             .replaceAll("\\.", "\\\\.")
@@ -49,7 +50,7 @@ public class LayerPattern extends Layer {
 //        if (language != layer.getLanguage()) return null;
     if (pass) return new Capture();
 
-    String source = identifier;
+    String source = this.source;
     for (int index = tokens.size(); index > 0; --index) {
       Token anchor = tokens.get(index - 1);
       String value = variables.getOrDefault(anchor.name, "\\\\w+");

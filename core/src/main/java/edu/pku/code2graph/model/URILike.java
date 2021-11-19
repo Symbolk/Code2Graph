@@ -5,7 +5,6 @@ import java.util.List;
 
 public abstract class URILike<T extends Layer> {
     public boolean isRef;
-    protected String type;
     protected List<T> layers = new ArrayList<>();
 
     public int getLayerCount() {
@@ -25,8 +24,7 @@ public abstract class URILike<T extends Layer> {
     @Override
     public String toString() {
         StringBuilder output = new StringBuilder();
-        output.append(type);
-        output.append(" <");
+        output.append("<");
         output.append(isRef ? "use" : "def");
         output.append(":");
         for (Layer layer : layers) {

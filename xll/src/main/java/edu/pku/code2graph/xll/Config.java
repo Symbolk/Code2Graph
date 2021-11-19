@@ -1,47 +1,56 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
-import edu.pku.code2graph.util.GraphUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.*;
 
 public class Config {
-  public Map<String, List<String>> flow;
-  private List<String> presets;
-  private String wordSep;
-  private List<String> plugins;
-  private Map<String, Rule> rules;
-  private List<String> suppress;
   private final static Logger logger = LoggerFactory.getLogger(Config.class);
 
+  private final List<String> presets;
+  private final List<String> plugins;
+  private final Map<String, Rule> rules;
+  private final Map<String, List<String>> flowGraph;
+
+  public static Config load(String path) throws FileNotFoundException {
+    InputStream inputStream = new FileInputStream(path);
+    Yaml yaml = new Yaml();
+    Object config_raw = yaml.loadAll(inputStream).iterator().next();
+    logger.debug("Using config from " + path);
+    return new Config((Map<String, Object>) config_raw);
+  }
+
+  public Config() {
+    presets = new ArrayList<>();
+    plugins = new ArrayList<>();
+    rules = new HashMap<>();
+    flowGraph = new HashMap<>();
+  }
+
   public Config(Map<String, Object> config) {
-    flow = (Map<String, List<String>>) config.get("flow");
+    presets = (List<String>) config.getOrDefault("presets", new ArrayList<>());
+    plugins = (List<String>) config.getOrDefault("plugins", new ArrayList<>());
+    flowGraph = (Map<String, List<String>>) config.get("flowgraph");
     Map<String, Object> rules_raw = (Map<String, Object>) config.get("rules");
     rules = new HashMap<>();
     for (Map.Entry<String, Object> entry : rules_raw.entrySet()) {
       rules.put(entry.getKey(), new Rule((Map<String, Object>) entry.getValue()));
     }
-    presets = (List<String>) config.getOrDefault("presets", new ArrayList<>());
-    wordSep = (String) config.getOrDefault("word_sep", "");
-    plugins = (List<String>) config.getOrDefault("plugins", new ArrayList<>());
-    suppress = (List<String>) config.getOrDefault("suppress", new ArrayList<>());
+    logger.debug(toString());
   }
 
-  public Map<String, List<String>> getFlow() {
-    return flow;
+  public Map<String, List<String>> getFlowGraph() {
+    return flowGraph;
   }
 
   public List<String> getPresets() {
     return presets;
-  }
-
-  public String getWord_sep() {
-    return wordSep;
   }
 
   public List<String> getPlugins() {
@@ -52,46 +61,19 @@ public class Config {
     return rules;
   }
 
-  public List<String> getSuppress() {
-    return suppress;
-  }
-
-  public void setFlow(Map<String, List<String>> flow) {
-    this.flow = flow;
-  }
-
-  public void setPresets(List<String> presets) {
-    this.presets = presets;
-  }
-
-  public void setWordSep(String word_sep) {
-    this.wordSep = word_sep;
-  }
-
-  public void setPlugins(List<String> plugins) {
-    this.plugins = plugins;
-  }
-
-  public void setRules(Map<String, Rule> rules) {
-    this.rules = rules;
-  }
-
-  public void setSuppress(List<String> suppress) {
-    this.suppress = suppress;
-  }
-
   public List<Link> link(URITree tree) {
     // initialize runtime properties
     List<Link> links = new ArrayList<>();
     Map<String, Set<Capture>> contexts = new HashMap<>();
 
     // create patterns and match
-    for (Map.Entry<String, List<String>> entry : getFlow().entrySet()) {
-      Rule rule = getRules().get(entry.getKey());
+    for (Map.Entry<String, List<String>> entry : flowGraph.entrySet()) {
+      Rule rule = rules.get(entry.getKey());
 
       // collect all available contexts
-      Set<Capture> localContext = new HashSet<>();
+      Set<Capture> localContext = new LinkedHashSet<>();
       for (String prevKey : entry.getValue()) {
+        if (prevKey.equals("$")) continue;
         Set<Capture> globalContext = contexts.get(prevKey);
         localContext.addAll(globalContext);
       }
@@ -111,18 +93,16 @@ public class Config {
 
   @Override
   public String toString() {
-    return "Config{"
-        + "presets="
-        + presets
-        + ", word_sep='"
-        + wordSep
-        + '\''
-        + ", plugins="
-        + plugins
-        + ", rules="
-        + rules
-        + ", suppress="
-        + suppress
-        + '}';
+    StringBuilder builder = new StringBuilder();
+    builder.append("Config {");
+    for (Map.Entry<String, Rule> entry : rules.entrySet()) {
+      entry.getKey();
+      builder.append("\n  ");
+      builder.append(entry.getKey());
+      builder.append(": ");
+      builder.append(entry.getValue());
+    }
+    builder.append("\n}");
+    return builder.toString();
   }
 }

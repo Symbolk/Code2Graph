@@ -11,7 +11,6 @@ import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Config;
-import edu.pku.code2graph.xll.ConfigLoader;
 import edu.pku.code2graph.xll.Link;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
@@ -190,40 +189,36 @@ public class Code2Graph {
       // build cross-language linking (XLL) edges
       if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
         logger.info("start detecting xll");
-        ConfigLoader loader = new ConfigLoader();
-        Optional<Config> configOpt = loader.load(xllConfigPath);
-        configOpt.ifPresent(config -> {
-          URITree tree = GraphUtil.getUriTree();
-          List<Link> links = config.link(tree);
-          logger.info("- #xll = {}", links.size());
-          this.xllLinks = links;
-          // create uri-element map when create node
-          for (Map.Entry<Language, Map<URI, List<Node>>> entry : tree.entrySet()) {
-            logger.info(
-                "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
-          }
+        Config config = Config.load(xllConfigPath);
+        URITree tree = GraphUtil.getUriTree();
+        List<Link> links = config.link(tree);
+        logger.info("- #xll = {}", links.size());
+        this.xllLinks = links;
+        // create uri-element map when create node
+        for (Map.Entry<Language, Map<URI, List<Node>>> entry : tree.entrySet()) {
+          logger.info(
+              "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
+        }
 
-          Type xllType = type("xll");
+        Type xllType = type("xll");
 
-          int i = 0;
-          for (Link link : links) {
-            i += 1;
-            logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
-            // get nodes by URI
-            List<Node> source = tree.get(link.left.getLang()).get(link.left);
-            List<Node> target = tree.get(link.right.getLang()).get(link.right);
-            Double weight = 1.0D;
+        int i = 0;
+        for (Link link : links) {
+          i += 1;
+          logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
+          // get nodes by URI
+          List<Node> source = tree.get(link.left.getLang()).get(link.left);
+          List<Node> target = tree.get(link.right.getLang()).get(link.right);
+          Double weight = 1.0D;
 
-            // create XLL edge
-            for (Node left : source) {
-              for (Node right : target) {
-                graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
-              }
+          // create XLL edge
+          for (Node left : source) {
+            for (Node right : target) {
+              graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
             }
           }
-        });
+        }
       }
-
     } catch (IOException e) {
       e.printStackTrace();
     }
