@@ -31,6 +31,11 @@ public class Linker {
    */
   private Map<String, Set<Capture>> contexts;
 
+  /**
+   * uri pattern cache
+   */
+  private Map<URIPattern, Map<Capture, Map<Capture, Pair<List<URI>, Set<Capture>>>>> cache;
+
   public Linker(Map<Language, Map<URI, List<Node>>> uriMap, String path) {
     this.uriMap = uriMap;
 
@@ -39,20 +44,32 @@ public class Linker {
     config = loader.load(path).get();
   }
 
-  private Map<Capture, Pair<List<URI>, Set<Capture>>> scan(URIPattern pattern, Capture variables) {
-    Map<Capture, Pair<List<URI>, Set<Capture>>> result = new HashMap<>();
+  private Map<Capture, Pair<List<URI>, Set<Capture>>> scan(URIPattern pattern, Set<String> shared, Capture variables) {
+    // generate uris
+    Map<Capture, Pair<List<URI>, Set<Capture>>> results = new HashMap<>();
     Map<URI, List<Node>> uris = uriMap.get(pattern.getLang());
-    if (uris == null) return result;
+    if (uris == null) return results;
+
+    // check cache
+    variables = variables.project(pattern.anchors);
+    if (cache.get(pattern).containsKey(variables)) {
+      return cache.get(pattern).get(variables);
+    }
+
+    // match every uri
     for (URI uri : uris.keySet()) {
       if (visited.contains(uri)) continue;
       Capture capture = pattern.match(uri, variables);
       if (capture == null) continue;
-      Pair<List<URI>, Set<Capture>> pair = result
-          .computeIfAbsent(capture, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
+      Capture key = capture.project(shared);
+      Pair<List<URI>, Set<Capture>> pair = results
+          .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
       pair.getLeft().add(uri);
       pair.getRight().add(capture);
     }
-    return result;
+
+    cache.get(pattern).put(variables, results);
+    return results;
   }
 
   private String formatUriList(List<URI> list) {
@@ -64,11 +81,11 @@ public class Linker {
     Set<Capture> results = new HashSet<>();
 
     // scan for use patterns
-    Map<Capture, Pair<List<URI>, Set<Capture>>> useMap = scan(rule.use, variables);
+    Map<Capture, Pair<List<URI>, Set<Capture>>> useMap = scan(rule.use, rule.shared, variables);
     if (useMap.size() == 0) return results;
 
     // scan for def patterns
-    Map<Capture, Pair<List<URI>, Set<Capture>>> defMap = scan(rule.def, variables);
+    Map<Capture, Pair<List<URI>, Set<Capture>>> defMap = scan(rule.def, rule.shared, variables);
     for (Capture capture : defMap.keySet()) {
       // def capture should match use capture
       Pair<List<URI>, Set<Capture>> uses = useMap.get(capture);
@@ -110,6 +127,7 @@ public class Linker {
     links = new ArrayList<>();
     contexts = new HashMap<>();
     visited = new HashSet<>();
+    cache = new HashMap<>();
 
     // create patterns and match
     for (Map.Entry<String, List<String>> entry : config.getFlow().entrySet()) {
@@ -126,6 +144,8 @@ public class Linker {
 
       // link rule for each context
       for (Capture variables : localContext) {
+        cache.put(rule.def, new HashMap<>());
+        cache.put(rule.use, new HashMap<>());
         captures.addAll(linkRule(rule, variables));
       }
     }

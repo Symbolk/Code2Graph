@@ -1,24 +1,34 @@
 package edu.pku.code2graph.xll;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
 public final class Capture extends TreeMap<String, String> {
-    private String hash = "";
+    public Capture project(Collection<String> collection) {
+        Capture capture = new Capture();
+        for (String key : collection) {
+            if (containsKey(key)) {
+                capture.put(key, get(key));
+            }
+        }
+        return capture;
+    }
 
-    public String put(String key, String value) {
-        hash = "";
+    @Override
+    public String toString() {
+        String hash = "";
         for (Map.Entry entry : this.entrySet()) {
             hash += entry.getKey() + ":" + entry.getValue() + ";";
         }
-        return super.put(key, value);
+        return hash;
     }
 
     public int hashCode() {
-        return hash.hashCode();
+        return toString().hashCode();
     }
 
     public boolean equals(Capture capture) {
-        return hash.equals(capture.hash);
+        return toString().equals(capture.toString());
     }
 }

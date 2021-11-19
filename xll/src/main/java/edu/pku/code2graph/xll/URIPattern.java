@@ -4,23 +4,35 @@ import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URILike;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class URIPattern extends URILike<LayerPattern> {
+  public final Set<String> symbols = new HashSet<>();
+  public final Set<String> anchors = new HashSet<>();
+
   {
     type = "Pattern";
   }
 
-  public URIPattern(Map<String, Object> pattern) {
+  public URIPattern(boolean isRef, Map<String, Object> pattern) {
+    this.isRef = isRef;
     String file = (String) pattern.getOrDefault("file", "**");
-    layers.add(new LayerPattern(file, Language.OTHER));
+    addLayer(file, Language.OTHER);
     while (pattern != null) {
       String identifier = (String) pattern.getOrDefault("identifier", "**");
       Language lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
-      layers.add(new LayerPattern(identifier, lang));
+      addLayer(identifier, lang);
       pattern = (Map<String, Object>) pattern.get("inline");
     }
+  }
+
+  private void addLayer(String identifier, Language language) {
+    LayerPattern layer = new LayerPattern(identifier, language);
+    layers.add(layer);
+    symbols.addAll(layer.symbols);
+    anchors.addAll(layer.anchors);
   }
 
   public Language getLang() {

@@ -8,6 +8,14 @@ public abstract class URILike<T extends Layer> {
     protected String type;
     protected List<T> layers = new ArrayList<>();
 
+    public int getLayerCount() {
+        return layers.size();
+    }
+
+    public Layer getLayer(int index) {
+        return layers.get(index);
+    }
+
     @Override
     public String toString() {
         StringBuilder output = new StringBuilder();

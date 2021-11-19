@@ -9,9 +9,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LayerPattern extends Layer {
-  private final List<Token> anchors = new ArrayList<>();
-  private final List<String> names = new ArrayList<>();
   private final boolean pass;
+  private final List<Token> anchorTokens = new ArrayList<>();
+  public final List<String> anchors = new ArrayList<>();
+  public final List<String> symbols = new ArrayList<>();
 
   public LayerPattern(String identifier, Language language) {
     super(identifier, language);
@@ -34,9 +35,10 @@ public class LayerPattern extends Layer {
     while (matcher.find()) {
       Token token = new Token(matcher);
       if (token.isAnchor) {
-        anchors.add(token);
+        anchors.add(token.name);
+        anchorTokens.add(token);
       } else {
-        names.add(token.name);
+        symbols.add(token.name);
       }
     }
   }
@@ -47,8 +49,8 @@ public class LayerPattern extends Layer {
     if (pass) return new Capture();
 
     String source = identifier;
-    for (int index = anchors.size(); index > 0; --index) {
-      Token anchor = anchors.get(index - 1);
+    for (int index = anchorTokens.size(); index > 0; --index) {
+      Token anchor = anchorTokens.get(index - 1);
       String value = variables.getOrDefault(anchor.name, "*");
       source = anchor.replace(source, value);
     }
@@ -68,7 +70,7 @@ public class LayerPattern extends Layer {
     Capture captures = new Capture();
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
-      captures.put(names.get(i - 1), matcher.group(i));
+      captures.put(symbols.get(i - 1), matcher.group(i));
     }
     return captures;
   }

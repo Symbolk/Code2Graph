@@ -44,14 +44,6 @@ public class URI extends URILike<Layer> {
     return layer;
   }
 
-  public int getLayerCount() {
-    return layers.size();
-  }
-
-  public Layer getLayer(int index) {
-    return layers.get(index);
-  }
-
   // hack code
   public Language getLang() {
     if (layers.size() < 1) return Language.ANY;
@@ -73,10 +65,8 @@ public class URI extends URILike<Layer> {
   }
 
   public String getSymbol() {
-    String identifier = getInlineIdentifier();
-    if (identifier.length() == 0) identifier = getIdentifier();
-    String[] split = identifier.split("//");
-    split = split[split.length - 1].split("/");
+    String identifier = layers.get(layers.size() - 1).getIdentifier();
+    String[] split = identifier.split("/");
     return split[split.length - 1];
   }
 
