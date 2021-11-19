@@ -4,16 +4,6 @@ flowgraph:
   r-id:
     - r-layout
     - $
-  r-dataBindingClass:
-    - $
-  r-dataBindingLayout:
-    - r-dataBindingClass
-  r-viewBindingClass:
-    - $
-  r-dataBinding:
-    - r-dataBindingLayout
-    - r-dataBindingClass
-    - r-viewBindingClass
 
 rules:
   # setContentView(R.layout.layoutName) <-> layoutName.xml
@@ -36,9 +26,9 @@ rules:
       lang: XML
       file: (layoutName).xml
       identifier: android:id
-      inline:
+      inline: 
         identifier: '@+id\/(name)'
-
+  
   # <data class="bindingName"> <-> bindingName bindingVar
   r-dataBindingClass:
     use:
@@ -51,7 +41,7 @@ rules:
       identifier: data/class
       inline:
         identifier: (bindingName)
-
+  
   # binding.setContentView(this, R.layout.layoutName) <-> layoutName.xml
   r-dataBindingLayout:
     use:
@@ -72,15 +62,5 @@ rules:
       lang: XML
       file: (layoutName).xml
       identifier: android:id
-      inline:
+      inline: 
         identifier: '@+id\/(widgetId)'
-
-  # viewBindingClass <-> layoutName
-  r-viewBindingClass:
-    use:
-      lang: JAVA
-      file: '(javaFile).java'
-      identifier: "(bindingVar)[type=(layoutName:capitalized)]" # 修饰符的用法？
-    def:
-      lang: XML
-      file: '(layoutName).xml'

@@ -1,5 +1,4 @@
 import edu.pku.code2graph.client.Code2Graph;
-import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.util.FileUtil;
@@ -34,9 +33,9 @@ public class LoaderTest {
         default:
           c2g.addSupportedLanguage(Language.JAVA);
       }
-      GraphVizExporter.printAsDot(c2g.generateGraph());
+      c2g.generateGraph();
     } catch (Exception e) {
-      System.out.println(e);
+      e.printStackTrace();
     }
   }
 

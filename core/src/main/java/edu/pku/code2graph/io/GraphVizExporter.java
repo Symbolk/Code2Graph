@@ -33,7 +33,7 @@ public class GraphVizExporter {
           if (uri != null) {
             String output = uri.toString();
             map.put(
-                "uri", DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
+                "uri", DefaultAttribute.createAttribute(output.substring(1, output.length() - 1)));
           }
 
           if (!print || uri == null) {
@@ -112,7 +112,7 @@ public class GraphVizExporter {
               String output = uri.toString();
               map.put(
                   "uri",
-                  DefaultAttribute.createAttribute(output.substring(5, output.length() - 1)));
+                  DefaultAttribute.createAttribute(output.substring(1, output.length() - 1)));
             }
           }
 

@@ -37,7 +37,7 @@ public abstract class URILike<T extends Layer> {
         return toString().hashCode();
     }
 
-    public boolean equals(URILike uri) {
-        return toString().equals(uri.toString());
+    public boolean equals(Object obj) {
+        return toString().equals(obj.toString());
     }
 }

@@ -64,7 +64,7 @@ public class Linker {
       if (capture == null) continue;
       Capture key = capture.project(rule.shared);
       Pair<List<URI>, Set<Capture>> pair = results
-              .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
+          .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
       pair.getLeft().add(uri);
       pair.getRight().add(capture);
     }

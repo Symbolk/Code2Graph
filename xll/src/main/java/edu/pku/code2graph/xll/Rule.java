@@ -1,17 +1,11 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.URI;
-import edu.pku.code2graph.util.GraphUtil;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.*;
-import java.util.stream.Stream;
 
 public class Rule {
   public final URIPattern def;
   public final URIPattern use;
+  public final List<String> deps;
 
   /**
    * shared symbols for def / use patterns
@@ -21,12 +15,15 @@ public class Rule {
   public Rule(URIPattern def, URIPattern use) {
     this.def = def;
     this.use = use;
+    this.deps = new ArrayList<>();
+    this.deps.add("$");
     initialize();
   }
 
-  public Rule(Map<String, Object> rule) {
-    def = new URIPattern(false, (Map<String, Object>) rule.get("def"));
-    use = new URIPattern(true, (Map<String, Object>) rule.get("use"));
+  public Rule(Map<String, Object> rule, List<String> deps) {
+    this.def = new URIPattern(false, (Map<String, Object>) rule.get("def"));
+    this.use = new URIPattern(true, (Map<String, Object>) rule.get("use"));
+    this.deps = deps;
     initialize();
   }
 

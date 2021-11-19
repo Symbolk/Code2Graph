@@ -14,11 +14,11 @@ public class LinkerTest {
     tree.add("def://main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
     tree.add("use://main/java/com/example/demo/MainActivity.java//R.id.button");
 
-    URIPattern def = new URIPattern(false, "*.xml");
+    URIPattern def = new URIPattern(false, "(layoutName).xml");
     def.addLayer("android:id", Language.XML);
     def.addLayer("@+id\\/(name)");
 
-    URIPattern use = new URIPattern(true, "*.java");
+    URIPattern use = new URIPattern(true, "(javaFile).java");
     use.addLayer("R.id.(name)", Language.JAVA);
 
     Rule rule = new Rule(def, use);
