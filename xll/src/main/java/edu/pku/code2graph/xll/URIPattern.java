@@ -16,6 +16,11 @@ public class URIPattern extends URILike<LayerPattern> {
     type = "Pattern";
   }
 
+  public URIPattern(boolean isRef, String file) {
+    this.isRef = isRef;
+    addLayer(file, Language.OTHER);
+  }
+
   public URIPattern(boolean isRef, Map<String, Object> pattern) {
     this.isRef = isRef;
     String file = (String) pattern.getOrDefault("file", "**");
@@ -28,11 +33,12 @@ public class URIPattern extends URILike<LayerPattern> {
     }
   }
 
-  private void addLayer(String identifier, Language language) {
+  public LayerPattern addLayer(String identifier, Language language) {
     LayerPattern layer = new LayerPattern(identifier, language);
     layers.add(layer);
     symbols.addAll(layer.symbols);
     anchors.addAll(layer.anchors);
+    return layer;
   }
 
   public Language getLang() {

@@ -307,7 +307,7 @@ public class Evaluation {
   private static List<String> getHistoricalCommitsChanged(URI uri) {
 
     List<Node> nodes =
-        GraphUtil.getUriMap().get(uri.getLang()).getOrDefault(uri, new ArrayList<>());
+        GraphUtil.getUriTree().get(uri.getLang()).getOrDefault(uri, new ArrayList<>());
     if (nodes.isEmpty()) {
       return new ArrayList<>();
     }

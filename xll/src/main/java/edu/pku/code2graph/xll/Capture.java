@@ -15,20 +15,15 @@ public final class Capture extends TreeMap<String, String> {
         return capture;
     }
 
-    @Override
-    public String toString() {
+    public int hashCode() {
         String hash = "";
         for (Map.Entry entry : this.entrySet()) {
             hash += entry.getKey() + ":" + entry.getValue() + ";";
         }
-        return hash;
-    }
-
-    public int hashCode() {
-        return toString().hashCode();
+        return hash.hashCode();
     }
 
     public boolean equals(Capture capture) {
-        return toString().equals(capture.toString());
+        return hashCode() == capture.hashCode();
     }
 }

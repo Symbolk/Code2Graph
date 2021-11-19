@@ -16,7 +16,8 @@ plugins:
 # rules are user-defined XLL rules as a supplement or overwriting for the presets
 # rules包括了用户自定义的、用于补充或覆盖预定义的跨语言关联规则
 rules:
-  - def:
+  rule1:
+    def:
       lang: JAVA
       file: "*.java"
       identifier: get(name:Capitalized)
@@ -26,19 +27,21 @@ rules:
       inline:
         lang: SQL
         identifier: "#{(name)}"
-    subrules:
-      - def:
-          lang: JAVA
-          file: "*.java"
-          identifier: get(name:Capitalized)
-        use:
-          lang: JAVA
-          file: "*.java"
-          inline:
-            lang: SQL
-            identifier: "#{(name)}"
 
-  - def:
+  rule2:
+    def:
+      lang: JAVA
+      file: "*.java"
+      identifier: get(name:Capitalized)
+    use:
+      lang: JAVA
+      file: "*.java"
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+
+  rule3:
+    def:
       lang: XML
       file: "*.xml"
       identifier: "**"
@@ -49,7 +52,8 @@ rules:
       file: "*.java"
       identifier: R.id.(name)
 
-  - def:
+  rule4:
+    def:
       lang: Java
       file: "*.java"
       identifier: .addAttribute

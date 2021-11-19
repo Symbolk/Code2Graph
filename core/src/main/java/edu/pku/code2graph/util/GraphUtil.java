@@ -17,13 +17,13 @@ public class GraphUtil {
   private static Integer nodeCount;
   private static Integer edgeCount;
   // sets of URIs that possibly have XLL
-  private static Map<Language, Map<URI, List<Node>>> uriMap;
+  private static URITree uriTree;
 
   static {
     graph = initGraph();
     nodeCount = 0;
     edgeCount = 0;
-    uriMap = new HashMap<>();
+    uriTree = new URITree();
   }
 
   /**
@@ -67,24 +67,21 @@ public class GraphUtil {
     graph = initGraph();
     nodeCount = 0;
     edgeCount = 0;
-    uriMap = new HashMap<>();
+    uriTree = new URITree();
   }
 
   /**
-   * Add one single uri to the urimap
+   * Add one single uri to the uri tree
    *
    * @param language
    * @param uri
    * @param node
    */
   public static void addURI(Language language, URI uri, Node node) {
-    uriMap
-        .computeIfAbsent(language, k -> new HashMap<>())
-        .computeIfAbsent(uri, k -> new ArrayList<>())
-        .add(node);
+    uriTree.add(language, uri, node);
   }
 
-  public static Map<Language, Map<URI, List<Node>>> getUriMap() {
-    return uriMap;
+  public static URITree getUriTree() {
+    return uriTree;
   }
 }

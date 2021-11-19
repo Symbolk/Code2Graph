@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
 
 public class LayerPattern extends Layer {
   private final boolean pass;
-  private final List<Token> anchorTokens = new ArrayList<>();
+  private final List<Token> tokens = new ArrayList<>();
+
   public final List<String> anchors = new ArrayList<>();
   public final List<String> symbols = new ArrayList<>();
 
@@ -20,7 +21,7 @@ public class LayerPattern extends Layer {
     pass = identifier.equals("**");
     if (pass) return;
 
-    identifier =
+    this.identifier =
         ("**/" + identifier)
             .replaceAll("\\\\", "\\\\\\\\")
             .replaceAll("\\.", "\\\\.")
@@ -31,12 +32,12 @@ public class LayerPattern extends Layer {
             .replaceAll("\\*", "\\\\w+")
             .replaceAll("\\{", "\\\\{");
 
-    Matcher matcher = VARIABLE.matcher(identifier);
+    Matcher matcher = VARIABLE.matcher(this.identifier);
     while (matcher.find()) {
       Token token = new Token(matcher);
       if (token.isAnchor) {
         anchors.add(token.name);
-        anchorTokens.add(token);
+        tokens.add(token);
       } else {
         symbols.add(token.name);
       }
@@ -49,9 +50,9 @@ public class LayerPattern extends Layer {
     if (pass) return new Capture();
 
     String source = identifier;
-    for (int index = anchorTokens.size(); index > 0; --index) {
-      Token anchor = anchorTokens.get(index - 1);
-      String value = variables.getOrDefault(anchor.name, "*");
+    for (int index = tokens.size(); index > 0; --index) {
+      Token anchor = tokens.get(index - 1);
+      String value = variables.getOrDefault(anchor.name, "\\\\w+");
       source = anchor.replace(source, value);
     }
     String[] segments = VARIABLE.split(source, -1);

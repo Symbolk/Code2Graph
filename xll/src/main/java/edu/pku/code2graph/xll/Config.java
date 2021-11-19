@@ -1,10 +1,14 @@
 package edu.pku.code2graph.xll;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.model.URITree;
+import edu.pku.code2graph.util.GraphUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class Config {
   public Map<String, List<String>> flow;
@@ -13,6 +17,7 @@ public class Config {
   private List<String> plugins;
   private Map<String, Rule> rules;
   private List<String> suppress;
+  private final static Logger logger = LoggerFactory.getLogger(Config.class);
 
   public Config(Map<String, Object> config) {
     flow = (Map<String, List<String>>) config.get("flow");
@@ -73,6 +78,35 @@ public class Config {
 
   public void setSuppress(List<String> suppress) {
     this.suppress = suppress;
+  }
+
+  public List<Link> link(URITree tree) {
+    // initialize runtime properties
+    List<Link> links = new ArrayList<>();
+    Map<String, Set<Capture>> contexts = new HashMap<>();
+
+    // create patterns and match
+    for (Map.Entry<String, List<String>> entry : getFlow().entrySet()) {
+      Rule rule = getRules().get(entry.getKey());
+
+      // collect all available contexts
+      Set<Capture> localContext = new HashSet<>();
+      for (String prevKey : entry.getValue()) {
+        Set<Capture> globalContext = contexts.get(prevKey);
+        localContext.addAll(globalContext);
+      }
+
+      // link rule for each context
+      Linker linker = new Linker(rule, tree);
+      for (Capture variables : localContext) {
+        linker.link(variables);
+      }
+      links.addAll(linker.links);
+      contexts.put(entry.getKey(), linker.captures);
+    }
+
+    logger.info("#xll = {}", links.size());
+    return links;
   }
 
   @Override

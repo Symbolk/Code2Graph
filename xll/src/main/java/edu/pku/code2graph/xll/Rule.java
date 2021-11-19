@@ -1,8 +1,13 @@
 package edu.pku.code2graph.xll;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.*;
+import java.util.stream.Stream;
 
 public class Rule {
   public final URIPattern def;

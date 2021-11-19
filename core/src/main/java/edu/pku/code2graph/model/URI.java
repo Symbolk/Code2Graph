@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 /** Unified Resource Identifier for code elements */
 public class URI extends URILike<Layer> {
   {
-    type = "Pattern";
+    type = "URI";
   }
 
   public URI() {
@@ -32,10 +32,6 @@ public class URI extends URILike<Layer> {
     for (int i = 3; i < result.length; ++i) {
       addLayer(result[i]);
     }
-  }
-
-  public Layer addLayer(String identifier) {
-    return addLayer(identifier, Language.ANY);
   }
 
   public Layer addLayer(String identifier, Language language) {

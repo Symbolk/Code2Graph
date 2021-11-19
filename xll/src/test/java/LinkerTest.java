@@ -1,3 +1,5 @@
+import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
 import org.junit.jupiter.api.Test;
 import edu.pku.code2graph.model.URI;
@@ -12,33 +14,45 @@ public class LinkerTest {
     config = configOptional.get();
   }
 
-  private void matchTest(int ruleIndex, boolean isRef, String source) {
-    URI uri = new URI(source);
-    Rule rule = config.getRules().get(ruleIndex);
-    URIPattern pattern = isRef ? rule.use : rule.def;
-    System.out.println(pattern);
-    System.out.println(uri);
-    System.out.println(pattern.match(uri));
+  @Test
+  public void matchTest1() {
+    URITree tree = new URITree();
+    tree.add("def://main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
+    tree.add("use://main/java/com/example/demo/MainActivity.java//R.id.button");
+
+    URIPattern def = new URIPattern(false, "*.xml");
+    def.addLayer("android:id", Language.XML);
+    def.addLayer("@+id\\/(name)");
+
+    URIPattern use = new URIPattern(true, "*.java");
+    use.addLayer("R.id.(name)", Language.JAVA);
+
+    Rule rule = new Rule(def, use);
+    Linker linker = new Linker(rule, tree);
+    linker.link();
+    System.out.println(linker.links);
+    System.out.println(linker.captures);
   }
 
   @Test
-  public void test1() {
-    matchTest(1, true,"use:///Code2Graph/client/build/resources/test/android/butterknife/main/java/com/example/demo/MainActivity.java//R.id.button");
-  }
+  public void matchTest2() {
+    URITree tree = new URITree();
+    tree.add("def://BlogAdminController.java//.addAttribute//postForm");
+    tree.add("use://blog/new.html//html/body/form/data-th-object//${postForm}");
 
-  @Test
-  public void test2() {
-    matchTest(1, false,"def://E:/code/Code2Graph/client/build/resources/test/android/butterknife/main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
-  }
+    URIPattern def = new URIPattern(false, "*.java");
+    def.addLayer(".addAttribute", Language.JAVA);
+    def.addLayer("(name)");
 
-  @Test
-  public void test3() {
-    matchTest(2, true,"use://blog/new.html//html/body/form/data-th-object//${postForm}");
-  }
+    URIPattern use = new URIPattern(true, "*.html");
+    use.addLayer("**", Language.HTML);
+    use.addLayer("${(name)}");
 
-  @Test
-  public void test4() {
-    matchTest(2, false,"def://BlogAdminController.java//.addAttribute//postForm");
+    Rule rule = new Rule(def, use);
+    Linker linker = new Linker(rule, tree);
+    linker.link();
+    System.out.println(linker.links);
+    System.out.println(linker.captures);
   }
 
   @Test
@@ -59,9 +73,6 @@ public class LinkerTest {
       System.out.println(uri2);
       System.out.println(right.match(uri2));
       System.out.println();
-
-      List<Rule> children = rule.subrules;
-      System.out.println(children);
 
 //      List<URI> uris = new ArrayList<>();
 //      uris.add(uri1);

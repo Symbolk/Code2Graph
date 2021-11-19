@@ -16,6 +16,12 @@ public abstract class URILike<T extends Layer> {
         return layers.get(index);
     }
 
+    public Layer addLayer(String identifier) {
+        return addLayer(identifier, Language.ANY);
+    }
+
+    public abstract T addLayer(String identifier, Language language);
+
     @Override
     public String toString() {
         StringBuilder output = new StringBuilder();
