@@ -23,7 +23,7 @@ public class AbstractExtractor {
     for (Pair<URI, URI> pair : uriPairs) {
       String left = pair.getLeft().toString(), right = pair.getRight().toString();
       String[] record = {
-        left.substring(5, left.length() - 1), right.substring(5, right.length() - 1)
+        left.substring(9, left.length() - 1), right.substring(9, right.length() - 1)
       };
       writer.writeRecord(record);
     }
