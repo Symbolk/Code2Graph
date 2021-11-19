@@ -183,14 +183,15 @@ public class MybatisMapperHandler extends AbstractHandler {
           List<ElementNode> identifierInQuery = new ArrayList<ElementNode>();
           int minLayerOfNode = 0;
           if (identifierById != null && !identifierById.isEmpty())
-            minLayerOfNode = identifierById.get(0).getUri().getInline().getIdentifierSegmentCount();
+            minLayerOfNode =
+                getIdentifierSegmentCount(identifierById.get(0).getUri().getInlineIdentifier());
           if (identifierById != null) {
             for (ElementNode node : identifierById) {
               String sqlId = ifInInclude(node);
               if (sqlId != null) {
                 node.getUri().setIdentifier("mapper/sql");
                 String lastToken = node.getUri().getSymbol();
-                node.getUri().getInline().setIdentifier(lastToken);
+                node.getUri().setInlineIdentifier(lastToken);
 
                 if (!graph.containsVertex(sqlMap.get(uriFilePath).get(sqlId).getNode())) {
                   logger.error("node not in graph");
@@ -203,7 +204,9 @@ public class MybatisMapperHandler extends AbstractHandler {
               } else {
                 identifierInQuery.add(node);
                 minLayerOfNode =
-                    Math.min(minLayerOfNode, node.getUri().getInline().getIdentifierSegmentCount());
+                    Math.min(
+                        minLayerOfNode,
+                        getIdentifierSegmentCount(node.getUri().getInlineIdentifier()));
               }
 
               currentEle.addIdentifer(node.getUri());
@@ -216,7 +219,8 @@ public class MybatisMapperHandler extends AbstractHandler {
             }
           } else if (identifierById != null) {
             for (ElementNode node : identifierInQuery) {
-              if (node.getUri().getInline().getIdentifierSegmentCount() == minLayerOfNode) {
+              if (getIdentifierSegmentCount(node.getUri().getInlineIdentifier())
+                  == minLayerOfNode) {
                 graph.addEdge(queryEle, node, new Edge(GraphUtil.eid(), type("child")));
               }
             }
@@ -282,5 +286,9 @@ public class MybatisMapperHandler extends AbstractHandler {
 
   public Map<String, String> getXmlToJavaMapper() {
     return xmlToJavaMapper;
+  }
+
+  private int getIdentifierSegmentCount(String identifier) {
+    return identifier.replaceAll("\\\\/", "").split("/").length;
   }
 }

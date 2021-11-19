@@ -189,7 +189,7 @@ public class Code2Graph {
       // build cross-language linking (XLL) edges
       if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
         logger.info("start detecting xll");
-        Linker linker = new Linker(GraphUtil.getUriMap(), configPath);
+        Linker linker = new Linker(GraphUtil.getUriMap(), xllConfigPath);
         List<Link> links = linker.linkAll();
         logger.info("- #xll = {}", links.size());
         this.xllLinks = links;

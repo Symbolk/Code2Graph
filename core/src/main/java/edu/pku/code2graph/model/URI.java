@@ -63,12 +63,12 @@ public class URI extends URILike<Layer> {
   }
 
   public String getIdentifier() {
-    if (layers.size() < 1) return "";
+    if (layers.size() <= 1) return "";
     return layers.get(1).getIdentifier();
   }
 
   public String getInlineIdentifier() {
-    if (layers.size() < 2) return "";
+    if (layers.size() <= 2) return "";
     return layers.get(2).getIdentifier();
   }
 
@@ -80,16 +80,19 @@ public class URI extends URILike<Layer> {
     return split[split.length - 1];
   }
 
-  public int getIdentifierSegmentCount() {
-    return getIdentifier().replaceAll("\\\\/", "").split("/").length;
-  }
-
   public void setIdentifier(String identifier) {
     if (layers.size() < 1) {
       addLayer(identifier);
     } else {
       layers.get(1).setIdentifier(identifier);
     }
+  }
+
+  public void setInlineIdentifier(String identifier) {
+    while(layers.size()<2){
+      addLayer("");
+    }
+    layers.get(2).setIdentifier(identifier);
   }
 
   private static List<String> pre = Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
