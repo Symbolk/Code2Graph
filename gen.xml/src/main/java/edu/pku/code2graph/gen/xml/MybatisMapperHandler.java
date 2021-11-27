@@ -2,7 +2,6 @@ package edu.pku.code2graph.gen.xml;
 
 import edu.pku.code2graph.gen.sql.JsqlGenerator;
 import edu.pku.code2graph.gen.xml.model.MybatisElement;
-import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
@@ -40,12 +39,11 @@ public class MybatisMapperHandler extends AbstractHandler {
 
     String name = FileUtil.getFileNameFromPath(filePath);
     URI uri = new URI(false, uriFilePath);
-    uri.addLayer("", Language.XML);
     fileEle =
         new ElementNode(
             GraphUtil.nid(), Language.XML, type("file", true), "", name, uriFilePath, uri);
     graph.addVertex(fileEle);
-    GraphUtil.addURI(Language.XML, fileEle.getUri(), fileEle);
+    GraphUtil.addNode(fileEle);
     super.startDocument();
   }
 
@@ -82,7 +80,7 @@ public class MybatisMapperHandler extends AbstractHandler {
 
         graph.addVertex(mapperEle);
         graph.addEdge(fileEle, mapperEle, new Edge(GraphUtil.eid(), type("child")));
-        GraphUtil.addURI(Language.XML, mapperUri, mapperEle);
+        GraphUtil.addNode(mapperEle);
         break;
       case "select":
         if (attributes != null) {
@@ -115,7 +113,7 @@ public class MybatisMapperHandler extends AbstractHandler {
                 GraphUtil.nid(), Language.XML, type("query", true), "", qName, qName, queryUri);
 
         graph.addVertex(queryEle);
-        GraphUtil.addURI(Language.XML, queryUri, queryEle);
+        GraphUtil.addNode(queryEle);
         if (mapperEle != null)
           graph.addEdge(mapperEle, queryEle, new Edge(GraphUtil.eid(), type("child")));
 

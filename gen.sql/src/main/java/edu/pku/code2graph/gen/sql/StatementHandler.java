@@ -398,7 +398,7 @@ public class StatementHandler {
                       }
                       uri.addLayer(idtf, Language.SQL);
                       en.setUri(uri);
-                      GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
+                      GraphUtil.addNode(en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
                       addToNodeMap(en);
@@ -428,7 +428,7 @@ public class StatementHandler {
             }
             uri.addLayer(idtf, Language.SQL);
             en.setUri(uri);
-            GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
+            GraphUtil.addNode(en);
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
             addToNodeMap(en);
@@ -593,7 +593,7 @@ public class StatementHandler {
     }
     uri.addLayer(identifierMap.get(en), Language.SQL);
     en.setUri(uri);
-    GraphUtil.addURI(en.getUri().getLang(), en.getUri(), en);
+    GraphUtil.addNode(en);
 
     addToNodeMap(en);
   }

@@ -73,12 +73,10 @@ public class GraphUtil {
   /**
    * Add one single uri to the uri tree
    *
-   * @param language
-   * @param uri
    * @param node
    */
-  public static void addURI(Language language, URI uri, Node node) {
-    uriTree.add(language, uri, node);
+  public static void addNode(Node node) {
+    uriTree.add(node.getUri()).add(node);
   }
 
   public static URITree getUriTree() {

@@ -22,9 +22,6 @@ public class JdtGenerator extends Generator {
 
   @Override
   protected Graph<Node, Edge> generate(List<String> filePaths) {
-    // create uri map for java
-    GraphUtil.getUriTree().put(Language.JAVA, new HashMap<>());
-
     // the absolute file path of the compilation units to create ASTs for
     String[] srcPaths = new String[filePaths.size()];
     filePaths.toArray(srcPaths);

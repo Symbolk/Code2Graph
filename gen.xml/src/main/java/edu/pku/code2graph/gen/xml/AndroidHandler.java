@@ -74,13 +74,12 @@ public class AndroidHandler extends AbstractHandler {
     }
 
     URI uri = new URI(false, uriFilePath);
-    uri.addLayer("", Language.XML);
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
-    GraphUtil.addURI(Language.XML, root.getUri(), root);
+    GraphUtil.addNode(root);
     logger.debug("Start Parsing {}", uriFilePath);
     super.startDocument();
   }
@@ -177,7 +176,7 @@ public class AndroidHandler extends AbstractHandler {
       }
     }
 
-    GraphUtil.addURI(Language.XML, xllUri, en);
+    GraphUtil.addNode(en);
     super.startElement(uri, localName, qName, attributes);
     // Keep snapshot of start location, for later when end of element is found.
     locatorStack.push(new LocatorImpl(locator));

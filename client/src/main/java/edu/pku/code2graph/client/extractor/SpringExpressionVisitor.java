@@ -1067,7 +1067,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           URI uri = new URI(true, uriFilePath);
           uri.addLayer(exp.toString().substring(1, exp.toString().length() - 1), Language.JAVA);
           root.setUri(uri);
-          GraphUtil.addURI(Language.JAVA, uri, root);
+          GraphUtil.addNode(root);
           break;
         }
       case ASTNode.QUALIFIED_NAME:
@@ -1077,7 +1077,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           URI uri = new URI(true, uriFilePath);
           uri.addLayer(qualifiedName.getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
-          GraphUtil.addURI(Language.JAVA, uri, root);
+          GraphUtil.addNode(root);
           break;
         }
       case ASTNode.SIMPLE_NAME:
@@ -1086,7 +1086,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           URI uri = new URI(true, uriFilePath);
           uri.addLayer(((SimpleName) exp).getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
-          GraphUtil.addURI(Language.JAVA, uri, root);
+          GraphUtil.addNode(root);
           if (binding == null) {
             // an unresolved identifier
             root.setType(NodeType.SIMPLE_NAME);

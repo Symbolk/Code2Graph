@@ -969,7 +969,7 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
           URI uri = new URI(true, uriFilePath);
           uri.addLayer(qualifiedName.getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
-          GraphUtil.addURI(Language.JAVA, uri, root);
+          GraphUtil.addNode(root);
 
           if (exp.toString().startsWith("R.layout.")) {
             if (!layouts.containsKey(filePath)) {
@@ -990,7 +990,7 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
           URI uri = new URI(true, uriFilePath);
           uri.addLayer(((SimpleName) exp).getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
-          GraphUtil.addURI(Language.JAVA, uri, root);
+          GraphUtil.addNode(root);
           if (binding == null) {
             // an unresolved identifier
             root.setType(NodeType.SIMPLE_NAME);

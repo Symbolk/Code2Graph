@@ -11,11 +11,11 @@ public abstract class URILike<T extends Layer> {
         return layers.size();
     }
 
-    public Layer getLayer(int index) {
+    public T getLayer(int index) {
         return layers.get(index);
     }
 
-    public Layer addLayer(String identifier) {
+    public T addLayer(String identifier) {
         return addLayer(identifier, Language.ANY);
     }
 

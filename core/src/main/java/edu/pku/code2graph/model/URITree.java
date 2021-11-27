@@ -5,26 +5,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class URITree extends HashMap<Language, Map<URI, List<Node>>> {
-  public void add(String source) {
-    URI uri = new URI(source);
-    add(uri.getLang(), uri);
+public class URITree {
+  public final Map<Layer, URITree> children = new HashMap<>();
+  public final List<Node> nodes = new ArrayList<>();
+
+  public URI uri;
+
+  public List<Node> add(URI uri) {
+    URITree root = this;
+    for (Layer layer : uri.layers) {
+      root = root.children.computeIfAbsent(layer, k -> new URITree());
+    }
+    root.uri = uri;
+    return root.nodes;
   }
 
-  public List<Node> add(Language language, URI uri) {
-    return this
-        .computeIfAbsent(language, k -> new HashMap<>())
-        .computeIfAbsent(uri, k -> new ArrayList<>());
+  public List<Node> add(String source) {
+    return add(new URI(source));
   }
 
-  /**
-   * Add one single uri to the uri tree
-   *
-   * @param language
-   * @param uri
-   * @param node
-   */
-  public void add(Language language, URI uri, Node node) {
-    this.add(language, uri).add(node);
+  public List<Node> get(URI uri) {
+    URITree root = this;
+    for (Layer layer : uri.layers) {
+      root = root.children.get(layer);
+      if (root == null) return null;
+    }
+    return root.nodes;
   }
 }

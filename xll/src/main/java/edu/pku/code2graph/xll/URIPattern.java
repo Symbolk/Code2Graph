@@ -37,7 +37,7 @@ public class URIPattern extends URILike<LayerPattern> {
     return layer;
   }
 
-  public Language getLang() {
+  public Language getLanguage() {
     if (layers.size() < 1) return Language.ANY;
     return layers.get(1).getLanguage();
   }

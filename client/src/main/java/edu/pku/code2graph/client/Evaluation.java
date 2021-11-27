@@ -306,9 +306,8 @@ public class Evaluation {
    */
   private static List<String> getHistoricalCommitsChanged(URI uri) {
 
-    List<Node> nodes =
-        GraphUtil.getUriTree().get(uri.getLang()).getOrDefault(uri, new ArrayList<>());
-    if (nodes.isEmpty()) {
+    List<Node> nodes = GraphUtil.getUriTree().get(uri);
+    if (nodes == null) {
       return new ArrayList<>();
     }
     // TODO: use full range

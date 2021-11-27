@@ -71,7 +71,7 @@ public class URI extends URILike<Layer> {
   }
 
   public void setInlineIdentifier(String identifier) {
-    while(layers.size()<2){
+    while (layers.size() <= 2) {
       addLayer("");
     }
     layers.get(2).setIdentifier(identifier);

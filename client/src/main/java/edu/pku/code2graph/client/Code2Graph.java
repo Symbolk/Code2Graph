@@ -194,11 +194,6 @@ public class Code2Graph {
         List<Link> links = config.link(tree);
         logger.info("- #xll = {}", links.size());
         this.xllLinks = links;
-        // create uri-element map when create node
-        for (Map.Entry<Language, Map<URI, List<Node>>> entry : tree.entrySet()) {
-          logger.info(
-              "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
-        }
 
         Type xllType = type("xll");
 
@@ -207,8 +202,8 @@ public class Code2Graph {
           i += 1;
           logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
           // get nodes by URI
-          List<Node> source = tree.get(link.left.getLang()).get(link.left);
-          List<Node> target = tree.get(link.right.getLang()).get(link.right);
+          List<Node> source = tree.get(link.left);
+          List<Node> target = tree.get(link.right);
           Double weight = 1.0D;
 
           // create XLL edge

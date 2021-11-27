@@ -24,4 +24,16 @@ public class Layer {
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
     }
+
+    public String toString() {
+        return language.toString() + "://" + identifier;
+    }
+
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        return toString().equals(obj.toString());
+    }
 }

@@ -1,9 +1,7 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +15,14 @@ public class Linker {
   public final Rule rule;
   public final URITree tree;
 
+  private final Scanner def;
+  private final Scanner use;
+
   public Linker(Rule rule, URITree tree) {
     this.rule = rule;
     this.tree = tree;
+    this.def = new Scanner(rule.def, this);
+    this.use = new Scanner(rule.use, this);
   }
 
   /**
@@ -37,42 +40,6 @@ public class Linker {
    */
   public final Set<URI> visited = new HashSet<>();
 
-  /**
-   * uri pattern cache
-   */
-  private final Map<Capture, ScanResult> defCache = new HashMap<>();
-  private final Map<Capture, ScanResult> useCache = new HashMap<>();
-
-  private static class ScanResult extends HashMap<Capture, Pair<List<URI>, Set<Capture>>> {}
-
-  private ScanResult scan(URIPattern pattern, Map<Capture, ScanResult> cache, Capture variables) {
-    // generate uris
-    ScanResult results = new ScanResult();
-    Map<URI, List<Node>> uris = tree.get(pattern.getLang());
-    if (uris == null) return results;
-
-    // check cache
-    variables = variables.project(pattern.anchors);
-    if (cache.containsKey(variables)) {
-      return cache.get(variables);
-    }
-
-    // match every uri
-    for (URI uri : uris.keySet()) {
-      if (visited.contains(uri)) continue;
-      Capture capture = pattern.match(uri, variables);
-      if (capture == null) continue;
-      Capture key = capture.project(rule.shared);
-      Pair<List<URI>, Set<Capture>> pair = results
-          .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
-      pair.getLeft().add(uri);
-      pair.getRight().add(capture);
-    }
-
-    cache.put(variables, results);
-    return results;
-  }
-
   private String formatUriList(List<URI> list) {
     Stream<String> segments = list.stream().map(uri -> uri.toString());
     return "[ " + String.join(",\n  ", segments.toArray(String[]::new)) + " ]";
@@ -84,11 +51,11 @@ public class Linker {
 
   public void link(Capture variables) {
     // scan for use patterns
-    ScanResult useMap = scan(rule.use, useCache, variables);
+    Scanner.Result useMap = this.use.scan(variables);
     if (useMap.size() == 0) return;
 
     // scan for def patterns
-    ScanResult defMap = scan(rule.def, defCache, variables);
+    Scanner.Result defMap = this.def.scan(variables);
     for (Capture capture : defMap.keySet()) {
       // def capture should match use capture
       Pair<List<URI>, Set<Capture>> uses = useMap.get(capture);
