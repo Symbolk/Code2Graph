@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Config {
   private final static Logger logger = LoggerFactory.getLogger(Config.class);
@@ -51,7 +52,7 @@ public class Config {
         if (rawRules.containsKey(x) || x.equals("$")) return true;
         reportMissing(x);
         return false;
-      }).toList());
+      }).collect(Collectors.toList()));
 
       if (rawRules.containsKey(name)) {
         degrees.put(name, 0);
