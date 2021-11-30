@@ -163,8 +163,8 @@ public class Evaluation {
     CsvReader gtReader = new CsvReader(gtPath);
     gtReader.readHeaders();
     String[] gtHeaders = gtReader.getHeaders();
-    if (gtHeaders.length != 3) {
-      logger.error("Ground Truth header num expected 3, but " + gtHeaders.length);
+    if (gtHeaders.length != 2) {
+      logger.error("Ground Truth header num expected 2, but " + gtHeaders.length);
       return;
     }
     Set<String> gtLines = new HashSet<>();
@@ -289,7 +289,7 @@ public class Evaluation {
   }
 
   private static String prettifyURI(URI uri) {
-    return uri.toString().substring(5, uri.toString().length() - 1);
+    return uri.toString().substring(1, uri.toString().length() - 1);
   }
 
   /**

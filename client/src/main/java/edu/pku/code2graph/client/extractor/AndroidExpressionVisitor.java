@@ -8,6 +8,8 @@ import edu.pku.code2graph.model.Type;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
 
@@ -28,10 +30,11 @@ import java.util.stream.Collectors;
  */
 public class AndroidExpressionVisitor extends AbstractJdtVisitor {
   private ElementNode cuNode;
-  private Map<String, List<String>> layouts;
+  private Map<String, List<Pair<String, URI>>> layouts;
   private Map<String, List<URI>> ids;
 
-  public AndroidExpressionVisitor(Map<String, List<String>> layMap, Map<String, List<URI>> idMap) {
+  public AndroidExpressionVisitor(
+      Map<String, List<Pair<String, URI>>> layMap, Map<String, List<URI>> idMap) {
     layouts = layMap;
     ids = idMap;
   }
@@ -975,7 +978,7 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
             if (!layouts.containsKey(filePath)) {
               layouts.put(filePath, new ArrayList<>());
             }
-            layouts.get(filePath).add(exp.toString());
+            layouts.get(filePath).add(new MutablePair<>(exp.toString(), uri));
           } else if (exp.toString().startsWith("R.id.")) {
             if (!ids.containsKey(filePath)) {
               ids.put(filePath, new ArrayList<>());
@@ -1038,7 +1041,7 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
             if (!layouts.containsKey(filePath)) {
               layouts.put(filePath, new ArrayList<>());
             }
-            layouts.get(filePath).add(exp.toString());
+            layouts.get(filePath).add(new MutablePair<>(exp.toString(), uri));
           } else if (exp.toString().startsWith("R.id.")) {
             if (!ids.containsKey(filePath)) {
               ids.put(filePath, new ArrayList<>());
