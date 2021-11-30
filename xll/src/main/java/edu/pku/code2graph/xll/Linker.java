@@ -79,7 +79,7 @@ public class Linker {
       // generate links
       for (URI use : uses.getLeft()) {
         for (URI def : defs.getLeft()) {
-          links.add(new Link(def, use, rule));
+          links.add(new Link(def, use, rule.name));
         }
         visited.add(use);
       }
@@ -95,5 +95,11 @@ public class Linker {
         }
       }
     }
+  }
+
+  public void print() {
+    System.out.println(rule.name);
+    System.out.println(links.size());
+    System.out.println(links);
   }
 }

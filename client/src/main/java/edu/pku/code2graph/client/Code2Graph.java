@@ -200,10 +200,10 @@ public class Code2Graph {
         int i = 0;
         for (Link link : links) {
           i += 1;
-          logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
+          logger.debug("XLL#{}  {}, {}", i, link.def.toString(), link.use.toString());
           // get nodes by URI
-          List<Node> source = tree.get(link.left);
-          List<Node> target = tree.get(link.right);
+          List<Node> source = tree.get(link.def);
+          List<Node> target = tree.get(link.use);
           Double weight = 1.0D;
 
           // create XLL edge

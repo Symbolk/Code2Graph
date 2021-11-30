@@ -135,15 +135,13 @@ public class Evaluation {
       return;
     }
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
-    Link first = xllLinks.get(0);
-    String[] headers = {first.left.getLang().name(), first.right.getLang().name()};
+    String[] headers = {"name", "def", "use"};
 
     writer.writeRecord(headers);
     for (Link link : xllLinks) {
-      String leftURI = link.left.toString(), rightURI = link.right.toString();
-      String left = prettifyURI(link.left), right = prettifyURI(link.right);
+      String left = prettifyURI(link.def), right = prettifyURI(link.use);
       // should rule be saved too?
-      String[] record = {left, right};
+      String[] record = {link.name, left, right};
       writer.writeRecord(record);
     }
     writer.close();
@@ -165,8 +163,8 @@ public class Evaluation {
     CsvReader gtReader = new CsvReader(gtPath);
     gtReader.readHeaders();
     String[] gtHeaders = gtReader.getHeaders();
-    if (gtHeaders.length != 2) {
-      logger.error("Ground Truth header num expected 2, but " + gtHeaders.length);
+    if (gtHeaders.length != 3) {
+      logger.error("Ground Truth header num expected 3, but " + gtHeaders.length);
       return;
     }
     Set<String> gtLines = new HashSet<>();
@@ -183,8 +181,8 @@ public class Evaluation {
 
     otReader.readHeaders();
     String[] otHeaders = otReader.getHeaders();
-    if (otHeaders.length != 2) {
-      logger.error("Output header num expected 2, but " + otHeaders.length);
+    if (otHeaders.length != 3) {
+      logger.error("Output header num expected 3, but " + otHeaders.length);
       return;
     }
     Set<String> otLines = new HashSet<>();
@@ -231,13 +229,13 @@ public class Evaluation {
 
     otReader.readHeaders();
     String[] otHeaders = otReader.getHeaders();
-    if (otHeaders.length != 2) {
-      logger.error("Output header num expected 2, but " + otHeaders.length);
+    if (otHeaders.length != 3) {
+      logger.error("Output header num expected 3, but " + otHeaders.length);
       return;
     }
     Set<Link> links = new HashSet<>();
     while (otReader.readRecord()) {
-      links.add(new Link(new URI(otReader.get(0)), new URI(otReader.get(1))));
+      links.add(new Link(new URI(otReader.get(0)), new URI(otReader.get(1)), otReader.get(2)));
     }
     otReader.close();
 
@@ -262,12 +260,8 @@ public class Evaluation {
     List<String[]> results = new ArrayList<>();
 
     for (Link link : xllLinks) {
-      // get line range of the first corresponding node
-      Language leftLang = link.left.getLang();
-      Language rightLang = link.right.getLang();
-
-      List<String> commitsLeft = getHistoricalCommitsChanged(link.left);
-      List<String> commitsRight = getHistoricalCommitsChanged(link.right);
+      List<String> commitsLeft = getHistoricalCommitsChanged(link.def);
+      List<String> commitsRight = getHistoricalCommitsChanged(link.use);
       int intersectionNum =
           MetricUtil.intersectSize(new HashSet<>(commitsLeft), new HashSet<>(commitsRight));
 
@@ -277,7 +271,7 @@ public class Evaluation {
       double confRL = MetricUtil.computeProportion(intersectionNum, commitsRight.size());
 
       // prepend results to the link
-      String[] record = {confLR + "", confRL + "", prettifyURI(link.left), prettifyURI(link.right)};
+      String[] record = {confLR + "", confRL + "", prettifyURI(link.def), prettifyURI(link.use)};
       System.out.println(Arrays.toString(record));
       results.add(record);
     }

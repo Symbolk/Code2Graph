@@ -78,10 +78,7 @@ public class LinkerTest {
 
     Linker linker1 = new Linker(tree, def, use);
     linker1.link();
-
-    System.out.println("rule1");
-    System.out.println(linker1.links);
-    System.out.println(linker1.links.size());
+    linker1.print();
 
     def = new URIPattern(false, "(&layoutName).xml");
     def.addLayer("android:id", Language.XML);
@@ -95,10 +92,7 @@ public class LinkerTest {
       linker2.link(variables);
     }
     linker2.link();
-
-    System.out.println("rule2");
-    System.out.println(linker2.links);
-    System.out.println(linker2.links.size());
+    linker2.print();
   }
 
   @Test

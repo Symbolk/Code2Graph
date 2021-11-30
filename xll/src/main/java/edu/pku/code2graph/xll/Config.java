@@ -93,7 +93,7 @@ public class Config {
     while (index >= 0) {
       String name = queue.get(index);
       List<String> deps = flowGraph.get(name);
-      Rule rule = new Rule((Map<String, Object>) rawRules.get(name), deps);
+      Rule rule = new Rule((Map<String, Object>) rawRules.get(name), deps, name);
       rules.put(name, rule);
       index -= 1;
     }
