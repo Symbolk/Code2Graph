@@ -1,5 +1,4 @@
 import edu.pku.code2graph.client.Code2Graph;
-import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.util.FileUtil;
 import org.apache.log4j.BasicConfigurator;

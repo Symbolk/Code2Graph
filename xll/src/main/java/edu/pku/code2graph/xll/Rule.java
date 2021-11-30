@@ -16,7 +16,6 @@ public class Rule {
     this.def = def;
     this.use = use;
     this.deps = new ArrayList<>();
-    this.deps.add("$");
     initialize();
   }
 

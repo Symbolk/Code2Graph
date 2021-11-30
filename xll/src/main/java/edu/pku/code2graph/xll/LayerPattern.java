@@ -51,7 +51,7 @@ public class LayerPattern extends Layer {
     String source = this.source;
     for (int index = tokens.size(); index > 0; --index) {
       Token anchor = tokens.get(index - 1);
-      String value = variables.getOrDefault(anchor.name, "\\\\w+");
+      String value = variables.getOrDefault(anchor.name, "\\w+");
       source = anchor.replace(source, value);
     }
     String[] segments = VARIABLE.split(source, -1);

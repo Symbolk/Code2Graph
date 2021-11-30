@@ -13,15 +13,14 @@ public class LinkerTest {
     tree.add("def://main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
     tree.add("use://main/java/com/example/demo/MainActivity.java//R.id.button");
 
-    URIPattern def = new URIPattern(false, "(layoutName).xml");
+    URIPattern def = new URIPattern(false, "(&layoutName).xml");
     def.addLayer("android:id", Language.XML);
     def.addLayer("@+id\\/(name)");
 
     URIPattern use = new URIPattern(true, "(javaFile).java");
     use.addLayer("R.id.(name)", Language.JAVA);
 
-    Rule rule = new Rule(def, use);
-    Linker linker = new Linker(rule, tree);
+    Linker linker = new Linker(tree, def, use);
     linker.link();
     System.out.println(linker.links);
     System.out.println(linker.captures);
@@ -34,20 +33,72 @@ public class LinkerTest {
     tree.add("use://blog/new.html//html/body/form/data-th-object//${postForm}");
 
     URIPattern def = new URIPattern(false, "*.java");
-    def.addLayer(".(&method)", Language.JAVA);
+    def.addLayer(".addAttribute", Language.JAVA);
     def.addLayer("(name)");
 
     URIPattern use = new URIPattern(true, "*.html");
     use.addLayer("**", Language.HTML);
     use.addLayer("${(name)}");
 
-    Rule rule = new Rule(def, use);
-    Linker linker = new Linker(rule, tree);
-    Capture variables = new Capture();
-    variables.put("method", "addAttribute");
-    linker.link(variables);
+    Linker linker = new Linker(tree, def, use);
+    linker.link();
     System.out.println(linker.links);
     System.out.println(linker.captures);
+  }
+
+  @Test
+  public void matchTest3() {
+    URITree tree = new URITree();
+
+    tree.add("def://res/layout/list_playlist_mini_item.xml");
+    tree.add("def://res/layout/list_stream_mini_item.xml");
+    tree.add("def://res/layout/list_stream_item.xml");
+    tree.add("def://res/layout/list_stream_grid_item.xml//androidx.constraintlayout.widget.ConstraintLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_stream_item.xml//androidx.constraintlayout.widget.ConstraintLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_playlist_grid_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_playlist_mini_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_stream_mini_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_playlist_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+
+    tree.add("use://java/org/schabi/newpipe/local/holder/PlaylistItemHolder.java//R.layout.list_playlist_mini_item");
+    tree.add("use://java/org/schabi/newpipe/settings/SelectPlaylistFragment.java//R.layout.list_playlist_mini_item");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/PlaylistMiniInfoItemHolder.java//R.layout.list_playlist_mini_item");
+    tree.add("use://java/org/schabi/newpipe/local/holder/LocalStatisticStreamItemHolder.java//R.layout.list_stream_item");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/StreamInfoItemHolder.java//R.layout.list_stream_item");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/StreamMiniInfoItemHolder.java//R.layout.list_stream_mini_item");
+    tree.add("use://java/org/schabi/newpipe/local/holder/PlaylistItemHolder.java//R.id.itemUploaderView");
+    tree.add("use://java/org/schabi/newpipe/local/holder/LocalStatisticStreamItemHolder.java//R.id.itemUploaderView");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/StreamMiniInfoItemHolder.java//R.id.itemUploaderView");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/PlaylistMiniInfoItemHolder.java//R.id.itemUploaderView");
+
+    URIPattern def, use;
+    def = new URIPattern(false, "(layoutName).xml");
+    use = new URIPattern(true, "(javaFile).java");
+    use.addLayer("R.layout.(layoutName)", Language.JAVA);
+
+    Linker linker1 = new Linker(tree, def, use);
+    linker1.link();
+
+    System.out.println("rule1");
+    System.out.println(linker1.links);
+    System.out.println(linker1.links.size());
+
+    def = new URIPattern(false, "(&layoutName).xml");
+    def.addLayer("android:id", Language.XML);
+    def.addLayer("@+id\\/(name)");
+
+    use = new URIPattern(true, "(&javaFile).java");
+    use.addLayer("R.id.(name)", Language.JAVA);
+
+    Linker linker2 = new Linker(tree, def, use);
+    for (Capture variables : linker1.captures) {
+      linker2.link(variables);
+    }
+    linker2.link();
+
+    System.out.println("rule2");
+    System.out.println(linker2.links);
+    System.out.println(linker2.links.size());
   }
 
   @Test

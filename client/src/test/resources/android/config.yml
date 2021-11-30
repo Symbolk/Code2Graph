@@ -20,7 +20,7 @@ rules:
   r-id:
     use:
       lang: JAVA
-      file: '(&javaFile).java'
+      file: (&javaFile).java
       identifier: R.id.(name)
     def:
       lang: XML
