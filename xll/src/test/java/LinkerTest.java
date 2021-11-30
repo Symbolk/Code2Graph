@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import edu.pku.code2graph.model.URI;
 
 import java.io.IOException;
-import java.util.*;
 
 public class LinkerTest {
   @Test
@@ -35,7 +34,7 @@ public class LinkerTest {
     tree.add("use://blog/new.html//html/body/form/data-th-object//${postForm}");
 
     URIPattern def = new URIPattern(false, "*.java");
-    def.addLayer(".addAttribute", Language.JAVA);
+    def.addLayer(".(&method)", Language.JAVA);
     def.addLayer("(name)");
 
     URIPattern use = new URIPattern(true, "*.html");
@@ -44,7 +43,9 @@ public class LinkerTest {
 
     Rule rule = new Rule(def, use);
     Linker linker = new Linker(rule, tree);
-    linker.link();
+    Capture variables = new Capture();
+    variables.put("method", "addAttribute");
+    linker.link(variables);
     System.out.println(linker.links);
     System.out.println(linker.captures);
   }
@@ -66,5 +67,5 @@ public class LinkerTest {
     System.out.println(uri2);
     System.out.println(right.match(uri2));
     System.out.println();
-  };
+  }
 }

@@ -3,19 +3,11 @@ flowgraph:
     - $
   r-id:
     - r-layout
+    - $
 
 rules:
   # setContentView(R.layout.layoutName) <-> layoutName.xml
   r-layout:
-    use:
-      lang: JAVA
-      file: '(javaFile).java'
-      identifier: setContentView/R.layout.(layoutName)
-    def:
-      lang: XML
-      file: (layoutName).xml
-
-  r-layout2:
     use:
       lang: JAVA
       file: '(javaFile).java'
@@ -28,15 +20,15 @@ rules:
   r-id:
     use:
       lang: JAVA
-      file: '(javaFile).java'
+      file: '(&javaFile).java'
       identifier: R.id.(name)
     def:
       lang: XML
-      file: (layoutName).xml
+      file: (&layoutName).xml
       identifier: android:id
-      inline: 
+      inline:
         identifier: '@+id\/(name)'
-  
+
   # <data class="bindingName"> <-> bindingName bindingVar
   r-dataBindingClass:
     use:
@@ -49,7 +41,7 @@ rules:
       identifier: data/class
       inline:
         identifier: (bindingName)
-  
+
   # binding.setContentView(this, R.layout.layoutName) <-> layoutName.xml
   r-dataBindingLayout:
     use:
@@ -70,5 +62,5 @@ rules:
       lang: XML
       file: (layoutName).xml
       identifier: android:id
-      inline: 
+      inline:
         identifier: '@+id\/(widgetId)'

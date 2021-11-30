@@ -21,12 +21,14 @@ public class URIPattern extends URILike<LayerPattern> {
     this.isRef = isRef;
     String file = (String) pattern.getOrDefault("file", "**");
     addLayer(file, Language.OTHER);
-    while (pattern != null) {
+    do {
       String identifier = (String) pattern.getOrDefault("identifier", "**");
       Language lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
-      addLayer(identifier, lang);
       pattern = (Map<String, Object>) pattern.get("inline");
-    }
+      if (pattern != null || !identifier.equals("**")) {
+        addLayer(identifier, lang);
+      }
+    } while (pattern != null);
   }
 
   public LayerPattern addLayer(String identifier, Language language) {

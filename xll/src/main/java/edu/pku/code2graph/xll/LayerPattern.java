@@ -33,7 +33,7 @@ public class LayerPattern extends Layer {
             .replaceAll("\\*", "\\\\w+")
             .replaceAll("\\{", "\\\\{");
 
-    Matcher matcher = VARIABLE.matcher(this.identifier);
+    Matcher matcher = VARIABLE.matcher(source);
     while (matcher.find()) {
       Token token = new Token(matcher);
       if (token.isAnchor) {
@@ -46,8 +46,6 @@ public class LayerPattern extends Layer {
   }
 
   public Capture match(Layer layer, Capture variables) {
-//        TODO: check language equality by nested uriMap
-//        if (language != layer.getLanguage()) return null;
     if (pass) return new Capture();
 
     String source = this.source;
