@@ -969,6 +969,7 @@ public class CoChangeHint {
   }
 
   private static Graph<Node, Edge> buildGraph() throws IOException {
+    FileUtil.setRootPath(repoPath);
     // iterate all Java files and match imports
     List<String> allJavaFilePaths = FileUtil.listFilePaths(repoPath, ".java");
     //    logger.info("Total Java files: "+allJavaFilePaths.size());
