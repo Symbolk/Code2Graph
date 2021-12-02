@@ -1252,7 +1252,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
             //          parseArguments(root, mi.arguments(), addedToMap);
             String identifier = "." + mi.getName().getIdentifier();
             String arg = mi.arguments().get(0).toString();
-            URI uri = new URI(true, uriFilePath);
+            URI uri = new URI(false, uriFilePath);
             uri.addLayer(identifier, Language.JAVA);
             uri.addLayer(arg.substring(1, arg.length() - 1), Language.SQL);
 
