@@ -377,7 +377,8 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           String para_name =
               para_qname.substring(para_qname.indexOf('"') + 1, para_qname.length() - 2);
 
-          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier);
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(identifier, Language.JAVA);
 
           ElementNode pn =
               new ElementNode(
@@ -391,7 +392,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
 
           graph.addVertex(pn);
           defPool.put(para_qname, pn);
-          GraphUtil.addURI(Language.JAVA, uri, pn);
+          GraphUtil.addNode(pn);
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
 
           if (currentTemplate != "" && !javaURIS.containsKey(currentTemplate)) {
@@ -579,7 +580,8 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
           Expression value = ((SingleMemberAnnotation) annotation).getValue();
           Expression typeName = annotation.getTypeName();
           if (typeName.toString().equals("ModelAttribute")) {
-            URI uri = new URI(false, Language.JAVA, uriFilePath, modifier.toString());
+            URI uri = new URI(true, uriFilePath);
+            uri.addLayer(modifier.toString(), Language.JAVA);
             globalAttr.add(uri);
           }
           usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
