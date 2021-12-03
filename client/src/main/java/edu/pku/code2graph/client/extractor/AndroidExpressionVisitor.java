@@ -32,11 +32,23 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
   private ElementNode cuNode;
   private Map<String, List<Pair<String, URI>>> layouts;
   private Map<String, List<URI>> ids;
+  private Map<String, Map<String, String>> dataBindings = new HashMap<>();
+  private Map<URI, String> dataBindingToLayout;
 
   public AndroidExpressionVisitor(
-      Map<String, List<Pair<String, URI>>> layMap, Map<String, List<URI>> idMap) {
+      Map<String, List<Pair<String, URI>>> layMap,
+      Map<String, List<URI>> idMap,
+      Map<URI, String> dataBindingMap) {
     layouts = layMap;
     ids = idMap;
+    dataBindingToLayout = dataBindingMap;
+  }
+
+  private void addDataBinding(String bindingName, String layoutName) {
+    if (!dataBindings.containsKey(filePath)) {
+      dataBindings.put(filePath, new HashMap<>());
+    }
+    dataBindings.get(filePath).put(bindingName, layoutName);
   }
 
   @Override
@@ -302,6 +314,22 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
       }
 
       if (fragment.getInitializer() != null) {
+        Expression initializer = fragment.getInitializer();
+        if (initializer instanceof MethodInvocation
+            && ((MethodInvocation) initializer).getExpression() != null
+            && ((MethodInvocation) initializer).getExpression().toString().equals("DataBindingUtil")
+            && ((MethodInvocation) initializer).getName().toString().equals("setContentView")) {
+          if (((MethodInvocation) initializer).arguments().size() == 2
+              && ((MethodInvocation) initializer)
+                  .arguments()
+                  .get(1)
+                  .toString()
+                  .startsWith("R.layout.")) {
+            String layoutName = ((MethodInvocation) initializer).arguments().get(1).toString();
+
+            addDataBinding(name, layoutName);
+          }
+        }
         graph.addEdge(
             node,
             parseExpression(fragment.getInitializer()),
@@ -596,6 +624,27 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
             IVariableBinding binding = fragment.resolveBinding();
             String name = fragment.getName().getFullyQualifiedName();
             String qname = name;
+
+            Expression initializer = fragment.getInitializer();
+            if (initializer != null
+                && initializer instanceof MethodInvocation
+                && ((MethodInvocation) initializer).getExpression() != null
+                && ((MethodInvocation) initializer)
+                    .getExpression()
+                    .toString()
+                    .equals("DataBindingUtil")
+                && ((MethodInvocation) initializer).getName().toString().equals("setContentView")) {
+              if (((MethodInvocation) initializer).arguments().size() == 2
+                  && ((MethodInvocation) initializer)
+                      .arguments()
+                      .get(1)
+                      .toString()
+                      .startsWith("R.layout.")) {
+                String layoutName = ((MethodInvocation) initializer).arguments().get(1).toString();
+                addDataBinding(name, layoutName);
+              }
+            }
+
             if (binding != null) { // since it is declaration, binding should never be null
               qname = JdtService.getVariableQNameFromBinding(binding, stmt);
 
@@ -627,6 +676,27 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.EXPRESSION_STATEMENT:
         {
           Expression exp = ((ExpressionStatement) stmt).getExpression();
+
+          if (exp instanceof Assignment) {
+            Expression right = ((Assignment) exp).getRightHandSide();
+            if (right instanceof MethodInvocation
+                && ((MethodInvocation) right).getExpression() != null
+                && ((MethodInvocation) right).getExpression().toString().equals("DataBindingUtil")
+                && ((MethodInvocation) right).getName().toString().equals("setContentView")) {
+              if (((MethodInvocation) right).arguments().size() == 2
+                  && ((MethodInvocation) right)
+                      .arguments()
+                      .get(1)
+                      .toString()
+                      .startsWith("R.layout.")) {
+                String layoutName = ((MethodInvocation) right).arguments().get(1).toString();
+                String bindingName = ((Assignment) exp).getLeftHandSide().toString();
+
+                addDataBinding(bindingName, layoutName);
+              }
+            }
+          }
+
           if (exp != null) {
             RelationNode node = parseExpression(exp);
             return Optional.of(node);
@@ -984,6 +1054,15 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
               ids.put(filePath, new ArrayList<>());
             }
             ids.get(filePath).add(uri);
+          } else {
+            if (dataBindings.containsKey(filePath)
+                && dataBindings
+                    .get(filePath)
+                    .containsKey(qualifiedName.getQualifier().toString())) {
+              String layoutName =
+                  dataBindings.get(filePath).get(qualifiedName.getQualifier().toString());
+              dataBindingToLayout.put(uri, layoutName);
+            }
           }
           break;
         }

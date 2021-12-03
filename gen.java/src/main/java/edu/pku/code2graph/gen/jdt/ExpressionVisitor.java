@@ -339,16 +339,19 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       // create element nodes
       List<SingleVariableDeclaration> paras = md.parameters();
       for (SingleVariableDeclaration p : paras) {
-        if (p.toString().trim().startsWith("@Param")) {
+        if (p.toString().trim().startsWith("@Param")
+            || p.toString().trim().startsWith("@ModelAttribute")) {
           String identifier = JdtService.getIdentifier(p);
           String[] split = p.toString().trim().split(" ");
           identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
-          String[] idtfSplit = identifier.split("/");
-          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
-          identifier = String.join("/", idtfSplit);
+          //          String[] idtfSplit = identifier.split("/");
+          //          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
+          //          identifier = String.join("/", idtfSplit);
+          identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
 
           String para_qname = split[0];
-          String para_name = para_qname.substring(8, para_qname.length() - 2);
+          String para_name =
+              para_qname.substring(para_qname.indexOf('"') + 1, para_qname.length() - 2);
 
           URI uri = new URI(false, uriFilePath);
           uri.addLayer(identifier, Language.JAVA);

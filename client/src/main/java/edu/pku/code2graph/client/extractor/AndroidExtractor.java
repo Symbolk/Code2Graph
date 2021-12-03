@@ -74,8 +74,9 @@ public class AndroidExtractor extends AbstractExtractor {
 
     Map<String, List<Pair<String, URI>>> layMap = new HashMap<>();
     Map<String, List<URI>> idMap = new HashMap<>();
+    Map<URI, String> dataBindingMap = new HashMap<>();
 
-    AbstractJdtVisitor visitor = new AndroidExpressionVisitor(layMap, idMap);
+    AbstractJdtVisitor visitor = new AndroidExpressionVisitor(layMap, idMap, dataBindingMap);
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");
@@ -94,6 +95,14 @@ public class AndroidExtractor extends AbstractExtractor {
           }
         },
         null);
+
+    for (URI uri : dataBindingMap.keySet()) {
+      String layout = dataBindingMap.get(uri);
+      if (layout != null && layout.length() > 0) {
+        if (!javaURIS.containsKey(layout)) javaURIS.put(layout, new ArrayList<>());
+        javaURIS.get(layout).add(uri);
+      }
+    }
 
     for (String fileName : filePaths) {
       List<Pair<String, URI>> layouts = layMap.get(fileName);
@@ -186,8 +195,9 @@ public class AndroidExtractor extends AbstractExtractor {
 
     if (!javaURIS.containsKey(layout)) return;
     for (URI item : javaURIS.get(layout)) {
-      if (item.getSymbol().length() >= 5 && item.getSymbol().substring(5).equals(uri.getSymbol()))
-        uriPairs.add(new ImmutablePair<>(uri, item));
+      String[] sp = item.getSymbol().split("\\.");
+      String symbol = sp[sp.length - 1];
+      if (symbol.equals(uri.getSymbol())) uriPairs.add(new ImmutablePair<>(uri, item));
     }
   }
 

@@ -342,9 +342,10 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
         if (p.toString().trim().startsWith("@Param")) {
           String[] split = p.toString().trim().split(" ");
           identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
-          String[] idtfSplit = identifier.split("/");
-          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
-          identifier = String.join("/", idtfSplit);
+          //          String[] idtfSplit = identifier.split("/");
+          //          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
+          //          identifier = String.join("/", idtfSplit);
+          identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
 
           URI uri = new URI(false, uriFilePath);
           uri.addLayer(identifier, Language.JAVA);

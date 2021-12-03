@@ -31,6 +31,7 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
   private ElementNode cuNode;
   private Map<String, List<URI>> javaURIS;
   private String currentTemplate;
+  private List<URI> globalAttr = new ArrayList<>();
 
   public SpringExpressionVisitor(Map<String, List<URI>> uris) {
     super();
@@ -334,6 +335,19 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
       }
     }
 
+    if (!globalAttr.isEmpty() && globalAttr.get(0).getFile().equals(uriFilePath)) {
+      for (URI uri : globalAttr) {
+        if (currentTemplate != "" && !javaURIS.containsKey(currentTemplate)) {
+          javaURIS.put(currentTemplate, new ArrayList<>());
+          javaURIS.get(currentTemplate).add(uri);
+        } else if (currentTemplate != "") {
+          if (!javaURIS.get(currentTemplate).contains(uri)) javaURIS.get(currentTemplate).add(uri);
+        }
+      }
+    } else {
+      globalAttr.clear();
+    }
+
     // annotations
     parseAnnotations(md.modifiers(), node);
 
@@ -350,6 +364,45 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
       // create element nodes
       List<SingleVariableDeclaration> paras = md.parameters();
       for (SingleVariableDeclaration p : paras) {
+        if (p.toString().trim().startsWith("@ModelAttribute")) {
+          String identifier = JdtService.getIdentifier(p);
+          String[] split = p.toString().trim().split(" ");
+          identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
+          //          String[] idtfSplit = identifier.split("/");
+          //          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
+          //          identifier = String.join("/", idtfSplit);
+          identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
+
+          String para_qname = split[0];
+          String para_name =
+              para_qname.substring(para_qname.indexOf('"') + 1, para_qname.length() - 2);
+
+          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier);
+
+          ElementNode pn =
+              new ElementNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname,
+                  uri);
+
+          graph.addVertex(pn);
+          defPool.put(para_qname, pn);
+          GraphUtil.addURI(Language.JAVA, uri, pn);
+          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
+
+          if (currentTemplate != "" && !javaURIS.containsKey(currentTemplate)) {
+            javaURIS.put(currentTemplate, new ArrayList<>());
+            javaURIS.get(currentTemplate).add(uri);
+          } else if (currentTemplate != "") {
+            if (!javaURIS.get(currentTemplate).contains(uri))
+              javaURIS.get(currentTemplate).add(uri);
+          }
+        }
+
         String para_name = p.getName().getFullyQualifiedName();
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
@@ -524,6 +577,11 @@ public class SpringExpressionVisitor extends AbstractJdtVisitor {
         } else if (annotation.isSingleMemberAnnotation()) {
           // @A(v)
           Expression value = ((SingleMemberAnnotation) annotation).getValue();
+          Expression typeName = annotation.getTypeName();
+          if (typeName.toString().equals("ModelAttribute")) {
+            URI uri = new URI(false, Language.JAVA, uriFilePath, modifier.toString());
+            globalAttr.add(uri);
+          }
           usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
           usePool.add(Triple.of(node, EdgeType.REFERENCE, value.toString()));
         } else if (annotation.isNormalAnnotation()) {
