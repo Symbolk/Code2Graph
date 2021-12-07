@@ -73,13 +73,13 @@ public class AndroidHandler extends AbstractHandler {
       qName = "@" + parentDir + "/" + FilenameUtils.removeExtension(name);
     }
 
-    URI uri = new URI(false, Language.XML, uriFilePath, "");
+    URI uri = new URI(false, uriFilePath);
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
     graph.addVertex(root);
     stack.push(root);
-    GraphUtil.addURI(Language.XML, root.getUri(), root);
+    GraphUtil.addNode(root);
     logger.debug("Start Parsing {}", uriFilePath);
     super.startDocument();
   }
@@ -95,7 +95,8 @@ public class AndroidHandler extends AbstractHandler {
       idtf = parentIdtf;
     }
     idtf = idtf + (idtf.isEmpty() ? "" : "/") + URI.checkInvalidCh(qName);
-    URI xllUri = new URI(false, Language.XML, uriFilePath, idtf);
+    URI xllUri = new URI(false, uriFilePath);
+    Layer layer = xllUri.addLayer(idtf, Language.XML);
 
     // qname = tag/type name, name = identifier
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.XML, nType, "", "", "", xllUri);
@@ -108,7 +109,6 @@ public class AndroidHandler extends AbstractHandler {
             locator.getColumnNumber(),
             locator.getColumnNumber()));
     graph.addVertex(en);
-    GraphUtil.addURI(Language.XML, en.getUri(), en);
     if (stack.size() > 0) {
       // View is the child of ViewGroup
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));
@@ -119,7 +119,6 @@ public class AndroidHandler extends AbstractHandler {
       for (int i = 0; i < attributes.getLength(); i++) {
         String key = attributes.getQName(i);
         String value = attributes.getValue(i);
-        String idtfLayer = en.getUri().getIdentifier();
 
         // each attribute should only be processed once
         // either for def, or for ref
@@ -129,39 +128,30 @@ public class AndroidHandler extends AbstractHandler {
           // ref in java: R.qname.value
           // ref in xml: @qname/value
           String resName = "@" + qName + "/" + value;
-          en.getUri().setIdentifier(idtfLayer + "/name");
+          layer.setIdentifier(idtf + "/name");
           en.setName(value);
           en.setQualifiedName(resName);
 
-          URI inline = new URI();
-          inline.setIdentifier(URI.checkInvalidCh(value));
-          en.getUri().setInline(inline);
-
+          xllUri.addLayer(URI.checkInvalidCh(value));
           defPool.put(resName, en);
         } else if ("android:id".equals(key)) {
           // fr components
           if (value.startsWith("@+")) {
             en.setName(value);
-            en.getUri().setIdentifier(idtfLayer + "/" + URI.checkInvalidCh("android:id"));
+            layer.setIdentifier(idtf + "/" + URI.checkInvalidCh("android:id"));
             String identifier = value.replace("+", "");
             en.setQualifiedName(identifier);
 
-            URI inline = new URI();
-            inline.setIdentifier(URI.checkInvalidCh(value));
-            en.getUri().setInline(inline);
-
+            xllUri.addLayer(URI.checkInvalidCh(value));
             defPool.put(identifier, en);
           }
         } else if ("id".equals(key)) {
           // fr components
           en.setName(value);
-          en.getUri().setIdentifier(idtfLayer + "/" + URI.checkInvalidCh("id"));
+          layer.setIdentifier(idtf + "/" + URI.checkInvalidCh("id"));
           en.setQualifiedName(value);
 
-          URI inline = new URI();
-          inline.setIdentifier(URI.checkInvalidCh(value));
-          en.getUri().setInline(inline);
-
+          xllUri.addLayer(URI.checkInvalidCh(value));
           defPool.put(value, en);
         } else {
           // references
@@ -186,6 +176,7 @@ public class AndroidHandler extends AbstractHandler {
       }
     }
 
+    GraphUtil.addNode(en);
     super.startElement(uri, localName, qName, attributes);
     // Keep snapshot of start location, for later when end of element is found.
     locatorStack.push(new LocatorImpl(locator));

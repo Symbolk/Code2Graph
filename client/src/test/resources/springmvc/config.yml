@@ -1,104 +1,129 @@
+      
+flowgraph:
+  r-htmlPath:
+    - $
+  r-modelName:
+    - r-htmlPath
+    - $
+  r-attr:
+    - r-modelName
+  r-global-model:
+    - r-htmlPath
+  r-global-model-addAttr:
+    - r-htmlPath
+  r-mav-htmlPath:
+    - $
+  r-mav-modelName:
+    - r-mav-htmlPath
+  r-mav-attr:
+    - r-mav-modelName
+
 rules:
-  - def:
+  # model.addAttribute("name", ) <-> ${name}
+  r-attr:
+    def:
       lang: JAVA
-      file: "*.java"
-      identifier: .addAttribute
+      file: (javaFile).java
+      identifier: '(controller)/(functionName)/(modelName)/addAttribute'
       inline:
-        identifier: '(name)'
+        identifier: (name)
     use:
-      lang: Html
-      file: "*.html"
+      lang: HTML
+      file: (htmlFile).html
       identifier: "**"
-      inline:
-        identifier: '${(name)}'
+      inline: "${(name)}"
 
-  - def:
-      lang: JAVA
-      file: "*.java"
-      identifier: .setAttribute
-      inline:
-        identifier: '(name)'
+  # functionName(Model modelName) <-> modelName.addAttribute("name", )
+  # optional
+  r-modelName:
     use:
-      lang: Html
-      file: "*.html"
-      identifier: "**"
-      inline:
-        identifier: '${(name)}'
+      lang: JAVA
+      file: (javaFile).java
+      identifier: "(controller)/(functionName)/(modelName)"
+    def:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (modelName)
 
-  - def:
-      lang: JAVA
-      file: "*.java"
-      identifier: .addAttribute
-      inline:
-        identifier: '(name)'
+  # return "htmlPath" <-> htmlPath.html
+  # TODO 捕获组可以包含多个segment吗？
+  r-htmlPath:
     use:
-      lang: Html
-      file: "*.html"
-      identifier: "**"
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (controller)/(functionName)/return
       inline:
-        identifier: '#{(name)}'
+        identifier: (htmlFile)
+    def:
+      lang: HTML
+      file: (htmlFile).html
 
-  - def:
-      lang: JAVA
-      file: "*.java"
-      identifier: .setAttribute
-      inline:
-        identifier: '(name)'
+  # mav.setViewName("htmlPath") <-> htmlPath.html
+  r-mav-htmlPath:
     use:
-      lang: Html
-      file: "*.html"
-      identifier: "**"
+      lang: JAVA
+      file: (javaFile).java
+      identifier: '(mav)/setViewName'
       inline:
-        identifier: '#{(name)}'
+        identifier: (htmlFile)
+    def:
+      lang: HTML
+      file: (htmlFile).html
 
-  - def:
+  # functionName(ModelAndView mav) <-> mav.addObject("name", )
+  # TODO
+  r-mav-modelName:
+    def:
       lang: JAVA
-      file: "*.java"
-      identifier: .addAttribute
-      inline:
-        identifier: '(name)'
+      file: (javaFile).java
+      identifier: "(controller)/(functionName)/(mav)[type=ModelAndView]"
     use:
-      lang: Html
-      file: "*.html"
-      identifier: "**"
-      inline:
-        identifier: '\*{(name)}'
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (controller)/(functionName)/(mav)
 
-  - def:
+  # mav.addObject("name", ) <-> ${name}
+  r-mav-attr:
+    def:
       lang: JAVA
-      file: "*.java"
-      identifier: .setAttribute
+      file: (javaFile).java
+      identifier: '(controller)/(functionName)/(mav)/addObject'
       inline:
-        identifier: '(name)'
+        identifier: (name)
     use:
-      lang: Html
-      file: "*.html"
+      lang: HTML
+      file: (htmlFile).html
       identifier: "**"
       inline:
-        identifier: '\*{(name)}'
+        identifier: "${(name)}"
 
-  - def:
+  # @ModelAttribute("name") <-> ${name}
+  r-global-model:
+    def:
       lang: JAVA
-      file: "*.java"
-      identifier: .addAttribute
+      file: (javaFile).java
+      identifier: '(controller)/(globalModelFunc)/@ModelAttribute'
       inline:
-        identifier: '(name)'
+        identifier: (name)
     use:
-      lang: Html
-      file: "*.html"
+      lang: HTML
+      file: (htmlFile).html
       identifier: "**"
       inline:
-        identifier: '@{(name)}'
+        identifier: "${(name)}"
 
-  - def:
+  # @ModelAttribute & addAttribute("name") <-> ${name}
+  r-global-model-addAttr:
+    def:
       lang: JAVA
-      file: "*.java"
-      identifier: .setAttribute
+      file: (javaFile).java
+      identifier: '(controller)/(globalModelFunc)[hasAnno="ModelAttribute"]/**/(modelName)/addAttribute'
       inline:
-        identifier: '(name)'
+        identifier: (name)
     use:
-      lang: Html
-      file: "*.html"
+      lang: HTML
+      file: (htmlFile).html
       identifier: "**"
-      inline:
-        identifier: '@{(name)}'
+      inline: "${(name)}"
+
+    

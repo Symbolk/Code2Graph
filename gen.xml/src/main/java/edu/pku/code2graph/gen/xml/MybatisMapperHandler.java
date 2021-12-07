@@ -2,7 +2,6 @@ package edu.pku.code2graph.gen.xml;
 
 import edu.pku.code2graph.gen.sql.JsqlGenerator;
 import edu.pku.code2graph.gen.xml.model.MybatisElement;
-import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
@@ -39,12 +38,12 @@ public class MybatisMapperHandler extends AbstractHandler {
     if (!queryMap.containsKey(uriFilePath)) queryMap.put(uriFilePath, new HashMap<>());
 
     String name = FileUtil.getFileNameFromPath(filePath);
-    URI uri = new URI(false, Language.XML, uriFilePath, "");
+    URI uri = new URI(false, uriFilePath);
     fileEle =
         new ElementNode(
             GraphUtil.nid(), Language.XML, type("file", true), "", name, uriFilePath, uri);
     graph.addVertex(fileEle);
-    GraphUtil.addURI(Language.XML, fileEle.getUri(), fileEle);
+    GraphUtil.addNode(fileEle);
     super.startDocument();
   }
 
@@ -73,14 +72,15 @@ public class MybatisMapperHandler extends AbstractHandler {
             xmlToJavaMapper.put(uriFilePath, value);
           }
         }
-        URI mapperUri = new URI(false, Language.XML, uriFilePath, "mapper");
+        URI mapperUri = new URI(false, uriFilePath);
+        mapperUri.addLayer("mapper", Language.XML);
         mapperEle =
             new ElementNode(
                 GraphUtil.nid(), Language.XML, type("mapper", true), "", qName, qName, mapperUri);
 
         graph.addVertex(mapperEle);
         graph.addEdge(fileEle, mapperEle, new Edge(GraphUtil.eid(), type("child")));
-        GraphUtil.addURI(Language.XML, mapperUri, mapperEle);
+        GraphUtil.addNode(mapperEle);
         break;
       case "select":
         if (attributes != null) {
@@ -106,13 +106,14 @@ public class MybatisMapperHandler extends AbstractHandler {
           }
         }
 
-        URI queryUri = new URI(false, Language.XML, uriFilePath, "mapper/" + qName);
+        URI queryUri = new URI(false, uriFilePath);
+        queryUri.addLayer("mapper/" + qName, Language.XML);
         queryEle =
             new ElementNode(
                 GraphUtil.nid(), Language.XML, type("query", true), "", qName, qName, queryUri);
 
         graph.addVertex(queryEle);
-        GraphUtil.addURI(Language.XML, queryUri, queryEle);
+        GraphUtil.addNode(queryEle);
         if (mapperEle != null)
           graph.addEdge(mapperEle, queryEle, new Edge(GraphUtil.eid(), type("child")));
 
@@ -180,14 +181,15 @@ public class MybatisMapperHandler extends AbstractHandler {
           List<ElementNode> identifierInQuery = new ArrayList<ElementNode>();
           int minLayerOfNode = 0;
           if (identifierById != null && !identifierById.isEmpty())
-            minLayerOfNode = identifierById.get(0).getUri().getInline().getIdentifierSegmentCount();
+            minLayerOfNode =
+                getIdentifierSegmentCount(identifierById.get(0).getUri().getInlineIdentifier());
           if (identifierById != null) {
             for (ElementNode node : identifierById) {
               String sqlId = ifInInclude(node);
               if (sqlId != null) {
                 node.getUri().setIdentifier("mapper/sql");
                 String lastToken = node.getUri().getSymbol();
-                node.getUri().getInline().setIdentifier(lastToken);
+                node.getUri().setInlineIdentifier(lastToken);
 
                 if (!graph.containsVertex(sqlMap.get(uriFilePath).get(sqlId).getNode())) {
                   logger.error("node not in graph");
@@ -200,7 +202,9 @@ public class MybatisMapperHandler extends AbstractHandler {
               } else {
                 identifierInQuery.add(node);
                 minLayerOfNode =
-                    Math.min(minLayerOfNode, node.getUri().getInline().getIdentifierSegmentCount());
+                    Math.min(
+                        minLayerOfNode,
+                        getIdentifierSegmentCount(node.getUri().getInlineIdentifier()));
               }
 
               currentEle.addIdentifer(node.getUri());
@@ -213,7 +217,8 @@ public class MybatisMapperHandler extends AbstractHandler {
             }
           } else if (identifierById != null) {
             for (ElementNode node : identifierInQuery) {
-              if (node.getUri().getInline().getIdentifierSegmentCount() == minLayerOfNode) {
+              if (getIdentifierSegmentCount(node.getUri().getInlineIdentifier())
+                  == minLayerOfNode) {
                 graph.addEdge(queryEle, node, new Edge(GraphUtil.eid(), type("child")));
               }
             }
@@ -279,5 +284,9 @@ public class MybatisMapperHandler extends AbstractHandler {
 
   public Map<String, String> getXmlToJavaMapper() {
     return xmlToJavaMapper;
+  }
+
+  private int getIdentifierSegmentCount(String identifier) {
+    return identifier.replaceAll("\\\\/", "").split("/").length;
   }
 }

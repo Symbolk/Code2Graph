@@ -1,36 +1,66 @@
+flowgraph:
+  r-layout:
+    - $
+  r-id:
+    - r-layout
+    - $
+
 rules:
-  - use:
+  # setContentView(R.layout.layoutName) <-> layoutName.xml
+  r-layout:
+    use:
       lang: JAVA
-      file: "*.java"
-      identifier: R.layout.(name)
+      file: '(javaFile).java'
+      identifier: R.layout.(layoutName)
     def:
       lang: XML
-      file: "(name).xml"
-      identifier: ""
+      file: (layoutName).xml
 
-  - use:
+  # R.id.name <-> @+id
+  r-id:
+    use:
       lang: JAVA
-      file: "*.java"
-      identifier: (name)Binding
-    def:
-      lang: XML
-      file: "(name).xml"
-      identifier: ""
-    subrules:
-      - use:
-          identifier: R.id.(name)
-        def:
-          identifier: "**"
-          inline:
-            identifier: '@+id\/(name)'
-
-  - use:
-      lang: JAVA
-      file: "*.java"
+      file: (&javaFile).java
       identifier: R.id.(name)
     def:
       lang: XML
-      file: "*.xml"
-      identifier: "**"
+      file: (&layoutName).xml
+      identifier: android:id
       inline:
         identifier: '@+id\/(name)'
+
+  # <data class="bindingName"> <-> bindingName bindingVar
+  r-dataBindingClass:
+    use:
+      lang: JAVA
+      file: '(javaFile).java'
+      identifier: "(bindingVar)[type=(bindingName))]"
+    def:
+      lang: XML
+      file: '(layoutName).xml'
+      identifier: data/class
+      inline:
+        identifier: (bindingName)
+
+  # binding.setContentView(this, R.layout.layoutName) <-> layoutName.xml
+  r-dataBindingLayout:
+    use:
+      lang: JAVA
+      file: '(javaFile).java'
+      identifier: "(bindingVar)/setContentView/R.layout.(layoutName)"
+    def:
+      lang: XML
+      file: '(layoutName).xml'
+
+  # binding.widgetId <-> @+id/widgetId
+  r-dataBinding:
+    use:
+      lang: JAVA
+      file: '(javaFile).java'
+      identifier: (bindingVar)/(widgetId)
+    def:
+      lang: XML
+      file: (layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(widgetId)'

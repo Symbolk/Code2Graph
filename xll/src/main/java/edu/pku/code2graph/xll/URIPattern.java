@@ -2,90 +2,46 @@ package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.model.URILike;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-public class URIPattern extends URI {
-  private final Map<String, Token> tokens = new HashMap<>();
-  private final List<List<String>> layerTokens = new ArrayList<>();
+public class URIPattern extends URILike<LayerPattern> {
+  public final Set<String> symbols = new HashSet<>();
+  public final Set<String> anchors = new HashSet<>();
 
-  {
-    type = "Pattern";
+  public URIPattern(boolean isRef, String file) {
+    this.isRef = isRef;
+    addLayer(file, Language.OTHER);
   }
 
-  public URIPattern() {}
-
-  public URIPattern(URIPattern pattern) {
-    this.isRef = pattern.isRef;
-    this.lang = pattern.lang;
-    this.file = pattern.file;
-    this.identifier = pattern.identifier;
-    if (pattern.inline != null) {
-      this.inline = new URIPattern((URIPattern) pattern.inline);
-    }
-    this.getLayers();
-  }
-
-  public URIPattern(Map<String, Object> pattern) {
-    this.lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
-    this.file = (String) pattern.getOrDefault("file", "");
-    this.identifier = (String) pattern.getOrDefault("identifier", "");
-    if (pattern.get("inline") != null) {
-      this.inline = new URIPattern((Map<String, Object>) pattern.get("inline"));
-    }
-    this.getLayers();
-  }
-
-  @Override
-  protected void parseLayer(String source) {
-    List<String> layer = new ArrayList<>();
-    if (source == null) {
-      source = "**";
-    } else {
-      Matcher matcher = Token.regexp.matcher(source);
-      while (matcher.find()) {
-        Token token = new Token(matcher, layers.size());
-        tokens.put(token.name, token);
-        layer.add(token.name);
+  public URIPattern(boolean isRef, Map<String, Object> pattern) {
+    this.isRef = isRef;
+    String file = (String) pattern.getOrDefault("file", "**");
+    addLayer(file, Language.OTHER);
+    do {
+      String identifier = (String) pattern.getOrDefault("identifier", "**");
+      Language lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
+      pattern = (Map<String, Object>) pattern.get("inline");
+      if (pattern != null || !identifier.equals("**")) {
+        addLayer(identifier, lang);
       }
-    }
-    layerTokens.add(layer);
-    super.parseLayer(source);
+    } while (pattern != null);
   }
 
-  private Map<String, String> matchLayer(int level, String target) {
-    String source = layers.get(level);
-    if (source.equals("**")) return new HashMap<>();
-    List<String> names = layerTokens.get(level);
-    source = "**/" + source;
-    source =
-        source
-            .replaceAll("\\\\", "\\\\\\\\")
-            .replaceAll("\\.", "\\\\.")
-            .replaceAll("\\^", "\\\\^")
-            .replaceAll("\\$", "\\\\\\$")
-            .replaceAll("\\+", "\\\\+")
-            .replaceAll("\\*\\*/", "(?:.+/)?")
-            .replaceAll("\\*", "\\\\w+")
-            .replaceAll("\\{", "\\\\{");
-    String[] segments = Token.regexp.split(source, -1);
-    source = String.join("(\\w+)", segments);
-    Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
-    target =
-        target
-            .replace("-", "")
-            .replace("_", "")
-            .toLowerCase();
-    Matcher matcher = regexp.matcher(target);
-    if (!matcher.matches()) return null;
-    Map<String, String> captures = new HashMap<>();
-    int count = matcher.groupCount();
-    for (int i = 1; i <= count; ++i) {
-      captures.put(names.get(i - 1), matcher.group(i));
-    }
-    return captures;
+  public LayerPattern addLayer(String identifier, Language language) {
+    LayerPattern layer = new LayerPattern(identifier, language);
+    layers.add(layer);
+    symbols.addAll(layer.symbols);
+    anchors.addAll(layer.anchors);
+    return layer;
+  }
+
+  public Language getLanguage() {
+    if (layers.size() < 1) return Language.ANY;
+    return layers.get(1).getLanguage();
   }
 
   /**
@@ -95,66 +51,32 @@ public class URIPattern extends URI {
    * @return captures
    */
   public Capture match(URI uri) {
-    // Part 1: match depth
-    int depth = getLayers().size();
-    if (uri.getLayers().size() < depth) return null;
-
-    // Part 2: match protocol
-    if (!isRef && uri.isRef) return null;
-
-    // Part 3: match every layers
-    Capture capture = new Capture();
-    for (int i = 0; i < depth; ++i) {
-      Map<String, String> cap = matchLayer(i, uri.getLayers().get(i));
-      if (cap == null) return null;
-      for (String name : cap.keySet()) {
-        capture.put(name, cap.get(name));
-      }
-    }
-
-    // return captures
-    return capture;
+    return match(uri, new Capture());
   }
 
   /**
-   * apply captures
+   * Match uri, return null if not matched, or a match with captured groups
    *
-   * @param captures matched result
-   * @return new pattern
+   * @param uri uri
+   * @return captures
    */
-  public URIPattern applyCaptures(Map<String, String> captures) {
-    URIPattern pattern = new URIPattern(this);
-    for (String name : captures.keySet()) {
-      Token token = tokens.get(name);
-      if (token != null) {
-        String source = pattern.getLayers().get(token.level);
-        pattern.getLayers().set(token.level, token.replace(source, captures.get(name)));
-        pattern.tokens.remove(name);
-        pattern.layerTokens.get(token.level).remove(name);
-      }
-    }
-    return pattern;
-  }
+  public Capture match(URI uri, Capture variables) {
+    // Part 1: match protocol
+    if (!isRef && uri.isRef) return null;
 
-  private static final class Token {
-    public static final Pattern regexp = Pattern.compile("\\((\\w+)(?::(\\w+))?\\)");
+    // Part 2: match depth
+    int depth = layers.size();
+    if (uri.getLayerCount() < depth) return null;
 
-    public int level;
-    public int start;
-    public int end;
-    public String name;
-    public String modifier;
-
-    public Token(Matcher matcher, int level) {
-      this.level = level;
-      this.start = matcher.start();
-      this.end = matcher.end();
-      this.name = matcher.group(1);
-      this.modifier = matcher.group(2);
+    // Part 3: match every layers
+    Capture result = new Capture();
+    for (int i = 0; i < depth; ++i) {
+      Capture capture = layers.get(i).match(uri.getLayer(i), variables);
+      if (capture == null) return null;
+      result.putAll(capture);
     }
 
-    public String replace(String source, String capture) {
-      return source.substring(0, start) + capture + source.substring(end);
-    }
+    // return captures
+    return result;
   }
 }

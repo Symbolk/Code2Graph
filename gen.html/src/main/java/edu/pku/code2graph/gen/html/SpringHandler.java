@@ -22,12 +22,9 @@ public class SpringHandler extends AbstractHandler {
   }
 
   private void traverseChidren(Element ele) {
-    URI uri =
-        new URI(
-            false,
-            Language.HTML,
-            uriFilePath,
-            ele instanceof Document ? "" : getIdentifier(ele.tagName()));
+    URI uri = new URI(false, uriFilePath);
+    uri.addLayer(ele instanceof Document ? "" : getIdentifier(ele.tagName()), Language.HTML);
+
     ElementNode en =
         new ElementNode(
             GraphUtil.nid(),
@@ -74,11 +71,11 @@ public class SpringHandler extends AbstractHandler {
 
   public Node DialectNodeToGnode(DialectNode node, String attrName, String parentIdtf) {
     DialectNode current = node;
-    URI uri = new URI(true, Language.HTML, uriFilePath, getIdentifier(attrName));
     String curIdtf =
         parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + URI.checkInvalidCh(current.getName());
-    URI inline = new URI(true, Language.OTHER, uriFilePath, curIdtf);
-    uri.setInline(inline);
+    URI uri = new URI(true, uriFilePath);
+    uri.addLayer(getIdentifier(attrName), Language.HTML);
+    uri.addLayer(curIdtf, Language.OTHER);
     ElementNode en =
         new ElementNode(
             GraphUtil.nid(),
@@ -89,7 +86,7 @@ public class SpringHandler extends AbstractHandler {
             current.getName(),
             uri);
     graph.addVertex(en);
-    GraphUtil.addURI(Language.HTML, en.getUri(), en);
+    GraphUtil.addNode(en);
 
     for (DialectNode child : node.getChildren()) {
       ElementNode childNode = (ElementNode) DialectNodeToGnode(child, attrName, curIdtf);

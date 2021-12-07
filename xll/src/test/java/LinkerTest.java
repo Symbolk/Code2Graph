@@ -1,74 +1,116 @@
+import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
 import org.junit.jupiter.api.Test;
 import edu.pku.code2graph.model.URI;
 
-import java.util.*;
+import java.io.IOException;
 
 public class LinkerTest {
-  private Config config;
+  @Test
+  public void matchTest1() {
+    URITree tree = new URITree();
+    tree.add("def://main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
+    tree.add("use://main/java/com/example/demo/MainActivity.java//R.id.button");
 
-  LinkerTest() {
-    Optional<Config> configOptional = new ConfigLoader().load("src/main/resources/config.yml");
-    config = configOptional.get();
-  }
+    URIPattern def = new URIPattern(false, "(&layoutName).xml");
+    def.addLayer("android:id", Language.XML);
+    def.addLayer("@+id\\/(name)");
 
-  private void matchTest(int ruleIndex, boolean isRef, String source) {
-    URI uri = new URI(source);
-    Rule rule = config.getRules().get(ruleIndex);
-    URIPattern pattern = isRef ? rule.use : rule.def;
-    System.out.println(pattern);
-    System.out.println(uri);
-    System.out.println(pattern.match(uri));
+    URIPattern use = new URIPattern(true, "(javaFile).java");
+    use.addLayer("R.id.(name)", Language.JAVA);
+
+    Linker linker = new Linker(tree, def, use);
+    linker.link();
+    System.out.println(linker.links);
+    System.out.println(linker.captures);
   }
 
   @Test
-  public void test1() {
-    matchTest(1, true,"use:///Code2Graph/client/build/resources/test/android/butterknife/main/java/com/example/demo/MainActivity.java//R.id.button");
+  public void matchTest2() {
+    URITree tree = new URITree();
+    tree.add("def://BlogAdminController.java//.addAttribute//postForm");
+    tree.add("use://blog/new.html//html/body/form/data-th-object//${postForm}");
+
+    URIPattern def = new URIPattern(false, "*.java");
+    def.addLayer(".addAttribute", Language.JAVA);
+    def.addLayer("(name)");
+
+    URIPattern use = new URIPattern(true, "*.html");
+    use.addLayer("**", Language.HTML);
+    use.addLayer("${(name)}");
+
+    Linker linker = new Linker(tree, def, use);
+    linker.link();
+    System.out.println(linker.links);
+    System.out.println(linker.captures);
   }
 
   @Test
-  public void test2() {
-    matchTest(1, false,"def://E:/code/Code2Graph/client/build/resources/test/android/butterknife/main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
+  public void matchTest3() {
+    URITree tree = new URITree();
+
+    tree.add("def://res/layout/list_playlist_mini_item.xml");
+    tree.add("def://res/layout/list_stream_mini_item.xml");
+    tree.add("def://res/layout/list_stream_item.xml");
+    tree.add("def://res/layout/list_stream_grid_item.xml//androidx.constraintlayout.widget.ConstraintLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_stream_item.xml//androidx.constraintlayout.widget.ConstraintLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_playlist_grid_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_playlist_mini_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_stream_mini_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+    tree.add("def://res/layout/list_playlist_item.xml//RelativeLayout/TextView/android:id//@+id\\/itemUploaderView");
+
+    tree.add("use://java/org/schabi/newpipe/local/holder/PlaylistItemHolder.java//R.layout.list_playlist_mini_item");
+    tree.add("use://java/org/schabi/newpipe/settings/SelectPlaylistFragment.java//R.layout.list_playlist_mini_item");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/PlaylistMiniInfoItemHolder.java//R.layout.list_playlist_mini_item");
+    tree.add("use://java/org/schabi/newpipe/local/holder/LocalStatisticStreamItemHolder.java//R.layout.list_stream_item");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/StreamInfoItemHolder.java//R.layout.list_stream_item");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/StreamMiniInfoItemHolder.java//R.layout.list_stream_mini_item");
+    tree.add("use://java/org/schabi/newpipe/local/holder/PlaylistItemHolder.java//R.id.itemUploaderView");
+    tree.add("use://java/org/schabi/newpipe/local/holder/LocalStatisticStreamItemHolder.java//R.id.itemUploaderView");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/StreamMiniInfoItemHolder.java//R.id.itemUploaderView");
+    tree.add("use://java/org/schabi/newpipe/info_list/holder/PlaylistMiniInfoItemHolder.java//R.id.itemUploaderView");
+
+    URIPattern def, use;
+    def = new URIPattern(false, "(layoutName).xml");
+    use = new URIPattern(true, "(javaFile).java");
+    use.addLayer("R.layout.(layoutName)", Language.JAVA);
+
+    Linker linker1 = new Linker(tree, def, use);
+    linker1.link();
+    linker1.print();
+
+    def = new URIPattern(false, "(&layoutName).xml");
+    def.addLayer("android:id", Language.XML);
+    def.addLayer("@+id\\/(name)");
+
+    use = new URIPattern(true, "(&javaFile).java");
+    use.addLayer("R.id.(name)", Language.JAVA);
+
+    Linker linker2 = new Linker(tree, def, use);
+    for (Capture variables : linker1.captures) {
+      linker2.link(variables);
+    }
+    linker2.link();
+    linker2.print();
   }
 
   @Test
-  public void test3() {
-    matchTest(2, true,"use://blog/new.html//html/body/form/data-th-object//${postForm}");
-  }
+  public void loaderTest() throws IOException {
+    Config config = Config.load("src/main/resources/config.yml");
+    Rule rule = config.getRules().get("rule1");
+    URIPattern left = rule.def;
+    URI uri1 = new URI("def://foo/bar.java//getFooBar");
+    System.out.println(left);
+    System.out.println(uri1);
+    System.out.println(left.match(uri1));
+    System.out.println();
 
-  @Test
-  public void test4() {
-    matchTest(2, false,"def://BlogAdminController.java//.addAttribute//postForm");
-  }
-
-  @Test
-  public void generalTest() {
-    Optional<Config> config = new ConfigLoader().load("src/main/resources/config.yml");
-    config.ifPresent(value -> {
-      Rule rule = value.getRules().get(0);
-      URIPattern left = rule.def;
-      URI uri1 = new URI("def://foo/bar.java//getFooBar");
-      System.out.println(left);
-      System.out.println(uri1);
-      System.out.println(left.match(uri1));
-      System.out.println();
-
-      URIPattern right = rule.use;
-      URI uri2 = new URI("def://foo/baz.java//Select//#{FooBar}");
-      System.out.println(right);
-      System.out.println(uri2);
-      System.out.println(right.match(uri2));
-      System.out.println();
-
-      List<Rule> children = rule.subrules;
-      System.out.println(children);
-
-//      List<URI> uris = new ArrayList<>();
-//      uris.add(uri1);
-//      uris.add(uri2);
-//      Map<Language, List<URI>> uriMap = new HashMap<>();
-//      uriMap.put(Language.JAVA, uris);
-//      System.out.println("Total links: " + new Detector(uriMap).link(rule));
-    });
+    URIPattern right = rule.use;
+    URI uri2 = new URI("def://foo/baz.java//Select//#{FooBar}");
+    System.out.println(right);
+    System.out.println(uri2);
+    System.out.println(right.match(uri2));
+    System.out.println();
   }
 }

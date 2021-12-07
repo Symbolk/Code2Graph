@@ -54,14 +54,14 @@ public class HandlersTest {
           case "@+id/discovery_toolbar":
             assertThat(((ElementNode) node).getUri().getIdentifier())
                 .isEqualTo("com.kickstarter.ui.views.DiscoveryToolbar/android\\:id");
-            assertThat(((ElementNode) node).getUri().getInline().getIdentifier())
+            assertThat(((ElementNode) node).getUri().getInlineIdentifier())
                 .isEqualTo("\\@+id\\/discovery_toolbar");
             break;
           case "@+id/filter_text_view":
             assertThat(((ElementNode) node).getUri().getIdentifier())
                 .isEqualTo(
                     "com.kickstarter.ui.views.DiscoveryToolbar/RelativeLayout/LinearLayout/TextView/android\\:id");
-            assertThat(((ElementNode) node).getUri().getInline().getIdentifier())
+            assertThat(((ElementNode) node).getUri().getInlineIdentifier())
                 .isEqualTo("\\@+id\\/filter_text_view");
             break;
         }

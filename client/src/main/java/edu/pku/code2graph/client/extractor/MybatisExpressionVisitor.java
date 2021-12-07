@@ -347,7 +347,8 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
           //          identifier = String.join("/", idtfSplit);
           identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
 
-          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier);
+          URI uri = new URI(false, uriFilePath);
+          uri.addLayer(identifier, Language.JAVA);
           MybatisParam param =
               new MybatisParam(false, split[0], uri, p.getType().toString(), p.toString());
           paramMap.get(declaringClass).get(mdBinding.getName()).add(param);
@@ -355,7 +356,8 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
           methodParaList.add(uri);
         } else {
           identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
-          URI uri = new URI(false, Language.JAVA, uriFilePath, identifier);
+          URI uri = new URI(false, uriFilePath);
+          uri.addLayer(identifier, Language.JAVA);
           MybatisParam param =
               new MybatisParam(false, uri.getSymbol(), uri, p.getType().toString(), p.toString());
           paramMap.get(declaringClass).get(mdBinding.getName()).add(param);
@@ -932,21 +934,16 @@ public class MybatisExpressionVisitor extends AbstractJdtVisitor {
         {
           root.setType(NodeType.QUALIFIED_NAME);
           QualifiedName qualifiedName = (QualifiedName) exp;
-          URI uri =
-              new URI(
-                  true, Language.JAVA, uriFilePath, qualifiedName.getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(qualifiedName.getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           break;
         }
       case ASTNode.SIMPLE_NAME:
         {
           IBinding binding = ((SimpleName) exp).resolveBinding();
-          URI uri =
-              new URI(
-                  true,
-                  Language.JAVA,
-                  uriFilePath,
-                  ((SimpleName) exp).getFullyQualifiedName());
+          URI uri = new URI(true, uriFilePath);
+          uri.addLayer(((SimpleName) exp).getFullyQualifiedName(), Language.JAVA);
           root.setUri(uri);
           if (binding == null) {
             // an unresolved identifier

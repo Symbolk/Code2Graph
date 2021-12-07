@@ -1,81 +1,169 @@
 package edu.pku.code2graph.xll;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import edu.pku.code2graph.model.URITree;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Config {
-  private List<String> presets;
-  private String word_sep;
-  private List<String> plugins;
-  // FIXME: represent rules as objects
-  private List<Rule> rules;
-  private List<String> suppress;
+  private final static Logger logger = LoggerFactory.getLogger(Config.class);
+
+  private final List<String> presets;
+  private final List<String> plugins;
+  private final Map<String, Rule> rules = new LinkedHashMap<>();
+  private final Set<String> missing = new HashSet<>();
+
+  public Config() {
+    presets = new ArrayList<>();
+    plugins = new ArrayList<>();
+  }
 
   public Config(Map<String, Object> config) {
-    Object rules_raw = config.getOrDefault("rules", new ArrayList<>());
-    rules = ((List<Map<String, Object>>) rules_raw).stream().map(Rule::new).collect(Collectors.toList());;
     presets = (List<String>) config.getOrDefault("presets", new ArrayList<>());
-    word_sep = (String) config.getOrDefault("word_sep", "");
     plugins = (List<String>) config.getOrDefault("plugins", new ArrayList<>());
-    suppress = (List<String>) config.getOrDefault("suppress", new ArrayList<>());
+    Map<String, List<String>> flowGraph = (Map<String, List<String>>) config.get("flowgraph");
+    Map<String, Object> rawRules = (Map<String, Object>) config.get("rules");
+    toposort(flowGraph, rawRules);
+    logger.debug(toString());
+  }
+
+  private void reportMissing(String name) {
+    if (missing.contains(name)) return;
+    logger.warn("missing rule definition {}", name);
+    missing.add(name);
+  }
+
+  private void toposort(Map<String, List<String>> flowGraph, Map<String, Object> rawRules) {
+    Map<String, Integer> degrees = new HashMap<>();
+    for (String name : rawRules.keySet()) {
+      if (!flowGraph.containsKey(name)) {
+        logger.warn("unused rule definition {}", name);
+      }
+    }
+
+    for (String name : flowGraph.keySet()) {
+      flowGraph.put(name, flowGraph.get(name).stream().filter(x -> {
+        if (rawRules.containsKey(x) || x.equals("$")) return true;
+        reportMissing(x);
+        return false;
+      }).collect(Collectors.toList()));
+
+      if (rawRules.containsKey(name)) {
+        degrees.put(name, 0);
+      } else {
+        reportMissing(name);
+      }
+    }
+
+    for (String name : flowGraph.keySet()) {
+      for (String prev : flowGraph.get(name)) {
+        if (prev.equals("$")) continue;
+        degrees.put(prev, degrees.get(prev) + 1);
+      }
+    }
+
+    List<String> queue = new ArrayList<>();
+    for (String name : degrees.keySet()) {
+      if (degrees.get(name) == 0) {
+        queue.add(name);
+      }
+    }
+
+    int index = 0;
+    while (index < queue.size()) {
+      String name = queue.get(index);
+      for (String prev : flowGraph.get(name)) {
+        if (prev.equals("$")) continue;
+        int degree = degrees.get(prev) - 1;
+        degrees.put(prev, degree);
+        if (degree == 0) {
+          queue.add(prev);
+        }
+      }
+      index += 1;
+    }
+
+    index -= 1;
+    while (index >= 0) {
+      String name = queue.get(index);
+      List<String> deps = flowGraph.get(name);
+      Rule rule = new Rule((Map<String, Object>) rawRules.get(name), deps, name);
+      rules.put(name, rule);
+      index -= 1;
+    }
   }
 
   public List<String> getPresets() {
     return presets;
   }
 
-  public String getWord_sep() {
-    return word_sep;
-  }
-
   public List<String> getPlugins() {
     return plugins;
   }
 
-  public List<Rule> getRules() {
+  public Map<String, Rule> getRules() {
     return rules;
   }
 
-  public List<String> getSuppress() {
-    return suppress;
-  }
+  public List<Link> link(URITree tree) {
+    // initialize runtime properties
+    List<Link> links = new ArrayList<>();
+    Map<String, Set<Capture>> contexts = new HashMap<>();
 
-  public void setPresets(List<String> presets) {
-    this.presets = presets;
-  }
+    // create patterns and match
+    for (Map.Entry<String, Rule> entry : rules.entrySet()) {
+      String name = entry.getKey();
+      Rule rule = entry.getValue();
 
-  public void setWord_sep(String word_sep) {
-    this.word_sep = word_sep;
-  }
+      // collect all available contexts
+      Set<Capture> localContext = new LinkedHashSet<>();
+      for (String prev : rule.deps) {
+        if (prev.equals("$")) {
+          localContext.add(new Capture());
+        } else {
+          localContext.addAll(contexts.get(prev));
+        }
+      }
 
-  public void setPlugins(List<String> plugins) {
-    this.plugins = plugins;
-  }
+      // link rule for each context
+      logger.debug("Linking " + rule.toString());
+      Linker linker = new Linker(tree, rule);
+      for (Capture variables : localContext) {
+        linker.link(variables);
+      }
+      links.addAll(linker.links);
+      contexts.put(name, linker.captures);
+    }
 
-  public void setRules(List<Rule> rules) {
-    this.rules = rules;
-  }
-
-  public void setSuppress(List<String> suppress) {
-    this.suppress = suppress;
+    logger.info("#xll = {}", links.size());
+    return links;
   }
 
   @Override
   public String toString() {
-    return "Config{"
-        + "presets="
-        + presets
-        + ", word_sep='"
-        + word_sep
-        + '\''
-        + ", plugins="
-        + plugins
-        + ", rules="
-        + rules
-        + ", suppress="
-        + suppress
-        + '}';
+    StringBuilder builder = new StringBuilder();
+    builder.append("Config {");
+    for (Map.Entry<String, Rule> entry : rules.entrySet()) {
+      builder.append("\n  ");
+      builder.append(entry.getKey());
+      builder.append(": ");
+      builder.append(entry.getValue());
+    }
+    builder.append("\n}");
+    return builder.toString();
+  }
+
+  public static Config load(String path) throws FileNotFoundException {
+    InputStream inputStream = new FileInputStream(path);
+    Yaml yaml = new Yaml();
+    Object rawConfig = yaml.loadAll(inputStream).iterator().next();
+    logger.debug("load from " + path);
+    return new Config((Map<String, Object>) rawConfig);
   }
 }

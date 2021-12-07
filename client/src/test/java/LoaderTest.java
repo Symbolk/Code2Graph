@@ -1,6 +1,4 @@
 import edu.pku.code2graph.client.Code2Graph;
-import edu.pku.code2graph.exception.NonexistPathException;
-import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.util.FileUtil;
 import org.apache.log4j.BasicConfigurator;
@@ -9,31 +7,35 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class LoaderTest {
-  private void generateGraph(String repoName, String configName) throws NonexistPathException {
-    String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
-    String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
-    System.out.println("RepoPath: " + repoPath);
-    System.out.println("ConfigPath: " + configPath);
-    Code2Graph c2g = new Code2Graph(repoName, repoPath, configPath);
-    String framework = configName.split("/")[0];
-    switch (framework) {
-      case "springmvc":
-        c2g.addSupportedLanguage(Language.JAVA);
-        c2g.addSupportedLanguage(Language.HTML);
-        break;
-      case "android":
-        c2g.addSupportedLanguage(Language.JAVA);
-        c2g.addSupportedLanguage(Language.XML);
-        break;
-      case "mybatis":
-        c2g.addSupportedLanguage(Language.JAVA);
-        c2g.addSupportedLanguage(Language.XML);
-        c2g.addSupportedLanguage(Language.SQL);
-        break;
-      default:
-        c2g.addSupportedLanguage(Language.JAVA);
+  private void generateGraph(String repoName, String configName) {
+    try {
+      String repoPath = FileUtil.getPathFromURL(this.getClass().getResource(repoName));
+      String configPath = FileUtil.getPathFromURL(this.getClass().getResource(configName));
+      System.out.println("RepoPath: " + repoPath);
+      System.out.println("ConfigPath: " + configPath);
+      Code2Graph c2g = new Code2Graph(repoName, repoPath, configPath);
+      String framework = configName.split("/")[0];
+      switch (framework) {
+        case "springmvc":
+          c2g.addSupportedLanguage(Language.JAVA);
+          c2g.addSupportedLanguage(Language.HTML);
+          break;
+        case "android":
+          c2g.addSupportedLanguage(Language.JAVA);
+          c2g.addSupportedLanguage(Language.XML);
+          break;
+        case "mybatis":
+          c2g.addSupportedLanguage(Language.JAVA);
+          c2g.addSupportedLanguage(Language.XML);
+          c2g.addSupportedLanguage(Language.SQL);
+          break;
+        default:
+          c2g.addSupportedLanguage(Language.JAVA);
+      }
+      c2g.generateGraph();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-    GraphVizExporter.printAsDot(c2g.generateGraph());
   }
 
   @BeforeAll
@@ -73,7 +75,7 @@ public class LoaderTest {
   }
 
   @Test
-  public void mybatisXMLTest() {
+  public void mybatisXmlTest() {
     generateGraph("mybatis/embedded_in_xml/main", "mybatis/config.yml");
   }
 

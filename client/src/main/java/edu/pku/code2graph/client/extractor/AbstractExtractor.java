@@ -29,7 +29,7 @@ public class AbstractExtractor {
     for (Pair<String, String> pair : pairSet) {
       String left = pair.getLeft(), right = pair.getRight();
       String[] record = {
-        left.substring(5, left.length() - 1), right.substring(5, right.length() - 1)
+        left.substring(1, left.length() - 1), right.substring(1, right.length() - 1)
       };
       writer.writeRecord(record);
     }

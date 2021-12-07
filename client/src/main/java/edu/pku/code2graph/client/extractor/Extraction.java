@@ -83,14 +83,14 @@ public class Extraction {
   private static void generateSpringGT() throws IOException {
     SpringExtractor extractor = new SpringExtractor();
     extractor.generateInstances(repoPath, repoPath);
-    String[] headers = {"HTML", "JAVA"};
+    String[] headers = {"use", "def"};
     extractor.writeToFile(gtPath, headers);
   }
 
   private static void generateAndroidGT() throws IOException {
     AndroidExtractor extractor = new AndroidExtractor();
     extractor.generateInstances(repoPath, repoPath);
-    String[] headers = {"XML", "JAVA"};
+    String[] headers = {"def", "use"};
     extractor.writeToFile(gtPath, headers);
   }
 
@@ -98,7 +98,7 @@ public class Extraction {
       throws IOException, ParserConfigurationException, SAXException {
     MybatisExtractor extractor = new MybatisExtractor();
     extractor.generateInstances(repoPath, repoPath);
-    String[] headers = {"SQL", "JAVA"};
+    String[] headers = {"use", "def"};
     extractor.writeToFile(gtPath, headers);
   }
 }

@@ -1,26 +1,42 @@
 package edu.pku.code2graph.xll;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Rule {
   public final URIPattern def;
   public final URIPattern use;
-  public final List<Rule> subrules;
+  public final List<String> deps;
+  public final String name;
 
-  public Rule(URIPattern def, URIPattern use, List<Rule> subrules) {
+  static private int index = 0;
+
+  /**
+   * shared symbols for def / use patterns
+   */
+  public final Set<String> shared = new HashSet<>();
+
+  public Rule(URIPattern def, URIPattern use) {
     this.def = def;
     this.use = use;
-    this.subrules = subrules;
+    this.deps = new ArrayList<>();
+    this.name = "#" + String.valueOf(++index);
+    initialize();
   }
 
-  public Rule(Map<String, Object> rule) {
-    this.def = new URIPattern((Map<String, Object>) rule.get("def"));
-    this.def.isRef = false;
-    this.use = new URIPattern((Map<String, Object>) rule.get("use"));
-    this.use.isRef = true;
-    this.subrules = (List<Rule>) rule.getOrDefault("subrules", new ArrayList());
+  public Rule(Map<String, Object> rule, List<String> deps, String name) {
+    this.def = new URIPattern(false, (Map<String, Object>) rule.get("def"));
+    this.use = new URIPattern(true, (Map<String, Object>) rule.get("use"));
+    this.deps = deps;
+    this.name = name;
+    initialize();
+  }
+
+  private void initialize() {
+    for (String name : def.symbols) {
+      if (use.symbols.contains(name)) {
+        shared.add(name);
+      }
+    }
   }
 
   @Override

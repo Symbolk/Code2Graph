@@ -5,29 +5,23 @@ import edu.pku.code2graph.model.URI;
 import java.util.Objects;
 
 public final class Link {
-  public final URI left;
-  public final Rule rule;
-  public final URI right;
+  public final URI def;
+  public final URI use;
+  public final String name;
 
-  public Link(final URI left, final URI right) {
-    this.left = left;
-    this.rule = null;
-    this.right = right;
-  }
-
-  public Link(final URI left, final URI right, final Rule rule) {
-    this.left = left;
-    this.rule = rule;
-    this.right = right;
+  public Link(final URI def, final URI use, final String name) {
+    this.def = def;
+    this.name = name;
+    this.use = use;
   }
 
   @Override
   public String toString() {
     StringBuilder output = new StringBuilder();
     output.append("(");
-    output.append(left.toString());
+    output.append(def.toString());
     output.append(", ");
-    output.append(right.toString());
+    output.append(use.toString());
     output.append(")");
     return output.toString();
   }
@@ -37,6 +31,6 @@ public final class Link {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     Link link = (Link) o;
-    return Objects.equals(left, link.left) && Objects.equals(right, link.right);
+    return Objects.equals(def, link.def) && Objects.equals(use, link.use);
   }
 }

@@ -211,7 +211,7 @@ public class HandlerTest {
           assertThat(node.getUri().getIdentifier()).isEqualTo(idtf);
           assertThat(node.getUri().getFile()).isEqualTo(filepath);
           assertThat(node.getUri().getLang()).isEqualTo(lang);
-          assertThat(node.getUri().getInline().getIdentifier()).isEqualTo("Select/Where/=/Country");
+          assertThat(node.getUri().getInlineIdentifier()).isEqualTo("Select/Where/=/Country");
         });
   }
 }

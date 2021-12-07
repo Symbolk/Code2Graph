@@ -10,7 +10,7 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.xll.Detector;
+import edu.pku.code2graph.xll.Config;
 import edu.pku.code2graph.xll.Link;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
@@ -189,26 +189,21 @@ public class Code2Graph {
       // build cross-language linking (XLL) edges
       if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
         logger.info("start detecting xll");
-        Detector detector = new Detector(GraphUtil.getUriMap(), xllConfigPath);
-        List<Link> links = detector.linkAll();
+        Config config = Config.load(xllConfigPath);
+        URITree tree = GraphUtil.getUriTree();
+        List<Link> links = config.link(tree);
         logger.info("- #xll = {}", links.size());
         this.xllLinks = links;
-        // create uri-element map when create node
-        Map<Language, Map<URI, List<Node>>> uriMap = GraphUtil.getUriMap();
-        for (Map.Entry<Language, Map<URI, List<Node>>> entry : uriMap.entrySet()) {
-          logger.info(
-              "- #{}_uri = {}", entry.getKey().toString().toLowerCase(), entry.getValue().size());
-        }
 
         Type xllType = type("xll");
 
         int i = 0;
         for (Link link : links) {
           i += 1;
-          logger.debug("XLL#{}  {}, {}", i, link.left.toString(), link.right.toString());
+          logger.debug("XLL#{}  {}, {}", i, link.def.toString(), link.use.toString());
           // get nodes by URI
-          List<Node> source = uriMap.get(link.left.getLang()).get(link.left);
-          List<Node> target = uriMap.get(link.right.getLang()).get(link.right);
+          List<Node> source = tree.get(link.def);
+          List<Node> target = tree.get(link.use);
           Double weight = 1.0D;
 
           // create XLL edge
@@ -219,7 +214,6 @@ public class Code2Graph {
           }
         }
       }
-
     } catch (IOException e) {
       e.printStackTrace();
     }

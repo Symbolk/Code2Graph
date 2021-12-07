@@ -3,7 +3,6 @@ package edu.pku.code2graph.gen.jdt;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
-import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -41,18 +40,14 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
 
   protected ElementNode createElementNode(
       Type type, String snippet, String name, String qname, String identifier) {
-    URI uri =
-        new URI(
-            false,
-            Language.JAVA,
-            uriFilePath,
-            identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""));
+    URI uri = new URI(false, uriFilePath);
+    uri.addLayer(identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""), Language.JAVA);
     ElementNode node =
         new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
     graph.addVertex(node);
     defPool.put(qname, node);
     this.identifier = identifier;
-    GraphUtil.addURI(Language.JAVA, uri, node);
+    GraphUtil.addNode(node);
     return node;
   }
 

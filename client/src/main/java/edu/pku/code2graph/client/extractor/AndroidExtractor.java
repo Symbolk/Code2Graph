@@ -25,6 +25,8 @@ import java.util.List;
 public class AndroidExtractor extends AbstractExtractor {
   public List<URI> xmlURIS = new ArrayList<>();
   public Map<String, List<URI>> javaURIS = new HashMap<>();
+  public Map<String, List<URI>> layoutRefURIS = new HashMap<>();
+  public List<URI> layoutDefURIS = new ArrayList<>();
 
   private static final String JRE_PATH =
       System.getProperty("java.home") + File.separator + "lib/rt.jar";
@@ -70,7 +72,7 @@ public class AndroidExtractor extends AbstractExtractor {
     parser.setResolveBindings(true);
     parser.setBindingsRecovery(true);
 
-    Map<String, List<String>> layMap = new HashMap<>();
+    Map<String, List<Pair<String, URI>>> layMap = new HashMap<>();
     Map<String, List<URI>> idMap = new HashMap<>();
     Map<URI, String> dataBindingMap = new HashMap<>();
 
@@ -103,7 +105,7 @@ public class AndroidExtractor extends AbstractExtractor {
     }
 
     for (String fileName : filePaths) {
-      List<String> layouts = layMap.get(fileName);
+      List<Pair<String, URI>> layouts = layMap.get(fileName);
       List<URI> ids = idMap.get(fileName);
       if (ids == null || ids.isEmpty()) continue;
       if (layouts == null || layouts.isEmpty()) {
@@ -112,12 +114,26 @@ public class AndroidExtractor extends AbstractExtractor {
           javaURIS.get("").add(id);
         }
       } else {
-        for (String layout : layouts) {
-          if (!javaURIS.containsKey(layout)) javaURIS.put(layout, new ArrayList<>());
+        for (Pair<String, URI> layout : layouts) {
+          if (!javaURIS.containsKey(layout.getLeft()))
+            javaURIS.put(layout.getLeft(), new ArrayList<>());
           for (URI id : ids) {
-            javaURIS.get(layout).add(id);
+            javaURIS.get(layout.getLeft()).add(id);
           }
         }
+      }
+    }
+
+    for (String fileName : layMap.keySet()) {
+      List<Pair<String, URI>> layouts = layMap.get(fileName);
+      for (Pair<String, URI> nameAndUri : layouts) {
+        String name = nameAndUri.getLeft();
+        URI uri = nameAndUri.getRight();
+        name = name.split("\\.")[2];
+        if (!layoutRefURIS.containsKey(name)) {
+          layoutRefURIS.put(name, new ArrayList<>());
+        }
+        layoutRefURIS.get(name).add(uri);
       }
     }
 
@@ -140,16 +156,29 @@ public class AndroidExtractor extends AbstractExtractor {
     SaxGenerator generator = new SaxGenerator();
     Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
     for (Node node : graph.vertexSet()) {
-      if (node instanceof ElementNode
-          && node.getUri().getInline() != null
-          && node.getUri().getInline().getIdentifier().startsWith("@+id")) {
+      if (node instanceof ElementNode && node.getUri().getInlineIdentifier().startsWith("@+id")) {
         xmlURIS.add(node.getUri());
+      } else if (node.getType().toString().equals("file")) {
+        layoutDefURIS.add(node.getUri());
       }
     }
 
     xmlURIS = removeDuplicateOutputField(xmlURIS);
 
     GraphUtil.clearGraph();
+  }
+
+  private void findLayoutPairs() {
+    for (URI uri : layoutDefURIS) {
+      if (uri.getIdentifier().equals("") && uri.getInlineIdentifier().equals("")) {
+        String[] split = uri.getFile().split("/");
+        String filename = split[split.length - 1].split("\\.")[0];
+        if (!layoutRefURIS.containsKey(filename)) continue;
+        for (URI refURI : layoutRefURIS.get(filename)) {
+          uriPairs.add(new ImmutablePair<>(uri, refURI));
+        }
+      }
+    }
   }
 
   private void findPairByXmlUri(URI uri) {
@@ -183,6 +212,7 @@ public class AndroidExtractor extends AbstractExtractor {
     FileUtil.setRootPath(repoRoot);
     extractJavaUri(repoPath);
     extractXmlUri(repoPath);
+    findLayoutPairs();
     findPairs();
     return uriPairs;
   }

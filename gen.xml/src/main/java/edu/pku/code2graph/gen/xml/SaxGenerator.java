@@ -31,7 +31,11 @@ public class SaxGenerator extends Generator {
       for (String filePath : filePaths) {
         File file = new File(filePath);
         handler.setFilePath(FilenameUtils.separatorsToUnix(filePath));
-        parser.parse(file, handler);
+        try {
+          parser.parse(file, handler);
+        } catch (SAXException e) {
+          logger.warn("can't initialize parser correctly for " + filePath);
+        }
       }
 
       handler.buildEdges();

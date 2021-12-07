@@ -19,7 +19,8 @@ public class DocumentHandler extends AbstractHandler {
   }
 
   private void traverseChidren(Element ele) {
-    URI uri = new URI(false, Language.HTML, uriFilePath, getIdentifier(ele.tagName()));
+    URI uri = new URI(false, uriFilePath);
+    uri.addLayer(getIdentifier(ele.tagName()), Language.HTML);
     ElementNode en =
         new ElementNode(
             GraphUtil.nid(),
@@ -31,7 +32,7 @@ public class DocumentHandler extends AbstractHandler {
             uri);
     graph.addVertex(en);
     stack.push(en);
-    GraphUtil.addURI(Language.HTML, en.getUri(), en);
+    GraphUtil.addNode(en);
 
     if (!stack.isEmpty()) {
       graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
