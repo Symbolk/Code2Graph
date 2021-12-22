@@ -1,11 +1,12 @@
 package edu.pku.code2graph.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class URITree {
+public class URITree  implements Serializable {
   public final Map<Layer, URITree> children = new HashMap<>();
   public final List<Node> nodes = new ArrayList<>();
 

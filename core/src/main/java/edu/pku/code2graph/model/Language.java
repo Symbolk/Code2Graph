@@ -1,8 +1,9 @@
 package edu.pku.code2graph.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public enum Language {
+public enum Language  implements Serializable {
   C(".c"),
   CPP(".cpp"),
   HPP(".h"),

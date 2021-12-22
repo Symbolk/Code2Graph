@@ -2,13 +2,14 @@ package edu.pku.code2graph.model;
 
 import org.apache.commons.io.FilenameUtils;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
-public class URI extends URILike<Layer> {
+public class URI extends URILike<Layer>  implements Serializable {
   public URI() {
     this(false, "");
   }

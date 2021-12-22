@@ -9,6 +9,7 @@ import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.jgrapht.Graph;
@@ -75,7 +76,7 @@ public class LintTest {
 
   private static void setUp(String folder)
       throws NonexistPathException, ParserConfigurationException, SAXException {
-    c2g = new Code2Graph(repoName, folder);
+    c2g = new Code2Graph(repoName, folder, configPath);
     switch (framework) {
       case "springmvc":
         c2g.addSupportedLanguage(Language.JAVA);
@@ -98,11 +99,16 @@ public class LintTest {
 
   private static List<Link> lint(String version1, String version2) {
     // collect all URIs as a tree in v1 and v2
-    Graph<Node, Edge> graph = c2g.generateGraph(version1);
+    Graph<Node, Edge> graph1 = c2g.generateGraph(version1);
     List<Link> xllLinks = c2g.getXllLinks();
-    URITree tree1 = GraphUtil.getUriTree();
+    URITree tree1 = (URITree) SerializationUtils.clone(GraphUtil.getUriTree());
+    GraphUtil.clearGraph();
 
+    Graph<Node, Edge> graph2 = c2g.generateGraph(version2);
     URITree tree2 = GraphUtil.getUriTree();
+
+    System.out.println(tree1.children.size() == tree2.children.size());
+    System.out.println(tree1.nodes.size() == tree2.nodes.size());
     // analyze volation in the current change
     List<Link> res = analyzeViolation(xllLinks, tree1, tree2);
     return res;

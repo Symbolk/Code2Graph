@@ -1,6 +1,8 @@
 package edu.pku.code2graph.model;
 
-public class Layer {
+import java.io.Serializable;
+
+public class Layer  implements Serializable {
     protected Language language;
     protected String identifier;
 
