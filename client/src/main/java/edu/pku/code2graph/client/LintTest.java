@@ -110,14 +110,17 @@ public class LintTest {
     System.out.println(tree1.children.size() == tree2.children.size());
     System.out.println(tree1.nodes.size() == tree2.nodes.size());
     // analyze volation in the current change
-    List<Link> res = analyzeViolation(xllLinks, tree1, tree2);
+    List<Link> res = analyzeViolation(xllLinks, tree2);
     return res;
   }
 
-  private static List<Link> analyzeViolation(List<Link> xllLinks, URITree tree1, URITree tree2) {
-    // analyze XLL in tree1
-    // compare tree1 with tree2
-    // return broken XLL
-    return new ArrayList<>();
+  private static List<Link> analyzeViolation(List<Link> xllLinks, URITree tree) {
+    List<Link> violations = new ArrayList<>();
+    for (Link link : xllLinks) {
+      if (!tree.has(link.def) && tree.has(link.use)) {
+        violations.add(link);
+      }
+    }
+    return violations;
   }
 }

@@ -25,6 +25,10 @@ public class URITree  implements Serializable {
     return add(new URI(source));
   }
 
+  public boolean has(URI uri) {
+    return get(uri) != null;
+  }
+
   public List<Node> get(URI uri) {
     URITree root = this;
     for (Layer layer : uri.layers) {
