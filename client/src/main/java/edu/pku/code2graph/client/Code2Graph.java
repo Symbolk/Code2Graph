@@ -146,6 +146,7 @@ public class Code2Graph {
    */
   public Graph<Node, Edge> generateGraph(String directory) {
     // collect the path list of source files in supported languages
+    FileUtil.setRootPath(directory);
     Map<String, List<String>> ext2FilePaths =
         FileUtil.listFilePathsInLanguages(directory, this.supportedLanguages);
     return generateGraph(ext2FilePaths);
