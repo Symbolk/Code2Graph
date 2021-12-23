@@ -1044,7 +1044,7 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
           root.setUri(uri);
           GraphUtil.addNode(root);
 
-          if (exp.toString().startsWith("R.layout.")) {
+          if (exp.toString().startsWith("R.layout.") || exp.toString().startsWith("R.menu.")) {
             if (!layouts.containsKey(filePath)) {
               layouts.put(filePath, new ArrayList<>());
             }
@@ -1116,7 +1116,7 @@ public class AndroidExpressionVisitor extends AbstractJdtVisitor {
             }
           }
 
-          if (exp.toString().startsWith("R.layout.")) {
+          if (exp.toString().startsWith("R.layout.") || exp.toString().startsWith("R.menu.")) {
             if (!layouts.containsKey(filePath)) {
               layouts.put(filePath, new ArrayList<>());
             }
