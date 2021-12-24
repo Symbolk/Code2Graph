@@ -34,7 +34,7 @@ public class LintTest {
 
   // common constants used across methods
   private static String framework = "android";
-  private static String repoName = "VirtualXposed";
+  private static String repoName = "NewPipe";
   private static String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   private static String repoPath = System.getProperty("user.home") + "/Downloads/lint/" + repoName;
@@ -71,14 +71,16 @@ public class LintTest {
 
     // compute precision for the current test case
     if (res.isEmpty()) {
-      System.out.println("Precision=" + "0%");
+      System.out.println("No violations!");
     } else {
       Set<String> resLines = convertLinksToStrings(res);
       resLines.forEach(System.out::println);
 
       int intersectionNum = MetricUtil.intersectSize(resLines, gtLines);
       double precision = MetricUtil.computeProportion(intersectionNum, resLines.size());
+      double recall = MetricUtil.computeProportion(intersectionNum, gtLines.size());
       System.out.println("Precision=" + MetricUtil.formatDouble(precision) + "%");
+      System.out.println("Recall=" + MetricUtil.formatDouble(recall) + "%");
     }
   }
 
