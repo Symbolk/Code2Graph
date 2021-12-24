@@ -1,6 +1,7 @@
 package edu.pku.code2graph.client;
 
 import com.csvreader.CsvReader;
+import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Edge;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Test on the simulated code smell/side effects of code changes */
 public class LintTest {
@@ -32,7 +34,7 @@ public class LintTest {
 
   // common constants used across methods
   private static String framework = "android";
-  private static String repoName = "CloudReader";
+  private static String repoName = "VirtualXposed";
   private static String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   private static String repoPath = System.getProperty("user.home") + "/Downloads/lint/" + repoName;
@@ -56,22 +58,43 @@ public class LintTest {
     }
 
     List<Link> res = lint(version1, version2);
-    res.forEach(System.out::println);
     //  compare with the ground truth list, compute the precision for current case
     String gtPath = repoPath + "_gt.csv";
     CsvReader gtReader = new CsvReader(gtPath);
     gtReader.readHeaders();
-    String[] gtHeaders = gtReader.getHeaders();
 
     Set<String> gtLines = new HashSet<>();
-    String leftLang = gtHeaders[0], rightLang = gtHeaders[1];
     while (gtReader.readRecord()) {
-      gtLines.add(gtReader.get(leftLang) + "," + gtReader.get(rightLang));
+      gtLines.add(gtReader.get("def") + "," + gtReader.get("use"));
     }
     gtReader.close();
 
     // compute precision for the current test case
+    if (res.isEmpty()) {
+      System.out.println("Precision=" + "0%");
+    } else {
+      Set<String> resLines = convertLinksToStrings(res);
+      resLines.forEach(System.out::println);
 
+      int intersectionNum = MetricUtil.intersectSize(resLines, gtLines);
+      double precision = MetricUtil.computeProportion(intersectionNum, resLines.size());
+      System.out.println("Precision=" + MetricUtil.formatDouble(precision) + "%");
+    }
+  }
+
+  private static Set<String> convertLinksToStrings(List<Link> links) {
+    return links.stream()
+        .map(
+            link -> {
+              return link.toString()
+                  .replaceFirst("\\(<", "")
+                  .replaceFirst(">\\)", "")
+                  .replace(">", "")
+                  .replace("<", "")
+                  .replace(", ", ",")
+                  .trim();
+            })
+        .collect(Collectors.toSet());
   }
 
   private static void setUp(String folder)
