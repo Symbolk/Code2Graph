@@ -11,10 +11,10 @@ rules:
     use:
       lang: JAVA
       file: '(javaFile).java'
-      identifier: R.layout.(layoutName)
+      identifier: R.(layoutType).(layoutName)
     def:
       lang: XML
-      file: (layoutName).xml
+      file: (layoutType)/(layoutName).xml
 
   # R.id.name <-> @+id
   r-id:

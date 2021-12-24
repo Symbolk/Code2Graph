@@ -185,7 +185,9 @@ public class AndroidExtractor extends AbstractExtractor {
     String layout = uri.getFile();
     String[] split = layout.split("/");
     layout = "R.layout." + split[split.length - 1];
+    String menu = "R.menu." + split[split.length - 1];
     layout = layout.substring(0, layout.length() - 4);
+    menu = menu.substring(0, menu.length() - 4);
     if (javaURIS.containsKey("")) {
       for (URI item : javaURIS.get("")) {
         if (item.getSymbol().length() >= 5 && item.getSymbol().substring(5).equals(uri.getSymbol()))
@@ -193,11 +195,20 @@ public class AndroidExtractor extends AbstractExtractor {
       }
     }
 
-    if (!javaURIS.containsKey(layout)) return;
-    for (URI item : javaURIS.get(layout)) {
-      String[] sp = item.getSymbol().split("\\.");
-      String symbol = sp[sp.length - 1];
-      if (symbol.equals(uri.getSymbol())) uriPairs.add(new ImmutablePair<>(uri, item));
+    if (javaURIS.containsKey(layout)) {
+      for (URI item : javaURIS.get(layout)) {
+        String[] sp = item.getSymbol().split("\\.");
+        String symbol = sp[sp.length - 1];
+        if (symbol.equals(uri.getSymbol())) uriPairs.add(new ImmutablePair<>(uri, item));
+      }
+    }
+
+    if (javaURIS.containsKey(menu)) {
+      for (URI item : javaURIS.get(menu)) {
+        String[] sp = item.getSymbol().split("\\.");
+        String symbol = sp[sp.length - 1];
+        if (symbol.equals(uri.getSymbol())) uriPairs.add(new ImmutablePair<>(uri, item));
+      }
     }
   }
 
