@@ -79,8 +79,10 @@ public class LintTest {
       int intersectionNum = MetricUtil.intersectSize(resLines, gtLines);
       double precision = MetricUtil.computeProportion(intersectionNum, resLines.size());
       double recall = MetricUtil.computeProportion(intersectionNum, gtLines.size());
+      double f1 = (2 * precision * recall) / (precision + recall);
       System.out.println("Precision=" + MetricUtil.formatDouble(precision) + "%");
       System.out.println("Recall=" + MetricUtil.formatDouble(recall) + "%");
+      System.out.println("F1=" + MetricUtil.formatDouble(f1) + "%");
     }
   }
 

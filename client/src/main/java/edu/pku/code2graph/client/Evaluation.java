@@ -200,9 +200,11 @@ public class Evaluation {
     // compute precision/recall
     double precision = MetricUtil.computeProportion(intersectionNum, otLines.size());
     double recall = MetricUtil.computeProportion(intersectionNum, gtLines.size());
+    double f1 =  MetricUtil.formatDouble((2 * precision * recall) / (precision + recall));
 
     logger.info("Precision = {}%", precision);
     logger.info("Recall = {}%", recall);
+    logger.info("F1 = {}%", f1);
   }
 
   /** Metric: compare output with ground truth and calculate the precision and recall */
