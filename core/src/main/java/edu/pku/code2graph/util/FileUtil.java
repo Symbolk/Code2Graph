@@ -108,7 +108,6 @@ public class FileUtil {
    * Get path relative to the root path
    *
    * @param absolutePath
-   * @param rootPath
    * @return
    */
   public static String getRelativePath(String absolutePath) {
