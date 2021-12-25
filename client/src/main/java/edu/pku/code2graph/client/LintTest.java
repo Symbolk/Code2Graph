@@ -1,6 +1,7 @@
 package edu.pku.code2graph.client;
 
 import com.csvreader.CsvReader;
+import com.google.common.base.Stopwatch;
 import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Test on the simulated code smell/side effects of code changes */
@@ -57,7 +59,12 @@ public class LintTest {
       e.printStackTrace();
     }
 
+    Stopwatch stopwatch = Stopwatch.createStarted();
+    stopwatch.reset().start();
     List<Link> res = lint(version1, version2);
+    stopwatch.stop();
+    long timeCost = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
     //  compare with the ground truth list, compute the precision for current case
     String gtPath = repoPath + "_gt.csv";
     CsvReader gtReader = new CsvReader(gtPath);
@@ -83,6 +90,7 @@ public class LintTest {
       System.out.println("Precision=" + MetricUtil.formatDouble(precision) + "%");
       System.out.println("Recall=" + MetricUtil.formatDouble(recall) + "%");
       System.out.println("F1=" + MetricUtil.formatDouble(f1) + "%");
+      System.out.println("Timecost=" + timeCost + "ms");
     }
   }
 
