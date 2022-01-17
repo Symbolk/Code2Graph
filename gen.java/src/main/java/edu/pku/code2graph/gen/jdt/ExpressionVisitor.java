@@ -173,103 +173,103 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     if (bodyDeclarations.isEmpty()) {
       return;
     }
-    String oldScope = scope;
     String parentQName = node.getQualifiedName();
-    scope += parentQName + '/';
-    RelationNode bodyNode = new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
-    bodyNode.setRange(computeRange(typeDeclaration.bodyDeclarations()));
+    withScope(parentQName, () -> {
+      RelationNode bodyNode = new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
+      bodyNode.setRange(computeRange(typeDeclaration.bodyDeclarations()));
 
-    graph.addVertex(bodyNode);
-    defPool.put(parentQName + ".BLOCK", bodyNode);
-    graph.addEdge(node, bodyNode, new Edge(GraphUtil.eid(), EdgeType.BODY));
+      graph.addVertex(bodyNode);
+      defPool.put(parentQName + ".BLOCK", bodyNode);
+      graph.addEdge(node, bodyNode, new Edge(GraphUtil.eid(), EdgeType.BODY));
 
-    // annotation member
-    if (typeDeclaration instanceof AnnotationTypeDeclaration) {
-      for (Object bodyDeclaration : bodyDeclarations) {
-        if (bodyDeclaration instanceof AnnotationTypeMemberDeclaration) {
-          AnnotationTypeMemberDeclaration atmd =
-              ((AnnotationTypeMemberDeclaration) bodyDeclaration);
-          ElementNode atmdNode =
-              createElementNode(
-                  NodeType.ENUM_CONSTANT_DECLARATION,
-                  atmd.toString(),
-                  atmd.getName().toString(),
-                  parentQName + "." + atmd.getName(),
-                  JdtService.getIdentifier(atmd));
+      // annotation member
+      if (typeDeclaration instanceof AnnotationTypeDeclaration) {
+        for (Object bodyDeclaration : bodyDeclarations) {
+          if (bodyDeclaration instanceof AnnotationTypeMemberDeclaration) {
+            AnnotationTypeMemberDeclaration atmd =
+                    ((AnnotationTypeMemberDeclaration) bodyDeclaration);
+            ElementNode atmdNode =
+                    createElementNode(
+                            NodeType.ENUM_CONSTANT_DECLARATION,
+                            atmd.toString(),
+                            atmd.getName().toString(),
+                            parentQName + "." + atmd.getName(),
+                            JdtService.getIdentifier(atmd));
 
-          atmdNode.setRange(computeRange(atmd));
-          graph.addEdge(bodyNode, atmdNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+            atmdNode.setRange(computeRange(atmd));
+            graph.addEdge(bodyNode, atmdNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+          }
         }
       }
-    }
 
-    // enum constant member
-    if (typeDeclaration instanceof EnumDeclaration) {
-      for (Object constantDeclaration : ((EnumDeclaration) typeDeclaration).enumConstants()) {
-        if (constantDeclaration instanceof EnumConstantDeclaration) {
-          EnumConstantDeclaration cst = (EnumConstantDeclaration) constantDeclaration;
-          ElementNode cstNode =
-              createElementNode(
-                  NodeType.ENUM_CONSTANT_DECLARATION,
-                  cst.toString(),
-                  cst.getName().toString(),
-                  parentQName + "." + cst.getName().toString(),
-                  JdtService.getIdentifier(cst));
+      // enum constant member
+      if (typeDeclaration instanceof EnumDeclaration) {
+        for (Object constantDeclaration : ((EnumDeclaration) typeDeclaration).enumConstants()) {
+          if (constantDeclaration instanceof EnumConstantDeclaration) {
+            EnumConstantDeclaration cst = (EnumConstantDeclaration) constantDeclaration;
+            ElementNode cstNode =
+                    createElementNode(
+                            NodeType.ENUM_CONSTANT_DECLARATION,
+                            cst.toString(),
+                            cst.getName().toString(),
+                            parentQName + "." + cst.getName().toString(),
+                            JdtService.getIdentifier(cst));
 
-          cstNode.setRange(computeRange(cst));
-          graph.addEdge(bodyNode, cstNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+            cstNode.setRange(computeRange(cst));
+            graph.addEdge(bodyNode, cstNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+          }
         }
       }
-    }
 
-    // initializer
-    List<Initializer> initializers =
-        bodyDeclarations.stream()
-            .filter(Initializer.class::isInstance)
-            .map(Initializer.class::cast)
-            .collect(Collectors.toList());
-    if (!initializers.isEmpty()) {
-      for (Initializer initializer : initializers) {
-        if (!initializer.getBody().statements().isEmpty()) {
-          String qname = parentQName + ".INIT";
+      // initializer
+      List<Initializer> initializers =
+              bodyDeclarations.stream()
+                      .filter(Initializer.class::isInstance)
+                      .map(Initializer.class::cast)
+                      .collect(Collectors.toList());
+      if (!initializers.isEmpty()) {
+        for (Initializer initializer : initializers) {
+          if (!initializer.getBody().statements().isEmpty()) {
+            String qname = parentQName + ".INIT";
 
-          ElementNode initNode =
-              createElementNode(
-                  NodeType.INIT_BLOCK_DECLARATION,
-                  initializer.toString(),
-                  node.getName() + ".INIT",
-                  qname,
-                  JdtService.getIdentifier(initializer));
+            ElementNode initNode =
+                    createElementNode(
+                            NodeType.INIT_BLOCK_DECLARATION,
+                            initializer.toString(),
+                            node.getName() + ".INIT",
+                            qname,
+                            JdtService.getIdentifier(initializer));
 
-          initNode.setRange(computeRange(initializer));
+            initNode.setRange(computeRange(initializer));
 
-          graph.addEdge(bodyNode, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
-          defPool.put(qname, node);
+            graph.addEdge(bodyNode, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+            defPool.put(qname, node);
 
-          parseBodyBlock(initializer.getBody(), parentQName + ".BLOCK")
-              .ifPresent(
-                  initBlock ->
-                      graph.addEdge(
-                          initNode, initBlock, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
+            parseBodyBlock(initializer.getBody(), parentQName + ".BLOCK")
+                    .ifPresent(
+                            initBlock ->
+                                    graph.addEdge(
+                                            initNode, initBlock, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
+          }
         }
       }
-    }
 
-    // field
-    IVariableBinding[] fdBindings = binding.getDeclaredFields();
-    for (IVariableBinding b : fdBindings) {
-      usePool.add(Triple.of(bodyNode, EdgeType.CHILD, parentQName + "." + b.getName()));
-    }
-
-    // method
-    IMethodBinding[] mdBindings = binding.getDeclaredMethods();
-    for (IMethodBinding b : mdBindings) {
-      if (b.isDefaultConstructor()) {
-        continue;
+      // field
+      IVariableBinding[] fdBindings = binding.getDeclaredFields();
+      for (IVariableBinding b : fdBindings) {
+        usePool.add(Triple.of(bodyNode, EdgeType.CHILD, parentQName + "." + b.getName()));
       }
-      usePool.add(Triple.of(bodyNode, EdgeType.CHILD, JdtService.getMethodQNameFromBinding(b)));
-    }
-    scope = oldScope;
+
+      // method
+      IMethodBinding[] mdBindings = binding.getDeclaredMethods();
+      for (IMethodBinding b : mdBindings) {
+        if (b.isDefaultConstructor()) {
+          continue;
+        }
+        usePool.add(Triple.of(bodyNode, EdgeType.CHILD, JdtService.getMethodQNameFromBinding(b)));
+      }
+      return null;
+    });
   }
 
   public boolean visit(FieldDeclaration fd) {
@@ -564,13 +564,14 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param node
    * @param arguments
    */
-  private void parseArguments(RelationNode node, List arguments) {
+  private RelationNode parseArguments(RelationNode node, List arguments) {
     for (Object arg : arguments) {
       if (arg instanceof Expression) {
         graph.addEdge(
             node, parseExpression((Expression) arg), new Edge(GraphUtil.eid(), EdgeType.ARGUMENT));
       }
     }
+    return node;
   }
 
   /**
@@ -622,7 +623,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                     EdgeType.REFERENCE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
-          parseArguments(node, ci.arguments());
+          withScope("super", () -> parseArguments(node, ci.arguments()));
           return Optional.of(node);
         }
       case ASTNode.CONSTRUCTOR_INVOCATION:
@@ -642,14 +643,14 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                     EdgeType.REFERENCE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
-          parseArguments(node, ci.arguments());
+          withScope("this", () -> parseArguments(node, ci.arguments()));
           return Optional.of(node);
         }
       case ASTNode.RETURN_STATEMENT:
         {
           Expression expression = ((ReturnStatement) stmt).getExpression();
           if (expression != null) {
-            RelationNode node = parseExpression(expression);
+            RelationNode node = withScope("return", () -> parseExpression(expression));
             graph.addVertex(node);
             return Optional.of(node);
           }
@@ -1183,15 +1184,18 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                     EdgeType.DATA_TYPE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
-          parseArguments(root, cic.arguments());
+          String identifier = cic.getType().toString();
+          withScope(identifier, () -> parseArguments(root, cic.arguments()));
           break;
         }
       case ASTNode.SUPER_METHOD_INVOCATION:
         {
           SuperMethodInvocation mi = (SuperMethodInvocation) exp;
+          String identifier = "super." + mi.getName().toString();
           root.setType(NodeType.SUPER_METHOD_INVOCATION);
+          root.setUri(createIdentifier(identifier));
 
-          parseArguments(root, mi.arguments());
+          withScope(identifier, () -> parseArguments(root, mi.arguments()));
           // find the method declaration in super class
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           if (mdBinding != null) {
@@ -1212,6 +1216,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           MethodInvocation mi = (MethodInvocation) exp;
           root.setType(NodeType.METHOD_INVOCATION);
 
+          // FIXME use better identifier
           identifier = "." + mi.getName().getIdentifier();
           root.setUri(createIdentifier(identifier));
           GraphUtil.addNode(root);
@@ -1224,7 +1229,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 new Edge(GraphUtil.eid(), EdgeType.ACCESSOR));
           }
 
-          parseArguments(root, mi.arguments());
+          withScope(identifier, () -> parseArguments(root, mi.arguments()));
 
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           // only internal invocation (or consider types, fields and local?)

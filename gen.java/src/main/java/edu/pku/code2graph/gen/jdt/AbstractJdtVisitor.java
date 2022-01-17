@@ -52,6 +52,18 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     return node;
   }
 
+  interface WithScope<T> {
+    T action();
+  }
+
+  protected <T> T withScope(String prefix, WithScope<T> callback) {
+    String oldScope = scope;
+    scope += prefix + "/";
+    T result = callback.action();
+    scope = oldScope;
+    return result;
+  }
+
   protected URI createIdentifier(String identifier) {
     return createIdentifier(identifier, true);
   }
