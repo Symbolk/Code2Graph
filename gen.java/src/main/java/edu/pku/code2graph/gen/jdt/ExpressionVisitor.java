@@ -245,7 +245,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
             graph.addEdge(bodyNode, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
             defPool.put(qname, node);
 
-            parseBodyBlock(initializer.getBody(), parentQName + ".BLOCK")
+            parseBodyBlock(initializer.getBody(), parentQName, parentQName)
                     .ifPresent(
                             initBlock ->
                                     graph.addEdge(
@@ -406,7 +406,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     // TODO: process body here or else where?
     if (md.getBody() != null) {
       if (!md.getBody().statements().isEmpty()) {
-        parseBodyBlock(md.getBody(), qname + ".BLOCK")
+        parseBodyBlock(md.getBody(), md.getName().toString(), qname)
             .ifPresent(
                 blockNode ->
                     graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
@@ -421,15 +421,15 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param body
    * @return
    */
-  private Optional<RelationNode> parseBodyBlock(Block body, String rootName) {
+  private Optional<RelationNode> parseBodyBlock(Block body, String name, String rootName) {
     if (body == null || body.statements().isEmpty()) {
       return Optional.empty();
     }
 
     // the node of the current block node
-    Optional<RelationNode> rootOpt = parseBodyBlock(body);
+    Optional<RelationNode> rootOpt = withScope(name, () -> parseBodyBlock(body));
     if (rootOpt.isPresent()) {
-      defPool.put(rootName, rootOpt.get());
+      defPool.put(rootName + ".BLOCK", rootOpt.get());
       return rootOpt;
     } else {
       return Optional.empty();
