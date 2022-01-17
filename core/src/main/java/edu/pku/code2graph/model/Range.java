@@ -56,4 +56,12 @@ public class Range implements Serializable {
     }
     return this.endLine >= range.getStartLine() && range.getEndLine() >= this.startLine;
   }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(startLine).append(":").append(startColumn);
+    builder.append("~").append(endLine).append(":").append(endColumn);
+    return builder.toString();
+  }
 }
