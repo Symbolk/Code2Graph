@@ -36,7 +36,7 @@ public class TestMember extends A implements B {
 
   public int fun2(int x) {
     // method invocation
-    return fun3(x);
+    return aaa().bbb.fun3(x);
   }
 
   private int fun3(int x) {

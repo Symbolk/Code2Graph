@@ -1214,20 +1214,25 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       case ASTNode.METHOD_INVOCATION:
         {
           MethodInvocation mi = (MethodInvocation) exp;
-          root.setType(NodeType.METHOD_INVOCATION);
-
-          // FIXME use better identifier
-          identifier = "." + mi.getName().getIdentifier();
-          root.setUri(createIdentifier(identifier));
-          GraphUtil.addNode(root);
 
           // accessor
-          if (mi.getExpression() != null) {
-            graph.addEdge(
-                root,
-                parseExpression(mi.getExpression()),
-                new Edge(GraphUtil.eid(), EdgeType.ACCESSOR));
+          Expression expr = mi.getExpression();
+          if (expr != null) {
+            Edge edge = new Edge(GraphUtil.eid(), EdgeType.ACCESSOR);
+            graph.addEdge(root, parseExpression(expr), edge);
+            String source = expr.toString();
+            if (source.matches("^\\w+(\\.\\w+)*$")) {
+              identifier = expr.toString() + "." + mi.getName().getIdentifier();
+            } else {
+              identifier = "." + mi.getName().getIdentifier();
+            }
+          } else {
+            identifier = mi.getName().getIdentifier();
           }
+
+          root.setType(NodeType.METHOD_INVOCATION);
+          root.setUri(createIdentifier(identifier));
+          GraphUtil.addNode(root);
 
           withScope(identifier, () -> parseArguments(root, mi.arguments()));
 
