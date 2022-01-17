@@ -52,6 +52,16 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     return node;
   }
 
+  protected URI createIdentifier(String identifier) {
+    return createIdentifier(identifier, true);
+  }
+
+  protected URI createIdentifier(String identifier, boolean isRef) {
+    URI uri = new URI(isRef, uriFilePath);
+    uri.addLayer(scope + identifier, Language.JAVA);
+    return uri;
+  }
+
   /** Build edges with cached data pool */
   public void buildEdges() {
     for (Triple<Node, Type, String> entry : usePool) {
