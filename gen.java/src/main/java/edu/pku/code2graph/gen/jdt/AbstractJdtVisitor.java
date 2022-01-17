@@ -24,6 +24,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   protected String filePath;
   protected String uriFilePath;
   protected String identifier;
+  protected String scope = "";
 
   // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
   // TODO include external type declaration or not?

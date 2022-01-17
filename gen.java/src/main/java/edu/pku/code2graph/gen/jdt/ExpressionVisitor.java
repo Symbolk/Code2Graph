@@ -173,7 +173,9 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     if (bodyDeclarations.isEmpty()) {
       return;
     }
+    String oldScope = scope;
     String parentQName = node.getQualifiedName();
+    scope += parentQName + '/';
     RelationNode bodyNode = new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
     bodyNode.setRange(computeRange(typeDeclaration.bodyDeclarations()));
 
@@ -267,6 +269,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       }
       usePool.add(Triple.of(bodyNode, EdgeType.CHILD, JdtService.getMethodQNameFromBinding(b)));
     }
+    scope = oldScope;
   }
 
   public boolean visit(FieldDeclaration fd) {
