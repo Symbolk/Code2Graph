@@ -40,49 +40,37 @@ public class URI extends URILike<Layer>  implements Serializable {
 
   // hack code
 
-  /**
-   * @deprecated
-   */
+  @Deprecated
   public Language getLang() {
     if (layers.size() < 1) return Language.ANY;
     return layers.get(1).getLanguage();
   }
 
-  /**
-   * @deprecated
-   */
+  @Deprecated
   public String getFile() {
     return layers.get(0).getIdentifier();
   }
 
-  /**
-   * @deprecated
-   */
+  @Deprecated
   public String getIdentifier() {
     if (layers.size() <= 1) return "";
     return layers.get(1).getIdentifier();
   }
 
-  /**
-   * @deprecated
-   */
+  @Deprecated
   public String getInlineIdentifier() {
     if (layers.size() <= 2) return "";
     return layers.get(2).getIdentifier();
   }
 
-  /**
-   * @deprecated
-   */
+  @Deprecated
   public String getSymbol() {
     String identifier = layers.get(layers.size() - 1).getIdentifier();
     String[] split = identifier.split("/");
     return split[split.length - 1];
   }
 
-  /**
-   * @deprecated
-   */
+  @Deprecated
   public void setIdentifier(String identifier) {
     if (layers.size() < 1) {
       addLayer(identifier);
@@ -91,9 +79,7 @@ public class URI extends URILike<Layer>  implements Serializable {
     }
   }
 
-  /**
-   * @deprecated
-   */
+  @Deprecated
   public void setInlineIdentifier(String identifier) {
     while (layers.size() <= 2) {
       addLayer("");
