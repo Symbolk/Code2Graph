@@ -4,9 +4,11 @@ import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.Type;
+import edu.pku.code2graph.util.FileUtil;
 import org.jgrapht.Graph;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,36 +20,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class JdtGeneratorTest {
   private static final JdtGenerator generator = new JdtGenerator();
 
-  private Set<Node> filterNodesByType(Graph<Node, Edge> graph, Type nodeType) {
-    Set<Node> result =
-        graph.vertexSet().stream()
-            .filter(node -> node.getType().equals(nodeType))
-            .collect(Collectors.toSet());
-    return result;
+  JdtGeneratorTest() {
+    FileUtil.setRootPath(new File("build/resources/test").getAbsolutePath());
+  }
+
+  private void generateGraph(String name) {
+    try {
+      List<String> filePaths = new ArrayList<>();
+      filePaths.add(this.getClass().getResource(name).getPath());
+      Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
+      GraphVizExporter.printNodes(graph);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @Test
-  public void testMember() throws IOException {
-    List<String> filePaths = new ArrayList<>();
-    filePaths.add("src/test/resources/TestMember.java");
-    Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
-    GraphVizExporter.copyAsDot(graph);
-//    assertThat(filterNodesByType(graph, NodeType.METHOD_INVOCATION).size()).isEqualTo(4);
+  public void testMember() {
+    generateGraph("TestMember.java");
   }
 
   @Test
-  public void testAnnotation() throws IOException {
-    List<String> filePaths = new ArrayList<>();
-    filePaths.add("src/test/resources/TestAnnotation.java");
-    Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
-    GraphVizExporter.printAsDot(graph);
+  public void testAnnotation() {
+    generateGraph("TestAnnotation.java");
   }
 
   @Test
-  public void testEnum() throws IOException {
-    List<String> filePaths = new ArrayList<>();
-    filePaths.add("src/test/resources/TestEnum.java");
-    Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
-    GraphVizExporter.printAsDot(graph);
+  public void testEnum() {
+    generateGraph("TestEnum.java");
   }
 }

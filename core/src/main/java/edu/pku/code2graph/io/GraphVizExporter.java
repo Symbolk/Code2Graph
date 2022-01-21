@@ -20,6 +20,23 @@ import java.util.Set;
 
 /** Convert graph to dot format of GraphViz */
 public class GraphVizExporter {
+  public static void printNodes(Graph<Node, Edge> graph) {
+    StringBuilder builder = new StringBuilder();
+    for (Node node : graph.vertexSet()) {
+      URI uri = node.getUri();
+      builder.append(node.getRange()).append(" ");
+      if (uri != null) {
+        builder.append(uri.toString());
+      } else {
+        builder.append(node instanceof ElementNode
+                ? node.getType().name + "(" + ((ElementNode) node).getName() + ")"
+                : node.getType().name + "(" + ((RelationNode) node).getSymbol() + ")");
+      }
+      builder.append("\n");
+    }
+    System.out.println(builder.toString());
+  }
+
   public static String exportAsDot(Graph<Node, Edge> graph, boolean print) {
     DOTExporter<Node, Edge> exporter = new DOTExporter<>();
 
