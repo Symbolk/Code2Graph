@@ -24,10 +24,14 @@ public class URIPattern extends URILike<LayerPattern> {
     do {
       String identifier = (String) pattern.getOrDefault("identifier", "**");
       Language lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
-      pattern = (Map<String, Object>) pattern.get("inline");
-      if (pattern != null || !identifier.equals("**")) {
-        addLayer(identifier, lang);
+      if (pattern.containsKey("inline") || !identifier.equals("**")) {
+        LayerPattern layer = addLayer(identifier, lang);
+        for (String key : pattern.keySet()) {
+          if (key.equals("identifier") || key.equals("lang") || key.equals("inline") || key.equals("file")) continue;
+          layer.addAttribute(key, pattern.get(key).toString());
+        }
       }
+      pattern = (Map<String, Object>) pattern.get("inline");
     } while (pattern != null);
   }
 
