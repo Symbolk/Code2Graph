@@ -35,6 +35,10 @@ public class Layer implements Serializable {
         attributes.put(key, value);
     }
 
+    public String getAttribute(String key) {
+        return attributes.get(key);
+    }
+
     public String toString() {
         return language.toString() + "://" + identifier;
     }
