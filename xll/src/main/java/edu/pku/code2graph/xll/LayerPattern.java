@@ -9,7 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LayerPattern extends Layer {
-  private boolean pass;
+  private final boolean pass;
+  private int offset = 0;
   private String source;
   private final List<Token> tokens = new ArrayList<>();
 
@@ -36,6 +37,10 @@ public class LayerPattern extends Layer {
     Matcher matcher = VARIABLE.matcher(source);
     while (matcher.find()) {
       Token token = new Token(matcher);
+      if (token.isMultiple) {
+        source = source.substring(8);
+        offset = 8;
+      }
       if (token.isAnchor) {
         anchors.add(token.name);
         tokens.add(token);
@@ -52,10 +57,14 @@ public class LayerPattern extends Layer {
     for (int index = tokens.size(); index > 0; --index) {
       Token anchor = tokens.get(index - 1);
       String value = variables.getOrDefault(anchor.name, "\\w+");
-      source = anchor.replace(source, value);
+      source = anchor.replace(source, value, offset);
     }
     String[] segments = VARIABLE.split(source, -1);
-    source = String.join("(\\w+)", segments);
+    if (segments[0].equals("")) {
+      source = "(.+)?" + String.join("(\\w+)", segments).substring(5);
+    } else {
+      source = String.join("(\\w+)", segments);
+    }
 
     String target = layer
         .getIdentifier()
@@ -75,7 +84,7 @@ public class LayerPattern extends Layer {
     return captures;
   }
 
-  public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(?::(\\w+))?\\)");
+  public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(:(\\w+)|(\\\\\\.){3})?\\)");
 
   private static final class Token {
     private final int start;
@@ -84,17 +93,19 @@ public class LayerPattern extends Layer {
     public final String name;
     public final String modifier;
     public final boolean isAnchor;
+    public final boolean isMultiple;
 
     public Token(Matcher matcher) {
       this.start = matcher.start();
       this.end = matcher.end();
       this.name = matcher.group(1);
-      this.modifier = matcher.group(2);
+      this.modifier = matcher.group(3);
       this.isAnchor = matcher.group(0).charAt(1) == '&';
+      this.isMultiple = "\\.\\.\\.".equals(matcher.group(2));
     }
 
-    public String replace(String source, String capture) {
-      return source.substring(0, start) + capture + source.substring(end);
+    public String replace(String source, String capture, int offset) {
+      return source.substring(offset, offset + start) + capture + source.substring(offset + end);
     }
   }
 }

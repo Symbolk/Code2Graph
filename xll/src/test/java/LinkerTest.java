@@ -96,6 +96,24 @@ public class LinkerTest {
   }
 
   @Test
+  public void matchTest4() {
+    URITree tree = new URITree();
+    tree.add("def://foo/bar/baz/qux.html");
+    tree.add("use://source.java//return//foo\\/bar\\/baz");
+
+    URIPattern def = new URIPattern(false, "(name...)/*.html");
+
+    URIPattern use = new URIPattern(true, "*.java");
+    use.addLayer("return", Language.JAVA);
+    use.addLayer("(name)");
+
+    Linker linker = new Linker(tree, use, def);
+    linker.link();
+    System.out.println(linker.links);
+    System.out.println(linker.captures);
+  }
+
+  @Test
   public void loaderTest() throws IOException {
     Config config = Config.load("src/main/resources/config.yml");
     Rule rule = config.getRules().get("rule1");
