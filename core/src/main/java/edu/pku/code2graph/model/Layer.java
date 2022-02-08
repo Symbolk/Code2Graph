@@ -1,14 +1,18 @@
 package edu.pku.code2graph.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
-public class Layer  implements Serializable {
+public class Layer implements Serializable {
     protected Language language;
     protected String identifier;
+    protected Map<String, String> attributes;
 
     public Layer(String identifier, Language language) {
         this.language = language;
         this.identifier = identifier;
+        this.attributes = new HashMap<>();
     }
 
     public Language getLanguage() {
@@ -25,6 +29,10 @@ public class Layer  implements Serializable {
 
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
+    }
+
+    public void addAttribute(String key, String value) {
+        attributes.put(key, value);
     }
 
     public String toString() {
