@@ -30,8 +30,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Evaluation {
-  private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
+public class XLLEvaluation {
+  private static Logger logger = LoggerFactory.getLogger(XLLEvaluation.class);
 
   // test one repo at a time
   private static String framework = "android";
