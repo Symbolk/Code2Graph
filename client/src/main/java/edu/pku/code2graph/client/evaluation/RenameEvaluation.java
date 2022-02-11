@@ -1,7 +1,10 @@
-package edu.pku.code2graph.client;
+package edu.pku.code2graph.client.evaluation;
 
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
+import edu.pku.code2graph.client.Code2Graph;
+import edu.pku.code2graph.client.MybatisPreprocesser;
+import edu.pku.code2graph.client.evaluation.model.Identifier;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
@@ -24,37 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-
-class Identifier {
-  public static Map<String, Integer> uriCnt = new HashMap<>();
-  private final String uri;
-  private final Integer id;
-
-  public Identifier(String uri, Integer id) {
-    this.uri = uri;
-    this.id = id;
-  }
-
-  public String getUri() {
-    return uri;
-  }
-
-  public Integer getId() {
-    return id;
-  }
-
-  @Override
-  public int hashCode() {
-    return uri.hashCode() * 10 + id.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (!(other instanceof Identifier)) return false;
-    Identifier otherId = (Identifier) other;
-    return otherId.uri.equals(uri) && otherId.id.equals(id);
-  }
-}
 
 class EvaluationResult {
   double precision;
@@ -260,7 +232,7 @@ public class RenameEvaluation {
     Set<String> uriStrs = new HashSet<>();
     uriToRename.forEach((uri) -> uriStrs.add(URI.prettified(uri)));
 
-    List<Identifier> idToRename = getIdentifiersToRename(uriStrs, getAllIdentifiers());
+    List<Identifier> idToRename = getIdentifiersToRename(uriStrs, Identifier.getAllIdentifiers());
 
     Set<Identifier> otSet = new HashSet<>(idToRename);
     Set<Identifier> gtSet = new HashSet<>(gt);
@@ -289,27 +261,6 @@ public class RenameEvaluation {
     }
 
     return res;
-  }
-
-  // get all identifiers from uriTree
-  private static List<Identifier> getAllIdentifiers() {
-    List<Identifier> list = new ArrayList<>();
-    addIdentifierFromURITree(list, GraphUtil.getUriTree());
-    return list;
-  }
-
-  private static void addIdentifierFromURITree(List<Identifier> list, URITree tree) {
-    if (tree.uri != null) {
-      String uriStr = tree.uri.toString();
-      if (!Identifier.uriCnt.containsKey(uriStr)) {
-        Identifier.uriCnt.put(uriStr, 0);
-      }
-      int uriId = Identifier.uriCnt.put(uriStr, Identifier.uriCnt.get(uriStr) + 1);
-      Identifier newId = new Identifier(URI.prettified(uriStr), uriId);
-      list.add(newId);
-    }
-
-    tree.children.forEach((key, value) -> addIdentifierFromURITree(list, value));
   }
 
   private static void exportToRename(List<List<Identifier>> casesOt, String filePath)
