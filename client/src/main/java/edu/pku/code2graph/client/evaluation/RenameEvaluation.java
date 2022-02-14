@@ -11,7 +11,6 @@ import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.*;
-import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -71,6 +70,8 @@ public class RenameEvaluation {
 
   private static List<EvaluationResult> evaResults = new ArrayList<>();
 
+  private static List<Identifier> allIdsInRepo;
+
   public static void main(String[] args) {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
@@ -107,6 +108,7 @@ public class RenameEvaluation {
 
       List<List<Identifier>> renamedIdList = getRenamed();
       List<List<Identifier>> gtIdList = getGroundtruth();
+      allIdsInRepo = Identifier.getAllIdentifiers();
 
       if (renamedIdList == null) return;
       if (gtIdList == null) return;
@@ -124,7 +126,8 @@ public class RenameEvaluation {
       for (List<Identifier> renamedIds : renamedIdList) {
         Set<String> renamedUris = new HashSet<>();
         for (Identifier renamedId : renamedIds) renamedUris.add(renamedId.getUri());
-        Set<URI> uriToRename = extractURIToRename(renamedUris);
+        List<Link> links = new ArrayList<>(xllLinks);
+        Set<URI> uriToRename = extractURIToRename(links, renamedUris);
 
         List<Identifier> oneCase = testRename(uriToRename, gtIdList.get(idx++));
         allCases.add(oneCase);
@@ -213,16 +216,28 @@ public class RenameEvaluation {
   }
 
   // extract uri of identifiers to rename
-  private static Set<URI> extractURIToRename(Set<String> ids) {
+  private static Set<URI> extractURIToRename(List<Link> links, Set<String> ids) {
     Set<URI> res = new HashSet<>();
-    for (Link link : xllLinks) {
+    Set<String> newIds = new HashSet<>();
+    List<Link> toRemove = new ArrayList<>();
+    for (Link link : links) {
       boolean defInIds = ids.contains(URI.prettified(link.def)),
           useInIds = ids.contains(URI.prettified(link.use));
       if (defInIds && !useInIds) {
         res.add(link.use);
+        newIds.add(URI.prettified(link.use));
+        toRemove.add(link);
       } else if (useInIds && !defInIds) {
         res.add(link.def);
+        newIds.add(URI.prettified(link.def));
+        toRemove.add(link);
       }
+    }
+
+    links.removeAll(toRemove);
+    if (!newIds.isEmpty()) {
+      Set<URI> next = extractURIToRename(links, newIds);
+      res.addAll(next);
     }
     return res;
   }
@@ -232,7 +247,7 @@ public class RenameEvaluation {
     Set<String> uriStrs = new HashSet<>();
     uriToRename.forEach((uri) -> uriStrs.add(URI.prettified(uri)));
 
-    List<Identifier> idToRename = getIdentifiersToRename(uriStrs, Identifier.getAllIdentifiers());
+    List<Identifier> idToRename = getIdentifiersToRename(uriStrs, allIdsInRepo);
 
     Set<Identifier> otSet = new HashSet<>(idToRename);
     Set<Identifier> gtSet = new HashSet<>(gt);
