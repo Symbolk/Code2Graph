@@ -63,12 +63,20 @@ public class Identifier {
   private static void addIdentifierFromURITree(List<Identifier> list, URITree tree) {
     if (tree.uri != null) {
       String uriStr = tree.uri.toString();
-      if (!uriCnt.containsKey(uriStr)) {
-        uriCnt.put(uriStr, 0);
+      int nodeCnt = tree.nodes.size();
+      int nowIdCnt = 0;
+      if (uriCnt.containsKey(uriStr)) {
+        nowIdCnt = uriCnt.get(uriStr);
       }
-      int uriId = uriCnt.put(uriStr, uriCnt.get(uriStr) + 1);
-      Identifier newId = new Identifier(URI.prettified(uriStr), uriId, tree.nodes);
-      list.add(newId);
+      for (int i = 0; i < nodeCnt; i++) {
+        Identifier newId = new Identifier(URI.prettified(uriStr), nowIdCnt + i, tree.nodes);
+        list.add(newId);
+      }
+      if (!uriCnt.containsKey(uriStr)) {
+        uriCnt.put(uriStr, nodeCnt);
+      } else {
+        uriCnt.put(uriStr, nowIdCnt + nodeCnt);
+      }
     }
 
     tree.children.forEach((key, value) -> addIdentifierFromURITree(list, value));
