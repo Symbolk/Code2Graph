@@ -12,6 +12,7 @@ public class LayerPattern extends Layer {
   private final boolean pass;
   private int offset = 0;
   private String source;
+  private String leading;
   private final List<Token> tokens = new ArrayList<>();
 
   public final List<String> anchors = new ArrayList<>();
@@ -37,7 +38,8 @@ public class LayerPattern extends Layer {
     Matcher matcher = VARIABLE.matcher(source);
     while (matcher.find()) {
       Token token = new Token(matcher);
-      if (token.isMultiple) {
+      if (token.isGreedy) {
+        leading = token.name;
         source = source.substring(8);
         offset = 8;
       }
@@ -88,6 +90,7 @@ public class LayerPattern extends Layer {
     for (int i = 1; i <= count; ++i) {
       captures.put(symbols.get(i - 1), matcher.group(i));
     }
+    if (leading != null) captures.greedy.add(leading);
     return captures;
   }
 
@@ -100,7 +103,7 @@ public class LayerPattern extends Layer {
     public final String name;
     public final String modifier;
     public final boolean isAnchor;
-    public final boolean isMultiple;
+    public final boolean isGreedy;
 
     public Token(Matcher matcher) {
       this.start = matcher.start();
@@ -108,7 +111,7 @@ public class LayerPattern extends Layer {
       this.name = matcher.group(1);
       this.modifier = matcher.group(3);
       this.isAnchor = matcher.group(0).charAt(1) == '&';
-      this.isMultiple = "\\.\\.\\.".equals(matcher.group(2));
+      this.isGreedy = "\\.\\.\\.".equals(matcher.group(2));
     }
 
     public String replace(String source, String capture, int offset) {

@@ -1,15 +1,18 @@
 package edu.pku.code2graph.xll;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public final class Capture extends TreeMap<String, String> {
+    public Set<String> greedy = new HashSet<>();
+
     public Capture project(Collection<String> collection) {
         Capture capture = new Capture();
         for (String key : collection) {
             if (containsKey(key)) {
                 capture.put(key, get(key));
+                if (greedy.contains(key)) {
+                    capture.greedy.add(key);
+                }
             }
         }
         return capture;
@@ -25,5 +28,23 @@ public final class Capture extends TreeMap<String, String> {
 
     public boolean equals(Capture capture) {
         return hashCode() == capture.hashCode();
+    }
+
+    public void merge(Capture capture) {
+        putAll(capture);
+        greedy.addAll(capture.greedy);
+    }
+
+    public String toString() {
+        String result = super.toString();
+        result += greedy.toString();
+        return result;
+    }
+
+    public Capture clone() {
+        Capture result = (Capture) super.clone();
+        result.putAll(this);
+        result.greedy.addAll(greedy);
+        return result;
     }
 }

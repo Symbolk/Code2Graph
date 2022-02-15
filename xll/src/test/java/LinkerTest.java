@@ -99,15 +99,15 @@ public class LinkerTest {
   public void matchTest4() {
     URITree tree = new URITree();
     tree.add("def://foo/bar/baz/qux.html");
-    tree.add("use://source.java//return//foo\\/bar\\/baz");
+    tree.add("use://source.java//return//bar/baz");
 
     URIPattern def = new URIPattern(false, "(name...)/*.html");
 
     URIPattern use = new URIPattern(true, "*.java");
     use.addLayer("return", Language.JAVA);
-    use.addLayer("(name)");
+    use.addLayer("(name...)");
 
-    Linker linker = new Linker(tree, use, def);
+    Linker linker = new Linker(tree, def, use);
     linker.link();
     System.out.println(linker.links);
     System.out.println(linker.captures);
