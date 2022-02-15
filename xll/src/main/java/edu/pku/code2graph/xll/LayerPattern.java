@@ -53,6 +53,13 @@ public class LayerPattern extends Layer {
   public Capture match(Layer layer, Capture variables) {
     if (pass) return new Capture();
 
+    for (String key : attributes.keySet()) {
+      String value = layer.getAttribute(key);
+      if (value == null || !value.equals(attributes.get(key))) {
+        return null;
+      }
+    }
+
     String source = this.source;
     for (int index = tokens.size(); index > 0; --index) {
       Token anchor = tokens.get(index - 1);

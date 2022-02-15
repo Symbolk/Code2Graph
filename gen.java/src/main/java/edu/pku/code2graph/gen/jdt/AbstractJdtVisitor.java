@@ -52,7 +52,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     return node;
   }
 
-  interface WithScope<T> {
+  public interface WithScope<T> {
     T action();
   }
 

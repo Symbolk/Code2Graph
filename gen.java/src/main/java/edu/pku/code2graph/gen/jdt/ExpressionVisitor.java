@@ -421,7 +421,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param body
    * @return
    */
-  private Optional<RelationNode> parseBodyBlock(Block body, String name, String rootName) {
+  protected Optional<RelationNode> parseBodyBlock(Block body, String name, String rootName) {
     if (body == null || body.statements().isEmpty()) {
       return Optional.empty();
     }
@@ -531,7 +531,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param body
    * @return
    */
-  private Optional<RelationNode> parseBodyBlock(Block body) {
+  protected Optional<RelationNode> parseBodyBlock(Block body) {
     RelationNode root = new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
     root.setRange(computeRange(body));
     graph.addVertex(root);
@@ -564,7 +564,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param node
    * @param arguments
    */
-  private RelationNode parseArguments(RelationNode node, List arguments) {
+  protected RelationNode parseArguments(RelationNode node, List arguments) {
     for (Object arg : arguments) {
       if (arg instanceof Expression) {
         graph.addEdge(
@@ -1015,7 +1015,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param exp
    * @return
    */
-  private RelationNode parseExpression(Expression exp) {
+  protected RelationNode parseExpression(Expression exp) {
     RelationNode root = new RelationNode(GraphUtil.nid(), Language.JAVA);
     root.setRange(computeRange(exp));
     root.setSnippet(exp.toString());
