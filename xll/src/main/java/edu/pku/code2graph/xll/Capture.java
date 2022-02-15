@@ -30,6 +30,17 @@ public final class Capture extends TreeMap<String, String> {
         return hashCode() == capture.hashCode();
     }
 
+    public boolean match(Capture capture) {
+        for (Map.Entry<String, String> entry : this.entrySet()) {
+            if (greedy.contains(entry.getKey())) {
+                if (!entry.getValue().endsWith(capture.get(entry.getKey()))) return false;
+            } else {
+                if (!entry.getValue().equals(capture.get(entry.getKey()))) return false;
+            }
+        }
+        return true;
+    }
+
     public void merge(Capture capture) {
         putAll(capture);
         greedy.addAll(capture.greedy);

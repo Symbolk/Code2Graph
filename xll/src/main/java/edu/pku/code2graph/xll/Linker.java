@@ -63,35 +63,37 @@ public class Linker {
 
     // scan for def patterns
     Scanner.Result defMap = this.def.scan(variables);
-    for (Capture capture : defMap.keySet()) {
+    for (Capture defCap : defMap.keySet()) {
       // def capture should match use capture
-      Pair<List<URI>, Set<Capture>> uses = useMap.get(capture);
-      if (uses == null) continue;
+      for (Capture useCap : useMap.keySet()) {
+        if (!defCap.match(useCap)) continue;
+        Pair<List<URI>, Set<Capture>> uses = useMap.get(useCap);
 
-      // check ambiguous links
-      Pair<List<URI>, Set<Capture>> defs = defMap.get(capture);
-      if (defs.getLeft().size() > 1) {
-        System.out.println("ambiguous xll found by " + capture.toString());
-        System.out.println(formatUriList(defs.getLeft()));
-        System.out.println(formatUriList(uses.getLeft()));
-      }
-
-      // generate links
-      for (URI use : uses.getLeft()) {
-        for (URI def : defs.getLeft()) {
-          links.add(new Link(def, use, rule.name));
+        // check ambiguous links
+        Pair<List<URI>, Set<Capture>> defs = defMap.get(defCap);
+        if (defs.getLeft().size() > 1) {
+          System.out.println("ambiguous xll found by " + defCap.toString());
+          System.out.println(formatUriList(defs.getLeft()));
+          System.out.println(formatUriList(uses.getLeft()));
         }
-        visited.add(use);
-      }
 
-      // generate results
-      for (Capture use : uses.getRight()) {
-        for (Capture def : defs.getRight()) {
-          Capture result = new Capture();
-          result.putAll(variables);
-          result.putAll(def);
-          result.putAll(use);
-          captures.add(result);
+        // generate links
+        for (URI use : uses.getLeft()) {
+          for (URI def : defs.getLeft()) {
+            links.add(new Link(def, use, rule.name));
+          }
+          visited.add(use);
+        }
+
+        // generate results
+        for (Capture use : uses.getRight()) {
+          for (Capture def : defs.getRight()) {
+            Capture result = new Capture();
+            result.putAll(variables);
+            result.putAll(def);
+            result.putAll(use);
+            captures.add(result);
+          }
         }
       }
     }
