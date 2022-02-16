@@ -72,6 +72,8 @@ public class RenameEvaluation {
 
   private static List<Identifier> allIdsInRepo;
 
+  private static String iptLangThisCase;
+
   public static void main(String[] args) {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
@@ -124,6 +126,7 @@ public class RenameEvaluation {
       int idx = 0;
       List<List<Identifier>> allCases = new ArrayList<>();
       for (List<Identifier> renamedIds : renamedIdList) {
+        iptLangThisCase = renamedIds.get(0).getLang();
         Set<String> renamedUris = new HashSet<>();
         for (Identifier renamedId : renamedIds) renamedUris.add(renamedId.getUri());
         List<Link> links = new ArrayList<>(xllLinks);
@@ -171,15 +174,25 @@ public class RenameEvaluation {
   }
 
   private static List<List<Identifier>> getIdsFromCsv(String path) throws IOException {
+    return getIdsFromCsv(path, false);
+  }
+
+  private static List<List<Identifier>> getIdsFromCsv(String path, boolean isInput)
+      throws IOException {
     CsvReader iptReader = new CsvReader(path);
     iptReader.readHeaders();
     String[] iptHeaders = iptReader.getHeaders();
-    if (iptHeaders.length != 3) {
-      logger.error("Input header num expected 3, but " + iptHeaders.length);
+    if (!isInput && iptHeaders.length != 3) {
+      logger.error("Ground truth header num expected 3, but got " + iptHeaders.length);
+      return null;
+    } else if (isInput && iptHeaders.length != 4) {
+      logger.error("Input header num expected 4, but got " + iptHeaders.length);
       return null;
     }
 
     String caseIdHeader = iptHeaders[0], uriHeader = iptHeaders[1], uriIdHeader = iptHeaders[2];
+    String langHeader = null;
+    if (isInput) langHeader = iptHeaders[3];
     int caseId = 0;
     List<List<Identifier>> res = new ArrayList<>();
     while (iptReader.readRecord()) {
@@ -187,8 +200,14 @@ public class RenameEvaluation {
         res.add(new ArrayList<>());
       }
       caseId = Integer.parseInt(iptReader.get(caseIdHeader));
+
+      String language = null;
+      if (langHeader != null) {
+        language = iptReader.get(langHeader);
+      }
       Identifier newId =
-          new Identifier(iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)));
+          new Identifier(
+              iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)), language);
       res.get(caseId - 1).add(newId);
     }
 
@@ -202,13 +221,13 @@ public class RenameEvaluation {
       return null;
     }
 
-    return getIdsFromCsv(iptPath);
+    return getIdsFromCsv(iptPath, true);
   }
 
   // collect groundtruth identifiers
   private static List<List<Identifier>> getGroundtruth() throws IOException {
     if (!Files.exists(Paths.get(gtPath))) {
-      logger.error("Input file: {} does not exist!", gtPath);
+      logger.error("Ground truth file: {} does not exist!", gtPath);
       return null;
     }
 
@@ -269,6 +288,7 @@ public class RenameEvaluation {
     List<Identifier> res = new ArrayList<>();
 
     for (Identifier id : allIds) {
+      if (id.getLang().equals(iptLangThisCase)) continue;
       String uriStr = id.getUri();
       if (uriStrsToRename.contains(uriStr)) {
         res.add(id);

@@ -125,30 +125,27 @@ public class IdentifierSearch {
 
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
 
-    String[] headers = {"uri", "uriId", "source", "range"};
+    String[] headers = {"language", "uri", "uriId", "source", "range"};
     writer.writeRecord(headers);
 
     for (Identifier id : results) {
       String uri = id.getUri();
       int uriId = id.getId();
-      List<Node> nodes = id.getNode();
+      Node node = id.getNode();
 
       // concat snippet of all nodes
       StringBuilder snippet = new StringBuilder();
-      for (Node node : nodes) {
-        snippet.append(node.getSnippet());
-      }
+      snippet.append(node.getSnippet());
 
       // append range in case it has
       String range = "";
-      for (Node node : nodes) {
-        if (node.getRange().isValid()) {
-          range = node.getRange().toString();
-          break;
-        }
+      if (node.getRange() != null && node.getRange().isValid()) {
+        range = node.getRange().toString();
       }
 
-      String[] record = {uri, String.valueOf(uriId), snippet.toString(), range};
+      String[] record = {
+              id.getLang(),uri, String.valueOf(uriId),  snippet.toString().split("\n")[0], range
+      };
       writer.writeRecord(record);
     }
     writer.close();

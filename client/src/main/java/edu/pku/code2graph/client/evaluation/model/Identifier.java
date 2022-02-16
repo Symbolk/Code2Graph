@@ -14,19 +14,22 @@ public class Identifier {
   public static Map<String, Integer> uriCnt = new HashMap<>();
   private final String uri;
   private final Integer id;
+  private final String lang;
 
   // optional
-  private List<Node> node;
+  private Node node;
 
-  public Identifier(String uri, Integer id) {
+  public Identifier(String uri, Integer id, String lang) {
     this.uri = uri;
     this.id = id;
+    this.lang = lang;
   }
 
-  public Identifier(String uri, Integer id, List<Node> node) {
+  public Identifier(String uri, Integer id, Node node) {
     this.uri = uri;
     this.id = id;
     this.node = node;
+    this.lang = node.getLanguage().toString();
   }
 
   public String getUri() {
@@ -37,8 +40,12 @@ public class Identifier {
     return id;
   }
 
-  public List<Node> getNode() {
+  public Node getNode() {
     return node;
+  }
+
+  public String getLang() {
+    return lang;
   }
 
   @Override
@@ -69,7 +76,7 @@ public class Identifier {
         nowIdCnt = uriCnt.get(uriStr);
       }
       for (int i = 0; i < nodeCnt; i++) {
-        Identifier newId = new Identifier(URI.prettified(uriStr), nowIdCnt + i, tree.nodes);
+        Identifier newId = new Identifier(URI.prettified(uriStr), nowIdCnt + i, tree.nodes.get(i));
         list.add(newId);
       }
       if (!uriCnt.containsKey(uriStr)) {
