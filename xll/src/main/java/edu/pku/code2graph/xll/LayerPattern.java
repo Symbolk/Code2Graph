@@ -94,7 +94,7 @@ public class LayerPattern extends Layer {
     return captures;
   }
 
-  public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(:(\\w+)|(\\\\\\.){3})?\\)");
+  public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(?::(\\w+))?((\\\\\\.){3})?\\)");
 
   private static final class Token {
     private final int start;
@@ -109,9 +109,9 @@ public class LayerPattern extends Layer {
       this.start = matcher.start();
       this.end = matcher.end();
       this.name = matcher.group(1);
-      this.modifier = matcher.group(3);
+      this.modifier = matcher.group(2);
       this.isAnchor = matcher.group(0).charAt(1) == '&';
-      this.isGreedy = "\\.\\.\\.".equals(matcher.group(2));
+      this.isGreedy = matcher.group(3) != null;
     }
 
     public String replace(String source, String capture, int offset) {
