@@ -275,7 +275,9 @@ public class RenameEvaluation {
     // compute precision/recall
     double precision = MetricUtil.computeProportion(intersectionNum, otSet.size());
     double recall = MetricUtil.computeProportion(intersectionNum, gtSet.size());
-    double f1 = MetricUtil.formatDouble((2 * precision * recall) / (precision + recall));
+    double f1 = 0;
+    if (precision != 0 && recall != 0)
+      f1 = MetricUtil.formatDouble((2 * precision * recall) / (precision + recall));
 
     evaResults.add(new EvaluationResult(precision, recall, f1));
 
