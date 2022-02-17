@@ -12,6 +12,8 @@ import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.xll.Link;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.jgrapht.Graph;
@@ -24,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class IdentifierSearch {
@@ -42,8 +46,7 @@ public class IdentifierSearch {
   private static final String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
 
-  private static String otPath =
-      otDir + "/search-" + keyword + "in-" + repoName + "-" + commitID + ".csv";
+  private final static String otPath = otDir + "/search-in-" + repoName + "-" + commitID + ".csv";
 
   private static Code2Graph c2g;
   private static GitService gitService;
@@ -107,13 +110,28 @@ public class IdentifierSearch {
     }
   }
 
+  private static String toFuzzyString(String str) {
+    return str.replaceAll("_", "").toLowerCase();
+  }
+
   private static List<Identifier> searchByKeyword(List<Identifier> list, String keyword) {
-    List<Identifier> res = new ArrayList<>();
+    List<Pair<Integer, Identifier>> res = new ArrayList<>();
     list.forEach(
         id -> {
-          if (id.getUri().contains(keyword)) res.add(id);
+          String fuzzyId = toFuzzyString(id.getUri());
+          String fuzzyKeyword = toFuzzyString(keyword);
+          if (fuzzyId.contains(fuzzyKeyword)) {
+            int index = fuzzyId.indexOf(fuzzyKeyword);
+            res.add(new ImmutablePair<>(fuzzyId.length() - index, id));
+          }
         });
-    return res;
+
+    // simple ranking
+    Collections.sort(res, Comparator.comparingInt(Pair::getKey));
+
+    List<Identifier> resIds = new ArrayList<>();
+    res.forEach(id -> resIds.add(id.getValue()));
+    return resIds;
   }
 
   private static void exportSearchedIds(List<Identifier> results, String filePath)
@@ -144,7 +162,7 @@ public class IdentifierSearch {
       }
 
       String[] record = {
-              id.getLang(),uri, String.valueOf(uriId),  snippet.toString().split("\n")[0], range
+        id.getLang(), uri, String.valueOf(uriId), snippet.toString().split("\n")[0], range
       };
       writer.writeRecord(record);
     }
