@@ -35,9 +35,10 @@ public class IdentifierSearch {
 
   // test one repo at a time
   private static final String framework = "android";
-  private static final String repoName = "CloudReader";
-  private static final String commitID = "91c8334";
-  private static final String keyword = "mTreeBean";
+  private static final String repoName = "GSYVideoPlayer";
+  private static final String commitID = "2a88f0fb29";
+  private static final String keyword = "video_item_player";
+  private static final String fileName = "";
   private static final String otDir =
       System.getProperty("user.home") + "/coding/xll/" + "identifier";
 
@@ -46,7 +47,7 @@ public class IdentifierSearch {
   private static final String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
 
-  private final static String otPath = otDir + "/search-in-" + repoName + "-" + commitID + ".csv";
+  private static final String otPath = otDir + "/search-in-" + repoName + "-" + commitID + ".csv";
 
   private static Code2Graph c2g;
   private static GitService gitService;
@@ -121,7 +122,12 @@ public class IdentifierSearch {
           String fuzzyId = toFuzzyString(id.getUri());
           String fuzzyKeyword = toFuzzyString(keyword);
           if (fuzzyId.contains(fuzzyKeyword)) {
-            int index = fuzzyId.indexOf(fuzzyKeyword);
+            if (fileName != null && fileName.length() != 0) {
+              if (!fuzzyId.contains(toFuzzyString(fileName))) {
+                return;
+              }
+            }
+            int index = fuzzyId.lastIndexOf(fuzzyKeyword);
             res.add(new ImmutablePair<>(fuzzyId.length() - index, id));
           }
         });
