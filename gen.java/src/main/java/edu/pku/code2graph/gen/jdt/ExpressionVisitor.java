@@ -1038,7 +1038,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
           String content = URI.checkInvalidCh(((StringLiteral) exp).getLiteralValue());
-          URI uri = createIdentifier(identifier, false);
+          URI uri = createIdentifier(null, false);
           uri.addLayer(content);
           root.setUri(uri);
           GraphUtil.addNode(root);
