@@ -69,7 +69,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   }
 
   protected URI createIdentifier(String identifier, boolean isRef) {
-    if (identifier == null) {
+    if (identifier == null && scope.length() > 0) {
       identifier = scope.substring(0, scope.length() - 1);
     } else {
       identifier = scope + identifier;
