@@ -131,9 +131,6 @@ public class Evaluation {
     if (!outFile.exists()) {
       outFile.createNewFile();
     }
-    if (xllLinks.isEmpty()) {
-      return;
-    }
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
     String[] headers = {"name", "def", "use"};
 
