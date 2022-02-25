@@ -38,7 +38,9 @@ public class URIPattern extends URILike<LayerPattern> {
   public LayerPattern addLayer(String identifier, Language language) {
     LayerPattern layer = new LayerPattern(identifier, language);
     layers.add(layer);
-    symbols.addAll(layer.symbols);
+    for (Token token : layer.symbols) {
+      symbols.add(token.name);
+    }
     anchors.addAll(layer.anchors);
     return layer;
   }

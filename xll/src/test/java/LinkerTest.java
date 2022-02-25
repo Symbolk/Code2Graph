@@ -29,7 +29,7 @@ public class LinkerTest {
   @Test
   public void matchTest2() {
     URITree tree = new URITree();
-    tree.add("def://BlogAdminController.java//.addAttribute//postForm");
+    tree.add("def://BlogAdminController.java//.addAttribute//post-form");
     tree.add("use://blog/new.html//html/body/form/data-th-object//${postForm}");
 
     URIPattern def = new URIPattern(false, "*.java");
@@ -99,13 +99,13 @@ public class LinkerTest {
   public void matchTest4() {
     URITree tree = new URITree();
     tree.add("def://foo/bar/baz/qux.html");
-    tree.add("use://source.java//return//bar\\/baz");
+    tree.add("use://source.java//return//bar.baz");
 
     URIPattern def = new URIPattern(false, "(name...)/*.html");
 
     URIPattern use = new URIPattern(true, "*.java");
     use.addLayer("return", Language.JAVA);
-    use.addLayer("(name)");
+    use.addLayer("(name:dot)");
 
     Linker linker = new Linker(tree, def, use);
     linker.link();
