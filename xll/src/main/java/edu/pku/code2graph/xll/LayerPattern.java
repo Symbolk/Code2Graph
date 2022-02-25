@@ -79,6 +79,7 @@ public class LayerPattern extends Layer {
         .getIdentifier()
         .replace("-", "")
         .replace("_", "")
+        .replace("\\/", "__slash__")
         .toLowerCase();
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
@@ -88,7 +89,7 @@ public class LayerPattern extends Layer {
     Capture captures = new Capture();
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
-      captures.put(symbols.get(i - 1), matcher.group(i));
+      captures.put(symbols.get(i - 1), matcher.group(i).replace("__slash__", "/"));
     }
     if (leading != null) captures.greedy.add(leading);
     return captures;

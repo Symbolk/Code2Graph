@@ -1,8 +1,12 @@
 import edu.pku.code2graph.client.Code2Graph;
+import edu.pku.code2graph.io.GraphVizExporter;
+import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.FileUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
+import org.jgrapht.Graph;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +36,8 @@ public class LoaderTest {
         default:
           c2g.addSupportedLanguage(Language.JAVA);
       }
-      c2g.generateGraph();
+      Graph<Node, Edge> graph = c2g.generateGraph();
+      GraphVizExporter.printAsDot(graph);
     } catch (Exception e) {
       e.printStackTrace();
     }
