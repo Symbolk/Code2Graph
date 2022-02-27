@@ -40,7 +40,16 @@ public class Layer implements Serializable {
     }
 
     public String toString() {
-        return language.toString() + "://" + identifier;
+        StringBuilder builder = new StringBuilder(identifier);
+        builder.append("[");
+        boolean flag = false;
+        for (String key : attributes.keySet()) {
+            if (flag) builder.append(",");
+            builder.append(key).append("=").append(getAttribute(key));
+            flag = true;
+        }
+        builder.append("]");
+        return builder.toString();
     }
 
     public int hashCode() {

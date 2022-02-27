@@ -28,7 +28,7 @@ public abstract class URILike<T extends Layer> {
         output.append(isRef ? "use" : "def");
         output.append(":");
         for (Layer layer : layers) {
-            output.append("//").append(layer.getIdentifier());
+            output.append("//").append(layer.toString());
         }
         return output.append(">").toString();
     }
