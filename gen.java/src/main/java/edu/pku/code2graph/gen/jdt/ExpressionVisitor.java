@@ -291,6 +291,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               JdtService.getIdentifier(fragment));
 
       node.setRange(computeRange(fragment));
+      node.getUri().getLayer(1).addAttribute("varType", fd.getType().toString());
 
       // annotations
       parseAnnotations(fd.modifiers(), node);
