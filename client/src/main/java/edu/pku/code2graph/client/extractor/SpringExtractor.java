@@ -121,9 +121,12 @@ public class SpringExtractor extends AbstractExtractor {
   }
 
   private void findPairByHtmlUri(URI uri) {
+    String filename = uri.getFile();
+    String[] split = filename.split("\\.");
+    String fileWithoutExt = split[split.length - 2];
     if (uri.getLayerCount() == 1) {
       for (String key : viewPathReturns.keySet()) {
-        if (uri.getFile().contains(key)) {
+        if (fileWithoutExt.endsWith(key)) {
           for (URI val : viewPathReturns.get(key)) {
             uriPairs.add(new ImmutablePair<>(val, uri));
           }
@@ -135,7 +138,7 @@ public class SpringExtractor extends AbstractExtractor {
     String sym = uri.getSymbol();
     sym = sym.substring(2, sym.length() - 1).trim();
     for (String key : javaURIS.keySet()) {
-      if (uri.getFile().contains(key)) {
+      if (fileWithoutExt.endsWith(key)) {
         for (URI val : javaURIS.get(key)) {
           if (val.getSymbol().equals(sym)) {
             uriPairs.add(new ImmutablePair<>(uri, val));
