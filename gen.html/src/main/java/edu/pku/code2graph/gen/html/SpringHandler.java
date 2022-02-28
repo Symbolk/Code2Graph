@@ -23,7 +23,7 @@ public class SpringHandler extends AbstractHandler {
 
   private void traverseChidren(Element ele) {
     URI uri = new URI(false, uriFilePath);
-    uri.addLayer(ele instanceof Document ? "" : getIdentifier(ele.tagName()), Language.HTML);
+    if (!(ele instanceof Document)) uri.addLayer(getIdentifier(ele.tagName()), Language.HTML);
 
     ElementNode en =
         new ElementNode(
@@ -34,6 +34,7 @@ public class SpringHandler extends AbstractHandler {
             ele instanceof Document ? "" : ele.tagName(),
             ele instanceof Document ? "" : ele.normalName(),
             uri);
+    GraphUtil.addNode(en);
     graph.addVertex(en);
     stack.push(en);
 
