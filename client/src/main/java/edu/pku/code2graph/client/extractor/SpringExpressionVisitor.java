@@ -256,7 +256,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
     return Optional.empty();
   }
 
-  private void parseAnnotations(List modifiers, ElementNode annotatedNode) {
+  protected void parseAnnotations(List modifiers, ElementNode annotatedNode) {
     for (Object modifier : modifiers) {
       if (modifier instanceof Annotation) {
         Annotation annotation = (Annotation) modifier;

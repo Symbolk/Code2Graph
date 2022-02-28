@@ -439,7 +439,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     }
   }
 
-  private void parseAnnotations(List modifiers, ElementNode annotatedNode) {
+  protected void parseAnnotations(List modifiers, ElementNode annotatedNode) {
     for (Object modifier : modifiers) {
       if (!(modifier instanceof Annotation)) continue;
       Annotation annotation = (Annotation) modifier;

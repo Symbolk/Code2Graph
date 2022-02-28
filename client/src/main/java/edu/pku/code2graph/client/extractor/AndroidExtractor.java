@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AndroidExtractor extends AbstractExtractor {
   public List<URI> xmlURIS = new ArrayList<>();
@@ -74,9 +76,11 @@ public class AndroidExtractor extends AbstractExtractor {
 
     Map<String, List<Pair<String, URI>>> layMap = new HashMap<>();
     Map<String, List<URI>> idMap = new HashMap<>();
-    Map<URI, String> dataBindingMap = new HashMap<>();
+    Map<String, List<Pair<String, URI>>> dataBindingClassInFile = new HashMap<>();
+    Map<String, List<URI>> dataBindingMap = new HashMap<>();
 
-    AbstractJdtVisitor visitor = new AndroidExpressionVisitor(layMap, idMap, dataBindingMap);
+    AbstractJdtVisitor visitor =
+        new AndroidExpressionVisitor(layMap, idMap, dataBindingClassInFile, dataBindingMap);
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");
@@ -96,11 +100,38 @@ public class AndroidExtractor extends AbstractExtractor {
         },
         null);
 
-    for (URI uri : dataBindingMap.keySet()) {
-      String layout = dataBindingMap.get(uri);
-      if (layout != null && layout.length() > 0) {
-        if (!javaURIS.containsKey(layout)) javaURIS.put(layout, new ArrayList<>());
-        javaURIS.get(layout).add(uri);
+    for (String file : dataBindingClassInFile.keySet()) {
+      List<Pair<String, URI>> dataBindingClass = dataBindingClassInFile.get(file);
+      for (Pair<String, URI> layoutClip : dataBindingClass) {
+        String fileName = layoutClip.getLeft();
+        if (!layoutRefURIS.containsKey(fileName)) {
+          layoutRefURIS.put(fileName, new ArrayList<>());
+        }
+        layoutRefURIS.get(fileName).add(layoutClip.getRight());
+      }
+    }
+
+    for (String file : dataBindingMap.keySet()) {
+      List<Pair<String, URI>> layouts = layMap.get(file);
+      if (layouts != null && layouts.size() > 0) {
+        for (Pair<String, URI> layPair : layouts) {
+          for (URI uri : dataBindingMap.get(file)) {
+            String layout = layPair.getLeft();
+            if (!javaURIS.containsKey(layout)) javaURIS.put(layout, new ArrayList<>());
+            javaURIS.get(layout).add(uri);
+          }
+        }
+      }
+
+      List<Pair<String, URI>> dataBindingClass = dataBindingClassInFile.get(file);
+      if (dataBindingClass != null) {
+        for (Pair<String, URI> layoutClip : dataBindingClass) {
+          String layout = "R.layout." + layoutClip.getRight();
+          for (URI uri : dataBindingMap.get(file)) {
+            if (!javaURIS.containsKey(layout)) javaURIS.put(layout, new ArrayList<>());
+            javaURIS.get(layout).add(uri);
+          }
+        }
       }
     }
 
@@ -168,6 +199,18 @@ public class AndroidExtractor extends AbstractExtractor {
     GraphUtil.clearGraph();
   }
 
+  private String capToSlash(String cap) {
+    Pattern capPattern = Pattern.compile("[A-Z]");
+    String camel = cap.substring(1);
+    Matcher matcher = capPattern.matcher(camel);
+    StringBuilder sb = new StringBuilder();
+    while (matcher.find()) {
+      matcher.appendReplacement(sb, "_" + matcher.group(0).toLowerCase());
+    }
+    matcher.appendTail(sb);
+    return cap.substring(0, 1).toLowerCase() + sb;
+  }
+
   private void findLayoutPairs() {
     for (URI uri : layoutDefURIS) {
       if (uri.getIdentifier().equals("") && uri.getInlineIdentifier().equals("")) {
@@ -199,7 +242,8 @@ public class AndroidExtractor extends AbstractExtractor {
       for (URI item : javaURIS.get(layout)) {
         String[] sp = item.getSymbol().split("\\.");
         String symbol = sp[sp.length - 1];
-        if (symbol.equals(uri.getSymbol())) uriPairs.add(new ImmutablePair<>(uri, item));
+        if (symbol.equals(uri.getSymbol()) || capToSlash(symbol).equals(uri.getSymbol()))
+          uriPairs.add(new ImmutablePair<>(uri, item));
       }
     }
 
@@ -207,7 +251,8 @@ public class AndroidExtractor extends AbstractExtractor {
       for (URI item : javaURIS.get(menu)) {
         String[] sp = item.getSymbol().split("\\.");
         String symbol = sp[sp.length - 1];
-        if (symbol.equals(uri.getSymbol())) uriPairs.add(new ImmutablePair<>(uri, item));
+        if (symbol.equals(uri.getSymbol()) || capToSlash(symbol).equals(uri.getSymbol()))
+          uriPairs.add(new ImmutablePair<>(uri, item));
       }
     }
   }
