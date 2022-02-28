@@ -26,6 +26,7 @@ import java.util.List;
 public class SpringExtractor extends AbstractExtractor {
   public List<URI> htmlURIS = new ArrayList<>();
   public Map<String, List<URI>> javaURIS = new HashMap<>();
+  public Map<String, List<URI>> viewPathReturns = new HashMap<>();
 
   private static final String JRE_PATH =
       System.getProperty("java.home") + File.separator + "lib/rt.jar";
@@ -40,7 +41,8 @@ public class SpringExtractor extends AbstractExtractor {
     JsoupGenerator generator = new JsoupGenerator();
     Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
     for (Node node : graph.vertexSet()) {
-      if (node instanceof ElementNode && node.getType().equals(NodeType.INLINE_VAR)) {
+      if (node instanceof ElementNode
+          && (node.getType().equals(NodeType.INLINE_VAR) || node.getType().equals(NodeType.FILE))) {
         System.out.println(((ElementNode) node).getName());
         htmlURIS.add(node.getUri());
       }
@@ -91,7 +93,7 @@ public class SpringExtractor extends AbstractExtractor {
     parser.setResolveBindings(true);
     parser.setBindingsRecovery(true);
 
-    AbstractJdtVisitor visitor = new SpringExpressionVisitor(javaURIS);
+    AbstractJdtVisitor visitor = new SpringExpressionVisitor(javaURIS, viewPathReturns);
     // create nodes and nesting edges while visiting the ASTs
     encodings = new String[srcPaths.length];
     Arrays.fill(encodings, "UTF-8");
@@ -119,6 +121,17 @@ public class SpringExtractor extends AbstractExtractor {
   }
 
   private void findPairByHtmlUri(URI uri) {
+    if (uri.getLayerCount() == 1) {
+      for (String key : viewPathReturns.keySet()) {
+        if (uri.getFile().contains(key)) {
+          for (URI val : viewPathReturns.get(key)) {
+            uriPairs.add(new ImmutablePair<>(val, uri));
+          }
+        }
+      }
+      return;
+    }
+
     String sym = uri.getSymbol();
     sym = sym.substring(2, sym.length() - 1).trim();
     for (String key : javaURIS.keySet()) {

@@ -583,7 +583,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param stmt
    * @return
    */
-  private Optional<Node> parseStatement(Statement stmt) {
+  protected Optional<Node> parseStatement(Statement stmt) {
     switch (stmt.getNodeType()) {
       case ASTNode.BLOCK:
         {
