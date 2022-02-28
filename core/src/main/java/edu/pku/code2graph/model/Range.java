@@ -57,6 +57,10 @@ public class Range implements Serializable {
     return this.endLine >= range.getStartLine() && range.getEndLine() >= this.startLine;
   }
 
+  public boolean isValid() {
+    return this.startLine >= 0 && this.endLine >= 0;
+  }
+
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();

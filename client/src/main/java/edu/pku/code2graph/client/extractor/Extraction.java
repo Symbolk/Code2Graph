@@ -1,6 +1,5 @@
 package edu.pku.code2graph.client.extractor;
 
-import edu.pku.code2graph.client.Evaluation;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.exception.InvalidRepoException;
@@ -15,7 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 
 public class Extraction {
-  private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
+  private static Logger logger = LoggerFactory.getLogger(Extraction.class);
 
   private static String framework = "android";
 

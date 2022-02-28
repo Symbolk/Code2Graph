@@ -1,7 +1,9 @@
-package edu.pku.code2graph.client;
+package edu.pku.code2graph.client.evaluation;
 
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
+import edu.pku.code2graph.client.Code2Graph;
+import edu.pku.code2graph.client.MybatisPreprocesser;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
@@ -30,8 +32,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Evaluation {
-  private static Logger logger = LoggerFactory.getLogger(Evaluation.class);
+public class XLLEvaluation {
+  private static Logger logger = LoggerFactory.getLogger(XLLEvaluation.class);
 
   // test one repo at a time
   private static String framework = "android";
