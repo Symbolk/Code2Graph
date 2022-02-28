@@ -98,14 +98,14 @@ public class LinkerTest {
   @Test
   public void matchTest4() {
     URITree tree = new URITree();
-    tree.add("def://foo/bar/baz/qux.html");
-    tree.add("use://source.java//return//bar.baz");
+    tree.add("def://foo/baz/qux.html");
+    tree.add("use://source.java//events/return//baz\\/qux");
 
-    URIPattern def = new URIPattern(false, "(name...)/*.html");
+    URIPattern def = new URIPattern(false, "(htmlFile...).html");
 
     URIPattern use = new URIPattern(true, "*.java");
-    use.addLayer("return", Language.JAVA);
-    use.addLayer("(name:dot)");
+    use.addLayer("(functionName)/return", Language.JAVA);
+    use.addLayer("(htmlFile)");
 
     Linker linker = new Linker(tree, def, use);
     linker.link();
