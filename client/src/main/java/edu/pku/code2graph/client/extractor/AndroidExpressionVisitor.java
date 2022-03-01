@@ -15,6 +15,8 @@ import org.eclipse.jdt.core.dom.*;
 import org.jgrapht.alg.util.Triple;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -33,23 +35,25 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
   private ElementNode cuNode;
   private Map<String, List<Pair<String, URI>>> layouts;
   private Map<String, List<URI>> ids;
-  private Map<String, Map<String, String>> dataBindings = new HashMap<>();
-  private Map<URI, String> dataBindingToLayout;
+  private Map<String, List<URI>> dataBindings;
+  private Map<String, List<Pair<String, URI>>> dataBindingClassInFile;
 
   public AndroidExpressionVisitor(
       Map<String, List<Pair<String, URI>>> layMap,
       Map<String, List<URI>> idMap,
-      Map<URI, String> dataBindingMap) {
+      Map<String, List<Pair<String, URI>>> dataBindingClassInFile,
+      Map<String, List<URI>> dataBindings) {
     layouts = layMap;
     ids = idMap;
-    dataBindingToLayout = dataBindingMap;
+    this.dataBindingClassInFile = dataBindingClassInFile;
+    this.dataBindings = dataBindings;
   }
 
-  private void addDataBinding(String bindingName, String layoutName) {
+  private void addDataBinding(URI bindingName) {
     if (!dataBindings.containsKey(filePath)) {
-      dataBindings.put(filePath, new HashMap<>());
+      dataBindings.put(filePath, new ArrayList<>());
     }
-    dataBindings.get(filePath).put(bindingName, layoutName);
+    dataBindings.get(filePath).add(bindingName);
   }
 
   /**
@@ -99,13 +103,9 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
             }
             ids.get(filePath).add(uri);
           } else {
-            if (dataBindings.containsKey(filePath)
-                && dataBindings
-                    .get(filePath)
-                    .containsKey(qualifiedName.getQualifier().toString())) {
-              String layoutName =
-                  dataBindings.get(filePath).get(qualifiedName.getQualifier().toString());
-              dataBindingToLayout.put(uri, layoutName);
+            String[] expSplit = exp.toString().split("\\.");
+            if (expSplit.length == 2 && expSplit[0].toLowerCase().contains("binding")) {
+              addDataBinding(uri);
             }
           }
           break;
@@ -270,13 +270,13 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           if (mdBinding != null) {
             // get caller qname
             JdtService.findWrappedMethodName(mi)
-                    .ifPresent(
-                            name -> {
-                              usePool.add(Triple.of(root, EdgeType.CALLER, name));
-                            });
+                .ifPresent(
+                    name -> {
+                      usePool.add(Triple.of(root, EdgeType.CALLER, name));
+                    });
             // get callee qname
             usePool.add(
-                    Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
+                Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
           }
           break;
         }
@@ -359,5 +359,187 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
     }
 
     return root;
+  }
+
+  private String capToSlash(String cap) {
+    Pattern capPattern = Pattern.compile("[A-Z]");
+    String camel = cap.substring(1);
+    Matcher matcher = capPattern.matcher(camel);
+    StringBuilder sb = new StringBuilder();
+    while (matcher.find()) {
+      matcher.appendReplacement(sb, "_" + matcher.group(0).toLowerCase());
+    }
+    matcher.appendTail(sb);
+    return cap.substring(0, 1).toLowerCase() + sb.toString();
+  }
+
+  private void addBindingClass(URI uri, String baseType) {
+    if (!baseType.endsWith("Binding")) {
+      return;
+    }
+
+    if (!dataBindingClassInFile.containsKey(filePath)) {
+      dataBindingClassInFile.put(filePath, new ArrayList<>());
+    }
+    dataBindingClassInFile
+        .get(filePath)
+        .add(new MutablePair<>(capToSlash(baseType.substring(0, baseType.length() - 7)), uri));
+  }
+
+  @Override
+  public boolean visit(FieldDeclaration fd) {
+    List<VariableDeclarationFragment> fragments = fd.fragments();
+    String baseType = fd.getType().toString();
+    for (VariableDeclarationFragment fragment : fragments) {
+      String name = fragment.getName().getFullyQualifiedName();
+      String qname = name;
+      IVariableBinding binding = fragment.resolveBinding();
+      if (binding != null && binding.getDeclaringClass() != null) {
+        qname = binding.getDeclaringClass().getQualifiedName() + "." + name;
+      }
+
+      ElementNode node =
+          createElementNode(
+              NodeType.FIELD_DECLARATION,
+              fragment.toString(),
+              name,
+              qname,
+              JdtService.getIdentifier(fragment));
+
+      node.setRange(computeRange(fragment));
+      node.getUri().getLayer(1).addAttribute("varType", fd.getType().toString());
+
+      if (baseType.endsWith("Binding")) {
+        addBindingClass(node.getUri(), baseType);
+      }
+
+      // annotations
+      parseAnnotations(fd.modifiers(), node);
+
+      if (binding != null) {
+        usePool.add(Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+      }
+
+      if (fragment.getInitializer() != null) {
+        graph.addEdge(
+            node,
+            parseExpression(fragment.getInitializer()),
+            new Edge(GraphUtil.eid(), EdgeType.INITIALIZER));
+      }
+    }
+    return false;
+  }
+
+  public boolean visit(MethodDeclaration md) {
+    // A binding represents a named entity in the Java language
+    // for internal, should never be null
+    IMethodBinding mdBinding = md.resolveBinding();
+    // can be null for method in local anonymous class
+    String name = md.getName().getFullyQualifiedName();
+    String qname = name;
+    if (mdBinding != null) {
+      qname = JdtService.getMethodQNameFromBinding(mdBinding);
+    }
+
+    ElementNode node =
+        createElementNode(
+            NodeType.METHOD_DECLARATION, md.toString(), name, qname, JdtService.getIdentifier(md));
+
+    node.setRange(computeRange(md));
+
+    // annotations
+    parseAnnotations(md.modifiers(), node);
+
+    // return type
+    if (mdBinding != null) {
+      ITypeBinding tpBinding = mdBinding.getReturnType();
+      if (tpBinding != null) {
+        usePool.add(Triple.of(node, EdgeType.RETURN_TYPE, tpBinding.getQualifiedName()));
+      }
+    }
+
+    // para decl and type
+    if (!md.parameters().isEmpty()) {
+      // create element nodes
+      List<SingleVariableDeclaration> paras = md.parameters();
+      for (SingleVariableDeclaration p : paras) {
+        if (p.toString().trim().startsWith("@Param")
+            || p.toString().trim().startsWith("@ModelAttribute")) {
+          String identifier = JdtService.getIdentifier(p);
+          String[] split = p.toString().trim().split(" ");
+          identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
+          //          String[] idtfSplit = identifier.split("/");
+          //          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
+          //          identifier = String.join("/", idtfSplit);
+          identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
+
+          String para_qname = split[0];
+          String para_name =
+              para_qname.substring(para_qname.indexOf('"') + 1, para_qname.length() - 2);
+
+          URI uri = new URI(false, uriFilePath);
+          uri.addLayer(identifier, Language.JAVA);
+
+          ElementNode pn =
+              new ElementNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname,
+                  uri);
+
+          graph.addVertex(pn);
+          defPool.put(para_qname, pn);
+          GraphUtil.addNode(pn);
+          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
+        }
+        String para_name = p.getName().getFullyQualifiedName();
+        String para_qname = para_name;
+        IVariableBinding b = p.resolveBinding();
+        if (b != null && b.getVariableDeclaration() != null) {
+          para_qname =
+              JdtService.getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+        }
+
+        ElementNode pn =
+            createElementNode(
+                NodeType.VAR_DECLARATION,
+                p.toString(),
+                para_name,
+                para_qname,
+                JdtService.getIdentifier(p));
+
+        pn.getUri().getLayer(1).addAttribute("varType", p.getType().toString());
+
+        String baseType = p.getType().toString();
+        if (baseType.endsWith("Binding")) {
+          addBindingClass(pn.getUri(), baseType);
+        }
+
+        node.setRange(computeRange(p));
+        graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
+
+        ITypeBinding paraBinding = p.getType().resolveBinding();
+        if (paraBinding != null) {
+          usePool.add(Triple.of(pn, EdgeType.DATA_TYPE, paraBinding.getQualifiedName()));
+        }
+      }
+    }
+
+    // TODO: add exception types
+    if (!md.thrownExceptionTypes().isEmpty()) {}
+
+    // TODO: process body here or else where?
+    if (md.getBody() != null) {
+      if (!md.getBody().statements().isEmpty()) {
+        parseBodyBlock(md.getBody(), md.getName().toString(), qname)
+            .ifPresent(
+                blockNode ->
+                    graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+      }
+    }
+    return true;
   }
 }

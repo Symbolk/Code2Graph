@@ -32,15 +32,27 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
   private ElementNode cuNode;
   private Map<String, List<URI>> javaURIS;
   private String currentTemplate;
+  private boolean currentReturnLiteral = false;
+  private boolean toParseReturn = false;
   private List<URI> globalAttr = new ArrayList<>();
+  private Map<String, List<URI>> viewPathReturns;
 
-  public SpringExpressionVisitor(Map<String, List<URI>> uris) {
+  public SpringExpressionVisitor(
+      Map<String, List<URI>> uris, Map<String, List<URI>> viewPathReturns) {
     super();
     javaURIS = uris;
+    this.viewPathReturns = viewPathReturns;
+  }
+
+  private void addViewPathReturn(URI uri) {
+    if (!viewPathReturns.containsKey(currentTemplate))
+      viewPathReturns.put(currentTemplate, new ArrayList<>());
+    viewPathReturns.get(currentTemplate).add(uri);
   }
 
   public boolean visit(MethodDeclaration md) {
     currentTemplate = "";
+    currentReturnLiteral = false;
     // A binding represents a named entity in the Java language
     // for internal, should never be null
     IMethodBinding mdBinding = md.resolveBinding();
@@ -173,6 +185,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
     }
 
     currentTemplate = "";
+    currentReturnLiteral = false;
     return true;
   }
 
@@ -216,6 +229,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
               && !returnExpr.trim().isEmpty()
               && pathRegex.matcher(returnExpr).find()) {
             currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+            currentReturnLiteral = true;
             return Optional.of(returnExpr);
           }
         } else if (expression != null
@@ -232,6 +246,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
                 && !returnExpr.trim().isEmpty()
                 && pathRegex.matcher(returnExpr).find()) {
               currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+              currentReturnLiteral = true;
               return Optional.of(returnExpr);
             }
           }
@@ -247,6 +262,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
                 && !returnExpr.trim().isEmpty()
                 && pathRegex.matcher(returnExpr).find()) {
               currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+              currentReturnLiteral = true;
               return Optional.of(returnExpr);
             }
           }
@@ -256,7 +272,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
     return Optional.empty();
   }
 
-  private void parseAnnotations(List modifiers, ElementNode annotatedNode) {
+  protected void parseAnnotations(List modifiers, ElementNode annotatedNode) {
     for (Object modifier : modifiers) {
       if (modifier instanceof Annotation) {
         Annotation annotation = (Annotation) modifier;
@@ -314,29 +330,6 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
   }
 
   /**
-   * Process arguments of (super) method/constructor invocation
-   *
-   * @param node
-   * @param arguments
-   */
-  private void parseArguments(RelationNode node, List arguments, boolean addedToMap) {
-    for (Object arg : arguments) {
-      if (arg instanceof Expression) {
-        RelationNode rn = parseExpression((Expression) arg);
-        graph.addEdge(node, rn, new Edge(GraphUtil.eid(), EdgeType.ARGUMENT));
-        if (rn.getUri() == null) continue;
-        if (currentTemplate != "" && addedToMap && !javaURIS.containsKey(currentTemplate)) {
-          javaURIS.put(currentTemplate, new ArrayList<>());
-          javaURIS.get(currentTemplate).add(rn.getUri());
-        } else if (currentTemplate != "" && addedToMap) {
-          if (!javaURIS.get(currentTemplate).contains(rn.getUri()))
-            javaURIS.get(currentTemplate).add(rn.getUri());
-        }
-      }
-    }
-  }
-
-  /**
    * Expression at the leaf level, modeled as relation Link used vars and methods into its def, if
    * exists
    *
@@ -365,9 +358,15 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
         {
           root.setSymbol(exp.toString());
           root.setType(NodeType.LITERAL);
-          URI uri = createIdentifier(identifier, false);
+          String content = URI.checkInvalidCh(((StringLiteral) exp).getLiteralValue());
+          URI uri = createIdentifier(null, false);
+          uri.addLayer(content);
           root.setUri(uri);
-          GraphUtil.addNode(root);
+          if (currentReturnLiteral && toParseReturn) {
+            if (currentTemplate.equals(exp.toString().substring(1, exp.toString().length() - 1))) {
+              addViewPathReturn(uri);
+            }
+          }
           break;
         }
       case ASTNode.QUALIFIED_NAME:
@@ -388,8 +387,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           if (binding == null) {
             // an unresolved identifier
             root.setType(NodeType.SIMPLE_NAME);
-            usePool.add(
-                Triple.of(root, EdgeType.REFERENCE, identifier));
+            usePool.add(Triple.of(root, EdgeType.REFERENCE, identifier));
           } else if (binding instanceof IVariableBinding) {
             IVariableBinding varBinding = (IVariableBinding) binding;
             if (varBinding.isField()) {
@@ -510,7 +508,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
                     EdgeType.DATA_TYPE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
-//          parseArguments(root, cic.arguments(), false);
+          //          parseArguments(root, cic.arguments(), false);
           String identifier = cic.getType().toString();
           withScope(identifier, () -> parseArguments(root, cic.arguments()));
           break;
@@ -522,7 +520,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           root.setType(NodeType.SUPER_METHOD_INVOCATION);
           root.setUri(createIdentifier(identifier));
 
-//          parseArguments(root, mi.arguments(), false);
+          //          parseArguments(root, mi.arguments(), false);
           withScope(identifier, () -> parseArguments(root, mi.arguments()));
           // find the method declaration in super class
           IMethodBinding mdBinding = mi.resolveMethodBinding();
@@ -673,5 +671,436 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
     }
 
     return root;
+  }
+
+  @Override
+  protected Optional<Node> parseStatement(Statement stmt) {
+    switch (stmt.getNodeType()) {
+      case ASTNode.BLOCK:
+        {
+          Block block = (Block) stmt;
+          if (block.statements().isEmpty()) {
+            return Optional.empty();
+          } else {
+            RelationNode node =
+                new RelationNode(GraphUtil.nid(), Language.JAVA, NodeType.BLOCK, "{}");
+            node.setRange(computeRange(stmt));
+            graph.addVertex(node);
+
+            for (Object st : block.statements()) {
+              parseStatement((Statement) st)
+                  .ifPresent(
+                      child ->
+                          graph.addEdge(node, child, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
+            }
+            return Optional.of(node);
+          }
+        }
+        // it is strange that constructor invocations is statement instead of expression
+      case ASTNode.SUPER_CONSTRUCTOR_INVOCATION:
+        {
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.SUPER_CONSTRUCTOR_INVOCATION,
+                  stmt.toString());
+          node.setRange(computeRange(stmt));
+          graph.addVertex(node);
+
+          SuperConstructorInvocation ci = (SuperConstructorInvocation) stmt;
+          IMethodBinding constructorBinding = ci.resolveConstructorBinding();
+          if (constructorBinding != null) {
+            usePool.add(
+                Triple.of(
+                    node,
+                    EdgeType.REFERENCE,
+                    constructorBinding.getDeclaringClass().getQualifiedName()));
+          }
+          withScope("super", () -> parseArguments(node, ci.arguments()));
+          return Optional.of(node);
+        }
+      case ASTNode.CONSTRUCTOR_INVOCATION:
+        {
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(), Language.JAVA, NodeType.CONSTRUCTOR_INVOCATION, stmt.toString());
+          node.setRange(computeRange(stmt));
+          graph.addVertex(node);
+
+          ConstructorInvocation ci = (ConstructorInvocation) stmt;
+          IMethodBinding constructorBinding = ci.resolveConstructorBinding();
+          if (constructorBinding != null) {
+            usePool.add(
+                Triple.of(
+                    node,
+                    EdgeType.REFERENCE,
+                    constructorBinding.getDeclaringClass().getQualifiedName()));
+          }
+          withScope("this", () -> parseArguments(node, ci.arguments()));
+          return Optional.of(node);
+        }
+      case ASTNode.RETURN_STATEMENT:
+        {
+          Expression expression = ((ReturnStatement) stmt).getExpression();
+          if (expression != null) {
+            toParseReturn = true;
+            RelationNode node = withScope("return", () -> parseExpression(expression));
+            graph.addVertex(node);
+            toParseReturn = false;
+            return Optional.of(node);
+          }
+          break;
+        }
+      case ASTNode.VARIABLE_DECLARATION_STATEMENT:
+        {
+          // local var declaration
+          VariableDeclarationStatement vd = (VariableDeclarationStatement) stmt;
+
+          for (Iterator iter = vd.fragments().iterator(); iter.hasNext(); ) {
+            VariableDeclarationFragment fragment = (VariableDeclarationFragment) iter.next();
+            IVariableBinding binding = fragment.resolveBinding();
+            String name = fragment.getName().getFullyQualifiedName();
+            String qname = name;
+            if (binding != null) { // since it is declaration, binding should never be null
+              qname = JdtService.getVariableQNameFromBinding(binding, stmt);
+
+              ElementNode node =
+                  createElementNode(
+                      NodeType.VAR_DECLARATION,
+                      fragment.toString(),
+                      name,
+                      qname,
+                      JdtService.getIdentifier(fragment));
+
+              node.setRange(computeRange(fragment));
+
+              usePool.add(
+                  Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
+
+              if (fragment.getInitializer() != null) {
+                graph.addEdge(
+                    node,
+                    parseExpression(fragment.getInitializer()),
+                    new Edge(GraphUtil.eid(), EdgeType.INITIALIZER));
+              }
+
+              return Optional.of(node);
+            }
+          }
+          break;
+        }
+      case ASTNode.EXPRESSION_STATEMENT:
+        {
+          Expression exp = ((ExpressionStatement) stmt).getExpression();
+          if (exp != null) {
+            RelationNode node = parseExpression(exp);
+            return Optional.of(node);
+          }
+          break;
+        }
+
+        // control
+      case ASTNode.IF_STATEMENT:
+        {
+          IfStatement ifStatement = (IfStatement) stmt;
+          //      ifStatement.getStartPosition();
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(), Language.JAVA, NodeType.IF_STATEMENT, ifStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          if (ifStatement.getExpression() != null) {
+            RelationNode cond = parseExpression(ifStatement.getExpression());
+            graph.addEdge(node, cond, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
+          if (ifStatement.getThenStatement() != null) {
+            parseStatement(ifStatement.getThenStatement())
+                .ifPresent(
+                    then -> graph.addEdge(node, then, new Edge(GraphUtil.eid(), EdgeType.THEN)));
+          }
+          if (ifStatement.getElseStatement() != null) {
+            parseStatement(ifStatement.getElseStatement())
+                .ifPresent(
+                    els -> graph.addEdge(node, els, new Edge(GraphUtil.eid(), EdgeType.ELSE)));
+          }
+          return Optional.of(node);
+        }
+      case ASTNode.FOR_STATEMENT:
+        {
+          ForStatement forStatement = (ForStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(), Language.JAVA, NodeType.FOR_STATEMENT, forStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          forStatement
+              .initializers()
+              .forEach(
+                  init ->
+                      graph.addEdge(
+                          node,
+                          parseExpression((Expression) init),
+                          new Edge(GraphUtil.eid(), EdgeType.INITIALIZER)));
+          forStatement
+              .updaters()
+              .forEach(
+                  upd ->
+                      graph.addEdge(
+                          node,
+                          parseExpression((Expression) upd),
+                          new Edge(GraphUtil.eid(), EdgeType.UPDATER)));
+
+          if (forStatement.getExpression() != null) {
+            graph.addEdge(
+                node,
+                parseExpression(forStatement.getExpression()),
+                new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
+          parseStatement(forStatement.getBody())
+              .ifPresent(
+                  body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+
+          return Optional.of(node);
+        }
+
+      case ASTNode.ENHANCED_FOR_STATEMENT:
+        {
+          EnhancedForStatement eForStatement = (EnhancedForStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.ENHANCED_FOR_STATEMENT,
+                  eForStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          SingleVariableDeclaration p = eForStatement.getParameter();
+          String para_name = p.getName().getFullyQualifiedName();
+          String para_qname = para_name;
+          IVariableBinding b = p.resolveBinding();
+          if (b != null && b.getVariableDeclaration() != null) {
+            para_qname =
+                JdtService.getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+          }
+
+          ElementNode pn =
+              createElementNode(
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname,
+                  JdtService.getIdentifier(p));
+
+          pn.setRange(computeRange(p));
+          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.ELEMENT));
+
+          ITypeBinding paraBinding = p.getType().resolveBinding();
+          if (paraBinding != null) {
+            usePool.add(Triple.of(pn, EdgeType.DATA_TYPE, paraBinding.getQualifiedName()));
+          }
+
+          graph.addEdge(
+              node,
+              parseExpression(eForStatement.getExpression()),
+              new Edge(GraphUtil.eid(), EdgeType.VALUES));
+          parseStatement(eForStatement.getBody())
+              .ifPresent(
+                  body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+
+          return Optional.of(node);
+        }
+      case ASTNode.DO_STATEMENT:
+        {
+          DoStatement doStatement = ((DoStatement) stmt);
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(), Language.JAVA, NodeType.DO_STATEMENT, doStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          Expression expression = doStatement.getExpression();
+          if (expression != null) {
+            RelationNode cond = parseExpression(expression);
+            graph.addEdge(node, cond, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
+
+          Statement doBody = doStatement.getBody();
+          if (doBody != null) {
+            parseStatement(doBody)
+                .ifPresent(
+                    body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+          }
+          return Optional.of(node);
+        }
+      case ASTNode.WHILE_STATEMENT:
+        {
+          WhileStatement whileStatement = (WhileStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.WHILE_STATEMENT,
+                  whileStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          Expression expression = whileStatement.getExpression();
+          if (expression != null) {
+            RelationNode cond = parseExpression(expression);
+            graph.addEdge(node, cond, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
+
+          Statement whileBody = whileStatement.getBody();
+          if (whileBody != null) {
+            parseStatement(whileBody)
+                .ifPresent(
+                    body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+          }
+          return Optional.of(node);
+        }
+      case ASTNode.TRY_STATEMENT:
+        {
+          TryStatement tryStatement = (TryStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(), Language.JAVA, NodeType.TRY_STATEMENT, tryStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          Statement tryBody = tryStatement.getBody();
+          if (tryBody != null) {
+            parseStatement(tryBody)
+                .ifPresent(
+                    body -> graph.addEdge(node, body, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+
+            List<CatchClause> catchClauses = tryStatement.catchClauses();
+            if (catchClauses != null && !catchClauses.isEmpty()) {
+              for (CatchClause catchClause : catchClauses) {
+                ITypeBinding binding = catchClause.getException().getType().resolveBinding();
+                RelationNode catchNode =
+                    new RelationNode(
+                        GraphUtil.nid(),
+                        Language.JAVA,
+                        NodeType.CATCH_CLAUSE,
+                        catchClause.toString());
+                catchNode.setRange(computeRange(catchClause));
+
+                graph.addVertex(catchNode);
+                graph.addEdge(node, catchNode, new Edge(GraphUtil.eid(), EdgeType.CATCH));
+
+                if (binding != null) {
+                  usePool.add(Triple.of(node, EdgeType.TARGET_TYPE, binding.getQualifiedName()));
+                }
+                if (catchClause.getBody() != null) {
+                  parseBodyBlock(catchClause.getBody())
+                      .ifPresent(
+                          block ->
+                              graph.addEdge(
+                                  catchNode, block, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
+                }
+              }
+            }
+            if (tryStatement.getFinally() != null) {
+              parseBodyBlock(tryStatement.getFinally())
+                  .ifPresent(
+                      block ->
+                          graph.addEdge(node, block, new Edge(GraphUtil.eid(), EdgeType.FINALLY)));
+            }
+          }
+          return Optional.of(node);
+        }
+      case ASTNode.THROW_STATEMENT:
+        {
+          ThrowStatement throwStatement = (ThrowStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.THROW_STATEMENT,
+                  throwStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          if (throwStatement.getExpression() != null) {
+            RelationNode thr = parseExpression(throwStatement.getExpression());
+            graph.addEdge(node, thr, new Edge(GraphUtil.eid(), EdgeType.THROW));
+          }
+
+          return Optional.of(node);
+        }
+      case ASTNode.SWITCH_STATEMENT:
+        {
+          SwitchStatement switchStatement = (SwitchStatement) stmt;
+          RelationNode node =
+              new RelationNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.SWITCH_STATEMENT,
+                  switchStatement.toString());
+          node.setRange(computeRange(stmt));
+
+          graph.addVertex(node);
+
+          Expression expression = switchStatement.getExpression();
+          if (expression != null) {
+            RelationNode cond = parseExpression(expression);
+            graph.addEdge(node, cond, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+          }
+          // treat case as an implicit block of statements
+          for (int i = 0; i < switchStatement.statements().size(); ++i) {
+            Object nxt = switchStatement.statements().get(i);
+            if (nxt instanceof SwitchCase) {
+              SwitchCase switchCase = (SwitchCase) nxt;
+              RelationNode caseNode =
+                  new RelationNode(
+                      GraphUtil.nid(),
+                      Language.JAVA,
+                      NodeType.SWITCH_CASE,
+                      ((SwitchCase) nxt).toString());
+              caseNode.setRange(computeRange((SwitchCase) nxt));
+
+              graph.addVertex(caseNode);
+              for (Object exx : switchCase.expressions()) {
+                if (exx instanceof Expression) {
+                  RelationNode condition = parseExpression((Expression) exx);
+                  graph.addVertex(condition);
+                  graph.addEdge(caseNode, condition, new Edge(GraphUtil.eid(), EdgeType.CONDITION));
+                }
+              }
+              graph.addEdge(node, caseNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
+
+              while (i + 1 < switchStatement.statements().size()) {
+                Object nxxt = switchStatement.statements().get(++i);
+                if (nxxt instanceof BreakStatement) {
+                  break;
+                } else if (nxxt instanceof SwitchCase) {
+                  i -= 1;
+                  break;
+                } else if (nxxt instanceof Statement) {
+                  parseStatement((Statement) nxxt)
+                      .ifPresent(
+                          then ->
+                              graph.addEdge(
+                                  caseNode, then, new Edge(GraphUtil.eid(), EdgeType.THEN)));
+                }
+              }
+            }
+          }
+          return Optional.of(node);
+        }
+    }
+
+    return Optional.empty();
   }
 }
