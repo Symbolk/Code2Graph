@@ -9,12 +9,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LayerPattern extends Layer {
-  private boolean pass;
+  private final boolean pass;
+  private int offset = 0;
   private String source;
+  private String leading;
   private final List<Token> tokens = new ArrayList<>();
 
   public final List<String> anchors = new ArrayList<>();
-  public final List<String> symbols = new ArrayList<>();
+  public final List<Token> symbols = new ArrayList<>();
 
   public LayerPattern(String identifier, Language language) {
     super(identifier, language);
@@ -36,11 +38,16 @@ public class LayerPattern extends Layer {
     Matcher matcher = VARIABLE.matcher(source);
     while (matcher.find()) {
       Token token = new Token(matcher);
+      if (token.isGreedy) {
+        leading = token.name;
+        source = source.substring(8);
+        offset = 8;
+      }
       if (token.isAnchor) {
         anchors.add(token.name);
         tokens.add(token);
       } else {
-        symbols.add(token.name);
+        symbols.add(token);
       }
     }
   }
@@ -58,17 +65,19 @@ public class LayerPattern extends Layer {
     String source = this.source;
     for (int index = tokens.size(); index > 0; --index) {
       Token anchor = tokens.get(index - 1);
-      String value = variables.getOrDefault(anchor.name, "\\w+");
-      source = anchor.replace(source, value);
+      String value = variables.getOrDefault(anchor.name, "[\\w-.]+");
+      source = anchor.replace(source, value, offset);
     }
     String[] segments = VARIABLE.split(source, -1);
-    source = String.join("(\\w+)", segments);
+    if (segments[0].equals("")) {
+      source = "(.+)?" + String.join("([\\w-.]+)", segments).substring(9);
+    } else {
+      source = String.join("([\\w-.]+)", segments);
+    }
 
     String target = layer
         .getIdentifier()
-        .replace("-", "")
-        .replace("_", "")
-        .toLowerCase();
+        .replace("\\/", "__slash__");
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
     Matcher matcher = regexp.matcher(target);
@@ -77,31 +86,20 @@ public class LayerPattern extends Layer {
     Capture captures = new Capture();
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
-      captures.put(symbols.get(i - 1), matcher.group(i));
+      String value = matcher.group(i)
+          .replace("__slash__", "/")
+          .replace("-", "")
+          .replace("_", "")
+          .toLowerCase();
+      Token token = symbols.get(i - 1);
+      if (token.modifier.equals("dot")) {
+        value = value.replace(".", "/");
+      }
+      captures.put(token.name, value);
     }
+    if (leading != null) captures.greedy.add(leading);
     return captures;
   }
 
-  public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(?::(\\w+))?\\)");
-
-  private static final class Token {
-    private final int start;
-    private final int end;
-
-    public final String name;
-    public final String modifier;
-    public final boolean isAnchor;
-
-    public Token(Matcher matcher) {
-      this.start = matcher.start();
-      this.end = matcher.end();
-      this.name = matcher.group(1);
-      this.modifier = matcher.group(2);
-      this.isAnchor = matcher.group(0).charAt(1) == '&';
-    }
-
-    public String replace(String source, String capture) {
-      return source.substring(0, start) + capture + source.substring(end);
-    }
-  }
+  public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(?::(\\w+))?((\\\\\\.){3})?\\)");
 }

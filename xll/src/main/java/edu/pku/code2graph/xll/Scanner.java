@@ -46,8 +46,8 @@ public class Scanner {
     for (Layer layer : tree.children.keySet()) {
       Capture capture = pattern.getLayer(index).match(layer, variables);
       if (capture == null) continue;
-      Capture next = (Capture) current.clone();
-      next.putAll(capture);
+      Capture next = current.clone();
+      next.merge(capture);
       scan(tree.children.get(layer), index + 1, next);
     }
   }
