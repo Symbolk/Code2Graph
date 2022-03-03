@@ -1,51 +1,46 @@
 package edu.pku.code2graph.model;
 
-import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Map;
 
-public class Layer implements Serializable {
-    protected Language language;
-    protected String identifier;
-    protected Map<String, String> attributes;
-
+public class Layer extends HashMap<String, String> {
     public Layer(String identifier, Language language) {
-        this.language = language;
-        this.identifier = identifier;
-        this.attributes = new HashMap<>();
+        super();
+        put("identifier", identifier);
+        put("language", language.toString());
     }
 
     public Language getLanguage() {
-        return language;
+        return Language.valueOf(get("language"));
     }
 
     public String getIdentifier() {
-        return identifier;
+        return get("identifier");
     }
 
     public void setLanguage(Language language) {
-        this.language = language;
+        put("language", language.toString());
     }
 
     public void setIdentifier(String identifier) {
-        this.identifier = identifier;
+        put("identifier", identifier);
     }
 
     public void addAttribute(String key, String value) {
-        attributes.put(key, value);
+        put(key, value);
     }
 
     public String getAttribute(String key) {
-        return attributes.get(key);
+        return get(key);
     }
 
     public String toString() {
-        StringBuilder builder = new StringBuilder(identifier);
+        StringBuilder builder = new StringBuilder(get("identifier"));
         builder.append("[");
         boolean flag = false;
-        for (String key : attributes.keySet()) {
+        for (String key : keySet()) {
+            if (key.equals("identifier")) continue;
             if (flag) builder.append(",");
-            builder.append(key).append("=").append(getAttribute(key));
+            builder.append(key).append("=").append(get(key));
             flag = true;
         }
         builder.append("]");

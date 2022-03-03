@@ -88,10 +88,10 @@ public class Linker {
         // generate results
         for (Capture use : uses.getRight()) {
           for (Capture def : defs.getRight()) {
-            Capture result = new Capture();
-            result.putAll(variables);
-            result.putAll(def);
-            result.putAll(use);
+            Capture result = variables.clone();
+            result.merge(variables);
+            result.merge(def);
+            result.merge(use);
             captures.add(result);
           }
         }
