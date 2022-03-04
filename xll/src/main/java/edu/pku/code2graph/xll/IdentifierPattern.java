@@ -68,7 +68,11 @@ public class IdentifierPattern {
       source = String.join("([\\w-.]+)", segments);
     }
 
-    target = target.replace("\\/", "__slash__");
+    target = target
+        .replace("-", "")
+        .replace("_", "")
+        .replace("\\/", "__slash__")
+        .toLowerCase();
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
     Matcher matcher = regexp.matcher(target);
@@ -78,10 +82,7 @@ public class IdentifierPattern {
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
       String value = matcher.group(i)
-          .replace("__slash__", "/")
-          .replace("-", "")
-          .replace("_", "")
-          .toLowerCase();
+          .replace("__slash__", "/");
       Token token = symbols.get(i - 1);
       if (token.modifier.equals("dot")) {
         value = value.replace(".", "/");

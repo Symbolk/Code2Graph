@@ -91,7 +91,6 @@ public class LinkerTest {
     for (Capture variables : linker1.captures) {
       linker2.link(variables);
     }
-    linker2.link();
     linker2.print();
   }
 

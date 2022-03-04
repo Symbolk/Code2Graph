@@ -101,7 +101,13 @@ public class Linker {
 
   public void print() {
     System.out.println(rule.name);
-    System.out.println(links.size());
-    System.out.println(links);
+    System.out.println("links: " + links.size());
+    for (Link link : links) {
+      System.out.println(link);
+    }
+    System.out.println("captures: " + captures.size());
+    for (Capture capture : captures) {
+      System.out.println(capture);
+    }
   }
 }
