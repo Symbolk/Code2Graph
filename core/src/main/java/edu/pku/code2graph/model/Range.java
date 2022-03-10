@@ -47,6 +47,11 @@ public class Range implements Serializable {
     this.endColumn = endColumn;
   }
 
+  public void setStartPosition(int startLine, int startColumn) {
+    this.startLine = startLine;
+    this.startColumn = startColumn;
+  }
+
   public boolean overlapsWith(Range range) {
     // overlapping intervals: !(b1 < a2 || b2 < a1) = (b1 >= a2 && b2 >= a1)
     // [a1, b1] this
