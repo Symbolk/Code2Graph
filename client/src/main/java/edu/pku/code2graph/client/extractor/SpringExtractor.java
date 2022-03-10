@@ -126,7 +126,7 @@ public class SpringExtractor extends AbstractExtractor {
     String fileWithoutExt = split[split.length - 2];
     if (uri.getLayerCount() == 1) {
       for (String key : viewPathReturns.keySet()) {
-        if (fileWithoutExt.endsWith(key)) {
+        if (fileWithoutExt.endsWith(key) || filename.endsWith(key)) {
           for (URI val : viewPathReturns.get(key)) {
             uriPairs.add(new ImmutablePair<>(val, uri));
           }
@@ -138,7 +138,7 @@ public class SpringExtractor extends AbstractExtractor {
     String sym = uri.getSymbol();
     sym = sym.substring(2, sym.length() - 1).trim();
     for (String key : javaURIS.keySet()) {
-      if (fileWithoutExt.endsWith(key)) {
+      if (fileWithoutExt.endsWith(key) || filename.endsWith(key)) {
         for (URI val : javaURIS.get(key)) {
           if (val.getSymbol().equals(sym)) {
             uriPairs.add(new ImmutablePair<>(uri, val));

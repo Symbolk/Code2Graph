@@ -10,6 +10,8 @@ public enum Language  implements Serializable {
   JAVA(".java"),
   XML(".xml"),
   HTML(".html"),
+  JSP(".jsp"),
+  FTL(".ftl"),
   SQL(".sql"),
   ANY("*"),
   OTHER("");

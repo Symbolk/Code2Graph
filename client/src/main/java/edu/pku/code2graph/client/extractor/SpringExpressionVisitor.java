@@ -566,7 +566,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
             String arg = mi.arguments().get(0).toString();
             URI uri = new URI(false, uriFilePath);
             uri.addLayer(identifier, Language.JAVA);
-            uri.addLayer(arg.substring(1, arg.length() - 1), Language.SQL);
+            uri.addLayer(arg.substring(1, arg.length() - 1), Language.ANY);
 
             if (currentTemplate != "" && !javaURIS.containsKey(currentTemplate)) {
               javaURIS.put(currentTemplate, new ArrayList<>());
