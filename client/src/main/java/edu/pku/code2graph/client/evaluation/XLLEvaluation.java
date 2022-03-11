@@ -261,6 +261,7 @@ public class XLLEvaluation {
     List<String[]> results = new ArrayList<>();
 
     for (Link link : xllLinks) {
+      if (link.hidden) continue;
       List<String> commitsLeft = getHistoricalCommitsChanged(link.def);
       List<String> commitsRight = getHistoricalCommitsChanged(link.use);
       int intersectionNum =

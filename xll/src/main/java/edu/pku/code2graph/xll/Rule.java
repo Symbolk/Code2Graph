@@ -7,6 +7,7 @@ public class Rule {
   public final URIPattern use;
   public final List<String> deps;
   public final String name;
+  public final boolean hidden;
 
   static private int index = 0;
 
@@ -20,12 +21,14 @@ public class Rule {
     this.use = use;
     this.deps = new ArrayList<>();
     this.name = "#" + String.valueOf(++index);
+    this.hidden = false;
     initialize();
   }
 
   public Rule(Map<String, Object> rule, List<String> deps, String name) {
     this.def = new URIPattern(false, (Map<String, Object>) rule.get("def"));
     this.use = new URIPattern(true, (Map<String, Object>) rule.get("use"));
+    this.hidden = (boolean) rule.getOrDefault("hidden", false);
     this.deps = deps;
     this.name = name;
     initialize();
