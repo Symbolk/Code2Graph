@@ -14,13 +14,13 @@ public class URIPattern extends URILike<LayerPattern> {
 
   public URIPattern(boolean isRef, String file) {
     this.isRef = isRef;
-    addLayer(file, Language.OTHER);
+    addLayer(file, Language.FILE);
   }
 
   public URIPattern(boolean isRef, Map<String, Object> pattern) {
     this.isRef = isRef;
     String file = (String) pattern.getOrDefault("file", "**");
-    addLayer(file, Language.OTHER);
+    addLayer(file, Language.FILE);
     do {
       String identifier = (String) pattern.getOrDefault("identifier", "**");
       Language lang = Language.valueOfLabel(pattern.getOrDefault("lang", "*").toString().toLowerCase());
