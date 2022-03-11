@@ -1,14 +1,14 @@
-package edu.pku.code2graph.xll;
+package edu.pku.code2graph.xll.pattern;
 
-import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Layer;
+import edu.pku.code2graph.xll.Capture;
+import edu.pku.code2graph.xll.Token;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class IdentifierPattern {
+public class IdentifierPattern implements AttributePattern {
   public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(?::(\\w+))?((\\\\\\.){3})?\\)");
 
   private final boolean pass;
