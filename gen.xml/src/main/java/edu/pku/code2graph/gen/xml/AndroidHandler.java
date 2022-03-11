@@ -57,6 +57,8 @@ public class AndroidHandler extends AbstractHandler {
 
   @Override
   public void endDocument() throws SAXException {
+    sourceFile.clear();
+    startElePosition.setStartPosition(1, -1);
     super.endDocument();
   }
 
