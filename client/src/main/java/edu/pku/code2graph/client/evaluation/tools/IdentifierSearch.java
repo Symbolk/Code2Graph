@@ -67,6 +67,7 @@ public class IdentifierSearch {
         case "springmvc":
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.HTML);
+          c2g.addSupportedLanguage(Language.JSP);
           break;
         case "android":
           c2g.addSupportedLanguage(Language.JAVA);
