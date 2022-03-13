@@ -13,7 +13,7 @@ import org.jsoup.nodes.Document;
 
 import java.util.List;
 
-@Register(id = "html-jsoup", accept = "\\.html$", priority = Registry.Priority.MAXIMUM)
+@Register(id = "html-jsoup", accept = {"\\.html$", "\\.jsp$"}, priority = Registry.Priority.MAXIMUM)
 public class JsoupGenerator extends Generator {
 
   @Override
