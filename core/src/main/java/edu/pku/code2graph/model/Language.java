@@ -13,8 +13,9 @@ public enum Language  implements Serializable {
   JSP(".jsp"),
   FTL(".ftl"),
   SQL(".sql"),
+  FILE(".file"),
   ANY("*"),
-  OTHER("");
+  OTHER("?");
 
   public String extension;
 
@@ -36,6 +37,6 @@ public enum Language  implements Serializable {
                     || ("*" + l.extension).equals(s)
                     || l.extension.endsWith(s)))
         .findFirst()
-        .orElse(Language.OTHER);
+        .orElse(Language.FILE);
   }
 }
