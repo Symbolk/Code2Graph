@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class URITree  implements Serializable {
+public class URITree implements Serializable {
   public final Map<Layer, URITree> children = new HashMap<>();
   public final List<Node> nodes = new ArrayList<>();
 
@@ -36,5 +36,13 @@ public class URITree  implements Serializable {
       if (root == null) return null;
     }
     return root.nodes;
+  }
+
+  public List<Node> getAllNodes() {
+    URITree root = this;
+    List<Node> res = new ArrayList<>(nodes);
+    children.forEach(
+        (key, value) -> res.addAll(value.getAllNodes()));
+    return res;
   }
 }
