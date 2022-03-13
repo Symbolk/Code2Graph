@@ -75,7 +75,7 @@ public class Code2Graph {
       throws NonexistPathException {
     this(repoName, repoPath);
     if (!FileUtil.checkExists(xllConfigPath)) {
-      throw new NonexistPathException("XLL config", repoPath);
+      throw new NonexistPathException("XLL config", xllConfigPath);
     }
     this.xllConfigPath = xllConfigPath;
   }
