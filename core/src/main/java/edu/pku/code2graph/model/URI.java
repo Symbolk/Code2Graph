@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
-public class URI extends URILike<Layer>  implements Serializable {
+public class URI extends URILike<Layer> implements Serializable {
   public URI() {
     this(false, "");
   }
@@ -22,13 +22,15 @@ public class URI extends URILike<Layer>  implements Serializable {
   public URI(String source) {
     String[] result = source.split("//");
     this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");
-    addLayer(result[1], Language.OTHER);
+    addLayerFromSource(result[1], Language.OTHER);
+
     Language lang = Language.valueOfLabel(FilenameUtils.getExtension(result[1]).toLowerCase());
     if (result.length <= 2) return;
     String identifier = result[2];
-    addLayer(identifier, lang);
+    addLayerFromSource(identifier, lang);
+
     for (int i = 3; i < result.length; ++i) {
-      addLayer(result[i]);
+      addLayerFromSource(result[i]);
     }
   }
 
@@ -98,10 +100,30 @@ public class URI extends URILike<Layer>  implements Serializable {
     return name;
   }
 
+  private Layer addLayerFromSource(String source) {
+    return addLayerFromSource(source, Language.ANY);
+  }
+
+  private Layer addLayerFromSource(String source, Language lang) {
+    int splitPoint = source.lastIndexOf("[");
+    Layer layer = addLayer(source.substring(0, splitPoint), lang);
+
+    String dropBracket = source.substring(splitPoint + 1, source.length() - 1);
+    String[] attrs = dropBracket.split(",");
+    for (String attr : attrs) {
+      String[] pair = attr.split("=");
+      assert (pair.length == 2);
+      layer.addAttribute(pair[0], pair[1]);
+    }
+
+    return layer;
+  }
+
   // for evaluation output
   public static String prettified(URI uri) {
     return uri.toString().substring(1, uri.toString().length() - 1);
   }
+
   public static String prettified(String uri) {
     return uri.substring(1, uri.length() - 1);
   }
