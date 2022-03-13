@@ -35,6 +35,15 @@ public class FileUtil {
     return directory.getAbsolutePath();
   }
 
+  public static String createFile(String path) throws IOException {
+    File file = new File(path);
+    if (!file.exists()) {
+      createDir(file.getParentFile().toString());
+      file.createNewFile();
+    }
+    return file.getAbsolutePath();
+  }
+
   public static String prepareDir(String dir) {
     File file = new File(dir);
     if (file.exists()) {
