@@ -3,6 +3,7 @@ package edu.pku.code2graph.model;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -24,7 +25,10 @@ public class URI extends URILike<Layer> implements Serializable {
     this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");
     addLayerFromSource(result[1], Language.FILE);
 
-    Language lang = Language.valueOfLabel(FilenameUtils.getExtension(result[1]).toLowerCase());
+    int splitIdx = getAttrIdx(result[1]);
+    Language lang =
+        Language.valueOfLabel(
+            FilenameUtils.getExtension(result[1].substring(0, splitIdx)).toLowerCase());
     if (result.length <= 2) return;
     String identifier = result[2];
     addLayerFromSource(identifier, lang);
@@ -100,16 +104,47 @@ public class URI extends URILike<Layer> implements Serializable {
     return name;
   }
 
+  private int getAttrIdx(String source) {
+    int splitPoint = source.length() - 1;
+    int stackCnt = 0;
+    for (; splitPoint >= 0; splitPoint--) {
+      if (source.charAt(splitPoint) == ']') {
+        stackCnt++;
+      } else if (source.charAt(splitPoint) == '[') {
+        stackCnt--;
+        if (stackCnt == 0) {
+          break;
+        }
+      }
+    }
+
+    return splitPoint;
+  }
+
   private Layer addLayerFromSource(String source) {
     return addLayerFromSource(source, Language.ANY);
   }
 
   private Layer addLayerFromSource(String source, Language lang) {
-    int splitPoint = source.lastIndexOf("[");
+    int splitPoint = getAttrIdx(source);
+
     Layer layer = addLayer(source.substring(0, splitPoint), lang);
 
     String dropBracket = source.substring(splitPoint + 1, source.length() - 1);
-    String[] attrs = dropBracket.split(",");
+    List<String> attrs = new ArrayList<>();
+    boolean hasMetEqual = false;
+    int end = source.length() - 1;
+    for (int i = dropBracket.length() - 1; i >= 0; i--) {
+      if (source.charAt(i) == ',') {
+        if (hasMetEqual) {
+          attrs.add(source.substring(i, end + 1));
+        }
+        hasMetEqual = false;
+      }
+      if (source.charAt(i) == '=') {
+        hasMetEqual = true;
+      }
+    }
     for (String attr : attrs) {
       String[] pair = attr.split("=");
       assert (pair.length == 2);
@@ -123,6 +158,7 @@ public class URI extends URILike<Layer> implements Serializable {
   public static String prettified(URI uri) {
     return uri.toString().substring(1, uri.toString().length() - 1);
   }
+
   public static String prettified(String uri) {
     return uri.substring(1, uri.length() - 1);
   }
