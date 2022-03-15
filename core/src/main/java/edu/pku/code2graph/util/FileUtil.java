@@ -225,6 +225,25 @@ public class FileUtil {
     return result;
   }
 
+  public static Map<String, List<String>> categorizeFilesByExtensionInLanguages(
+      List<String> filePaths, Set<Language> languages) {
+    Set<String> extensions =
+        languages.stream()
+            .map(language -> language.extension.replace(".", ""))
+            .collect(Collectors.toSet());
+
+    Map<String, List<String>> result = new LinkedHashMap<>();
+    for (String path : filePaths) {
+      String extension = FilenameUtils.getExtension(path);
+      if (!extensions.contains((extension))) continue;
+      if (!result.containsKey(extension)) {
+        result.put(extension, new ArrayList<>());
+      }
+      result.get(extension).add(path);
+    }
+    return result;
+  }
+
   /**
    * List all files with specific extension under a folder/directory
    *
