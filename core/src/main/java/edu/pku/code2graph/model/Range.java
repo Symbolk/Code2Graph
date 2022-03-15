@@ -23,6 +23,17 @@ public class Range implements Serializable {
     this.endColumn = endColumn;
   }
 
+  public Range(String source) {
+    if (source.length() == 0) return;
+    String[] startEnd = source.split("~");
+    String[] start = startEnd[0].split(":");
+    String[] end = startEnd[1].split(":");
+    this.startLine = Integer.parseInt(start[0]);
+    this.startColumn = Integer.parseInt(start[1]);
+    this.endLine = Integer.parseInt(end[0]);
+    this.endColumn = Integer.parseInt(end[1]);
+  }
+
   public int getStartLine() {
     return startLine;
   }
