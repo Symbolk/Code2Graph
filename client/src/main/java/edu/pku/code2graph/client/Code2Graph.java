@@ -17,6 +17,7 @@ import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -188,38 +189,42 @@ public class Code2Graph {
       logger.info("- #edges = " + graph.edgeSet().size());
 
       // build cross-language linking (XLL) edges
-      if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
-        logger.info("start detecting xll");
-        Config config = Config.load(xllConfigPath);
-        URITree tree = GraphUtil.getUriTree();
-        List<Link> links = config.link(tree);
-        logger.info("- #xll = {}", links.size());
-        this.xllLinks = links;
-
-        Type xllType = type("xll");
-
-        int i = 0;
-        for (Link link : links) {
-          i += 1;
-          logger.debug("XLL#{}  {}, {}", i, link.def.toString(), link.use.toString());
-          // get nodes by URI
-          List<Node> source = tree.get(link.def);
-          List<Node> target = tree.get(link.use);
-          Double weight = 1.0D;
-
-          // create XLL edge
-          for (Node left : source) {
-            for (Node right : target) {
-              graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
-            }
-          }
-        }
-      }
+      generateXLL(graph);
     } catch (IOException e) {
       e.printStackTrace();
     }
 
     return GraphUtil.getGraph();
+  }
+
+  public void generateXLL(Graph<Node, Edge> graph) throws FileNotFoundException {
+    if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
+      logger.info("start detecting xll");
+      Config config = Config.load(xllConfigPath);
+      URITree tree = GraphUtil.getUriTree();
+      List<Link> links = config.link(tree);
+      logger.info("- #xll = {}", links.size());
+      this.xllLinks = links;
+
+      Type xllType = type("xll");
+
+      int i = 0;
+      for (Link link : links) {
+        i += 1;
+        logger.debug("XLL#{}  {}, {}", i, link.def.toString(), link.use.toString());
+        // get nodes by URI
+        List<Node> source = tree.get(link.def);
+        List<Node> target = tree.get(link.use);
+        Double weight = 1.0D;
+
+        // create XLL edge
+        for (Node left : source) {
+          for (Node right : target) {
+            graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
+          }
+        }
+      }
+    }
   }
 
   public Map<Language, Set<URI>> crossLanguageRename(Language lang, URI uri) {
