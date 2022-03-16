@@ -31,7 +31,14 @@ public class URITree implements Serializable {
     URI uri = new URI(source);
     ElementNode node =
         new ElementNode(
-            GraphUtil.nid(), uri.getLayer(uri.getLayerCount() - 1).getLanguage(), null, "", "", "");
+            GraphUtil.nid(),
+            uri.getLayer(uri.getLayerCount() - 1).getLanguage(),
+            null,
+            "",
+            "",
+            "",
+            uri);
+    GraphUtil.getGraph().addVertex(node);
     node.setRange(range);
     add(new URI(source)).add(node);
 
