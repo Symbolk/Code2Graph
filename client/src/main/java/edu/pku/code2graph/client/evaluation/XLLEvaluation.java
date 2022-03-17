@@ -138,6 +138,7 @@ public class XLLEvaluation {
 
     writer.writeRecord(headers);
     for (Link link : xllLinks) {
+      if (link.hidden) continue;
       String left = prettifyURI(link.def), right = prettifyURI(link.use);
       // should rule be saved too?
       String[] record = {link.name, left, right};
