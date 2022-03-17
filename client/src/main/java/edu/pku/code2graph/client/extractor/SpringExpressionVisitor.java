@@ -510,7 +510,9 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           }
           //          parseArguments(root, cic.arguments(), false);
           String identifier = cic.getType().toString();
-          withScope(identifier, () -> parseArguments(root, cic.arguments()));
+          pushScope(identifier);
+          parseArguments(root, cic.arguments());
+          popScope();
           break;
         }
       case ASTNode.SUPER_METHOD_INVOCATION:
@@ -521,7 +523,9 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           root.setUri(createIdentifier(identifier));
 
           //          parseArguments(root, mi.arguments(), false);
-          withScope(identifier, () -> parseArguments(root, mi.arguments()));
+          pushScope(identifier);
+          parseArguments(root, mi.arguments());
+          popScope();
           // find the method declaration in super class
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           if (mdBinding != null) {
@@ -717,7 +721,9 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
                     EdgeType.REFERENCE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
-          withScope("super", () -> parseArguments(node, ci.arguments()));
+          pushScope("super");
+          parseArguments(node, ci.arguments());
+          popScope();
           return Optional.of(node);
         }
       case ASTNode.CONSTRUCTOR_INVOCATION:
@@ -737,7 +743,9 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
                     EdgeType.REFERENCE,
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
-          withScope("this", () -> parseArguments(node, ci.arguments()));
+          pushScope("this");
+          parseArguments(node, ci.arguments());
+          popScope();
           return Optional.of(node);
         }
       case ASTNode.RETURN_STATEMENT:
@@ -745,7 +753,9 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           Expression expression = ((ReturnStatement) stmt).getExpression();
           if (expression != null) {
             toParseReturn = true;
-            RelationNode node = withScope("return", () -> parseExpression(expression));
+            pushScope("return");
+            RelationNode node = parseExpression(expression);
+            popScope();
             graph.addVertex(node);
             toParseReturn = false;
             return Optional.of(node);
