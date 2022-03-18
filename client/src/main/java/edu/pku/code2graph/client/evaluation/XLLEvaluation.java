@@ -32,6 +32,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static edu.pku.code2graph.client.CacheHandler.initCache;
+import static edu.pku.code2graph.client.CacheHandler.loadCache;
+
 public class XLLEvaluation {
   private static Logger logger = LoggerFactory.getLogger(XLLEvaluation.class);
 
@@ -46,6 +49,8 @@ public class XLLEvaluation {
   //          Evaluation.class.getClassLoader().getResource(framework + "/config.yml"));
   private static String gtDir =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/groundtruth";
+  private static String cacheDir =
+      System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
   private static String gtPath = gtDir + "/" + repoName + ".csv";
   private static String otPath = gtPath.replace("groundtruth", "output");
 
@@ -88,7 +93,10 @@ public class XLLEvaluation {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
-      Graph<Node, Edge> graph = c2g.generateGraph();
+      if (loadCache(cacheDir, GraphUtil.getUriTree()) == null) {
+        initCache(framework, repoPath, cacheDir);
+      }
+      c2g.generateXLL(GraphUtil.getGraph());
       xllLinks = c2g.getXllLinks();
       logger.info("Exporting xll to file {}", repoName);
       exportXLLLinks(xllLinks, otPath);
@@ -200,7 +208,7 @@ public class XLLEvaluation {
     // compute precision/recall
     double precision = MetricUtil.computeProportion(intersectionNum, otLines.size());
     double recall = MetricUtil.computeProportion(intersectionNum, gtLines.size());
-    double f1 =  MetricUtil.formatDouble((2 * precision * recall) / (precision + recall));
+    double f1 = MetricUtil.formatDouble((2 * precision * recall) / (precision + recall));
 
     logger.info("Precision = {}%", precision);
     logger.info("Recall = {}%", recall);
