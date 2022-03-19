@@ -50,6 +50,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
     viewPathReturns.get(currentTemplate).add(uri);
   }
 
+  @Override
   public boolean visit(MethodDeclaration md) {
     currentTemplate = "";
     currentReturnLiteral = false;
@@ -260,7 +261,9 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
                 ((Expression) ((MethodInvocation) expression).arguments().get(0)).toString();
             if (returnExpr != null
                 && !returnExpr.trim().isEmpty()
-                && pathRegex.matcher(returnExpr).find()) {
+                && pathRegex.matcher(returnExpr).find()
+                && !returnExpr.equals("\".html\"")
+                && !returnExpr.equals("\".jsp\"")) {
               currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
               currentReturnLiteral = true;
               return Optional.of(returnExpr);
@@ -272,6 +275,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
     return Optional.empty();
   }
 
+  @Override
   protected void parseAnnotations(List modifiers, ElementNode annotatedNode) {
     for (Object modifier : modifiers) {
       if (modifier instanceof Annotation) {
@@ -336,6 +340,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
    * @param exp
    * @return
    */
+  @Override
   protected RelationNode parseExpression(Expression exp) {
     RelationNode root = new RelationNode(GraphUtil.nid(), Language.JAVA);
     root.setRange(computeRange(exp));
@@ -563,6 +568,10 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           root.setType(NodeType.METHOD_INVOCATION);
           root.setUri(createIdentifier(identifier));
           GraphUtil.addNode(root);
+
+          pushScope(identifier);
+          parseArguments(root, mi.arguments());
+          popScope();
 
           if (exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute")) {
             //          parseArguments(root, mi.arguments(), addedToMap);
