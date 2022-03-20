@@ -85,7 +85,7 @@ public class XLLEvaluation {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+//          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
