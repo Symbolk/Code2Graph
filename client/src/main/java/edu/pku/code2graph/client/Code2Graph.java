@@ -11,7 +11,7 @@ import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Config;
-import edu.pku.code2graph.xll.Link;
+import edu.pku.code2graph.model.Link;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;

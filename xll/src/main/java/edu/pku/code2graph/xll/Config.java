@@ -1,6 +1,8 @@
 package edu.pku.code2graph.xll;
 
+import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URITree;
+import edu.pku.code2graph.xll.pattern.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;

@@ -3,8 +3,9 @@ package edu.pku.code2graph.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class URILike<T extends Layer> {
+public abstract class URIBase<T extends LayerBase> {
     public boolean isRef;
+
     protected List<T> layers = new ArrayList<>();
 
     public int getLayerCount() {
@@ -27,17 +28,9 @@ public abstract class URILike<T extends Layer> {
         output.append("<");
         output.append(isRef ? "use" : "def");
         output.append(":");
-        for (Layer layer : layers) {
-            output.append("//").append(layer.toString());
+        for (LayerBase layer : layers) {
+            output.append("//").append(layer);
         }
         return output.append(">").toString();
-    }
-
-    public int hashCode() {
-        return toString().hashCode();
-    }
-
-    public boolean equals(Object obj) {
-        return toString().equals(obj.toString());
     }
 }

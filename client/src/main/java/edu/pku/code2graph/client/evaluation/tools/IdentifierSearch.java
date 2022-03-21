@@ -11,7 +11,7 @@ import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.xll.Link;
+import edu.pku.code2graph.model.Link;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;

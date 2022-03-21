@@ -1,7 +1,10 @@
 package edu.pku.code2graph.xll;
 
+import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
+import edu.pku.code2graph.xll.pattern.Rule;
+import edu.pku.code2graph.xll.pattern.URIPattern;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

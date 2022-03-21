@@ -15,7 +15,7 @@ import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.xll.Link;
+import edu.pku.code2graph.model.Link;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;

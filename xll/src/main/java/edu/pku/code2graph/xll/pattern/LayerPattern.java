@@ -1,14 +1,14 @@
-package edu.pku.code2graph.xll;
+package edu.pku.code2graph.xll.pattern;
 
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Layer;
-import edu.pku.code2graph.xll.pattern.AttributePattern;
-import edu.pku.code2graph.xll.pattern.IdentifierPattern;
-import edu.pku.code2graph.xll.pattern.LanguagePattern;
+import edu.pku.code2graph.model.LayerBase;
+import edu.pku.code2graph.xll.Capture;
+import edu.pku.code2graph.xll.Token;
 
 import java.util.*;
 
-public class LayerPattern extends Layer {
+public class LayerPattern extends LayerBase {
   private final Map<String, AttributePattern> matchers = new HashMap<>();
 
   public final List<String> anchors = new ArrayList<>();
