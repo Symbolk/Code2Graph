@@ -46,6 +46,7 @@ public final class Capture extends TreeMap<String, String> {
         greedy.addAll(capture.greedy);
     }
 
+    @Override
     public String toString() {
         String result = super.toString();
         result += greedy.toString();
@@ -54,8 +55,7 @@ public final class Capture extends TreeMap<String, String> {
 
     public Capture clone() {
         Capture result = (Capture) super.clone();
-        result.putAll(this);
-        result.greedy.addAll(greedy);
+        result.merge(this);
         return result;
     }
 }

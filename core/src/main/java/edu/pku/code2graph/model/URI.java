@@ -16,13 +16,13 @@ public class URI extends URILike<Layer>  implements Serializable {
 
   public URI(boolean isRef, String file) {
     this.isRef = isRef;
-    this.addLayer(file, Language.OTHER);
+    this.addLayer(file, Language.FILE);
   }
 
   public URI(String source) {
     String[] result = source.split("//");
     this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");
-    addLayer(result[1], Language.OTHER);
+    addLayer(result[1], Language.FILE);
     Language lang = Language.valueOfLabel(FilenameUtils.getExtension(result[1]).toLowerCase());
     if (result.length <= 2) return;
     String identifier = result[2];

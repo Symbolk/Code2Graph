@@ -91,26 +91,46 @@ public class LinkerTest {
     for (Capture variables : linker1.captures) {
       linker2.link(variables);
     }
-    linker2.link();
     linker2.print();
   }
 
   @Test
   public void matchTest4() {
     URITree tree = new URITree();
-    tree.add("def://foo/baz/qux.html");
-    tree.add("use://source.java//events/return//baz\\/qux");
+    tree.add("def://BlogController.java//showPost/return//blog\\/show");
+    tree.add("def://BlogController.java//showPost/model.addAttribute//categories");
+    tree.add("use://root/blog/show.html");
+    tree.add("use://root/blog/show.html//html/body/form/select/option/data-th-each//${categories}");
 
-    URIPattern def = new URIPattern(false, "(htmlFile...).html");
+    URIPattern def, use;
 
-    URIPattern use = new URIPattern(true, "*.java");
+    // rule 1
+    def = new URIPattern(false, "(htmlFile...).html");
+
+    use = new URIPattern(true, "(javaFile).java");
     use.addLayer("(functionName)/return", Language.JAVA);
     use.addLayer("(htmlFile)");
 
-    Linker linker = new Linker(tree, def, use);
-    linker.link();
-    System.out.println(linker.links);
-    System.out.println(linker.captures);
+    Linker linker1 = new Linker(tree, def, use);
+    linker1.link();
+    System.out.println(linker1.links);
+    System.out.println(linker1.captures);
+
+    // rule 2
+    def = new URIPattern(false, "(&javaFile).java");
+    def.addLayer("(&functionName)/(&modelName).addAttribute", Language.JAVA);
+    def.addLayer("(name)");
+
+    use = new URIPattern(true, "(&htmlFile).html");
+    use.addLayer("**", Language.HTML);
+    use.addLayer("${(name)}");
+
+    Linker linker2 = new Linker(tree, def, use);
+    for (Capture variables : linker1.captures) {
+      linker2.link(variables);
+    }
+    System.out.println(linker2.links);
+    System.out.println(linker2.captures);
   }
 
   @Test

@@ -6,6 +6,7 @@ import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -31,6 +32,8 @@ public class HandlersTest {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.ERROR);
 
+    FileUtil.setRootPath("");
+
     filePaths.add("src/test/resources/layout.xml");
     //    filePaths.add("src/test/resources/strings.xml");
     //    filePaths.add("src/test/resources/manifest.xml");
@@ -52,17 +55,16 @@ public class HandlersTest {
       if (node instanceof ElementNode) {
         switch (((ElementNode) node).getName()) {
           case "@+id/discovery_toolbar":
-            assertThat(((ElementNode) node).getUri().getIdentifier())
-                .isEqualTo("com.kickstarter.ui.views.DiscoveryToolbar/android\\:id");
-            assertThat(((ElementNode) node).getUri().getInlineIdentifier())
-                .isEqualTo("\\@+id\\/discovery_toolbar");
+            assertThat(node.getUri().getIdentifier())
+                .isEqualTo("com.kickstarter.ui.views.DiscoveryToolbar/android:id");
+            assertThat(node.getUri().getInlineIdentifier()).isEqualTo("@+id\\/discovery_toolbar");
+            assertThat(node.getRange().toString()).isEqualTo("5:20~5:41");
             break;
           case "@+id/filter_text_view":
-            assertThat(((ElementNode) node).getUri().getIdentifier())
+            assertThat(node.getUri().getIdentifier())
                 .isEqualTo(
-                    "com.kickstarter.ui.views.DiscoveryToolbar/RelativeLayout/LinearLayout/TextView/android\\:id");
-            assertThat(((ElementNode) node).getUri().getInlineIdentifier())
-                .isEqualTo("\\@+id\\/filter_text_view");
+                    "com.kickstarter.ui.views.DiscoveryToolbar/RelativeLayout/LinearLayout/TextView/android:id");
+            assertThat(node.getUri().getInlineIdentifier()).isEqualTo("@+id\\/filter_text_view");
             break;
         }
       }

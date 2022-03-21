@@ -11,7 +11,7 @@ public enum TestEnum {
   HTML(".html"),
   SQL(".sql"),
   ANY("*"),
-  OTHER("");
+  UNKNOWN("?");
 
   public String extension;
 
@@ -33,6 +33,6 @@ public enum TestEnum {
                     || ("*" + l.extension).equals(s)
                     || l.extension.endsWith(s)))
         .findFirst()
-        .orElse(Language.OTHER);
+        .orElse(Language.UNKNOWN);
   }
 }

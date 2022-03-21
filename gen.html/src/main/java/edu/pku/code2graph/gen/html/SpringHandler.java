@@ -76,11 +76,11 @@ public class SpringHandler extends AbstractHandler {
         parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + URI.checkInvalidCh(current.getName());
     URI uri = new URI(true, uriFilePath);
     uri.addLayer(getIdentifier(attrName), Language.HTML);
-    uri.addLayer(curIdtf, Language.OTHER);
+    uri.addLayer(curIdtf, Language.ANY);
     ElementNode en =
         new ElementNode(
             GraphUtil.nid(),
-            Language.OTHER,
+            Language.ANY,
             NodeType.INLINE_VAR,
             current.getSnippet(),
             current.getName(),

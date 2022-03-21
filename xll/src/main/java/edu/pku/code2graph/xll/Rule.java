@@ -20,7 +20,7 @@ public class Rule {
     this.def = def;
     this.use = use;
     this.deps = new ArrayList<>();
-    this.name = "#" + String.valueOf(++index);
+    this.name = "#" + ++index;
     this.hidden = false;
     initialize();
   }
