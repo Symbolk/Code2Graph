@@ -54,7 +54,7 @@ public class LayerPattern extends Layer {
       AttributePattern matcher = matchers.get(key);
       Capture capture = matcher.match(target, variables);
       if (capture == null) return null;
-      result.merge(capture);
+      result.putAll(capture);
     }
 
     return result;

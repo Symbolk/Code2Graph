@@ -47,7 +47,7 @@ public class Scanner {
       Capture capture = pattern.getLayer(index).match(layer, variables);
       if (capture == null) continue;
       Capture next = current.clone();
-      next.merge(capture);
+      next.putAll(capture);
       scan(tree.children.get(layer), index + 1, next);
     }
   }

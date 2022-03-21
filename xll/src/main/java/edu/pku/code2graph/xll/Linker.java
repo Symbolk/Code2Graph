@@ -89,9 +89,8 @@ public class Linker {
         for (Capture use : uses.getRight()) {
           for (Capture def : defs.getRight()) {
             Capture result = variables.clone();
-            result.merge(variables);
-            result.merge(def);
-            result.merge(use);
+            result.putAll(def);
+            result.putAll(use);
             captures.add(result);
           }
         }
