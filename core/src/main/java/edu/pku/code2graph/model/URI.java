@@ -148,7 +148,7 @@ public class URI extends URILike<Layer> implements Serializable {
     for (String attr : attrs) {
       String[] pair = attr.split("=");
       assert (pair.length == 2);
-      layer.addAttribute(pair[0], pair[1]);
+      layer.put(pair[0], pair[1]);
     }
 
     return layer;

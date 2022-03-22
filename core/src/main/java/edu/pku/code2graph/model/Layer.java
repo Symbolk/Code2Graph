@@ -25,10 +25,12 @@ public class Layer extends HashMap<String, String> {
         put("identifier", identifier);
     }
 
+    @Deprecated
     public void addAttribute(String key, String value) {
         put(key, value);
     }
 
+    @Deprecated
     public String getAttribute(String key) {
         return get(key);
     }

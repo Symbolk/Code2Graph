@@ -114,7 +114,7 @@ public class MybatisMapperHandler extends AbstractHandler {
             String attrName = attributes.getQName(i);
             if (attrName.equals("id")) attrName = "queryId";
             String attrVal = attributes.getValue(i);
-            queryUri.getLayer(1).addAttribute(attrName, attrVal);
+            queryUri.getLayer(1).put(attrName, attrVal);
           }
         }
         queryEle =
