@@ -29,7 +29,9 @@ public abstract class AttributePattern {
 
   public static AttributePattern create(String key, String value, URIPattern root) {
     try {
-      return AttributePattern.registry.get(key).getDeclaredConstructor(String.class, URIPattern.class).newInstance(value, root);
+      return registry.get(key)
+          .getDeclaredConstructor(String.class, URIPattern.class)
+          .newInstance(value, root);
     } catch (Exception e) {
       e.printStackTrace();
       return null;
