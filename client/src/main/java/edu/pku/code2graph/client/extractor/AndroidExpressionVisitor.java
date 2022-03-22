@@ -214,7 +214,9 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
                     constructorBinding.getDeclaringClass().getQualifiedName()));
           }
           String identifier = cic.getType().toString();
-          withScope(identifier, () -> parseArguments(root, cic.arguments()));
+          pushScope(identifier);
+          parseArguments(root, cic.arguments());
+          popScope();
           break;
         }
       case ASTNode.SUPER_METHOD_INVOCATION:
@@ -224,7 +226,9 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           root.setType(NodeType.SUPER_METHOD_INVOCATION);
           root.setUri(createIdentifier(identifier));
 
-          withScope(identifier, () -> parseArguments(root, mi.arguments()));
+          pushScope(identifier);
+          parseArguments(root, mi.arguments());
+          popScope();
           // find the method declaration in super class
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           if (mdBinding != null) {
@@ -263,7 +267,9 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           root.setUri(createIdentifier(identifier));
           GraphUtil.addNode(root);
 
-          withScope(identifier, () -> parseArguments(root, mi.arguments()));
+          pushScope(identifier);
+          parseArguments(root, mi.arguments());
+          popScope();
 
           IMethodBinding mdBinding = mi.resolveMethodBinding();
           // only internal invocation (or consider types, fields and local?)

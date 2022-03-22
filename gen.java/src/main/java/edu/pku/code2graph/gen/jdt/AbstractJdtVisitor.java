@@ -25,6 +25,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   protected String uriFilePath;
   protected String identifier;
   protected String scope = "";
+  private final Stack<String> stack = new Stack<>();
 
   // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
   // TODO include external type declaration or not?
@@ -52,16 +53,14 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     return node;
   }
 
-  public interface WithScope<T> {
-    T action();
-  }
-
-  protected <T> T withScope(String prefix, WithScope<T> callback) {
+  protected void pushScope(String prefix) {
     String oldScope = scope;
     scope += prefix + "/";
-    T result = callback.action();
-    scope = oldScope;
-    return result;
+    stack.push(oldScope);
+  }
+
+  protected void popScope() {
+    scope = stack.pop();
   }
 
   protected URI createIdentifier(String identifier) {

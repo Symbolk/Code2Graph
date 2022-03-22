@@ -35,6 +35,15 @@ public class FileUtil {
     return directory.getAbsolutePath();
   }
 
+  public static String createFile(String path) throws IOException {
+    File file = new File(path);
+    if (!file.exists()) {
+      createDir(file.getParentFile().toString());
+      file.createNewFile();
+    }
+    return file.getAbsolutePath();
+  }
+
   public static String prepareDir(String dir) {
     File file = new File(dir);
     if (file.exists()) {
@@ -208,6 +217,25 @@ public class FileUtil {
     Map<String, List<String>> result = new LinkedHashMap<>();
     for (String path : filePaths) {
       String extension = FilenameUtils.getExtension(path);
+      if (!result.containsKey(extension)) {
+        result.put(extension, new ArrayList<>());
+      }
+      result.get(extension).add(path);
+    }
+    return result;
+  }
+
+  public static Map<String, List<String>> categorizeFilesByExtensionInLanguages(
+      List<String> filePaths, Set<Language> languages) {
+    Set<String> extensions =
+        languages.stream()
+            .map(language -> language.extension.replace(".", ""))
+            .collect(Collectors.toSet());
+
+    Map<String, List<String>> result = new LinkedHashMap<>();
+    for (String path : filePaths) {
+      String extension = FilenameUtils.getExtension(path);
+      if (!extensions.contains((extension))) continue;
       if (!result.containsKey(extension)) {
         result.put(extension, new ArrayList<>());
       }
