@@ -49,4 +49,9 @@ public class JdtGeneratorTest {
   public void testEnum() {
     generateGraph("TestEnum.java");
   }
+
+  @Test
+  public void testController() {
+    generateGraph("BlogController.java");
+  }
 }
