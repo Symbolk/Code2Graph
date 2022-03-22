@@ -23,6 +23,7 @@ public abstract class LayerBase extends HashMap<String, String> {
     put(key, value);
   }
 
+  @Override
   public String toString() {
     StringBuilder builder = new StringBuilder(get("identifier"));
     builder.append("[");
