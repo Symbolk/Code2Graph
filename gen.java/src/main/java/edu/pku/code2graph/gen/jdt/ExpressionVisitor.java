@@ -438,7 +438,22 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       GraphUtil.addNode(node);
 
       graph.addVertex(node);
-      graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
+
+      if (annotation.isMarkerAnnotation()) {
+        // @A
+        return;
+      } else if (annotation.isSingleMemberAnnotation()) {
+        // @A(v)
+        Expression value = ((SingleMemberAnnotation) annotation).getValue();
+        parseExpression(value);
+      } else if (annotation.isNormalAnnotation()) {
+        // @A(k=v)
+        for (Object _pair : ((NormalAnnotation) annotation).values()) {
+          MemberValuePair pair = (MemberValuePair) _pair;
+          Expression innerValue = pair.getValue();
+          parseExpression(innerValue);
+        }
+      }
     }
   }
 

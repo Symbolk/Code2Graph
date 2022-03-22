@@ -278,7 +278,22 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
         node.setUri(createIdentifier(identifier));
 
         graph.addVertex(node);
-        graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
+
+        if (annotation.isMarkerAnnotation()) {
+          // @A
+          return;
+        } else if (annotation.isSingleMemberAnnotation()) {
+          // @A(v)
+          Expression typeName = annotation.getTypeName();
+          if (typeName.toString().equals("ModelAttribute")) {
+            URI uri = new URI(true, uriFilePath);
+            uri.addLayer(modifier.toString(), Language.JAVA);
+            globalAttr.add(uri);
+          }
+        } else if (annotation.isNormalAnnotation()) {
+          // @A(k=v)
+          // FIXME missing implementation?
+        }
       }
     }
   }

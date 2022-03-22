@@ -246,6 +246,22 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
         node.setRange(computeRange(annotation));
         node.setUri(createIdentifier(identifier));
 
+        if (annotation.isMarkerAnnotation()) {
+          // @A
+          return;
+        } else if (annotation.isSingleMemberAnnotation()) {
+          // @A(v)
+          Expression value = ((SingleMemberAnnotation) annotation).getValue();
+          parseExpression(value);
+        } else if (annotation.isNormalAnnotation()) {
+          // @A(k=v)
+          for (Object _pair : ((NormalAnnotation) annotation).values()) {
+            MemberValuePair pair = (MemberValuePair) _pair;
+            Expression innerValue = pair.getValue();
+            parseExpression(innerValue);
+          }
+        }
+
         // TODO: #{a.b} <-> Class.field
         if (!sqlParams.isEmpty() && methodParas != null && !methodParas.isEmpty()) {
           for (URI sql_uri : sqlParams) {
