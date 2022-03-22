@@ -14,7 +14,6 @@ public class IdentifierPattern extends AttributePattern {
   private final boolean pass;
   private int offset = 0;
   private String source;
-  private String leading;
   private final List<Token> anchors = new ArrayList<>();
   private final List<Token> symbols = new ArrayList<>();
 
@@ -38,8 +37,7 @@ public class IdentifierPattern extends AttributePattern {
     Matcher matcher = VARIABLE.matcher(source);
     while (matcher.find()) {
       Token token = new Token(matcher);
-      if (token.isGreedy) {
-        leading = token.name;
+      if (token.modifier.equals("slash")) {
         source = source.substring(8);
         offset = 8;
       }
@@ -86,9 +84,6 @@ public class IdentifierPattern extends AttributePattern {
       String value = matcher.group(i)
           .replace("__slash__", "/");
       Token token = symbols.get(i - 1);
-      if (token.modifier.equals("dot")) {
-        value = value.replace(".", "/");
-      }
       capture.put(token.name, new Fragment(value, token.modifier));
     }
     return capture;

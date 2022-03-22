@@ -121,10 +121,14 @@ public class LinkerTest {
     check(linker2, 4);
   }
 
+  /**
+   * - dot and slash
+   * - greedy matching
+   */
   @Test
   public void matchTest4() {
     URITree tree = new URITree();
-    tree.add("def://BlogController.java//showPost/return//blog\\/show");
+    tree.add("def://BlogController.java//showPost/return//blog.show");
     tree.add("def://BlogController.java//showPost/model.addAttribute//categories");
     tree.add("use://root/blog/show.html");
     tree.add("use://root/blog/show.html//html/body/form/select/option/data-th-each//${categories}");
@@ -136,12 +140,11 @@ public class LinkerTest {
 
     use = new URIPattern(true, "(javaFile).java");
     use.addLayer("(functionName)/return", Language.JAVA);
-    use.addLayer("(htmlFile)");
+    use.addLayer("(htmlFile:dot)");
 
     Linker linker1 = new Linker(tree, def, use);
     linker1.link();
-    System.out.println(linker1.links);
-    System.out.println(linker1.captures);
+    check(linker1, 1);
 
     // rule 2
     def = new URIPattern(false, "(&javaFile).java");
@@ -156,8 +159,7 @@ public class LinkerTest {
     for (Capture variables : linker1.captures) {
       linker2.link(variables);
     }
-    System.out.println(linker2.links);
-    System.out.println(linker2.captures);
+    check(linker2, 1);
   }
 
   @Test

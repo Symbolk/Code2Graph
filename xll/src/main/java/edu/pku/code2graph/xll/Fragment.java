@@ -64,7 +64,8 @@ public class Fragment {
     List<String> source = slice();
     List<String> target = fragment.slice();
     if (source == null || target == null) {
-      return simplify().equals(fragment.simplify());
+      if (!greedy) return simplify().equals(fragment.simplify());
+      return simplify().endsWith(fragment.simplify());
     }
 
     int sourceSize = source.size();
