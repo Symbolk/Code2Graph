@@ -13,8 +13,8 @@ import java.io.IOException;
 import static edu.pku.code2graph.client.CacheHandler.*;
 
 public class CacheTest {
-  private static String framework = "springmvc";
-  private static String repoName = "sagan";
+  private static String framework = "android";
+  private static String repoName = "CloudReader";
   private static String configPath =
       System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
   private static String repoPath =
@@ -22,8 +22,19 @@ public class CacheTest {
   private static String cachePath =
       System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
 
+  private void setUp(String frame, String repo) {
+    framework = frame;
+    repoName = repo;
+
+    configPath =
+        System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
+    repoPath = System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
+    cachePath = System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
+  }
+
   @Test
   public void testInitCache() throws IOException, ParserConfigurationException, SAXException {
+    setUp("springmvc", "sagan");
     initCache(framework, repoPath, cachePath);
 
     URIPattern def = new URIPattern(false, "*.java");
@@ -42,12 +53,17 @@ public class CacheTest {
 
   @Test
   public void testUpdateCache() throws IOException, ParserConfigurationException, SAXException {
-    String modifiedFile = repoPath;
+    setUp("springmvc", "sagan");
+    String modifiedFile = repoPath + "/sagan-site/src/main/resources/templates/admin/show.html";
     updateCache(framework, repoPath, modifiedFile, cachePath);
+    URITree tree = GraphUtil.getUriTree();
+    System.out.println(tree);
   }
 
   @Test
   public void testLoadCache() throws IOException {
+    setUp("springmvc", "sagan");
+
     URITree tree = new URITree();
     loadCache(cachePath, tree);
 
@@ -63,5 +79,11 @@ public class CacheTest {
     linker.link();
     System.out.println(linker.links);
     System.out.println(linker.captures);
+  }
+
+  @Test
+  public void testAndroid() throws IOException, ParserConfigurationException, SAXException {
+    setUp("android", "CloudReader");
+    initCache(framework, repoPath, cachePath);
   }
 }
