@@ -3,12 +3,6 @@ package edu.pku.code2graph.model;
 import java.util.HashMap;
 
 public abstract class LayerBase extends HashMap<String, String> {
-  public LayerBase(String identifier, Language language) {
-    super();
-    put("identifier", identifier);
-    put("language", language.toString());
-  }
-
   public Language getLanguage() {
     return Language.valueOf(get("language"));
   }

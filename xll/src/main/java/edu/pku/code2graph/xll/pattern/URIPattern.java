@@ -37,10 +37,8 @@ public class URIPattern extends URIBase<LayerPattern> {
   }
 
   public LayerPattern addLayer(String identifier, Language language) {
-    LayerPattern layer = new LayerPattern(identifier, language);
+    LayerPattern layer = new LayerPattern(identifier, language, this);
     layers.add(layer);
-    symbols.addAll(layer.symbols);
-    anchors.addAll(layer.anchors);
     return layer;
   }
 

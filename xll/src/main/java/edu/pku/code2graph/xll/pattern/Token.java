@@ -1,4 +1,4 @@
-package edu.pku.code2graph.xll;
+package edu.pku.code2graph.xll.pattern;
 
 import java.util.regex.Matcher;
 

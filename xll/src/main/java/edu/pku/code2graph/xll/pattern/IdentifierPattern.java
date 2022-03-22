@@ -1,25 +1,24 @@
 package edu.pku.code2graph.xll.pattern;
 
 import edu.pku.code2graph.xll.Capture;
-import edu.pku.code2graph.xll.Token;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class IdentifierPattern implements AttributePattern {
+public class IdentifierPattern extends AttributePattern {
   public static final Pattern VARIABLE = Pattern.compile("\\(&?(\\w+)(?::(\\w+))?((\\\\\\.){3})?\\)");
 
   private final boolean pass;
   private int offset = 0;
   private String source;
   private String leading;
-  private final List<Token> tokens = new ArrayList<>();
-  public final List<String> anchors = new ArrayList<>();
-  public final List<Token> symbols = new ArrayList<>();
+  private final List<Token> anchors = new ArrayList<>();
+  private final List<Token> symbols = new ArrayList<>();
 
-  public IdentifierPattern(String identifier) {
+  public IdentifierPattern(String identifier, URIPattern root) {
+    super(root);
     pass = identifier.equals("**");
     if (pass) return;
 
@@ -44,9 +43,10 @@ public class IdentifierPattern implements AttributePattern {
         offset = 8;
       }
       if (token.isAnchor) {
-        anchors.add(token.name);
-        tokens.add(token);
+        root.anchors.add(token.name);
+        anchors.add(token);
       } else {
+        root.symbols.add(token.name);
         symbols.add(token);
       }
     }
@@ -56,9 +56,11 @@ public class IdentifierPattern implements AttributePattern {
     if (pass) return new Capture();
 
     String source = this.source;
-    for (int index = tokens.size(); index > 0; --index) {
-      Token anchor = tokens.get(index - 1);
-      String value = variables.getOrDefault(anchor.name, "[\\w-.]+");
+    for (int index = anchors.size(); index > 0; --index) {
+      Token anchor = anchors.get(index - 1);
+      String value = variables.containsKey(anchor.name)
+        ? variables.get(anchor.name).text
+        : "[\\w-.]+";
       source = anchor.replace(source, value, offset);
     }
     String[] segments = VARIABLE.split(source, -1);

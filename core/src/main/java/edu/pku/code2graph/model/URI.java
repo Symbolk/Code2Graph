@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
-public class URI extends URIBase<Layer> implements Serializable {
+public final class URI extends URIBase<Layer> implements Serializable {
   public URI() {
     this(false, "");
   }

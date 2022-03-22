@@ -61,18 +61,20 @@ public class Fragment {
   }
 
   public boolean match(Fragment fragment) {
-    List<String> local = slice();
-    List<String> foreign = fragment.slice();
-    if (local == null || foreign == null) {
+    List<String> source = slice();
+    List<String> target = fragment.slice();
+    if (source == null || target == null) {
       return simplify().equals(fragment.simplify());
     }
-    int localSize = local.size();
-    int foreignSize = foreign.size();
-    if (!greedy && localSize > foreignSize || localSize < foreignSize) {
+
+    int sourceSize = source.size();
+    int targetSize = target.size();
+    if (!greedy && sourceSize > targetSize || sourceSize < targetSize) {
       return false;
     }
-    for (int i = 0; i < foreignSize; i++) {
-      if (!foreign.get(i).equals(local.get(i))) {
+
+    for (int i = 0; i < targetSize; i++) {
+      if (!target.get(i).equals(source.get(i))) {
         return false;
       }
     }

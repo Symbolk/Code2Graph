@@ -2,10 +2,11 @@ package edu.pku.code2graph.xll.pattern;
 
 import edu.pku.code2graph.xll.Capture;
 
-public class LanguagePattern implements AttributePattern {
+public class LanguagePattern extends AttributePattern {
   private final String source;
 
-  public LanguagePattern(String source) {
+  public LanguagePattern(String source, URIPattern root) {
+    super(root);
     this.source = source;
   }
 

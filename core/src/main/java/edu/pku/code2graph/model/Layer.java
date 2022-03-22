@@ -1,8 +1,10 @@
 package edu.pku.code2graph.model;
 
-public class Layer extends LayerBase {
+public final class Layer extends LayerBase {
   public Layer(String identifier, Language language) {
-    super(identifier, language);
+    super();
+    put("identifier", identifier);
+    put("language", language.toString());
   }
 
   @Override

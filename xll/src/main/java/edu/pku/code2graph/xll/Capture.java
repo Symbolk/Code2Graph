@@ -2,7 +2,7 @@ package edu.pku.code2graph.xll;
 
 import java.util.*;
 
-public final class Capture extends TreeMap<String, Fragment> {
+public class Capture extends TreeMap<String, Fragment> {
   public Capture project(Collection<String> collection) {
     Capture capture = new Capture();
     for (String key : collection) {
@@ -15,9 +15,9 @@ public final class Capture extends TreeMap<String, Fragment> {
 
   public boolean match(Capture capture) {
     for (String name : keySet()) {
-      Fragment local = get(name);
-      Fragment foreign = capture.get(name);
-      if (!local.match(foreign)) {
+      Fragment source = get(name);
+      Fragment target = capture.get(name);
+      if (!source.match(target)) {
         return false;
       }
     }

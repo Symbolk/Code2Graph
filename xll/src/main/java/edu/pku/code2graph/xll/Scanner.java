@@ -31,7 +31,9 @@ public class Scanner {
   public void scan(URITree tree, int index, Capture current) {
     if (pattern.getLayerCount() == index) {
       if (tree.uri != null && !linker.visited.contains(tree.uri)) {
-        Capture key = current.project(linker.rule.shared);
+        Capture key = current
+            .project(linker.rule.def.symbols)
+            .project(linker.rule.use.symbols);
         Pair<List<URI>, Set<Capture>> pair = results
             .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
         pair.getLeft().add(tree.uri);
