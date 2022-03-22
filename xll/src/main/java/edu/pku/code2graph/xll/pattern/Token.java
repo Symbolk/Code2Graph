@@ -15,7 +15,7 @@ public class Token {
     this.start = matcher.start();
     this.end = matcher.end();
     this.name = matcher.group(1);
-    this.modifier = matcher.group(2) != null ? matcher.group(2) : "";
+    this.modifier = matcher.group(2) != null ? matcher.group(2) : "auto";
     this.isAnchor = matcher.group(0).charAt(1) == '&';
     this.isGreedy = matcher.group(3) != null;
   }

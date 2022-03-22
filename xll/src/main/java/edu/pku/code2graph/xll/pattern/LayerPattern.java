@@ -11,6 +11,14 @@ public class LayerPattern extends LayerBase {
   private final URIPattern root;
   private final Map<String, AttributePattern> matchers = new HashMap<>();
 
+  static Map<String, Class<? extends AttributePattern>> attributes = new HashMap<>();
+
+  static {
+    attributes.put("language", LanguagePattern.class);
+    attributes.put("identifier", IdentifierPattern.class);
+    attributes.put("varType", IdentifierPattern.class);
+  }
+
   public LayerPattern(String identifier, Language language, URIPattern root) {
     super();
     this.root = root;
@@ -21,13 +29,12 @@ public class LayerPattern extends LayerBase {
   @Override
   public String put(String key, String value) {
     String result = super.put(key, value);
-    AttributePattern matcher;
-    if (key.equals("language")) {
-      matcher = new LanguagePattern(value, root);
-    } else {
-      matcher = new IdentifierPattern(value, root);
+    try {
+      AttributePattern matcher = (AttributePattern) attributes.get(key).getDeclaredConstructors()[0].newInstance(value, root);
+      matchers.put(key, matcher);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
-    matchers.put(key, matcher);
     return result;
   }
 

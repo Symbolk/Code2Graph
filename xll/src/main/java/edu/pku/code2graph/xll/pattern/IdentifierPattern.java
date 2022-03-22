@@ -1,6 +1,7 @@
 package edu.pku.code2graph.xll.pattern;
 
 import edu.pku.code2graph.xll.Capture;
+import edu.pku.code2graph.xll.Fragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,7 @@ public class IdentifierPattern extends AttributePattern {
   public Capture match(String target, Capture variables) {
     if (pass) return new Capture();
 
+    // step 1: replace anchors
     String source = this.source;
     for (int index = anchors.size(); index > 0; --index) {
       Token anchor = anchors.get(index - 1);
@@ -63,6 +65,8 @@ public class IdentifierPattern extends AttributePattern {
         : "[\\w-.]+";
       source = anchor.replace(source, value, offset);
     }
+
+    // step 2: replace symbols
     String[] segments = VARIABLE.split(source, -1);
     if (segments[0].equals("")) {
       source = "(.+)?" + String.join("([\\w-.]+)", segments).substring(9);
@@ -70,17 +74,13 @@ public class IdentifierPattern extends AttributePattern {
       source = String.join("([\\w-.]+)", segments);
     }
 
-    target = target
-        .replace("-", "")
-        .replace("_", "")
-        .replace("\\/", "__slash__")
-        .toLowerCase();
+    target = target.replace("\\/", "__slash__");
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
     Matcher matcher = regexp.matcher(target);
     if (!matcher.matches()) return null;
 
-    Capture captures = new Capture();
+    Capture capture = new Capture();
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
       String value = matcher.group(i)
@@ -89,9 +89,8 @@ public class IdentifierPattern extends AttributePattern {
       if (token.modifier.equals("dot")) {
         value = value.replace(".", "/");
       }
-      captures.put(token.name, value);
+      capture.put(token.name, new Fragment(value, token.modifier));
     }
-    if (leading != null) captures.greedy.add(leading);
-    return captures;
+    return capture;
   }
 }

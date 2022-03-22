@@ -92,24 +92,13 @@ public class Linker {
         for (Capture use : uses.getRight()) {
           for (Capture def : defs.getRight()) {
             Capture result = variables.clone();
-            result.putAll(def);
+            // use def fragments to override use fragments
             result.putAll(use);
+            result.putAll(def);
             captures.add(result);
           }
         }
       }
-    }
-  }
-
-  public void print() {
-    System.out.println(rule.name);
-    System.out.println("links: " + links.size());
-    for (Link link : links) {
-      System.out.println(link);
-    }
-    System.out.println("captures: " + captures.size());
-    for (Capture capture : captures) {
-      System.out.println(capture);
     }
   }
 }

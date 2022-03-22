@@ -42,7 +42,7 @@ public class Fragment {
   public String simplify() {
     if (simplified != null) return simplified;
 
-    return simplified = text.toLowerCase();
+    return simplified = text.toLowerCase().replaceAll("[^0-9a-z]", "");
   }
 
   @Override

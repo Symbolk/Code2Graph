@@ -26,15 +26,15 @@ public class Capture extends TreeMap<String, Fragment> {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder();
+    StringBuilder builder = new StringBuilder("{");
     for (Map.Entry<String, Fragment> entry : entrySet()) {
+      if (builder.length() > 1) builder.append(',');
       builder
           .append(entry.getKey())
-          .append(":")
-          .append(entry.getValue())
-          .append(";");
+          .append(':')
+          .append(entry.getValue());
     }
-    return builder.toString();
+    return builder.append("}").toString();
   }
 
   @Override

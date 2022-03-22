@@ -1,4 +1,5 @@
 import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
 import edu.pku.code2graph.xll.pattern.Rule;
@@ -9,33 +10,55 @@ import edu.pku.code2graph.model.URI;
 import java.io.IOException;
 
 public class LinkerTest {
+  static void check(Linker linker, int count) {
+    System.out.println(linker.rule.name);
+    System.out.println("links: " + linker.links.size());
+    for (Link link : linker.links) {
+      System.out.println(link);
+    }
+    System.out.println("captures: " + linker.captures.size());
+    for (Capture capture : linker.captures) {
+      System.out.println(capture);
+    }
+    assert linker.links.size() == count;
+  }
+
+  /**
+   * - matching algorithm
+   * - anchors and symbols
+   * - modifier and word slice
+   */
   @Test
   public void matchTest1() {
     URITree tree = new URITree();
-    tree.add("def://main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button");
-    tree.add("use://main/java/com/example/demo/MainActivity.java//R.id.button");
+    tree.add("def://main/res/layout/activity_main.xml//RelativeLayout/Button/android:id//@+id\\/button_login");
+    tree.add("use://main/java/com/example/demo/MainActivity.java//R.id.buttonLogin");
 
     URIPattern def = new URIPattern(false, "(&layoutName).xml");
     def.addLayer("android:id", Language.XML);
-    def.addLayer("@+id\\/(name)");
+    def.addLayer("@+id\\/(name:snake)");
 
     URIPattern use = new URIPattern(true, "(javaFile).java");
-    use.addLayer("R.id.(name)", Language.JAVA);
+    use.addLayer("R.id.(name:camel)", Language.JAVA);
 
     Linker linker = new Linker(tree, def, use);
     linker.link();
-    System.out.println(linker.links);
-    System.out.println(linker.captures);
+    check(linker, 1);
   }
 
+  /**
+   * - wildcards
+   * - embedding layer
+   * - fuzzy matching
+   */
   @Test
   public void matchTest2() {
     URITree tree = new URITree();
-    tree.add("def://BlogAdminController.java//.addAttribute//post-form");
+    tree.add("def://BlogAdminController.java//model.addAttribute//post-form");
     tree.add("use://blog/new.html//html/body/form/data-th-object//${postForm}");
 
     URIPattern def = new URIPattern(false, "*.java");
-    def.addLayer(".addAttribute", Language.JAVA);
+    def.addLayer("model.addAttribute", Language.JAVA);
     def.addLayer("(name)");
 
     URIPattern use = new URIPattern(true, "*.html");
@@ -44,10 +67,12 @@ public class LinkerTest {
 
     Linker linker = new Linker(tree, def, use);
     linker.link();
-    System.out.println(linker.links);
-    System.out.println(linker.captures);
+    check(linker, 1);
   }
 
+  /**
+   * - fallback mechanism
+   */
   @Test
   public void matchTest3() {
     URITree tree = new URITree();
@@ -80,7 +105,7 @@ public class LinkerTest {
 
     Linker linker1 = new Linker(tree, def, use);
     linker1.link();
-    linker1.print();
+    check(linker1, 6);
 
     def = new URIPattern(false, "(&layoutName).xml");
     def.addLayer("android:id", Language.XML);
@@ -93,7 +118,7 @@ public class LinkerTest {
     for (Capture variables : linker1.captures) {
       linker2.link(variables);
     }
-    linker2.print();
+    check(linker2, 4);
   }
 
   @Test
