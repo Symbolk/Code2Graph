@@ -3,8 +3,6 @@ package edu.pku.code2graph.xll;
 import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
-import edu.pku.code2graph.xll.pattern.Rule;
-import edu.pku.code2graph.xll.pattern.URIPattern;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +73,7 @@ public class Linker {
         // check ambiguous links
         Pair<List<URI>, Set<Capture>> defs = defMap.get(defCap);
         if (defs.getLeft().size() > 1) {
-          System.out.println("ambiguous xll found by " + defCap.toString());
+          System.out.println("ambiguous xll found by " + defCap);
           System.out.println(formatUriList(defs.getLeft()));
           System.out.println(formatUriList(uses.getLeft()));
         }
@@ -83,7 +81,7 @@ public class Linker {
         // generate links
         for (URI use : uses.getLeft()) {
           for (URI def : defs.getLeft()) {
-            links.add(new Link(def, use, rule));
+            links.add(new Link(def, use, rule.name, rule.hidden));
           }
           visited.add(use);
         }

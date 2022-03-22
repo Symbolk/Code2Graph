@@ -2,8 +2,8 @@ import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
-import edu.pku.code2graph.xll.pattern.Rule;
-import edu.pku.code2graph.xll.pattern.URIPattern;
+import edu.pku.code2graph.xll.Rule;
+import edu.pku.code2graph.xll.URIPattern;
 import org.junit.jupiter.api.Test;
 import edu.pku.code2graph.model.URI;
 

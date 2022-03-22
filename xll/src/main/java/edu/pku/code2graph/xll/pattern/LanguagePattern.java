@@ -1,6 +1,7 @@
 package edu.pku.code2graph.xll.pattern;
 
 import edu.pku.code2graph.xll.Capture;
+import edu.pku.code2graph.xll.URIPattern;
 
 public class LanguagePattern extends AttributePattern {
   private final String source;

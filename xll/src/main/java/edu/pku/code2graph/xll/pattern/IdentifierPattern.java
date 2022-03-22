@@ -2,6 +2,7 @@ package edu.pku.code2graph.xll.pattern;
 
 import edu.pku.code2graph.xll.Capture;
 import edu.pku.code2graph.xll.Fragment;
+import edu.pku.code2graph.xll.URIPattern;
 
 import java.util.ArrayList;
 import java.util.List;

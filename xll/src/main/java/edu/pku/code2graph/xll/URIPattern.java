@@ -1,9 +1,8 @@
-package edu.pku.code2graph.xll.pattern;
+package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URIBase;
-import edu.pku.code2graph.xll.Capture;
 
 import java.util.HashSet;
 import java.util.Map;

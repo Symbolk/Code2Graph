@@ -3,8 +3,8 @@ package edu.pku.code2graph.model;
 import java.util.Objects;
 
 public final class Link extends LinkBase<URI> {
-  public Link(final URI def, final URI use, final String name) {
-    super(def, use, name);
+  public Link(final URI def, final URI use, final String name, final boolean hidden) {
+    super(def, use, name, hidden);
   }
 
   @Override
