@@ -83,7 +83,7 @@ public class Linker {
         // generate links
         for (URI use : uses.getLeft()) {
           for (URI def : defs.getLeft()) {
-            links.add(new Link(def, use, rule.name));
+            links.add(new Link(def, use, rule));
           }
           visited.add(use);
         }

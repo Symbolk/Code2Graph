@@ -4,11 +4,20 @@ public class LinkBase<T extends URIBase> {
   public final T def;
   public final T use;
   public final String name;
+  public final boolean hidden;
+
+  public Link(final URI def, final URI use, final Rule rule) {
+    this.def = def;
+    this.use = use;
+    this.name = rule.name;
+    this.hidden = rule.hidden;
+  }
 
   public LinkBase(final T def, final T use, final String name) {
     this.def = def;
-    this.name = name;
     this.use = use;
+    this.name = name;
+    this.hidden = false;
   }
 
   @Override

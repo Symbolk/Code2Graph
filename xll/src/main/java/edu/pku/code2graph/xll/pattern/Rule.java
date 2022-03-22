@@ -6,12 +6,14 @@ import java.util.*;
 
 public class Rule extends LinkBase<URIPattern> {
   public final List<String> deps;
+  public final boolean hidden;
 
   static private int index = 0;
 
   public Rule(final URIPattern def, final URIPattern use) {
     super(def, use, "#" + ++index);
     this.deps = new ArrayList<>();
+    this.hidden = false;
   }
 
   public Rule(final Map<String, Object> rule, final List<String> deps, final String name) {
@@ -21,5 +23,6 @@ public class Rule extends LinkBase<URIPattern> {
       name
     );
     this.deps = deps;
+    this.hidden = (boolean) rule.getOrDefault("hidden", false);
   }
 }
