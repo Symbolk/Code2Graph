@@ -23,21 +23,6 @@ public class AbstractHandler extends DefaultHandler {
   protected String filePath;
   protected String uriFilePath;
 
-  // unified identifier: @type/id
-  protected Map<String, Node> defPool = new HashMap<>();
-  protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
-
-  /** Build edges with cached data pool */
-  public void buildEdges() {
-    for (Triple<Node, Type, String> entry : usePool) {
-      Node src = entry.getFirst();
-      Node tgt = defPool.get(entry.getThird());
-      if (tgt != null) {
-        graph.addEdge(src, tgt, new Edge(GraphUtil.eid(), entry.getSecond()));
-      }
-    }
-  }
-
   public Graph<Node, Edge> getGraph() {
     return graph;
   }

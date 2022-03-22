@@ -1,23 +1,18 @@
 package edu.pku.code2graph.client.extractor;
 
-import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
 import edu.pku.code2graph.gen.jdt.ExpressionVisitor;
 import edu.pku.code2graph.gen.jdt.JdtService;
 import edu.pku.code2graph.gen.jdt.model.EdgeType;
 import edu.pku.code2graph.gen.jdt.model.NodeType;
-import edu.pku.code2graph.model.Type;
 import edu.pku.code2graph.model.*;
-import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jdt.core.dom.*;
-import org.jgrapht.alg.util.Triple;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Visitor focusing on the entity granularity, at or above expression level
@@ -162,10 +157,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
 
             n.setRange(computeRange(fragment));
             graph.addEdge(root, n, new Edge(GraphUtil.eid(), EdgeType.CHILD));
-
-            if (binding != null) {
-              usePool.add(Triple.of(n, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
-            }
           }
           break;
         }
@@ -174,30 +165,12 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           SuperFieldAccess fa = (SuperFieldAccess) exp;
           root.setType(NodeType.SUPER_FIELD_ACCESS);
           root.setUri(createIdentifier(fa.toString()));
-
-          IVariableBinding faBinding = fa.resolveFieldBinding();
-          if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
-            usePool.add(
-                Triple.of(
-                    root,
-                    EdgeType.REFERENCE,
-                    faBinding.getDeclaringClass().getQualifiedName() + "." + faBinding.getName()));
-          }
           break;
         }
       case ASTNode.FIELD_ACCESS:
         {
           root.setType(NodeType.FIELD_ACCESS);
           FieldAccess fa = (FieldAccess) exp;
-
-          IVariableBinding faBinding = fa.resolveFieldBinding();
-          if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
-            usePool.add(
-                Triple.of(
-                    root,
-                    EdgeType.REFERENCE,
-                    faBinding.getDeclaringClass().getQualifiedName() + "." + faBinding.getName()));
-          }
           break;
         }
       case ASTNode.CLASS_INSTANCE_CREATION:
@@ -205,14 +178,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           root.setType(NodeType.TYPE_INSTANTIATION);
 
           ClassInstanceCreation cic = (ClassInstanceCreation) exp;
-          IMethodBinding constructorBinding = cic.resolveConstructorBinding();
-          if (constructorBinding != null) {
-            usePool.add(
-                Triple.of(
-                    root,
-                    EdgeType.DATA_TYPE,
-                    constructorBinding.getDeclaringClass().getQualifiedName()));
-          }
           String identifier = cic.getType().toString();
           pushScope(identifier);
           parseArguments(root, cic.arguments());
@@ -229,19 +194,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           pushScope(identifier);
           parseArguments(root, mi.arguments());
           popScope();
-          // find the method declaration in super class
-          IMethodBinding mdBinding = mi.resolveMethodBinding();
-          if (mdBinding != null) {
-            // get caller qname
-            JdtService.findWrappedMethodName(mi)
-                .ifPresent(
-                    name -> {
-                      usePool.add(Triple.of(root, EdgeType.CALLER, name));
-                    });
-            // get callee qname
-            usePool.add(
-                Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
-          }
           break;
         }
       case ASTNode.METHOD_INVOCATION:
@@ -270,20 +222,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           pushScope(identifier);
           parseArguments(root, mi.arguments());
           popScope();
-
-          IMethodBinding mdBinding = mi.resolveMethodBinding();
-          // only internal invocation (or consider types, fields and local?)
-          if (mdBinding != null) {
-            // get caller qname
-            JdtService.findWrappedMethodName(mi)
-                .ifPresent(
-                    name -> {
-                      usePool.add(Triple.of(root, EdgeType.CALLER, name));
-                    });
-            // get callee qname
-            usePool.add(
-                Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
-          }
           break;
         }
       case ASTNode.ASSIGNMENT:
@@ -311,11 +249,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           root.setType(NodeType.CAST_EXPRESSION);
           root.setSymbol("()");
           root.setArity(2);
-
-          ITypeBinding typeBinding = castExpression.getType().resolveBinding();
-          if (typeBinding != null) {
-            usePool.add(Triple.of(root, EdgeType.TARGET_TYPE, typeBinding.getQualifiedName()));
-          }
 
           graph.addEdge(
               root,
@@ -422,10 +355,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
       // annotations
       parseAnnotations(fd.modifiers(), node);
 
-      if (binding != null) {
-        usePool.add(Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
-      }
-
       if (fragment.getInitializer() != null) {
         graph.addEdge(
             node,
@@ -455,14 +384,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
 
     // annotations
     parseAnnotations(md.modifiers(), node);
-
-    // return type
-    if (mdBinding != null) {
-      ITypeBinding tpBinding = mdBinding.getReturnType();
-      if (tpBinding != null) {
-        usePool.add(Triple.of(node, EdgeType.RETURN_TYPE, tpBinding.getQualifiedName()));
-      }
-    }
 
     // para decl and type
     if (!md.parameters().isEmpty()) {
@@ -497,7 +418,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
                   uri);
 
           graph.addVertex(pn);
-          defPool.put(para_qname, pn);
           GraphUtil.addNode(pn);
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
         }
@@ -526,11 +446,6 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
 
         node.setRange(computeRange(p));
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
-
-        ITypeBinding paraBinding = p.getType().resolveBinding();
-        if (paraBinding != null) {
-          usePool.add(Triple.of(pn, EdgeType.DATA_TYPE, paraBinding.getQualifiedName()));
-        }
       }
     }
 

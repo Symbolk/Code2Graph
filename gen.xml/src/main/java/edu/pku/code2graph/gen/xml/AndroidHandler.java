@@ -215,9 +215,6 @@ public class AndroidHandler extends AbstractHandler {
             rn.setRange(new Range(valueLine, valueLine, valueColumn, endColumn));
             graph.addVertex(rn);
             graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
-
-            // unified references (may should use regex for matching)
-            usePool.add(Triple.of(rn, eType, value));
           }
         }
       }

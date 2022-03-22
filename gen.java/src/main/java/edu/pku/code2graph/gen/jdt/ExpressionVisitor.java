@@ -160,17 +160,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
    * @param node
    */
   private void parseExtendsAndImplements(ITypeBinding binding, ElementNode node) {
-    ITypeBinding parentType = binding.getSuperclass();
-    if (parentType != null) {
-      usePool.add(Triple.of(node, EdgeType.EXTENDED_CLASS, parentType.getQualifiedName()));
-    }
-    ITypeBinding[] interfaces = binding.getInterfaces();
-    if (interfaces != null && interfaces.length > 0) {
-      for (ITypeBinding anInterface : interfaces) {
-        usePool.add(
-            Triple.of(node, EdgeType.IMPLEMENTED_INTERFACE, anInterface.getQualifiedName()));
-      }
-    }
   }
 
   /**
@@ -192,7 +181,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     bodyNode.setRange(computeRange(typeDeclaration.bodyDeclarations()));
 
     graph.addVertex(bodyNode);
-    defPool.put(parentQName + ".BLOCK", bodyNode);
     graph.addEdge(node, bodyNode, new Edge(GraphUtil.eid(), EdgeType.BODY));
 
     // annotation member
@@ -256,7 +244,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           initNode.setRange(computeRange(initializer));
 
           graph.addEdge(bodyNode, initNode, new Edge(GraphUtil.eid(), EdgeType.CHILD));
-          defPool.put(qname, node);
 
           parseBodyBlock(initializer.getBody(), parentQName, parentQName)
                   .ifPresent(
@@ -265,21 +252,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                                           initNode, initBlock, new Edge(GraphUtil.eid(), EdgeType.CHILD)));
         }
       }
-    }
-
-    // field
-    IVariableBinding[] fdBindings = binding.getDeclaredFields();
-    for (IVariableBinding b : fdBindings) {
-      usePool.add(Triple.of(bodyNode, EdgeType.CHILD, parentQName + "." + b.getName()));
-    }
-
-    // method
-    IMethodBinding[] mdBindings = binding.getDeclaredMethods();
-    for (IMethodBinding b : mdBindings) {
-      if (b.isDefaultConstructor()) {
-        continue;
-      }
-      usePool.add(Triple.of(bodyNode, EdgeType.CHILD, JdtService.getMethodQNameFromBinding(b)));
     }
 
     popScope();
@@ -308,10 +280,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
       // annotations
       parseAnnotations(fd.modifiers(), node);
-
-      if (binding != null) {
-        usePool.add(Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
-      }
 
       if (fragment.getInitializer() != null) {
         graph.addEdge(
@@ -342,14 +310,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     // annotations
     parseAnnotations(md.modifiers(), node);
-
-    // return type
-    if (mdBinding != null) {
-      ITypeBinding tpBinding = mdBinding.getReturnType();
-      if (tpBinding != null) {
-        usePool.add(Triple.of(node, EdgeType.RETURN_TYPE, tpBinding.getQualifiedName()));
-      }
-    }
 
     // para decl and type
     if (!md.parameters().isEmpty()) {
@@ -384,7 +344,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                   uri);
 
           graph.addVertex(pn);
-          defPool.put(para_qname, pn);
           GraphUtil.addNode(pn);
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
         }
@@ -408,11 +367,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
         node.setRange(computeRange(p));
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
-
-        ITypeBinding paraBinding = p.getType().resolveBinding();
-        if (paraBinding != null) {
-          usePool.add(Triple.of(pn, EdgeType.DATA_TYPE, paraBinding.getQualifiedName()));
-        }
       }
     }
 
@@ -485,38 +439,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
       graph.addVertex(node);
       graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
-
-      // check annotation type and possible refs
-      // add possible refs into use pool
-      ITypeBinding typeBinding = annotation.resolveTypeBinding();
-      String typeQName =
-          typeBinding == null
-              ? annotation.getTypeName().getFullyQualifiedName()
-              : typeBinding.getQualifiedName();
-      if (annotation.isMarkerAnnotation()) {
-        // @A
-        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-      } else if (annotation.isSingleMemberAnnotation()) {
-        // @A(v)
-        Expression value = ((SingleMemberAnnotation) annotation).getValue();
-        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-        usePool.add(Triple.of(node, EdgeType.REFERENCE, value.toString()));
-        parseExpression(value);
-      } else if (annotation.isNormalAnnotation()) {
-        // @A(k=v)
-        usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-
-        for (Object _pair : ((NormalAnnotation) annotation).values()) {
-          if (!(_pair instanceof  MemberValuePair)) continue;
-          MemberValuePair pair = (MemberValuePair) _pair;
-          Expression innerValue = pair.getValue();
-          ITypeBinding binding = innerValue.resolveTypeBinding();
-          String qname =
-              binding == null ? innerValue.toString() : binding.getQualifiedName();
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, qname));
-          parseExpression(innerValue);
-        }
-      }
     }
   }
 
@@ -536,7 +458,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     Optional<RelationNode> rootOpt = parseBodyBlock(body);
     popScope();
     if (rootOpt.isPresent()) {
-      defPool.put(rootName + ".BLOCK", rootOpt.get());
       return rootOpt;
     } else {
       return Optional.empty();
@@ -633,14 +554,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           graph.addVertex(node);
 
           SuperConstructorInvocation ci = (SuperConstructorInvocation) stmt;
-          IMethodBinding constructorBinding = ci.resolveConstructorBinding();
-          if (constructorBinding != null) {
-            usePool.add(
-                Triple.of(
-                    node,
-                    EdgeType.REFERENCE,
-                    constructorBinding.getDeclaringClass().getQualifiedName()));
-          }
           pushScope("super");
           parseArguments(node, ci.arguments());
           popScope();
@@ -655,14 +568,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           graph.addVertex(node);
 
           ConstructorInvocation ci = (ConstructorInvocation) stmt;
-          IMethodBinding constructorBinding = ci.resolveConstructorBinding();
-          if (constructorBinding != null) {
-            usePool.add(
-                Triple.of(
-                    node,
-                    EdgeType.REFERENCE,
-                    constructorBinding.getDeclaringClass().getQualifiedName()));
-          }
           pushScope("this");
           parseArguments(node, ci.arguments());
           popScope();
@@ -702,9 +607,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                       JdtService.getIdentifier(fragment));
 
               node.setRange(computeRange(fragment));
-
-              usePool.add(
-                  Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
 
               if (fragment.getInitializer() != null) {
                 graph.addEdge(
@@ -829,11 +731,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           pn.setRange(computeRange(p));
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.ELEMENT));
 
-          ITypeBinding paraBinding = p.getType().resolveBinding();
-          if (paraBinding != null) {
-            usePool.add(Triple.of(pn, EdgeType.DATA_TYPE, paraBinding.getQualifiedName()));
-          }
-
           graph.addEdge(
               node,
               parseExpression(eForStatement.getExpression()),
@@ -926,9 +823,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 graph.addVertex(catchNode);
                 graph.addEdge(node, catchNode, new Edge(GraphUtil.eid(), EdgeType.CATCH));
 
-                if (binding != null) {
-                  usePool.add(Triple.of(node, EdgeType.TARGET_TYPE, binding.getQualifiedName()));
-                }
                 if (catchClause.getBody() != null) {
                   parseBodyBlock(catchClause.getBody())
                       .ifPresent(
@@ -1086,43 +980,17 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           if (binding == null) {
             // an unresolved identifier
             root.setType(NodeType.SIMPLE_NAME);
-            usePool.add(
-                Triple.of(root, EdgeType.REFERENCE, identifier));
           } else if (binding instanceof IVariableBinding) {
             IVariableBinding varBinding = (IVariableBinding) binding;
             if (varBinding.isField()) {
               root.setType(NodeType.FIELD_ACCESS);
-              usePool.add(
-                  Triple.of(
-                      root,
-                      EdgeType.REFERENCE,
-                      varBinding.getDeclaringClass().getQualifiedName()
-                          + "."
-                          + varBinding.getName()));
             } else if (varBinding.isParameter()) {
               root.setType(NodeType.PARAMETER_ACCESS);
-              usePool.add(
-                  Triple.of(
-                      root,
-                      EdgeType.REFERENCE,
-                      JdtService.getVariableQNameFromBinding(varBinding, exp)));
             } else if (varBinding.isEnumConstant()) {
               root.setType(NodeType.CONSTANT_ACCESS);
-              usePool.add(
-                  Triple.of(
-                      root,
-                      EdgeType.REFERENCE,
-                      varBinding.getDeclaringClass().getQualifiedName()
-                          + "."
-                          + varBinding.getName()));
             } else {
               // if not the above 3, then must be a local variable
               root.setType(NodeType.LOCAL_VAR_ACCESS);
-              usePool.add(
-                  Triple.of(
-                      root,
-                      EdgeType.REFERENCE,
-                      JdtService.getVariableQNameFromBinding(varBinding, exp)));
             }
           }
           break;
@@ -1157,10 +1025,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
             n.setRange(computeRange(fragment));
             graph.addEdge(root, n, new Edge(GraphUtil.eid(), EdgeType.CHILD));
-
-            if (binding != null) {
-              usePool.add(Triple.of(n, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
-            }
           }
           break;
         }
@@ -1169,30 +1033,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           SuperFieldAccess fa = (SuperFieldAccess) exp;
           root.setType(NodeType.SUPER_FIELD_ACCESS);
           root.setUri(createIdentifier(fa.toString()));
-
-          IVariableBinding faBinding = fa.resolveFieldBinding();
-          if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
-            usePool.add(
-                Triple.of(
-                    root,
-                    EdgeType.REFERENCE,
-                    faBinding.getDeclaringClass().getQualifiedName() + "." + faBinding.getName()));
-          }
           break;
         }
       case ASTNode.FIELD_ACCESS:
         {
           root.setType(NodeType.FIELD_ACCESS);
           FieldAccess fa = (FieldAccess) exp;
-
-          IVariableBinding faBinding = fa.resolveFieldBinding();
-          if (faBinding != null && faBinding.isField() && faBinding.getDeclaringClass() != null) {
-            usePool.add(
-                Triple.of(
-                    root,
-                    EdgeType.REFERENCE,
-                    faBinding.getDeclaringClass().getQualifiedName() + "." + faBinding.getName()));
-          }
           break;
         }
       case ASTNode.CLASS_INSTANCE_CREATION:
@@ -1200,14 +1046,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setType(NodeType.TYPE_INSTANTIATION);
 
           ClassInstanceCreation cic = (ClassInstanceCreation) exp;
-          IMethodBinding constructorBinding = cic.resolveConstructorBinding();
-          if (constructorBinding != null) {
-            usePool.add(
-                Triple.of(
-                    root,
-                    EdgeType.DATA_TYPE,
-                    constructorBinding.getDeclaringClass().getQualifiedName()));
-          }
           String identifier = cic.getType().toString();
           pushScope(identifier);
           parseArguments(root, cic.arguments());
@@ -1224,19 +1062,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           pushScope(identifier);
           parseArguments(root, mi.arguments());
           popScope();
-          // find the method declaration in super class
-          IMethodBinding mdBinding = mi.resolveMethodBinding();
-          if (mdBinding != null) {
-            // get caller qname
-            JdtService.findWrappedMethodName(mi)
-                .ifPresent(
-                    name -> {
-                      usePool.add(Triple.of(root, EdgeType.CALLER, name));
-                    });
-            // get callee qname
-            usePool.add(
-                Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
-          }
+
           break;
         }
       case ASTNode.METHOD_INVOCATION:
@@ -1266,19 +1092,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           parseArguments(root, mi.arguments());
           popScope();
 
-          IMethodBinding mdBinding = mi.resolveMethodBinding();
-          // only internal invocation (or consider types, fields and local?)
-          if (mdBinding != null) {
-            // get caller qname
-            JdtService.findWrappedMethodName(mi)
-                .ifPresent(
-                    name -> {
-                      usePool.add(Triple.of(root, EdgeType.CALLER, name));
-                    });
-            // get callee qname
-            usePool.add(
-                Triple.of(root, EdgeType.CALLEE, JdtService.getMethodQNameFromBinding(mdBinding)));
-          }
           break;
         }
       case ASTNode.ASSIGNMENT:
@@ -1306,11 +1119,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setType(NodeType.CAST_EXPRESSION);
           root.setSymbol("()");
           root.setArity(2);
-
-          ITypeBinding typeBinding = castExpression.getType().resolveBinding();
-          if (typeBinding != null) {
-            usePool.add(Triple.of(root, EdgeType.TARGET_TYPE, typeBinding.getQualifiedName()));
-          }
 
           graph.addEdge(
               root,

@@ -77,10 +77,6 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
 
       // annotations
       parseAnnotations(fd.modifiers(), node, null);
-
-      if (binding != null) {
-        usePool.add(Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
-      }
     }
     return false;
   }
@@ -112,14 +108,6 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
                     NodeType.METHOD_DECLARATION, md.toString(), name, qname, JdtService.getIdentifier(md));
 
     node.setRange(computeRange(md));
-
-    // return type
-    if (mdBinding != null) {
-      ITypeBinding tpBinding = mdBinding.getReturnType();
-      if (tpBinding != null) {
-        usePool.add(Triple.of(node, EdgeType.RETURN_TYPE, tpBinding.getQualifiedName()));
-      }
-    }
 
     // para decl and type
     if (!md.parameters().isEmpty()) {
@@ -157,7 +145,6 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
                           uri);
 
           graph.addVertex(pn);
-          defPool.put(para_qname, pn);
           GraphUtil.addNode(pn);
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
 
@@ -258,36 +245,6 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
                 annotation.getTypeName().getFullyQualifiedName());
         node.setRange(computeRange(annotation));
         node.setUri(createIdentifier(identifier));
-
-        // check annotation type and possible refs
-        // add possible refs into use pool
-        ITypeBinding typeBinding = annotation.resolveTypeBinding();
-        String typeQName =
-            typeBinding == null
-                ? annotation.getTypeName().getFullyQualifiedName()
-                : typeBinding.getQualifiedName();
-        if (annotation.isMarkerAnnotation()) {
-          // @A
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-        } else if (annotation.isSingleMemberAnnotation()) {
-          // @A(v)
-          Expression value = ((SingleMemberAnnotation) annotation).getValue();
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, value.toString()));
-        } else if (annotation.isNormalAnnotation()) {
-          // @A(k=v)
-          usePool.add(Triple.of(node, EdgeType.REFERENCE, typeQName));
-
-          for (Object value : ((NormalAnnotation) annotation).values()) {
-            if (value instanceof MemberValuePair) {
-              MemberValuePair pair = ((MemberValuePair) value);
-              ITypeBinding binding = pair.getValue().resolveTypeBinding();
-              String qname =
-                  binding == null ? pair.getValue().toString() : binding.getQualifiedName();
-              usePool.add(Triple.of(node, EdgeType.REFERENCE, qname));
-            }
-          }
-        }
 
         // TODO: #{a.b} <-> Class.field
         if (!sqlParams.isEmpty() && methodParas != null && !methodParas.isEmpty()) {

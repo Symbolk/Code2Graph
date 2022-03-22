@@ -27,15 +27,6 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   protected String scope = "";
   private final Stack<String> stack = new Stack<>();
 
-  // TODO index nodes by qualified name as Trie to speed up matching, or just use hash?
-  // TODO include external type declaration or not?
-  // intermediate cache to build nodes and edges
-  // basic assumption: qualified name is unique in one project
-  protected Map<String, Node> defPool =
-      new HashMap<>(); // should be ElementNode in theory, but use node to avoid casting when adding
-  // edges
-  protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
-
   public AbstractJdtVisitor() {
     super(true);
   }
@@ -47,7 +38,6 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     ElementNode node =
         new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
     graph.addVertex(node);
-    defPool.put(qname, node);
     this.identifier = identifier;
     GraphUtil.addNode(node);
     return node;
@@ -76,27 +66,6 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     URI uri = new URI(isRef, uriFilePath);
     uri.addLayer(identifier, Language.JAVA);
     return uri;
-  }
-
-  /** Build edges with cached data pool */
-  public void buildEdges() {
-    for (Triple<Node, Type, String> entry : usePool) {
-      Node src = entry.getFirst();
-      Optional<Node> tgt = findEntityNodeByName(entry.getThird());
-      tgt.ifPresent(node -> graph.addEdge(src, node, new Edge(GraphUtil.eid(), entry.getSecond())));
-    }
-  }
-
-  protected Optional<Node> findEntityNodeByName(String name) {
-    if (defPool.containsKey(name)) {
-      return Optional.of(defPool.get(name));
-    } else {
-      // greedily match as simple name
-      return defPool.entrySet().stream()
-          .filter(e -> e.getKey().endsWith(name))
-          .map(Map.Entry::getValue)
-          .findFirst();
-    }
   }
 
   /**
