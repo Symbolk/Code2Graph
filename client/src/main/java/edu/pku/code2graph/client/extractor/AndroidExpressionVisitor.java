@@ -180,7 +180,7 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           ClassInstanceCreation cic = (ClassInstanceCreation) exp;
           String identifier = cic.getType().toString();
           pushScope(identifier);
-          parseArguments(root, cic.arguments());
+          parseArguments(cic.arguments());
           popScope();
           break;
         }
@@ -192,7 +192,7 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           root.setUri(createIdentifier(identifier));
 
           pushScope(identifier);
-          parseArguments(root, mi.arguments());
+          parseArguments(mi.arguments());
           popScope();
           break;
         }
@@ -220,7 +220,7 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
           GraphUtil.addNode(root);
 
           pushScope(identifier);
-          parseArguments(root, mi.arguments());
+          parseArguments(mi.arguments());
           popScope();
           break;
         }

@@ -499,18 +499,11 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
   /**
    * Process arguments of (super) method/constructor invocation
-   *
-   * @param node
-   * @param arguments
    */
-  protected RelationNode parseArguments(RelationNode node, List arguments) {
+  protected void parseArguments(List<?> arguments) {
     for (Object arg : arguments) {
-      if (arg instanceof Expression) {
-        graph.addEdge(
-            node, parseExpression((Expression) arg), new Edge(GraphUtil.eid(), EdgeType.ARGUMENT));
-      }
+      parseExpression((Expression) arg);
     }
-    return node;
   }
 
   /**
@@ -555,7 +548,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
           SuperConstructorInvocation ci = (SuperConstructorInvocation) stmt;
           pushScope("super");
-          parseArguments(node, ci.arguments());
+          parseArguments(ci.arguments());
           popScope();
           return Optional.of(node);
         }
@@ -569,7 +562,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
           ConstructorInvocation ci = (ConstructorInvocation) stmt;
           pushScope("this");
-          parseArguments(node, ci.arguments());
+          parseArguments(ci.arguments());
           popScope();
           return Optional.of(node);
         }
@@ -1048,7 +1041,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           ClassInstanceCreation cic = (ClassInstanceCreation) exp;
           String identifier = cic.getType().toString();
           pushScope(identifier);
-          parseArguments(root, cic.arguments());
+          parseArguments(cic.arguments());
           popScope();
           break;
         }
@@ -1060,7 +1053,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setUri(createIdentifier(identifier));
 
           pushScope(identifier);
-          parseArguments(root, mi.arguments());
+          parseArguments(mi.arguments());
           popScope();
 
           break;
@@ -1089,7 +1082,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           GraphUtil.addNode(root);
 
           pushScope(identifier);
-          parseArguments(root, mi.arguments());
+          parseArguments(mi.arguments());
           popScope();
 
           break;

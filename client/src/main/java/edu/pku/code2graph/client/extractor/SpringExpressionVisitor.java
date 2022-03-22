@@ -410,7 +410,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           //          parseArguments(root, cic.arguments(), false);
           String identifier = cic.getType().toString();
           pushScope(identifier);
-          parseArguments(root, cic.arguments());
+          parseArguments(cic.arguments());
           popScope();
           break;
         }
@@ -423,7 +423,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
 
           //          parseArguments(root, mi.arguments(), false);
           pushScope(identifier);
-          parseArguments(root, mi.arguments());
+          parseArguments(mi.arguments());
           popScope();
           break;
         }
@@ -451,7 +451,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           GraphUtil.addNode(root);
 
           pushScope(identifier);
-          parseArguments(root, mi.arguments());
+          parseArguments(mi.arguments());
           popScope();
 
           if (exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute")) {
@@ -586,7 +586,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
 
           SuperConstructorInvocation ci = (SuperConstructorInvocation) stmt;
           pushScope("super");
-          parseArguments(node, ci.arguments());
+          parseArguments(ci.arguments());
           popScope();
           return Optional.of(node);
         }
@@ -600,7 +600,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
 
           ConstructorInvocation ci = (ConstructorInvocation) stmt;
           pushScope("this");
-          parseArguments(node, ci.arguments());
+          parseArguments(ci.arguments());
           popScope();
           return Optional.of(node);
         }

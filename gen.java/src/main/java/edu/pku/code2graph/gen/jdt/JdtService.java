@@ -7,22 +7,6 @@ import java.util.*;
 import java.lang.*;
 
 public class JdtService {
-  /**
-   * Find the parent method, return its qname
-   *
-   * @return
-   */
-  public static Optional<String> findWrappedMethodName(ASTNode node) {
-    ASTNode parent = node.getParent();
-    while (parent != null) {
-      if (parent.getNodeType() == ASTNode.METHOD_DECLARATION) {
-        return Optional.of(
-            getMethodQNameFromBinding(((MethodDeclaration) parent).resolveBinding()));
-      }
-      parent = parent.getParent();
-    }
-    return Optional.empty();
-  }
 
   /**
    * Get the qname for var declaration, which can be inside a method or init block
