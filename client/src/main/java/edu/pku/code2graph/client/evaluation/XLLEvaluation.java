@@ -139,6 +139,7 @@ public class XLLEvaluation {
 
     writer.writeRecord(headers);
     for (Link link : xllLinks) {
+      if (link.hidden) continue;
       String left = prettifyURI(link.def), right = prettifyURI(link.use);
       // should rule be saved too?
       String[] record = {link.name, left, right};
@@ -262,6 +263,7 @@ public class XLLEvaluation {
     List<String[]> results = new ArrayList<>();
 
     for (Link link : xllLinks) {
+      if (link.hidden) continue;
       List<String> commitsLeft = getHistoricalCommitsChanged(link.def);
       List<String> commitsRight = getHistoricalCommitsChanged(link.use);
       int intersectionNum =
