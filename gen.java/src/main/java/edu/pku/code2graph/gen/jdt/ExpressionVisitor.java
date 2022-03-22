@@ -50,9 +50,11 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
   @Override
   public boolean visit(CompilationUnit cu) {
+    URI uri = new URI(false, uriFilePath);
     this.cuNode =
-        createElementNode(NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath, "");
-
+        new ElementNode(GraphUtil.nid(), Language.JAVA, NodeType.FILE, "", FileUtil.getFileNameFromPath(filePath), filePath, uri);
+    graph.addVertex(cuNode);
+    GraphUtil.addNode(cuNode);
     logger.debug("Start Parsing {}", uriFilePath);
     return true;
   }
