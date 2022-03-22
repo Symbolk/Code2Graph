@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CacheHandler {
   private static final Logger logger = LoggerFactory.getLogger(CacheHandler.class);
 
-  private static String framework = "android";
+  private static String framework = "";
   private static String defaultConfigPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
 
