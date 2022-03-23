@@ -14,4 +14,14 @@ public class URITest {
     assertThat(uri.getLayer(1).getAttribute("language")).isEqualTo("JAVA");
     assertThat(uri.getLayer(0).getAttribute("language")).isEqualTo("FILE");
   }
+
+  @Test
+  public void testMultiAttr() {
+    String source =
+        "use://zheng-cms/zheng-cms-rpc-service/target/classes/com/zheng/cms/dao/mapper/CmsTopicMapper.xml[language=FILE]//mapper/update[parameterType=com.zheng.cms.dao.model.CmsTopic,language=XML,queryId=updateByPrimaryKey]//Update/Where/=/#{topicId,jdbcType=INTEGER}[language=ANY]";
+    URI uri = new URI(source);
+    assertThat(uri.getLayer(1).getAttribute("parameterType")).isEqualTo("com.zheng.cms.dao.model.CmsTopic");
+    assertThat(uri.getLayer(1).getAttribute("language")).isEqualTo("XML");
+    assertThat(uri.getLayer(1).getAttribute("queryId")).isEqualTo("updateByPrimaryKey");
+  }
 }
