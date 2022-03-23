@@ -108,8 +108,8 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
     List<URI> methodParaList = new ArrayList<URI>();
 
     ElementNode node =
-            createElementNode(
-                    NodeType.METHOD_DECLARATION, md.toString(), name, qname, JdtService.getIdentifier(md));
+        createElementNode(
+            NodeType.METHOD_DECLARATION, md.toString(), name, qname, JdtService.getIdentifier(md));
 
     node.setRange(computeRange(md));
 
@@ -130,7 +130,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
       List<SingleVariableDeclaration> paras = md.parameters();
       for (SingleVariableDeclaration p : paras) {
         if (p.toString().trim().startsWith("@Param")
-                || p.toString().trim().startsWith("@ModelAttribute")) {
+            || p.toString().trim().startsWith("@ModelAttribute")) {
           String identifier = JdtService.getIdentifier(p);
           String[] split = p.toString().trim().split(" ");
           identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
@@ -141,20 +141,20 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
 
           String para_qname = split[0];
           String para_name =
-                  para_qname.substring(para_qname.indexOf('"') + 1, para_qname.length() - 2);
+              para_qname.substring(para_qname.indexOf('"') + 1, para_qname.length() - 2);
 
           URI uri = new URI(false, uriFilePath);
           uri.addLayer(identifier, Language.JAVA);
 
           ElementNode pn =
-                  new ElementNode(
-                          GraphUtil.nid(),
-                          Language.JAVA,
-                          NodeType.VAR_DECLARATION,
-                          p.toString(),
-                          para_name,
-                          para_qname,
-                          uri);
+              new ElementNode(
+                  GraphUtil.nid(),
+                  Language.JAVA,
+                  NodeType.VAR_DECLARATION,
+                  p.toString(),
+                  para_name,
+                  para_qname,
+                  uri);
 
           graph.addVertex(pn);
           defPool.put(para_qname, pn);
@@ -162,7 +162,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
 
           MybatisParam param =
-                  new MybatisParam(false, split[0], uri, p.getType().toString(), p.toString());
+              new MybatisParam(false, split[0], uri, p.getType().toString(), p.toString());
           paramMap.get(declaringClass).get(mdBinding.getName()).add(param);
           methodParaList.add(uri);
         } else {
@@ -187,7 +187,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
 
           URI uri = pn.getUri();
           MybatisParam param =
-                  new MybatisParam(false, uri.getSymbol(), uri, p.getType().toString(), p.toString());
+              new MybatisParam(false, uri.getSymbol(), uri, p.getType().toString(), p.toString());
           paramMap.get(declaringClass).get(mdBinding.getName()).add(param);
           methodParaList.add(uri);
         }
@@ -204,9 +204,9 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
     if (md.getBody() != null) {
       if (!md.getBody().statements().isEmpty()) {
         parseBodyBlock(md.getBody(), md.getName().toString(), qname)
-                .ifPresent(
-                        blockNode ->
-                                graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+            .ifPresent(
+                blockNode ->
+                    graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
       }
     }
     return true;
@@ -239,7 +239,13 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
         if (query != null) {
           query = StringEscapeUtils.unescapeJava(query);
           Graph<Node, Edge> graph =
-              generator.generate(query, FileUtil.getRootPath() + "/" + filepath, lang, idtf, "");
+              generator.generate(
+                  query,
+                  FileUtil.getRootPath() + "/" + filepath,
+                  lang,
+                  idtf,
+                  annotatedNode.getUri(),
+                  "");
           List<ElementNode> list = generator.getIdentifiers().get("");
           for (ElementNode n : list) {
             if (n.getType() == edu.pku.code2graph.gen.sql.model.NodeType.Parameter) {

@@ -163,6 +163,27 @@ public class MybatisMapperHandler extends AbstractHandler {
         }
         break;
     }
+
+    for (int i = 0; i < attributes.getLength(); i++) {
+      String attrName = attributes.getQName(i);
+      String attrVal = attributes.getValue(i);
+      URI attrUri = new URI(false, uriFilePath);
+      attrUri.addLayer(qName + "/" + attrName, Language.XML);
+      attrUri.addLayer(URI.checkInvalidCh(attrVal), Language.ANY);
+
+      ElementNode attrEle =
+          new ElementNode(
+              GraphUtil.nid(),
+              Language.ANY,
+              type("attribute", true),
+              "",
+              attrVal,
+              attrVal,
+              attrUri);
+
+      graph.addVertex(attrEle);
+      GraphUtil.addNode(attrEle);
+    }
     super.startElement(uri, localName, qName, attributes);
   }
 
@@ -184,7 +205,9 @@ public class MybatisMapperHandler extends AbstractHandler {
           String query = currentEle.getQuery();
           String idtf = "mapper/" + qName;
           Language lang = Language.XML;
-          Graph<Node, Edge> graph = sqlGenerator.generate(query, filePath, lang, idtf, currentId);
+          Graph<Node, Edge> graph =
+              sqlGenerator.generate(
+                  query, filePath, lang, idtf, currentEle.getNode().getUri(), currentId);
           List<ElementNode> identifierById = identifierMap.get(currentId);
           List<RelationNode> queryById = queryTypeMap.get(currentId);
           List<ElementNode> identifierInQuery = new ArrayList<>();
