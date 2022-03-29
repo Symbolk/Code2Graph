@@ -5,14 +5,10 @@ import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class Scanner {
-  private final static Logger logger = LoggerFactory.getLogger(Scanner.class);
-
   /**
    * uri pattern cache
    */
@@ -34,7 +30,9 @@ public class Scanner {
   public void scan(URITree tree, int index, Capture current) {
     if (pattern.getLayerCount() == index) {
       if (tree.uri != null && !linker.visited.contains(tree.uri)) {
-        Capture key = current.project(linker.rule.shared);
+        Capture key = current
+            .project(linker.rule.def.symbols)
+            .project(linker.rule.use.symbols);
         Pair<List<URI>, Set<Capture>> pair = results
             .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
         pair.getLeft().add(tree.uri);
@@ -47,7 +45,7 @@ public class Scanner {
       Capture capture = pattern.getLayer(index).match(layer, variables);
       if (capture == null) continue;
       Capture next = current.clone();
-      next.merge(capture);
+      next.putAll(capture);
       scan(tree.children.get(layer), index + 1, next);
     }
   }
