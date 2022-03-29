@@ -21,6 +21,8 @@ public abstract class AttributePattern {
     register("language", LanguagePattern.class);
     register("identifier", IdentifierPattern.class);
     register("varType", IdentifierPattern.class);
+    register("queryId", IdentifierPattern.class);
+    register("resultType", IdentifierPattern.class);
   }
 
   public static void register(String key, Class<? extends AttributePattern> value) {
