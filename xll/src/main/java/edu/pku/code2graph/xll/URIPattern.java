@@ -12,6 +12,8 @@ public class URIPattern extends URIBase<LayerPattern> {
   public final Set<String> symbols = new HashSet<>();
   public final Set<String> anchors = new HashSet<>();
 
+  public URIPattern() {}
+
   public URIPattern(boolean isRef, String file) {
     this.isRef = isRef;
     addLayer(file, Language.FILE);

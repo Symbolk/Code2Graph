@@ -32,6 +32,7 @@ public class IdentifierPattern extends AttributePattern {
             .replaceAll("\\$", "\\\\\\$")
             .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
+            .replaceAll("/\\*\\*", "(?:/.+)?")
             .replaceAll("\\*", "\\\\w+")
             .replaceAll("\\{", "\\\\{");
 

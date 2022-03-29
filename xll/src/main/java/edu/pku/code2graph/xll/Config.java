@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -158,7 +159,7 @@ public class Config {
     return builder.toString();
   }
 
-  public static Config load(String path) throws Exception {
+  public static Config load(String path) throws FileNotFoundException {
     InputStream inputStream = new FileInputStream(path);
     Yaml yaml = new Yaml();
     Object rawConfig = yaml.loadAll(inputStream).iterator().next();

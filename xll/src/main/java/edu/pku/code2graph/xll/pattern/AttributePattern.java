@@ -35,7 +35,7 @@ public abstract class AttributePattern {
     registry.put(key, value.getDeclaredConstructor(String.class, URIPattern.class));
   }
 
-  static final public Map<String, Exception> exceptions = new HashMap<>();
+  static final Map<String, Exception> exceptions = new HashMap<>();
 
   static public AttributePattern create(String key, String value, URIPattern root) {
     if (exceptions.containsKey(key)) return null;
