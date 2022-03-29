@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,7 +30,6 @@ public class Config {
     Map<String, List<String>> flowGraph = (Map<String, List<String>>) config.get("flowgraph");
     Map<String, Object> rawRules = (Map<String, Object>) config.get("rules");
     toposort(flowGraph, rawRules);
-    logger.debug(toString());
   }
 
   private void reportMissing(String name) {
@@ -160,7 +158,7 @@ public class Config {
     return builder.toString();
   }
 
-  public static Config load(String path) throws FileNotFoundException {
+  public static Config load(String path) throws Exception {
     InputStream inputStream = new FileInputStream(path);
     Yaml yaml = new Yaml();
     Object rawConfig = yaml.loadAll(inputStream).iterator().next();
