@@ -2,13 +2,13 @@ package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URI;
-import edu.pku.code2graph.model.URILike;
+import edu.pku.code2graph.model.URIBase;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class URIPattern extends URILike<LayerPattern> {
+public class URIPattern extends URIBase<LayerPattern> {
   public final Set<String> symbols = new HashSet<>();
   public final Set<String> anchors = new HashSet<>();
 
@@ -36,10 +36,8 @@ public class URIPattern extends URILike<LayerPattern> {
   }
 
   public LayerPattern addLayer(String identifier, Language language) {
-    LayerPattern layer = new LayerPattern(identifier, language);
+    LayerPattern layer = new LayerPattern(identifier, language, this);
     layers.add(layer);
-    symbols.addAll(layer.symbols);
-    anchors.addAll(layer.anchors);
     return layer;
   }
 

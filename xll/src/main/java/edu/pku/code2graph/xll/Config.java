@@ -1,5 +1,6 @@
 package edu.pku.code2graph.xll;
 
+import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URITree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

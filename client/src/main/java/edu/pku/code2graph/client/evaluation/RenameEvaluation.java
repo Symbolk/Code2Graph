@@ -11,7 +11,7 @@ import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.*;
-import edu.pku.code2graph.xll.Link;
+import edu.pku.code2graph.model.Link;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.jgrapht.Graph;

@@ -1,1 +1,1 @@
-resources/*.csv linguist-generated
+resources/**/*.csv linguist-generated

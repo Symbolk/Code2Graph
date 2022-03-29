@@ -1,55 +1,26 @@
 package edu.pku.code2graph.xll;
 
+import edu.pku.code2graph.model.LinkBase;
+
 import java.util.*;
 
-public class Rule {
-  public final URIPattern def;
-  public final URIPattern use;
+public class Rule extends LinkBase<URIPattern> {
   public final List<String> deps;
-  public final String name;
-  public final boolean hidden;
 
   static private int index = 0;
 
-  /**
-   * shared symbols for def / use patterns
-   */
-  public final Set<String> shared = new HashSet<>();
-
-  public Rule(URIPattern def, URIPattern use) {
-    this.def = def;
-    this.use = use;
+  public Rule(final URIPattern def, final URIPattern use) {
+    super(def, use, "#" + ++index, false);
     this.deps = new ArrayList<>();
-    this.name = "#" + ++index;
-    this.hidden = false;
-    initialize();
   }
 
-  public Rule(Map<String, Object> rule, List<String> deps, String name) {
-    this.def = new URIPattern(false, (Map<String, Object>) rule.get("def"));
-    this.use = new URIPattern(true, (Map<String, Object>) rule.get("use"));
-    this.hidden = (boolean) rule.getOrDefault("hidden", false);
+  public Rule(final Map<String, Object> rule, final List<String> deps, final String name) {
+    super(
+      new URIPattern(false, (Map<String, Object>) rule.get("def")),
+      new URIPattern(true, (Map<String, Object>) rule.get("use")),
+      name,
+      (boolean) rule.getOrDefault("hidden", false)
+    );
     this.deps = deps;
-    this.name = name;
-    initialize();
-  }
-
-  private void initialize() {
-    for (String name : def.symbols) {
-      if (use.symbols.contains(name)) {
-        shared.add(name);
-      }
-    }
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder output = new StringBuilder();
-    output.append("(");
-    output.append(def.toString());
-    output.append(", ");
-    output.append(use.toString());
-    output.append(")");
-    return output.toString();
   }
 }

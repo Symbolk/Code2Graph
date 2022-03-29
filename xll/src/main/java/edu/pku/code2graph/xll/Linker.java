@@ -1,5 +1,6 @@
 package edu.pku.code2graph.xll;
 
+import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import org.apache.commons.lang3.tuple.Pair;
@@ -72,7 +73,7 @@ public class Linker {
         // check ambiguous links
         Pair<List<URI>, Set<Capture>> defs = defMap.get(defCap);
         if (defs.getLeft().size() > 1) {
-          System.out.println("ambiguous xll found by " + defCap.toString());
+          System.out.println("ambiguous xll found by " + defCap);
           System.out.println(formatUriList(defs.getLeft()));
           System.out.println(formatUriList(uses.getLeft()));
         }
@@ -80,7 +81,7 @@ public class Linker {
         // generate links
         for (URI use : uses.getLeft()) {
           for (URI def : defs.getLeft()) {
-            links.add(new Link(def, use, rule));
+            links.add(new Link(def, use, rule.name, rule.hidden));
           }
           visited.add(use);
         }
@@ -89,25 +90,13 @@ public class Linker {
         for (Capture use : uses.getRight()) {
           for (Capture def : defs.getRight()) {
             Capture result = variables.clone();
-            result.merge(variables);
-            result.merge(def);
-            result.merge(use);
+            // use def fragments to override use fragments
+            result.putAll(use);
+            result.putAll(def);
             captures.add(result);
           }
         }
       }
-    }
-  }
-
-  public void print() {
-    System.out.println(rule.name);
-    System.out.println("links: " + links.size());
-    for (Link link : links) {
-      System.out.println(link);
-    }
-    System.out.println("captures: " + captures.size());
-    for (Capture capture : captures) {
-      System.out.println(capture);
     }
   }
 }
