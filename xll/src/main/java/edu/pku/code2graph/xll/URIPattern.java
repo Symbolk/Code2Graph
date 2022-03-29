@@ -28,7 +28,7 @@ public class URIPattern extends URIBase<LayerPattern> {
         LayerPattern layer = addLayer(identifier, lang);
         for (String key : pattern.keySet()) {
           if (key.equals("identifier") || key.equals("lang") || key.equals("inline") || key.equals("file")) continue;
-          layer.addAttribute(key, pattern.get(key).toString());
+          layer.put(key, pattern.get(key).toString());
         }
       }
       pattern = (Map<String, Object>) pattern.get("inline");
