@@ -31,19 +31,26 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   // TODO include external type declaration or not?
   // intermediate cache to build nodes and edges
   // basic assumption: qualified name is unique in one project
+  @Deprecated
   protected Map<String, Node> defPool =
       new HashMap<>(); // should be ElementNode in theory, but use node to avoid casting when adding
   // edges
+  @Deprecated
   protected List<Triple<Node, Type, String>> usePool = new ArrayList<>();
 
   public AbstractJdtVisitor() {
     super(true);
   }
 
+  public interface LayerCallback {
+    void action(Layer layer);
+  }
+
   protected ElementNode createElementNode(
-      Type type, String snippet, String name, String qname, String identifier) {
+      Type type, String snippet, String name, String qname, String identifier, LayerCallback callback) {
     URI uri = new URI(false, uriFilePath);
-    uri.addLayer(identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""), Language.JAVA);
+    Layer layer = uri.addLayer(identifier.replace(".", "/").replaceAll("\\(.+?\\)", ""), Language.JAVA);
+    callback.action(layer);
     ElementNode node =
         new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
     graph.addVertex(node);
@@ -51,6 +58,11 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     this.identifier = identifier;
     GraphUtil.addNode(node);
     return node;
+  }
+
+  protected ElementNode createElementNode(
+      Type type, String snippet, String name, String qname, String identifier) {
+    return createElementNode(type, snippet, name, qname, identifier, (layer) -> {});
   }
 
   protected void pushScope(String prefix) {

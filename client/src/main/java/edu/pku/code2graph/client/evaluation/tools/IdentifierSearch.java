@@ -12,7 +12,7 @@ import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.xll.Link;
+import edu.pku.code2graph.model.Link;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
@@ -38,10 +38,10 @@ public class IdentifierSearch {
   private static final Logger logger = LoggerFactory.getLogger(IdentifierSearch.class);
 
   // test one repo at a time
-  private static final String framework = "mybatis";
-  private static final String repoName = "zheng";
-  private static final String commitID = "7005c0a7";
-  private static final String keyword = "payOutOrderDetailId";
+  private static final String framework = "android";
+  private static final String repoName = "GSYVideoPlayer";
+  private static final String commitID = "2a88f0fb29";
+  private static final String keyword = "video_item_player";
   private static final String fileName = "";
   private static final String otDir =
       System.getProperty("user.home") + "/coding/xll/" + "identifier";

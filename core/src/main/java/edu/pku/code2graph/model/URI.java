@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
-public class URI extends URILike<Layer> implements Serializable {
+public final class URI extends URIBase<Layer> implements Serializable {
   public URI() {
     this(false, "");
   }
@@ -93,6 +93,16 @@ public class URI extends URILike<Layer> implements Serializable {
     layers.get(2).setIdentifier(identifier);
   }
 
+  @Override
+  public int hashCode() {
+    return toString().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return toString().equals(obj.toString());
+  }
+
   private static List<String> pre = Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
 
   public static String checkInvalidCh(String name) {
@@ -152,7 +162,7 @@ public class URI extends URILike<Layer> implements Serializable {
     for (String attr : attrs) {
       String[] pair = attr.split("=");
       assert (pair.length == 2);
-      layer.addAttribute(pair[0], pair[1]);
+      layer.put(pair[0], pair[1]);
     }
 
     return layer;

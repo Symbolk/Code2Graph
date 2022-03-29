@@ -301,10 +301,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               fragment.toString(),
               name,
               qname,
-              JdtService.getIdentifier(fragment));
+              JdtService.getIdentifier(fragment),
+              (layer) -> {
+                layer.put("varType", fd.getType().toString());
+              });
 
       node.setRange(computeRange(fragment));
-      node.getUri().getLayer(1).addAttribute("varType", fd.getType().toString());
 
       // annotations
       parseAnnotations(fd.modifiers(), node);
@@ -402,9 +404,10 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 p.toString(),
                 para_name,
                 para_qname,
-                JdtService.getIdentifier(p));
-
-        pn.getUri().getLayer(1).addAttribute("varType", p.getType().toString());
+                JdtService.getIdentifier(p),
+                (layer) -> {
+                  layer.put("varType", p.getType().toString());
+                });
 
         node.setRange(computeRange(p));
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));

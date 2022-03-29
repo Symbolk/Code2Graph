@@ -9,10 +9,10 @@ public class URITest {
         "def://src/main/java/org/jeecgframework/web/system/sms/util/CMPPSenderUtil.java[language=FILE]//sendDifferenceNetMsg/return[language=JAVA]//abc[language=ANY,varType=String]";
     URI uri = new URI(source);
     assertThat(uri.getLayerCount()).isEqualTo(3);
-    assertThat(uri.getLayer(2).getAttribute("varType")).isEqualTo("String");
-    assertThat(uri.getLayer(2).getAttribute("language")).isEqualTo("ANY");
-    assertThat(uri.getLayer(1).getAttribute("language")).isEqualTo("JAVA");
-    assertThat(uri.getLayer(0).getAttribute("language")).isEqualTo("FILE");
+    assertThat(uri.getLayer(2).get("varType")).isEqualTo("String");
+    assertThat(uri.getLayer(2).get("language")).isEqualTo("ANY");
+    assertThat(uri.getLayer(1).get("language")).isEqualTo("JAVA");
+    assertThat(uri.getLayer(0).get("language")).isEqualTo("FILE");
   }
 
   @Test

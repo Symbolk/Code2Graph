@@ -410,10 +410,12 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
               fragment.toString(),
               name,
               qname,
-              JdtService.getIdentifier(fragment));
+              JdtService.getIdentifier(fragment),
+              (layer) -> {
+                layer.put("varType", fd.getType().toString());
+              });
 
       node.setRange(computeRange(fragment));
-      node.getUri().getLayer(1).addAttribute("varType", fd.getType().toString());
 
       if (baseType.endsWith("Binding")) {
         addBindingClass(node.getUri(), baseType);
@@ -515,9 +517,10 @@ public class AndroidExpressionVisitor extends ExpressionVisitor {
                 p.toString(),
                 para_name,
                 para_qname,
-                JdtService.getIdentifier(p));
-
-        pn.getUri().getLayer(1).addAttribute("varType", p.getType().toString());
+                JdtService.getIdentifier(p),
+                (layer) -> {
+                  layer.put("varType", p.getType().toString());
+                });
 
         String baseType = p.getType().toString();
         if (baseType.endsWith("Binding")) {
