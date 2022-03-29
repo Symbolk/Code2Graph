@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class Range implements Serializable {
   private static final long serialVersionUID = -5826525705626590558L;
+  private String fileName = null;
   // necessary
   private int startLine = -1;
   private int endLine = -1;
@@ -32,6 +33,11 @@ public class Range implements Serializable {
     this.startColumn = Integer.parseInt(start[1]);
     this.endLine = Integer.parseInt(end[0]);
     this.endColumn = Integer.parseInt(end[1]);
+  }
+
+  public Range(String source, String fileName) {
+    this(source);
+    this.fileName = fileName;
   }
 
   public int getStartLine() {
