@@ -88,7 +88,9 @@ public class IdentifierPattern extends AttributePattern {
       String value = matcher.group(i)
           .replace("__slash__", "/");
       Token token = symbols.get(i - 1);
-      capture.put(token.name, new Fragment(value, token.modifier));
+      Fragment fragment = new Fragment(value, token.modifier);
+      if (fragment.plain.isEmpty()) return null;
+      capture.put(token.name, fragment);
     }
     return capture;
   }

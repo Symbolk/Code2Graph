@@ -137,7 +137,7 @@ public class LinkerTest {
     tree.add("def://BlogController.java[language=FILE]"
         + "//showPost/model.addAttribute[language=JAVA]"
         + "//categories[language=ANY]");
-    tree.add("use://root/blog/show.html[language=FILE]");
+    tree.add("def://root/blog/show.html[language=FILE]");
     tree.add("use://root/blog/show.html[language=FILE]"
         + "//html/body/form/select/option/data-th-each[language=HTML]"
         + "//${categories}[language=ANY]");
