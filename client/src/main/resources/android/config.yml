@@ -76,7 +76,7 @@ rules:
       varType: (layoutName:capitalized)Binding
     def:
       lang: XML
-      file: (layoutName:underscore).xml
+      file: (layoutName:snake).xml
 
   # binding.widgetId <-> @+id/widgetId
   r-dataBinding:
@@ -89,4 +89,4 @@ rules:
       file: (&layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@+id\/(widgetId:underscore)'
+        identifier: '@+id\/(widgetId:snake)'
