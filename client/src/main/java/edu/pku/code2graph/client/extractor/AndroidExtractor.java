@@ -126,7 +126,7 @@ public class AndroidExtractor extends AbstractExtractor {
       List<Pair<String, URI>> dataBindingClass = dataBindingClassInFile.get(file);
       if (dataBindingClass != null) {
         for (Pair<String, URI> layoutClip : dataBindingClass) {
-          String layout = "R.layout." + layoutClip.getRight();
+          String layout = "R.layout." + layoutClip.getLeft();
           for (URI uri : dataBindingMap.get(file)) {
             if (!javaURIS.containsKey(layout)) javaURIS.put(layout, new ArrayList<>());
             javaURIS.get(layout).add(uri);
