@@ -99,4 +99,16 @@ public class AttributeTest {
     matcher.shouldFail("foo/bar/baz/qux");
     matcher.shouldFail("foo/bar/qux/baz");
   }
+
+  @Test
+  public void anchorTest() {
+    Matcher matcher = new Matcher("identifier", "foo/(&name).java");
+    matcher.shouldPass("foo/bar.java");
+  }
+
+  @Test
+  public void slashAnchorTest() {
+    Matcher matcher = new Matcher("identifier", "(&path:slash).java");
+    matcher.shouldPass("foo/bar.java");
+  }
 }

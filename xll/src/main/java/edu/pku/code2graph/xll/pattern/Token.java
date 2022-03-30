@@ -23,6 +23,6 @@ public class Token {
   }
 
   public String replace(String source, String capture, int offset) {
-    return source.substring(offset, offset + start) + capture + source.substring(offset + end);
+    return source.substring(0, start - offset) + capture + source.substring(end - offset);
   }
 }

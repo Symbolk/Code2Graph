@@ -62,7 +62,9 @@ public class IdentifierPattern extends AttributePattern {
       Token anchor = anchors.get(index - 1);
       String value = variables.containsKey(anchor.name)
         ? variables.get(anchor.name).text
-        : "[\\w-.]+";
+        : anchor.modifier.equals("slash")
+          ? "[\\w-./]+"
+          : "[\\w-.]+";
       source = anchor.replace(source, value, offset);
     }
 
