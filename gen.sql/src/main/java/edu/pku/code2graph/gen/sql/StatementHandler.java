@@ -53,12 +53,16 @@ public class StatementHandler {
   public static Map<String, List<RelationNode>> idToQueryRn = new HashMap<>();
   private String currentQueryId;
 
+  // parent uri (mybatis xml element)
+  private URI parentURI;
+
   public StatementHandler() {}
 
-  public StatementHandler(boolean inline, Language lang, String identifier) {
+  public StatementHandler(boolean inline, Language lang, String identifier, URI parentURI) {
     this.isInline = inline;
     this.wrapLang = lang;
     this.wrapIdentifier = identifier;
+    this.parentURI = parentURI;
   }
 
   public void generateFrom(Statements stmts, String queryId) {
@@ -384,7 +388,7 @@ public class StatementHandler {
                         }
                       }
                       ElementNode en =
-                          new ElementNode(GraphUtil.nid(), Language.SQL, type, name, name, name);
+                          new ElementNode(GraphUtil.nid(), Language.ANY, type, name, name, name);
                       graph.addVertex(en);
                       String idtf = "";
                       idtf =
@@ -395,9 +399,12 @@ public class StatementHandler {
                       URI uri = new URI(false, uriFilePath);
                       if (isInline) {
                         uri.addLayer(wrapIdentifier, wrapLang);
+                        Layer parentIdentifier = parentURI.getLayer(1);
+                        uri.getLayer(1).putAll(parentIdentifier);
                       }
-                      uri.addLayer(idtf, Language.SQL);
+                      uri.addLayer(idtf, Language.ANY);
                       en.setUri(uri);
+                      graph.addVertex(en);
                       GraphUtil.addNode(en);
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
@@ -414,7 +421,7 @@ public class StatementHandler {
               }
             }
             ElementNode en =
-                new ElementNode(GraphUtil.nid(), Language.SQL, type, colName, colName, colName);
+                new ElementNode(GraphUtil.nid(), Language.ANY, type, colName, colName, colName);
             graph.addVertex(en);
             String idtf = "";
             idtf =
@@ -425,9 +432,12 @@ public class StatementHandler {
             URI uri = new URI(false, uriFilePath);
             if (isInline) {
               uri.addLayer(wrapIdentifier, wrapLang);
+              Layer parentIdentifier = parentURI.getLayer(1);
+              uri.getLayer(1).putAll(parentIdentifier);
             }
-            uri.addLayer(idtf, Language.SQL);
+            uri.addLayer(idtf, Language.ANY);
             en.setUri(uri);
+            graph.addVertex(en);
             GraphUtil.addNode(en);
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
@@ -552,7 +562,7 @@ public class StatementHandler {
 
   private RelationNode addRootNode(Statement el, Type nodeType, String symbol, SimpleNode recur) {
     RelationNode rn =
-        new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, el.toString(), symbol);
+        new RelationNode(GraphUtil.nid(), Language.ANY, nodeType, el.toString(), symbol);
     while (recur.jjtGetParent() != null) {
       recur = (SimpleNode) recur.jjtGetParent();
     }
@@ -569,7 +579,7 @@ public class StatementHandler {
 
   private RelationNode addRelationNode(
       String snippet, Type nodeType, String symbol, SimpleNode snode, boolean setEdge) {
-    RelationNode rn = new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, snippet, symbol);
+    RelationNode rn = new RelationNode(GraphUtil.nid(), Language.ANY, nodeType, snippet, symbol);
     graph.addVertex(rn);
     if (snode != null) {
       rn.setRange(getRange(snode));
@@ -581,7 +591,7 @@ public class StatementHandler {
 
   private void addElementNode(
       String snippet, Type nodeType, String name, String qName, SimpleNode snode) {
-    ElementNode en = new ElementNode(GraphUtil.nid(), Language.SQL, nodeType, snippet, name, qName);
+    ElementNode en = new ElementNode(GraphUtil.nid(), Language.ANY, nodeType, snippet, name, qName);
     en.setRange(getRange(snode));
     graph.addVertex(en);
     nodePool.put(snode, en);
@@ -590,9 +600,12 @@ public class StatementHandler {
     URI uri = new URI(true, uriFilePath);
     if (isInline) {
       uri.addLayer(wrapIdentifier, wrapLang);
+      Layer parentIdentifier = parentURI.getLayer(1);
+      uri.getLayer(1).putAll(parentIdentifier);
     }
-    uri.addLayer(identifierMap.get(en), Language.SQL);
+    uri.addLayer(identifierMap.get(en), Language.ANY);
     en.setUri(uri);
+    graph.addVertex(en);
     GraphUtil.addNode(en);
 
     addToNodeMap(en);

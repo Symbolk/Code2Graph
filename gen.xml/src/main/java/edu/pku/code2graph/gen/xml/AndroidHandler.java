@@ -184,18 +184,16 @@ public class AndroidHandler extends AbstractHandler {
 
           xllUri.addLayer(URI.checkInvalidCh(value));
           defPool.put(resName, en);
-        } else if ("android:id".equals(key)) {
+        } else if ("android:id".equals(key) && value.startsWith("@+")) {
           // fr components
-          if (value.startsWith("@+")) {
-            en.setName(value);
-            layer.setIdentifier(idtf + "/" + URI.checkInvalidCh("android:id"));
-            String identifier = value.replace("+", "");
-            en.setQualifiedName(identifier);
-            en.setRange(new Range(valueLine, valueLine, valueColumn, endColumn));
+          en.setName(value);
+          layer.setIdentifier(idtf + "/" + URI.checkInvalidCh("android:id"));
+          String identifier = value.replace("+", "");
+          en.setQualifiedName(identifier);
+          en.setRange(new Range(valueLine, valueLine, valueColumn, endColumn));
 
-            xllUri.addLayer(URI.checkInvalidCh(value));
-            defPool.put(identifier, en);
-          }
+          xllUri.addLayer(URI.checkInvalidCh(value));
+          defPool.put(identifier, en);
         } else if ("id".equals(key)) {
           // fr components
           en.setName(value);
@@ -208,13 +206,19 @@ public class AndroidHandler extends AbstractHandler {
         } else {
           // references
           if (value.startsWith("@") && !value.startsWith("@android:")) {
+            URI refURI = new URI(false, uriFilePath);
+            refURI.addLayer(idtf + "/" + URI.checkInvalidCh(key), Language.XML);
+            refURI.addLayer(URI.checkInvalidCh(value), Language.ANY);
+
             Type eType = type(key);
             RelationNode rn =
                 new RelationNode(GraphUtil.nid(), Language.XML, eType, key + "=" + value);
+            rn.setUri(refURI);
             // TODO correctly set the start line with locator stack
             rn.setRange(new Range(valueLine, valueLine, valueColumn, endColumn));
             graph.addVertex(rn);
             graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
+            GraphUtil.addNode(rn);
 
             // unified references (may should use regex for matching)
             usePool.add(Triple.of(rn, eType, value));
