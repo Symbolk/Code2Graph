@@ -1,9 +1,6 @@
 package edu.pku.code2graph.model;
 
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -21,10 +18,11 @@ public final class URI extends URIBase<Layer> implements Serializable {
   }
 
   public URI(String source) {
-    String[] result = source.split("//");
+    source = source.replace("\\\\", Layer.backslash);
+    String[] result = source.split("(?<!\\\\)//");
     this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");
     for (int i = 1; i < result.length; ++i) {
-      addLayerFromSource(result[i]);
+      layers.add(new Layer(result[i]));
     }
   }
 
@@ -102,26 +100,5 @@ public final class URI extends URIBase<Layer> implements Serializable {
       name = m.replaceAll("\\" + ch);
     }
     return name;
-  }
-
-  private void addLayerFromSource(String source) {
-    int splitPoint = source.indexOf('[');
-    String identifier = source.substring(0, splitPoint);
-    String attrs = source.substring(splitPoint + 1, source.length() - 1);
-    Layer layer = addLayer(identifier);
-    for (String attr : attrs.split(",")) {
-      String[] pair = attr.split("=");
-      assert pair.length == 2;
-      layer.put(pair[0], pair[1]);
-    }
-  }
-
-  // for evaluation output
-  public static String prettified(URI uri) {
-    return uri.toString().substring(1, uri.toString().length() - 1);
-  }
-
-  public static String prettified(String uri) {
-    return uri.substring(1, uri.length() - 1);
   }
 }

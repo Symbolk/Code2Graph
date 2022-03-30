@@ -41,10 +41,10 @@ public class JsqlGenerator extends Generator {
 
   // queryId: for mybatis xml mapper, be null in other scene
   public Graph<Node, Edge> generate(
-      String query, String filepath, Language lang, String identifier, String queryId) {
+      String query, String filepath, Language lang, String identifier, URI parentURI, String queryId) {
     Graph<Node, Edge> graph = GraphUtil.getGraph();
     String newQuery = addQuotesToQuery(query);
-    StatementHandler hdl = new StatementHandler(true, lang, identifier);
+    StatementHandler hdl = new StatementHandler(true, lang, identifier, parentURI);
     Statements stmt = parser.parseLines(newQuery);
     hdl.setFilePath(filepath);
     if (stmt != null) hdl.generateFrom(stmt, queryId);

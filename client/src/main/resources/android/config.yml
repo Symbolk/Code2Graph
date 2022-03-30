@@ -4,6 +4,12 @@ flowgraph:
   r-id:
     - r-layout
     - $
+  r-dataBindingClassLink:
+    - $
+  r-dataBinding:
+    - r-dataBindingClassLink
+    - r-layout
+#    - $
 
 rules:
   # setContentView(R.layout.layoutName) <-> layoutName.xml
@@ -11,10 +17,19 @@ rules:
     use:
       lang: JAVA
       file: '(javaFile).java'
-      identifier: R.(layoutType).(layoutName)
+      identifier: R.layout.(layoutName)
     def:
       lang: XML
-      file: (layoutType)/(layoutName).xml
+      file: layout/(layoutName).xml
+
+  r-menu:
+    use:
+      lang: JAVA
+      file: '(javaFile).java'
+      identifier: R.menu.(layoutName)
+    def:
+      lang: XML
+      file: menu/(layoutName).xml
 
   # R.id.name <-> @+id
   r-id:
@@ -34,7 +49,8 @@ rules:
     use:
       lang: JAVA
       file: '(javaFile).java'
-      identifier: "(bindingVar)[type=(bindingName))]"
+      identifier: "(bindingVar)"
+      varType: bindingName
     def:
       lang: XML
       file: '(layoutName).xml'
@@ -52,15 +68,25 @@ rules:
       lang: XML
       file: '(layoutName).xml'
 
+  r-dataBindingClassLink:
+    use:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (bindingVar)
+      varType: (layoutName:capitalized)Binding
+    def:
+      lang: XML
+      file: (layoutName:snake).xml
+
   # binding.widgetId <-> @+id/widgetId
   r-dataBinding:
     use:
       lang: JAVA
-      file: '(javaFile).java'
-      identifier: (bindingVar)/(widgetId)
+      file: '(&javaFile).java'
+      identifier: (&bindingVar).(widgetId)
     def:
       lang: XML
-      file: (layoutName).xml
+      file: (&layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@+id\/(widgetId)'
+        identifier: '@+id\/(widgetId:snake)'

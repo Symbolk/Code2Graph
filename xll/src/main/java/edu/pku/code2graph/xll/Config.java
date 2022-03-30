@@ -132,7 +132,7 @@ public class Config {
       }
 
       // link rule for each context
-      logger.debug("Linking " + rule.toString());
+      logger.debug("Linking " + rule);
       Linker linker = new Linker(tree, rule);
       for (Capture variables : localContext) {
         linker.link(variables);

@@ -43,11 +43,6 @@ public class URIPattern extends URIBase<LayerPattern> {
     return layer;
   }
 
-  public Language getLanguage() {
-    if (layers.size() < 1) return Language.ANY;
-    return layers.get(1).getLanguage();
-  }
-
   /**
    * Match uri, return null if not matched, or a match with captured groups
    *
@@ -76,8 +71,7 @@ public class URIPattern extends URIBase<LayerPattern> {
     Capture result = new Capture();
     for (int i = 0; i < depth; ++i) {
       Capture capture = layers.get(i).match(uri.getLayer(i), variables);
-      if (capture == null) return null;
-      result.putAll(capture);
+      if (!result.accept(capture)) return null;
     }
 
     // return captures
