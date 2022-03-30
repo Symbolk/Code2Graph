@@ -200,7 +200,7 @@ public class CacheHandler {
               node -> {
                 if (node.getUri() != null) {
                   String[] record = {
-                    URI.prettified(node.getUri()),
+                    node.getUri().toString(),
                     node.getRange() == null ? "" : node.getRange().toString()
                   };
                   try {
