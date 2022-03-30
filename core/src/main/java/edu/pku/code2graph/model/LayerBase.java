@@ -28,6 +28,8 @@ public abstract class LayerBase extends HashMap<String, String> {
     put(key, value);
   }
 
+  static public final String backslash = "%%__BACKSLASH__%%";
+
   static public String escape(String source) {
     return source
         .replace("\\", "\\\\")
@@ -41,7 +43,7 @@ public abstract class LayerBase extends HashMap<String, String> {
         .replace("\\,", ",")
         .replace("\\]", "]")
         .replace("\\[", "[")
-        .replace("\\\\", "\\");
+        .replace(backslash, "\\");
   }
 
   @Override

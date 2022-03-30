@@ -21,7 +21,8 @@ public final class URI extends URIBase<Layer> implements Serializable {
   }
 
   public URI(String source) {
-    String[] result = source.split("//");
+    source = source.replace("\\\\", Layer.backslash);
+    String[] result = source.split("(?<!\\\\)//");
     this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");
     for (int i = 1; i < result.length; ++i) {
       layers.add(new Layer(result[i]));

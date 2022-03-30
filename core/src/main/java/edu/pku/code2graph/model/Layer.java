@@ -8,9 +8,9 @@ public final class Layer extends LayerBase {
   }
 
   public Layer(String source) {
-    int splitPoint = source.indexOf('[');
-    String identifier = source.substring(0, splitPoint);
-    String attrs = source.substring(splitPoint + 1, source.length() - 1);
+    String[] result = source.split("(?<!\\\\)\\[");
+    String identifier = result[0];
+    String attrs = source.substring(identifier.length() + 1, source.length() - 1);
     put("identifier", unescape(identifier));
     for (String attr : attrs.split("(?<!\\\\),")) {
       int position = attr.indexOf('=');
