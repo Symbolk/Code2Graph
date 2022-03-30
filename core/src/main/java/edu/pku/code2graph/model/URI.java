@@ -1,7 +1,5 @@
 package edu.pku.code2graph.model;
 
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,20 +19,11 @@ public final class URI extends URIBase<Layer> implements Serializable {
   }
 
   public URI(String source) {
-    String[] result = source.split("//");
+    source = source.replace("\\\\", Layer.backslash);
+    String[] result = source.split("(?<!\\\\)//");
     this.isRef = result[0].substring(0, result[0].length() - 1).equals("use");
-    addLayerFromSource(result[1], Language.FILE);
-
-    int splitIdx = getAttrIdx(result[1]);
-    Language lang =
-        Language.valueOfLabel(
-            FilenameUtils.getExtension(result[1].substring(0, splitIdx)).toLowerCase());
-    if (result.length <= 2) return;
-    String identifier = result[2];
-    addLayerFromSource(identifier, lang);
-
-    for (int i = 3; i < result.length; ++i) {
-      addLayerFromSource(result[i]);
+    for (int i = 1; i < result.length; ++i) {
+      layers.add(new Layer(result[i]));
     }
   }
 
@@ -112,59 +101,5 @@ public final class URI extends URIBase<Layer> implements Serializable {
       name = m.replaceAll("\\" + ch);
     }
     return name;
-  }
-
-  private int getAttrIdx(String source) {
-    int splitPoint = source.length() - 1;
-    int stackCnt = 0;
-    for (; splitPoint >= 0; splitPoint--) {
-      if (source.charAt(splitPoint) == ']') {
-        stackCnt++;
-      } else if (source.charAt(splitPoint) == '[') {
-        stackCnt--;
-        if (stackCnt == 0) {
-          break;
-        }
-      }
-    }
-
-    return splitPoint;
-  }
-
-  private Layer addLayerFromSource(String source) {
-    return addLayerFromSource(source, Language.ANY);
-  }
-
-  private Layer addLayerFromSource(String source, Language lang) {
-    int splitPoint = getAttrIdx(source);
-
-    Layer layer = addLayer(source.substring(0, splitPoint), lang);
-
-    String dropBracket = source.substring(splitPoint + 1, source.length() - 1);
-    List<String> attrs = new ArrayList<>();
-    boolean hasMetEqual = false;
-    int end = dropBracket.length() - 1;
-    for (int i = dropBracket.length() - 1; i >= 0; i--) {
-      if (dropBracket.charAt(i) == ',') {
-        if (hasMetEqual) {
-          attrs.add(dropBracket.substring(i + 1, end + 1));
-          end = i - 1;
-        }
-        hasMetEqual = false;
-      }
-      if (dropBracket.charAt(i) == '=') {
-        hasMetEqual = true;
-      }
-      if (i == 0) {
-        attrs.add(dropBracket.substring(i, end + 1));
-      }
-    }
-    for (String attr : attrs) {
-      String[] pair = attr.split("=");
-      assert (pair.length == 2);
-      layer.put(pair[0], pair[1]);
-    }
-
-    return layer;
   }
 }
