@@ -76,7 +76,7 @@ public class Identifier {
         nowIdCnt = uriCnt.get(uriStr);
       }
       for (int i = 0; i < nodeCnt; i++) {
-        Identifier newId = new Identifier(URI.prettified(uriStr), nowIdCnt + i, tree.nodes.get(i));
+        Identifier newId = new Identifier(uriStr, nowIdCnt + i, tree.nodes.get(i));
         list.add(newId);
       }
       if (!uriCnt.containsKey(uriStr)) {

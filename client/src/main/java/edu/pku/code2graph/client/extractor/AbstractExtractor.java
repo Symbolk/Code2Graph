@@ -28,9 +28,7 @@ public class AbstractExtractor {
     }
     for (Pair<String, String> pair : pairSet) {
       String left = pair.getLeft(), right = pair.getRight();
-      String[] record = {
-        left.substring(1, left.length() - 1), right.substring(1, right.length() - 1)
-      };
+      String[] record = {left, right};
       writer.writeRecord(record);
     }
     writer.close();

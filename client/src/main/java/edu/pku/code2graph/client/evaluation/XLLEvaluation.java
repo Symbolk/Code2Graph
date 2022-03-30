@@ -148,7 +148,7 @@ public class XLLEvaluation {
     writer.writeRecord(headers);
     for (Link link : xllLinks) {
       if (link.hidden) continue;
-      String left = prettifyURI(link.def), right = prettifyURI(link.use);
+      String left = link.def.toString(), right = link.use.toString();
       // should rule be saved too?
       String[] record = {link.name, left, right};
       writer.writeRecord(record);
@@ -283,7 +283,7 @@ public class XLLEvaluation {
       double confRL = MetricUtil.computeProportion(intersectionNum, commitsRight.size());
 
       // prepend results to the link
-      String[] record = {confLR + "", confRL + "", prettifyURI(link.def), prettifyURI(link.use)};
+      String[] record = {confLR + "", confRL + "", link.def.toString(), link.use.toString()};
       System.out.println(Arrays.toString(record));
       results.add(record);
     }
@@ -298,10 +298,6 @@ public class XLLEvaluation {
 
     // discuss whether patterns can be mined from highly-confident co-changes
 
-  }
-
-  private static String prettifyURI(URI uri) {
-    return uri.toString().substring(1, uri.toString().length() - 1);
   }
 
   /**

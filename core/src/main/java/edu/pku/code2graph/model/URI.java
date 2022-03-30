@@ -167,13 +167,4 @@ public final class URI extends URIBase<Layer> implements Serializable {
 
     return layer;
   }
-
-  // for evaluation output
-  public static String prettified(URI uri) {
-    return uri.toString().substring(1, uri.toString().length() - 1);
-  }
-
-  public static String prettified(String uri) {
-    return uri.substring(1, uri.length() - 1);
-  }
 }

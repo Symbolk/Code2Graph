@@ -74,8 +74,7 @@ public class URIPattern extends URIBase<LayerPattern> {
     Capture result = new Capture();
     for (int i = 0; i < depth; ++i) {
       Capture capture = layers.get(i).match(uri.getLayer(i), variables);
-      if (capture == null) return null;
-      result.putAll(capture);
+      if (!result.accept(capture)) return null;
     }
 
     // return captures

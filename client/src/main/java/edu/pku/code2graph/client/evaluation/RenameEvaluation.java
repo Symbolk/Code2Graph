@@ -240,15 +240,15 @@ public class RenameEvaluation {
     Set<String> newIds = new HashSet<>();
     List<Link> toRemove = new ArrayList<>();
     for (Link link : links) {
-      boolean defInIds = ids.contains(URI.prettified(link.def)),
-          useInIds = ids.contains(URI.prettified(link.use));
+      boolean defInIds = ids.contains(link.def.toString()),
+          useInIds = ids.contains(link.use.toString());
       if (defInIds && !useInIds) {
         res.add(link.use);
-        newIds.add(URI.prettified(link.use));
+        newIds.add(link.use.toString());
         toRemove.add(link);
       } else if (useInIds && !defInIds) {
         res.add(link.def);
-        newIds.add(URI.prettified(link.def));
+        newIds.add(link.def.toString());
         toRemove.add(link);
       }
     }
@@ -264,7 +264,7 @@ public class RenameEvaluation {
   // compare results with gt and return identifiers
   private static List<Identifier> testRename(Set<URI> uriToRename, List<Identifier> gt) {
     Set<String> uriStrs = new HashSet<>();
-    uriToRename.forEach((uri) -> uriStrs.add(URI.prettified(uri)));
+    uriToRename.forEach((uri) -> uriStrs.add(uri.toString()));
 
     List<Identifier> idToRename = getIdentifiersToRename(uriStrs, allIdsInRepo);
 
