@@ -1,7 +1,5 @@
 package edu.pku.code2graph.model;
 
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,14 +101,5 @@ public final class URI extends URIBase<Layer> implements Serializable {
       name = m.replaceAll("\\" + ch);
     }
     return name;
-  }
-
-  // for evaluation output
-  public static String prettified(URI uri) {
-    return uri.toString().substring(1, uri.toString().length() - 1);
-  }
-
-  public static String prettified(String uri) {
-    return uri.substring(1, uri.length() - 1);
   }
 }

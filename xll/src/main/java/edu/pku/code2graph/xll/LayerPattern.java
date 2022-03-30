@@ -35,8 +35,7 @@ public class LayerPattern extends LayerBase {
 
       AttributePattern matcher = matchers.get(key);
       Capture capture = matcher.match(target, variables);
-      if (capture == null) return null;
-      result.putAll(capture);
+      if (!result.accept(capture)) return null;
     }
 
     return result;

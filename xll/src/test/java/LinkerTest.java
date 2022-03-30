@@ -2,12 +2,8 @@ import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
-import edu.pku.code2graph.xll.Rule;
 import edu.pku.code2graph.xll.URIPattern;
 import org.junit.jupiter.api.Test;
-import edu.pku.code2graph.model.URI;
-
-import java.io.IOException;
 
 public class LinkerTest {
   static void check(Linker linker, int count) {
@@ -29,10 +25,13 @@ public class LinkerTest {
    * - modifier and word slice
    */
   @Test
-  public void matchTest1() {
+  public void basicTest() {
     URITree tree = new URITree();
-    tree.add("def://main/res/layout/activity_main.xml[language=FILE]//RelativeLayout/Button/android:id[language=XML]//@+id\\/button_login[language=ANY]");
-    tree.add("use://main/java/com/example/demo/MainActivity.java[language=FILE]//R.id.buttonLogin[language=JAVA]");
+    tree.add("def://main/res/layout/activity_main.xml[language=FILE]"
+        + "//RelativeLayout/Button/android:id[language=XML]"
+        + "//@+id\\/button_login[language=ANY]");
+    tree.add("use://main/java/com/example/demo/MainActivity.java[language=FILE]"
+        + "//R.id.buttonLogin[language=JAVA]");
 
     URIPattern def = new URIPattern(false, "(&layoutName).xml");
     def.addLayer("android:id", Language.XML);
@@ -52,10 +51,14 @@ public class LinkerTest {
    * - fuzzy matching
    */
   @Test
-  public void matchTest2() {
+  public void wildcardTest() {
     URITree tree = new URITree();
-    tree.add("def://BlogAdminController.java[language=FILE]//model.addAttribute[language=JAVA]//post-form[language=ANY]");
-    tree.add("use://blog/new.html[language=FILE]//html/body/form/data-th-object[language=HTML]//${postForm}[language=ANY]");
+    tree.add("def://BlogAdminController.java[language=FILE]"
+        + "//model.addAttribute[language=JAVA]"
+        + "//post-form[language=ANY]");
+    tree.add("use://blog/new.html[language=FILE]"
+        + "//html/body/form/data-th-object[language=HTML]"
+        + "//${postForm}[language=ANY]");
 
     URIPattern def = new URIPattern(false, "*.java");
     def.addLayer("model.addAttribute", Language.JAVA);
@@ -74,7 +77,7 @@ public class LinkerTest {
    * - fallback mechanism
    */
   @Test
-  public void matchTest3() {
+  public void precisionTest() {
     URITree tree = new URITree();
 
     tree.add("def://res/layout/list_playlist_mini_item.xml[language=FILE]");
@@ -126,12 +129,18 @@ public class LinkerTest {
    * - greedy matching
    */
   @Test
-  public void matchTest4() {
+  public void greedyTest() {
     URITree tree = new URITree();
-    tree.add("def://BlogController.java[language=FILE]//showPost/return[language=JAVA]//blog.show[language=ANY]");
-    tree.add("def://BlogController.java[language=FILE]//showPost/model.addAttribute[language=JAVA]//categories[language=ANY]");
+    tree.add("def://BlogController.java[language=FILE]"
+        + "//showPost/return[language=JAVA]"
+        + "//blog.show[language=ANY]");
+    tree.add("def://BlogController.java[language=FILE]"
+        + "//showPost/model.addAttribute[language=JAVA]"
+        + "//categories[language=ANY]");
     tree.add("use://root/blog/show.html[language=FILE]");
-    tree.add("use://root/blog/show.html[language=FILE]//html/body/form/select/option/data-th-each[language=HTML]//${categories}[language=ANY]");
+    tree.add("use://root/blog/show.html[language=FILE]"
+        + "//html/body/form/select/option/data-th-each[language=HTML]"
+        + "//${categories}[language=ANY]");
 
     URIPattern def, use;
 
@@ -162,43 +171,35 @@ public class LinkerTest {
     check(linker2, 1);
   }
 
+  /**
+   * - self matching
+   * - attribute matching
+   */
   @Test
-  public void matchTest5() {
+  public void attributeTest() {
     URITree tree = new URITree();
-    tree.add("def://zheng-upms/zheng-upms-dao/src/main/java/com/zheng/upms/dao/model/UpmsSystem.java[language=FILE]//UpmsSystem/setStatus/status[language=JAVA]");
-    tree.add("use://zheng-cms/zheng-cms-rpc-service/src/main/java/com/zheng/cms/rpc/mapper/CmsArticleExtMapper.xml[language=FILE]//mapper/select[language=XML,resultType=java.lang.Long,queryId=countByCategoryId]//Select/Where/=/status[language=ANY]");
+    tree.add("def://com/zheng/upms/dao/model/UpmsSystem.java[language=FILE]"
+        + "//UpmsSystem/setStatus/status[language=JAVA]");
+    tree.add("def://com/zheng/upms/dao/model/UpmsSystem.java[language=FILE]"
+        + "//UpmsSystem/status[language=JAVA]");
+    tree.add("use://com/zheng/cms/rpc/mapper/CmsArticleExtMapper.xml[language=FILE]"
+        + "//mapper/select[language=XML,resultType=java.lang.Long]"
+        + "//Select/Where/=/status[language=ANY]");
+    tree.add("use://com/zheng/cms/rpc/mapper/CmsArticleExtMapper.xml[language=FILE]"
+        + "//mapper/select[language=XML,resultType=com.zheng.upms.dao.model.UpmsSystem,queryId=countByCategoryId]"
+        + "//Select/Where/=/status[language=ANY]");
 
     URIPattern def = new URIPattern(false, "(resTypePackage...)/(class).java");
-    def.addLayer("(name)", Language.JAVA);
+    def.addLayer("(class)/(name)", Language.JAVA);
 
     URIPattern use = new URIPattern(true, "(xmlFile).xml");
     LayerPattern pattern = use.addLayer("select", Language.XML);
-    pattern.put("queryId", "(queryId)");
     pattern.put("resultType", "(resTypePackage:dot).(class)");
+    pattern.put("queryId", "(queryId)");
     use.addLayer("(name)");
 
     Linker linker = new Linker(tree, def, use);
     linker.link();
-    System.out.println(linker.links);
-    System.out.println(linker.captures);
-  }
-
-  @Test
-  public void loaderTest() throws IOException {
-    Config config = Config.load("src/main/resources/config.yml");
-    Rule rule = config.getRules().get("rule1");
-    URIPattern left = rule.def;
-    URI uri1 = new URI("def://foo/bar.java//getFooBar");
-    System.out.println(left);
-    System.out.println(uri1);
-    System.out.println(left.match(uri1));
-    System.out.println();
-
-    URIPattern right = rule.use;
-    URI uri2 = new URI("def://foo/baz.java//Select//#{FooBar}");
-    System.out.println(right);
-    System.out.println(uri2);
-    System.out.println(right.match(uri2));
-    System.out.println();
+    check(linker, 1);
   }
 }

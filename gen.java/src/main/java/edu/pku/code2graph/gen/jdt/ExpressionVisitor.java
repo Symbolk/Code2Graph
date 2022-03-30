@@ -461,7 +461,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       if (query != null) {
         query = StringEscapeUtils.unescapeJava(query);
         Graph<Node, Edge> graph =
-            generator.generate(query, FileUtil.getRootPath() + "/" + filepath, lang, idtf, "");
+            generator.generate(query, FileUtil.getRootPath() + "/" + filepath, lang, idtf, annotatedNode.getUri(), "");
 
         Map<String, List<RelationNode>> queryList = generator.getQueries();
         if (annotatedNode != null && queryList.get("") != null) {

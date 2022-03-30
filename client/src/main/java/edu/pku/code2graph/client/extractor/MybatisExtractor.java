@@ -151,16 +151,20 @@ public class MybatisExtractor extends AbstractExtractor {
             String parameterType = query.getParameterType();
             String symbol = name.substring(2, name.length() - 1);
             if (symbol.contains(",")) symbol = symbol.split(",")[0];
+            boolean hasMatched = false;
             if (parameterType != null) {
               for (String classPackagePath : fieldMap.keySet()) {
                 if (classPackagePath.endsWith(parameterType)) {
-                  if (fieldMap.get(classPackagePath).get(symbol) != null)
+                  if (fieldMap.get(classPackagePath).get(symbol) != null) {
+                    hasMatched = true;
                     uriPairs.add(
                         new ImmutablePair<>(
                             identifier, fieldMap.get(classPackagePath).get(symbol)));
+                  }
                 }
               }
-            } else {
+            }
+            if (!hasMatched) {
               if (paramsInJava != null && paramsInJava.get(queryId) != null) {
                 List<MybatisParam> targetJavaParams = paramsInJava.get(queryId);
                 for (MybatisParam param : targetJavaParams) {
