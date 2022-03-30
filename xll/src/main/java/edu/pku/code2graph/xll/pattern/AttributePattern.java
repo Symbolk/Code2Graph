@@ -23,6 +23,7 @@ public abstract class AttributePattern {
     register("varType", IdentifierPattern.class);
     register("queryId", IdentifierPattern.class);
     register("resultType", IdentifierPattern.class);
+    register("parameterType", IdentifierPattern.class);
   }
 
   public static void register(String key, Class<? extends AttributePattern> value) {

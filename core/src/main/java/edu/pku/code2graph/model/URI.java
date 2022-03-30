@@ -143,16 +143,20 @@ public final class URI extends URIBase<Layer> implements Serializable {
     String dropBracket = source.substring(splitPoint + 1, source.length() - 1);
     List<String> attrs = new ArrayList<>();
     boolean hasMetEqual = false;
-    int end = source.length() - 1;
+    int end = dropBracket.length() - 1;
     for (int i = dropBracket.length() - 1; i >= 0; i--) {
-      if (source.charAt(i) == ',') {
+      if (dropBracket.charAt(i) == ',') {
         if (hasMetEqual) {
-          attrs.add(source.substring(i, end + 1));
+          attrs.add(dropBracket.substring(i + 1, end + 1));
+          end = i - 1;
         }
         hasMetEqual = false;
       }
-      if (source.charAt(i) == '=') {
+      if (dropBracket.charAt(i) == '=') {
         hasMetEqual = true;
+      }
+      if (i == 0) {
+        attrs.add(dropBracket.substring(i, end + 1));
       }
     }
     for (String attr : attrs) {

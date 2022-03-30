@@ -11,6 +11,7 @@ import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.model.Link;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,6 +31,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static edu.pku.code2graph.client.CacheHandler.initCache;
+import static edu.pku.code2graph.client.CacheHandler.loadCache;
+
 public class IdentifierSearch {
   private static final Logger logger = LoggerFactory.getLogger(IdentifierSearch.class);
 
@@ -46,6 +50,8 @@ public class IdentifierSearch {
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static final String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
+  private static String cacheDir =
+          System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
 
   private static final String otPath = otDir + "/search-in-" + repoName + "-" + commitID + ".csv";
 
@@ -77,7 +83,7 @@ public class IdentifierSearch {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+//          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
@@ -85,7 +91,10 @@ public class IdentifierSearch {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
-      Graph<Node, Edge> graph = c2g.generateGraph();
+      if (loadCache(cacheDir, GraphUtil.getUriTree()) == null) {
+        initCache(framework, repoPath, cacheDir);
+      }
+      c2g.generateXLL(GraphUtil.getGraph());
       xllLinks = c2g.getXllLinks();
 
       List<Identifier> allIds = Identifier.getAllIdentifiers();
