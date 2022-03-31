@@ -53,8 +53,8 @@ public class IdentifierPattern extends AttributePattern {
     }
   }
 
-  public Capture match(String target, Capture variables) {
-    if (pass) return new Capture();
+  public boolean match(String target, Capture variables, Capture result) {
+    if (pass) return true;
 
     // step 1: replace anchors
     String source = this.source;
@@ -80,18 +80,18 @@ public class IdentifierPattern extends AttributePattern {
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
     Matcher matcher = regexp.matcher(target);
-    if (!matcher.matches()) return null;
+    if (!matcher.matches()) return false;
 
-    Capture capture = new Capture();
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
       String value = matcher.group(i)
           .replace("__slash__", "/");
       Token token = symbols.get(i - 1);
       Fragment fragment = new Fragment(value, token.modifier);
-      if (fragment.plain.isEmpty()) return null;
-      capture.put(token.name, fragment);
+      if (fragment.plain.isEmpty()) return false;
+      if (!result.accept(token.name, fragment)) return false;
     }
-    return capture;
+
+    return true;
   }
 }

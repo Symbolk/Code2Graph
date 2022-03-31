@@ -42,39 +42,4 @@ public class URIPattern extends URIBase<LayerPattern> {
     layers.add(layer);
     return layer;
   }
-
-  /**
-   * Match uri, return null if not matched, or a match with captured groups
-   *
-   * @param uri uri
-   * @return captures
-   */
-  public Capture match(URI uri) {
-    return match(uri, new Capture());
-  }
-
-  /**
-   * Match uri, return null if not matched, or a match with captured groups
-   *
-   * @param uri uri
-   * @return captures
-   */
-  public Capture match(URI uri, Capture variables) {
-    // Part 1: match protocol
-    if (!isRef && uri.isRef) return null;
-
-    // Part 2: match depth
-    int depth = layers.size();
-    if (uri.getLayerCount() < depth) return null;
-
-    // Part 3: match every layers
-    Capture result = new Capture();
-    for (int i = 0; i < depth; ++i) {
-      Capture capture = layers.get(i).match(uri.getLayer(i), variables);
-      if (!result.accept(capture)) return null;
-    }
-
-    // return captures
-    return result;
-  }
 }

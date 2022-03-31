@@ -25,6 +25,12 @@ public class LayerPattern extends LayerBase {
     return result;
   }
 
+  /**
+   * match layer, return null if not matched, or a capture as result
+   * @param layer input layer
+   * @param variables context variables
+   * @return captures
+   */
   public Capture match(Layer layer, Capture variables) {
     Capture result = new Capture();
 
@@ -34,8 +40,7 @@ public class LayerPattern extends LayerBase {
       if (target == null) return null;
 
       AttributePattern matcher = matchers.get(key);
-      Capture capture = matcher.match(target, variables);
-      if (!result.accept(capture)) return null;
+      if (!matcher.match(target, variables, result)) return null;
     }
 
     return result;

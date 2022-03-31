@@ -25,10 +25,10 @@ public class Capture extends TreeMap<String, Fragment> {
     return true;
   }
 
-  public boolean accept(Capture capture) {
-    if (capture == null) return false;
-    if (!match(capture)) return false;
-    putAll(capture);
+  public boolean accept(String key, Fragment value) {
+    Fragment source = get(key);
+    if (source != null && !source.match(value)) return false;
+    put(key, value);
     return true;
   }
 

@@ -14,7 +14,29 @@ public abstract class AttributePattern {
     this.root = root;
   }
 
-  public abstract Capture match(String target, Capture variables);
+  /**
+   * match layer attribute
+   * @param target input value
+   * @param variables context variables
+   * @return result capture
+   */
+  public Capture match(String target, Capture variables) {
+    Capture result = new Capture();
+    if (match(target, variables, result)) {
+      return result;
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * match layer attribute
+   * @param target input value
+   * @param variables context variables
+   * @param result result capture
+   * @return boolean
+   */
+  public abstract boolean match(String target, Capture variables, Capture result);
 
   static final Map<String, Constructor<? extends AttributePattern>> registry = new HashMap<>();
 

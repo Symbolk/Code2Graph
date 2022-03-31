@@ -11,10 +11,9 @@ public class LanguagePattern extends AttributePattern {
     this.source = source;
   }
 
-  public Capture match(String target, Capture variables) {
-    if (source.equals("ANY")) return new Capture();
-    if (target.equals("ANY")) return new Capture();
-    if (source.equals(target)) return new Capture();
-    return null;
+  public boolean match(String target, Capture variables, Capture result) {
+    if (source.equals("ANY")) return true;
+    if (target.equals("ANY")) return true;
+    return source.equals(target);
   }
 }
