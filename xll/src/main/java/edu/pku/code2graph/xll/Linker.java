@@ -55,13 +55,13 @@ public class Linker {
     link(new Capture());
   }
 
-  public void link(Capture variables) {
+  public void link(Capture input) {
     // scan for use patterns
-    Scanner.Result useMap = this.use.scan(variables);
+    Map<Capture, Map<URI, Capture>> useMap = this.use.scan(input);
     if (useMap.size() == 0) return;
 
     // scan for def patterns
-    Scanner.Result defMap = this.def.scan(variables);
+    Map<Capture, Map<URI, Capture>> defMap = this.def.scan(input);
     for (Capture defCap : defMap.keySet()) {
       // def capture should match use capture
       for (Capture useCap : useMap.keySet()) {
@@ -80,11 +80,11 @@ public class Linker {
         for (Map.Entry<URI, Capture> use : uses.entrySet()) {
           for (Map.Entry<URI, Capture> def : defs.entrySet()) {
             // def fragments should override use fragments
-            Capture result = variables.clone();
-            result.putAll(use.getValue());
-            result.putAll(def.getValue());
-            context.add(result);
-            links.add(new Link(def.getKey(), use.getKey(), rule, result));
+            Capture output = input.clone();
+            output.putAll(use.getValue());
+            output.putAll(def.getValue());
+            context.add(output);
+            links.add(new Link(def.getKey(), use.getKey(), rule, input, output));
           }
           visited.add(use.getKey());
         }

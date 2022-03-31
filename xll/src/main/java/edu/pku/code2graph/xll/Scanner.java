@@ -3,18 +3,17 @@ package edu.pku.code2graph.xll;
 import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Scanner {
   /**
    * uri pattern cache
    */
-  private final Map<Capture, Result> cache = new HashMap<>();
+  private final Map<Capture, Map<Capture, Map<URI, Capture>>> cache = new HashMap<>();
 
-  private Result result;
+  private Map<Capture, Map<URI, Capture>> result;
   private Capture variables;
 
   public final URIPattern pattern;
@@ -24,8 +23,6 @@ public class Scanner {
     this.pattern = pattern;
     this.linker = linker;
   }
-
-  public static class Result extends HashMap<Capture, Map<URI, Capture>> {}
 
   public void scan(URITree tree, int index, Capture current) {
     if (pattern.getLayerCount() == index) {
@@ -48,14 +45,14 @@ public class Scanner {
     }
   }
 
-  public Result scan(Capture variables) {
+  public Map<Capture, Map<URI, Capture>> scan(Capture variables) {
     // check cache
     this.variables = variables = variables.project(pattern.anchors);
     if (cache.containsKey(variables)) {
       return cache.get(variables);
     }
 
-    result = new Result();
+    result = new HashMap<>();
     scan(linker.tree, 0, new Capture());
     cache.put(variables, result);
     return result;

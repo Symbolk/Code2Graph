@@ -205,7 +205,8 @@ public class Code2Graph {
     if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
       logger.info("start detecting xll");
       Project project = Project.load(xllConfigPath);
-      project.setTree(GraphUtil.getUriTree());
+      URITree tree = GraphUtil.getUriTree();
+      project.setTree(tree);
       List<Link> links = project.link();
       logger.info("- #xll = {}", links.size());
       this.xllLinks = links;

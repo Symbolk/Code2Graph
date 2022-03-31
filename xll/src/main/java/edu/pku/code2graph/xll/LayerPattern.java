@@ -44,4 +44,12 @@ public class LayerPattern extends LayerBase {
 
     return result;
   }
+
+  public Layer hydrate(Capture input, Capture output, Layer target) {
+    Layer layer = new Layer();
+    for (AttributePattern matcher : matchers) {
+      layer.put(matcher.key, matcher.hydrate(target.get(matcher.key), input, output));
+    }
+    return layer;
+  }
 }

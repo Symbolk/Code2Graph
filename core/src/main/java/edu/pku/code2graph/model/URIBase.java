@@ -16,6 +16,10 @@ public abstract class URIBase<T extends LayerBase> {
     return layers.get(index);
   }
 
+  public void addLayer(T layer) {
+    layers.add(layer);
+  }
+
   public T addLayer(String identifier) {
     return addLayer(identifier, Language.ANY);
   }

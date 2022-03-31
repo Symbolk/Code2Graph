@@ -66,7 +66,8 @@ public class Project {
   public void rename(URI oldUri, URI newUri) {
     for (Link link : links) {
       if (link.def.equals(oldUri)) {
-        System.out.println(link);
+        System.out.println(link.input);
+        System.out.println(link.output);
       }
     }
   }

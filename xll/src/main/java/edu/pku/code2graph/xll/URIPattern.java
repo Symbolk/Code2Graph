@@ -1,6 +1,7 @@
 package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Language;
+import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URIBase;
 
@@ -41,5 +42,14 @@ public class URIPattern extends URIBase<LayerPattern> {
     LayerPattern layer = new LayerPattern(identifier, language, this);
     layers.add(layer);
     return layer;
+  }
+
+  public URI hydrate(Capture input, Capture output, URI target) {
+    URI uri = new URI();
+    uri.isRef = isRef;
+    for (int index = 0; index < layers.size(); ++index) {
+      uri.addLayer(layers.get(index).hydrate(input, output, target.getLayer(index)));
+    }
+    return uri;
   }
 }

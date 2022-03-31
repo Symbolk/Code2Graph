@@ -8,6 +8,10 @@ public class LinkBase<T extends URIBase<?>> {
   public final String name;
   public final boolean hidden;
 
+  public LinkBase(final T def, final T use, final String name) {
+    this(def, use, name, false);
+  }
+
   public LinkBase(final T def, final T use, final String name, final boolean hidden) {
     this.def = def;
     this.use = use;

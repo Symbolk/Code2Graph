@@ -53,16 +53,14 @@ public class IdentifierPattern extends AttributePattern {
     }
   }
 
-  public boolean match(String target, Capture variables, Capture result) {
-    if (pass) return true;
-
+  private String prepare(Capture input) {
     // step 1: replace anchors
     String source = this.source;
     for (int index = anchors.size(); index > 0; --index) {
       Token anchor = anchors.get(index - 1);
-      String value = variables.containsKey(anchor.name)
-        ? variables.get(anchor.name).text
-        : anchor.modifier.equals("slash")
+      String value = input.containsKey(anchor.name)
+          ? input.get(anchor.name).text
+          : anchor.modifier.equals("slash")
           ? "[\\w-./]+"
           : "[\\w-.]+";
       source = anchor.replace(source, value, offset);
@@ -76,6 +74,13 @@ public class IdentifierPattern extends AttributePattern {
       source = String.join("([\\w-.]+)", segments);
     }
 
+    return source;
+  }
+
+  public boolean match(String target, Capture input, Capture result) {
+    if (pass) return true;
+
+    String source = prepare(input);
     target = target.replace("\\/", "__slash__");
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
@@ -93,5 +98,32 @@ public class IdentifierPattern extends AttributePattern {
     }
 
     return true;
+  }
+
+  public String hydrate(String target, Capture input, Capture output) {
+    if (pass) return target;
+
+    String source = prepare(input);
+    target = target.replace("\\/", "__slash__");
+
+    Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
+    Matcher matcher = regexp.matcher(target);
+
+    if (!matcher.matches()) {
+      System.out.println(target);
+      System.out.println(source);
+    }
+
+    int count = matcher.groupCount();
+    int lastIndex = 0;
+    StringBuilder builder = new StringBuilder();
+    for (int i = 1; i <= count; ++i) {
+      Token token = symbols.get(i - 1);
+      builder.append(target.substring(lastIndex, matcher.start(i)).replace("__slash__", "/"));
+      builder.append(output.get(token.name).text);
+      lastIndex = matcher.end(i);
+    }
+
+    return builder.append(target.substring(lastIndex).replace("__slash__", "/")).toString();
   }
 }

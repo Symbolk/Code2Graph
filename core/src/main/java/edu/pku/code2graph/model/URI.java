@@ -8,9 +8,7 @@ import java.util.regex.Pattern;
 
 /** Unified Resource Identifier for code elements */
 public final class URI extends URIBase<Layer> implements Serializable {
-  public URI() {
-    this(false, "");
-  }
+  public URI() {}
 
   public URI(boolean isRef, String file) {
     this.isRef = isRef;

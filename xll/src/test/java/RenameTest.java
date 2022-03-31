@@ -1,10 +1,10 @@
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
-import edu.pku.code2graph.xll.Project;
-import edu.pku.code2graph.xll.Rule;
-import edu.pku.code2graph.xll.URIPattern;
+import edu.pku.code2graph.xll.*;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 public class RenameTest {
   @Test
@@ -27,8 +27,11 @@ public class RenameTest {
     Project project = new Project();
     project.setTree(tree);
     project.addRule(new Rule(def, use));
-    project.link();
+    List<Link> links = project.link();
 
-    project.rename(uri1, uri1);
+    Link link = links.get(0);
+    System.out.println(link);
+    link.output.put("javaFile", new Fragment("Foo", "auto"));
+    System.out.println(link.rule.hydrate(link.input, link.output, link));
   }
 }
