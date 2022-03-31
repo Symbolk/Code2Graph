@@ -18,8 +18,8 @@ public class IdentifierPattern extends AttributePattern {
   private final List<Token> anchors = new ArrayList<>();
   private final List<Token> symbols = new ArrayList<>();
 
-  public IdentifierPattern(String identifier, URIPattern root) {
-    super(root);
+  public IdentifierPattern(String name, String identifier, URIPattern root) {
+    super(name, root, 100);
     pass = identifier.equals("**");
     if (pass) return;
 

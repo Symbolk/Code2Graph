@@ -6,8 +6,8 @@ import edu.pku.code2graph.xll.URIPattern;
 public class LanguagePattern extends AttributePattern {
   private final String source;
 
-  public LanguagePattern(String source, URIPattern root) {
-    super(root);
+  public LanguagePattern(String name, String source, URIPattern root) {
+    super(name, root, 0);
     this.source = source;
   }
 

@@ -7,11 +7,21 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class AttributePattern {
+public abstract class AttributePattern implements Comparable<AttributePattern> {
   protected final URIPattern root;
+  protected final int order;
+  public final String key;
 
-  public AttributePattern(final URIPattern root) {
+  public AttributePattern(String key, URIPattern root, int order) {
+    this.key = key;
     this.root = root;
+    this.order = order;
+  }
+
+  public int compareTo(AttributePattern target) {
+    int result = Integer.compare(order, target.order);
+    if (result != 0) return result;
+    return key.compareTo(target.key);
   }
 
   /**
@@ -54,7 +64,7 @@ public abstract class AttributePattern {
   }
 
   static public void register(String key, Class<? extends AttributePattern> value) throws NoSuchMethodException {
-    registry.put(key, value.getDeclaredConstructor(String.class, URIPattern.class));
+    registry.put(key, value.getDeclaredConstructor(String.class, String.class, URIPattern.class));
   }
 
   static final Map<String, Exception> exceptions = new HashMap<>();
@@ -62,7 +72,7 @@ public abstract class AttributePattern {
   static public AttributePattern create(String key, String value, URIPattern root) {
     if (exceptions.containsKey(key)) return null;
     try {
-      return registry.get(key).newInstance(value, root);
+      return registry.get(key).newInstance(key, value, root);
     } catch (Exception e) {
       exceptions.put(key, e);
       e.printStackTrace();

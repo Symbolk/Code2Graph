@@ -5,11 +5,12 @@ import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.LayerBase;
 import edu.pku.code2graph.xll.pattern.AttributePattern;
 
-import java.util.*;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class LayerPattern extends LayerBase {
   private final URIPattern root;
-  private final Map<String, AttributePattern> matchers = new HashMap<>();
+  private final Set<AttributePattern> matchers = new TreeSet<>();
 
   public LayerPattern(String identifier, Language language, URIPattern root) {
     super();
@@ -21,7 +22,7 @@ public class LayerPattern extends LayerBase {
   @Override
   public String put(String key, String value) {
     String result = super.put(key, value);
-    matchers.put(key, AttributePattern.create(key, value, root));
+    matchers.add(AttributePattern.create(key, value, root));
     return result;
   }
 
@@ -35,11 +36,9 @@ public class LayerPattern extends LayerBase {
     Capture result = new Capture();
 
     // perform pattern matching
-    for (String key : matchers.keySet()) {
-      String target = layer.get(key);
+    for (AttributePattern matcher : matchers) {
+      String target = layer.get(matcher.key);
       if (target == null) return null;
-
-      AttributePattern matcher = matchers.get(key);
       if (!matcher.match(target, variables, result)) return null;
     }
 
