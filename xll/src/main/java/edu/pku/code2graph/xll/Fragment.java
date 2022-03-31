@@ -16,12 +16,13 @@ public class Fragment {
 
   public final boolean greedy;
   public final String text;
+  public final String plain;
   public final String modifier;
   private List<String> slices;
-  private String simplified;
 
   public Fragment(String text, String modifier) {
     this.text = text;
+    this.plain = text.toLowerCase().replaceAll("[^0-9a-z]", "");
     this.modifier = modifier;
     this.greedy = modifier.equals("slash");
   }
@@ -37,12 +38,6 @@ public class Fragment {
       slices.add(words[i].toLowerCase());
     }
     return slices;
-  }
-
-  public String simplify() {
-    if (simplified != null) return simplified;
-
-    return simplified = text.toLowerCase().replaceAll("[^0-9a-z]", "");
   }
 
   @Override
@@ -64,8 +59,8 @@ public class Fragment {
     List<String> source = slice();
     List<String> target = fragment.slice();
     if (source == null || target == null) {
-      if (!greedy) return simplify().equals(fragment.simplify());
-      return simplify().endsWith(fragment.simplify());
+      if (!greedy) return plain.equals(fragment.plain);
+      return plain.endsWith(fragment.plain);
     }
 
     int sourceSize = source.size();

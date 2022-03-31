@@ -18,8 +18,8 @@ public class IdentifierPattern extends AttributePattern {
   private final List<Token> anchors = new ArrayList<>();
   private final List<Token> symbols = new ArrayList<>();
 
-  public IdentifierPattern(String identifier, URIPattern root) {
-    super(root);
+  public IdentifierPattern(String name, String identifier, URIPattern root) {
+    super(name, root, 100);
     pass = identifier.equals("**");
     if (pass) return;
 
@@ -32,6 +32,7 @@ public class IdentifierPattern extends AttributePattern {
             .replaceAll("\\$", "\\\\\\$")
             .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
+            .replaceAll("/\\*\\*", "(?:/.+)?")
             .replaceAll("\\*", "\\\\w+")
             .replaceAll("\\{", "\\\\{");
 
@@ -52,8 +53,8 @@ public class IdentifierPattern extends AttributePattern {
     }
   }
 
-  public Capture match(String target, Capture variables) {
-    if (pass) return new Capture();
+  public boolean match(String target, Capture variables, Capture result) {
+    if (pass) return true;
 
     // step 1: replace anchors
     String source = this.source;
@@ -61,7 +62,9 @@ public class IdentifierPattern extends AttributePattern {
       Token anchor = anchors.get(index - 1);
       String value = variables.containsKey(anchor.name)
         ? variables.get(anchor.name).text
-        : "[\\w-.]+";
+        : anchor.modifier.equals("slash")
+          ? "[\\w-./]+"
+          : "[\\w-.]+";
       source = anchor.replace(source, value, offset);
     }
 
@@ -77,16 +80,18 @@ public class IdentifierPattern extends AttributePattern {
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
     Matcher matcher = regexp.matcher(target);
-    if (!matcher.matches()) return null;
+    if (!matcher.matches()) return false;
 
-    Capture capture = new Capture();
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
       String value = matcher.group(i)
           .replace("__slash__", "/");
       Token token = symbols.get(i - 1);
-      capture.put(token.name, new Fragment(value, token.modifier));
+      Fragment fragment = new Fragment(value, token.modifier);
+      if (fragment.plain.isEmpty()) return false;
+      if (!result.accept(token.name, fragment)) return false;
     }
-    return capture;
+
+    return true;
   }
 }

@@ -31,7 +31,6 @@ public class Config {
     Map<String, List<String>> flowGraph = (Map<String, List<String>>) config.get("flowgraph");
     Map<String, Object> rawRules = (Map<String, Object>) config.get("rules");
     toposort(flowGraph, rawRules);
-    logger.debug(toString());
   }
 
   private void reportMissing(String name) {
