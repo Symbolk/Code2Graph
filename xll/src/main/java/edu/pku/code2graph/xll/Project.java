@@ -1,6 +1,6 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +13,12 @@ public class Project {
 
   private final Map<String, Rule> rules = new LinkedHashMap<>();
 
+  private URITree tree;
+
+  // runtime properties
+  private final List<Link> links = new ArrayList<>();
+  private final Map<String, Set<Capture>> contexts = new HashMap<>();
+
   public Project() {}
 
   static public Project load(String path) throws IOException {
@@ -23,11 +29,11 @@ public class Project {
     rules.put(rule.name, rule);
   }
 
-  public List<Link> link(URITree tree) {
-    // initialize runtime properties
-    List<Link> links = new ArrayList<>();
-    Map<String, Set<Capture>> contexts = new HashMap<>();
+  public void setTree(URITree tree) {
+    this.tree = tree;
+  }
 
+  public List<Link> link() {
     // create patterns and match
     for (Map.Entry<String, Rule> entry : rules.entrySet()) {
       String name = entry.getKey();
@@ -50,11 +56,19 @@ public class Project {
         linker.link(variables);
       }
       links.addAll(linker.links);
-      contexts.put(name, linker.captures);
+      contexts.put(name, linker.context);
     }
 
     logger.info("#xll = {}", links.size());
     return links;
+  }
+
+  public void rename(URI oldUri, URI newUri) {
+    for (Link link : links) {
+      if (link.def.equals(oldUri)) {
+        System.out.println(link);
+      }
+    }
   }
 
   @Override

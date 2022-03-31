@@ -14,7 +14,7 @@ public class Scanner {
    */
   private final Map<Capture, Result> cache = new HashMap<>();
 
-  private Result results;
+  private Result result;
   private Capture variables;
 
   public final URIPattern pattern;
@@ -25,7 +25,7 @@ public class Scanner {
     this.linker = linker;
   }
 
-  public static class Result extends HashMap<Capture, Pair<List<URI>, Set<Capture>>> {}
+  public static class Result extends HashMap<Capture, Map<URI, Capture>> {}
 
   public void scan(URITree tree, int index, Capture current) {
     if (pattern.getLayerCount() == index) {
@@ -33,10 +33,9 @@ public class Scanner {
         Capture key = current
             .project(linker.rule.def.symbols)
             .project(linker.rule.use.symbols);
-        Pair<List<URI>, Set<Capture>> pair = results
-            .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
-        pair.getLeft().add(tree.uri);
-        pair.getRight().add(current);
+        result
+            .computeIfAbsent(key, k -> new HashMap<>())
+            .put(tree.uri, current);
       }
       return;
     }
@@ -56,9 +55,9 @@ public class Scanner {
       return cache.get(variables);
     }
 
-    results = new Result();
+    result = new Result();
     scan(linker.tree, 0, new Capture());
-    cache.put(variables, results);
-    return results;
+    cache.put(variables, result);
+    return result;
   }
 }

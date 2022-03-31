@@ -1,6 +1,8 @@
-package edu.pku.code2graph.model;
+package edu.pku.code2graph.xll;
 
-public class LinkBase<T extends URIBase> {
+import edu.pku.code2graph.model.URIBase;
+
+public class LinkBase<T extends URIBase<?>> {
   public final T def;
   public final T use;
   public final String name;

@@ -11,7 +11,7 @@ import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Project;
-import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.xll.Link;
 import edu.pku.code2graph.xll.pattern.AttributePattern;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
@@ -205,8 +205,8 @@ public class Code2Graph {
     if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
       logger.info("start detecting xll");
       Project project = Project.load(xllConfigPath);
-      URITree tree = GraphUtil.getUriTree();
-      List<Link> links = project.link(tree);
+      project.setTree(GraphUtil.getUriTree());
+      List<Link> links = project.link();
       logger.info("- #xll = {}", links.size());
       this.xllLinks = links;
 

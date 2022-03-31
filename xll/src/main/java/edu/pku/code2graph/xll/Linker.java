@@ -1,9 +1,7 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.Link;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +39,14 @@ public class Linker {
   /**
    * matched captured
    */
-  public final Set<Capture> captures = new HashSet<>();
+  public final Set<Capture> context = new HashSet<>();
 
   /**
    * visited use uris
    */
   public final Set<URI> visited = new HashSet<>();
 
-  private String formatUriList(List<URI> list) {
+  private String formatUriList(Set<URI> list) {
     Stream<String> segments = list.stream().map(uri -> uri.toString());
     return "[ " + String.join(",\n  ", segments.toArray(String[]::new)) + " ]";
   }
@@ -68,33 +66,27 @@ public class Linker {
       // def capture should match use capture
       for (Capture useCap : useMap.keySet()) {
         if (!defCap.match(useCap)) continue;
-        Pair<List<URI>, Set<Capture>> uses = useMap.get(useCap);
+        Map<URI, Capture> uses = useMap.get(useCap);
 
         // check ambiguous links
-        Pair<List<URI>, Set<Capture>> defs = defMap.get(defCap);
-        if (defs.getLeft().size() > 1) {
+        Map<URI, Capture> defs = defMap.get(defCap);
+        if (defs.size() > 1) {
           System.out.println("ambiguous xll found by " + defCap);
-          System.out.println(formatUriList(defs.getLeft()));
-          System.out.println(formatUriList(uses.getLeft()));
+          System.out.println(formatUriList(defs.keySet()));
+          System.out.println(formatUriList(uses.keySet()));
         }
 
-        // generate links
-        for (URI use : uses.getLeft()) {
-          for (URI def : defs.getLeft()) {
-            links.add(new Link(def, use, rule.name, rule.hidden));
-          }
-          visited.add(use);
-        }
-
-        // generate results
-        for (Capture use : uses.getRight()) {
-          for (Capture def : defs.getRight()) {
+        // generate links and update context
+        for (Map.Entry<URI, Capture> use : uses.entrySet()) {
+          for (Map.Entry<URI, Capture> def : defs.entrySet()) {
+            // def fragments should override use fragments
             Capture result = variables.clone();
-            // use def fragments to override use fragments
-            result.putAll(use);
-            result.putAll(def);
-            captures.add(result);
+            result.putAll(use.getValue());
+            result.putAll(def.getValue());
+            context.add(result);
+            links.add(new Link(def.getKey(), use.getKey(), rule, result));
           }
+          visited.add(use.getKey());
         }
       }
     }
