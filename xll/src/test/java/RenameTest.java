@@ -2,6 +2,7 @@ import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -27,11 +28,11 @@ public class RenameTest {
     Project project = new Project();
     project.setTree(tree);
     project.addRule(new Rule(def, use));
-    List<Link> links = project.link();
+    project.link();
 
-    Link link = links.get(0);
-    System.out.println(link);
-    link.output.put("javaFile", new Fragment("Foo", "auto"));
-    System.out.println(link.rule.hydrate(link.input, link.output, link));
+    List<Pair<URI, URI>> renames = project.rename(uri1, new URI("def://main/res/layout/activity_main.xml[language=FILE]"
+        + "//RelativeLayout/Button/android:id[language=XML]"
+        + "//@+id\\/button_logout[language=ANY]"));
+    System.out.println(renames);
   }
 }

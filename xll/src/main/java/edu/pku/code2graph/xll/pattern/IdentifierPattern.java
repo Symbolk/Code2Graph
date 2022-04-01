@@ -100,7 +100,7 @@ public class IdentifierPattern extends AttributePattern {
     return true;
   }
 
-  public String hydrate(String target, Capture input, Capture output) {
+  public String refactor(String target, Capture input, Capture output) {
     if (pass) return target;
 
     String source = prepare(input);
@@ -120,6 +120,8 @@ public class IdentifierPattern extends AttributePattern {
     for (int i = 1; i <= count; ++i) {
       Token token = symbols.get(i - 1);
       builder.append(target.substring(lastIndex, matcher.start(i)).replace("__slash__", "/"));
+      System.out.println(output);
+      System.out.println(token.name);
       builder.append(output.get(token.name).text);
       lastIndex = matcher.end(i);
     }

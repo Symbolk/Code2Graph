@@ -1,7 +1,5 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.URI;
-
 import java.util.*;
 
 public class Rule extends LinkBase<URIPattern> {
@@ -23,11 +21,5 @@ public class Rule extends LinkBase<URIPattern> {
       (boolean) rule.getOrDefault("hidden", false)
     );
     this.deps = deps;
-  }
-
-  public Link hydrate(Capture input, Capture output, Link target) {
-    URI def = this.def.hydrate(input, output, target.def);
-    URI use = this.use.hydrate(input, output, target.use);
-    return new Link(def, use, this, input, output);
   }
 }

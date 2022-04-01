@@ -2,6 +2,8 @@ package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,13 +65,26 @@ public class Project {
     return links;
   }
 
-  public void rename(URI oldUri, URI newUri) {
+  public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
+    List<Pair<URI, URI>> result = new ArrayList<>();
     for (Link link : links) {
       if (link.def.equals(oldUri)) {
-        System.out.println(link.input);
-        System.out.println(link.output);
+        Capture o = link.rule.def.match(newUri, link.input);
+        if (o == null) continue;
+        Capture output = link.output.clone();
+        output.putAll(o);
+        URI i = link.rule.use.refactor(link.use, link.input, output);
+        result.add(new ImmutablePair<>(link.use, i));
+      } else if (link.use.equals(oldUri)) {
+        Capture o = link.rule.use.match(newUri, link.input);
+        if (o == null) continue;
+        Capture output = link.output.clone();
+        output.putAll(o);
+        URI i = link.rule.def.refactor(link.def, link.input, output);
+        result.add(new ImmutablePair<>(link.def, i));
       }
     }
+    return result;
   }
 
   @Override

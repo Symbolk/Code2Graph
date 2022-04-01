@@ -17,7 +17,7 @@ public class LanguagePattern extends AttributePattern {
     return source.equals(target);
   }
 
-  public String hydrate(String target, Capture input, Capture output) {
+  public String refactor(String target, Capture input, Capture output) {
     return target;
   }
 }

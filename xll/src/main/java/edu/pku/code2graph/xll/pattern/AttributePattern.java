@@ -1,6 +1,5 @@
 package edu.pku.code2graph.xll.pattern;
 
-import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.xll.Capture;
 import edu.pku.code2graph.xll.URIPattern;
 
@@ -49,7 +48,7 @@ public abstract class AttributePattern implements Comparable<AttributePattern> {
    */
   public abstract boolean match(String target, Capture variables, Capture result);
 
-  public abstract String hydrate(String target, Capture input, Capture output);
+  public abstract String refactor(String target, Capture input, Capture output);
 
   static final Map<String, Constructor<? extends AttributePattern>> registry = new HashMap<>();
 
