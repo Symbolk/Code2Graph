@@ -1,6 +1,7 @@
 package edu.pku.code2graph.xll;
 
 import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,6 +116,7 @@ public class Config {
     // initialize runtime properties
     List<Link> links = new ArrayList<>();
     Map<String, Set<Capture>> contexts = new HashMap<>();
+    Set<URI> visited = new HashSet<>();
 
     // create patterns and match
     for (Map.Entry<String, Rule> entry : rules.entrySet()) {
@@ -133,7 +135,7 @@ public class Config {
 
       // link rule for each context
       logger.debug("Linking " + rule);
-      Linker linker = new Linker(tree, rule);
+      Linker linker = new Linker(tree, rule, visited);
       for (Capture variables : localContext) {
         linker.link(variables);
       }
