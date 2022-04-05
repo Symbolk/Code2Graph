@@ -108,11 +108,7 @@ public class IdentifierPattern extends AttributePattern {
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
     Matcher matcher = regexp.matcher(target);
-
-    if (!matcher.matches()) {
-      System.out.println(target);
-      System.out.println(source);
-    }
+    if (!matcher.matches()) return null;
 
     int count = matcher.groupCount();
     int lastIndex = 0;
@@ -120,9 +116,7 @@ public class IdentifierPattern extends AttributePattern {
     for (int i = 1; i <= count; ++i) {
       Token token = symbols.get(i - 1);
       builder.append(target.substring(lastIndex, matcher.start(i)).replace("__slash__", "/"));
-      System.out.println(output);
-      System.out.println(token.name);
-      builder.append(output.get(token.name).text);
+      builder.append(output.get(token.name).toString(token.modifier));
       lastIndex = matcher.end(i);
     }
 
