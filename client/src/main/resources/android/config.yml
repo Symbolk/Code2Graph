@@ -1,11 +1,21 @@
 flowgraph:
   r-layout:
     - $
+  r-menu:
+    - $
+  r-include-layout:
+    - r-dataBindingClassLink
+    - r-layout
+  r-include-id:
+    - r-include-layout
   r-id:
     - r-layout
+    - r-menu
     - $
   r-dataBindingClassLink:
     - $
+  r-include-dataBinding:
+    - r-include-layout
   r-dataBinding:
     - r-dataBindingClassLink
     - r-layout
@@ -87,6 +97,42 @@ rules:
     def:
       lang: XML
       file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(widgetId:snake)'
+
+  r-include-layout:
+    hidden: true
+    use:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: include/layout
+      inline:
+        identifier: '@layout/(includeLayout)'
+    def:
+      lang: XML
+      file: (includeLayout).xml
+
+  r-include-id:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: R.id.(name)
+    def:
+      lang: XML
+      file: (&includeLayout).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+
+  r-include-dataBinding:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: (&bindingVar).(widgetId)
+    def:
+      lang: XML
+      file: (&includeLayout).xml
       identifier: android:id
       inline:
         identifier: '@+id\/(widgetId:snake)'
