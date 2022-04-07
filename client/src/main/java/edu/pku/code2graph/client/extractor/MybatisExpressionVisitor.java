@@ -67,7 +67,10 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
               fragment.toString(),
               name,
               qname,
-              JdtService.getIdentifier(fragment));
+              JdtService.getIdentifier(fragment),
+              (layer) -> {
+                layer.put("varType", fd.getType().toString());
+              });
 
       if (packageName != null) {
         fieldMap.get(packageName).put(name, node.getUri());
@@ -180,7 +183,10 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
                   p.toString(),
                   para_name,
                   para_qname,
-                  JdtService.getIdentifier(p));
+                  JdtService.getIdentifier(p),
+                  (layer) -> {
+                    layer.put("varType", p.getType().toString());
+                  });
 
           node.setRange(computeRange(p));
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
