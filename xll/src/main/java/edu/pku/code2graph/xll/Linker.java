@@ -17,18 +17,16 @@ public class Linker {
   private final Scanner def;
   private final Scanner use;
 
-  public Linker(URITree tree, Rule rule) {
+  public Linker(URITree tree, Rule rule, Set<URI> visited) {
     this.rule = rule;
     this.tree = tree;
     this.def = new Scanner(rule.def, this);
     this.use = new Scanner(rule.use, this);
+    this.visited = visited;
   }
 
   public Linker(URITree tree, URIPattern def, URIPattern use) {
-    this.rule = new Rule(def, use);
-    this.tree = tree;
-    this.def = new Scanner(def, this);
-    this.use = new Scanner(use, this);
+    this(tree, new Rule(def, use), new HashSet<>());
   }
 
   /**
@@ -44,7 +42,7 @@ public class Linker {
   /**
    * visited use uris
    */
-  public final Set<URI> visited = new HashSet<>();
+  public final Set<URI> visited;
 
   private String formatUriList(Set<URI> list) {
     Stream<String> segments = list.stream().map(uri -> uri.toString());

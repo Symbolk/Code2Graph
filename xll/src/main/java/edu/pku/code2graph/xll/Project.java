@@ -20,6 +20,7 @@ public class Project {
   // runtime properties
   private final List<Link> links = new ArrayList<>();
   private final Map<String, Set<Capture>> contexts = new HashMap<>();
+  private final Set<URI> visited = new HashSet<>();
 
   public Project() {}
 
@@ -53,7 +54,7 @@ public class Project {
 
       // link rule for each context
       logger.debug("Linking " + rule);
-      Linker linker = new Linker(tree, rule);
+      Linker linker = new Linker(tree, rule, visited);
       for (Capture variables : localContext) {
         linker.link(variables);
       }
