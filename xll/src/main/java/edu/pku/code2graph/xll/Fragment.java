@@ -10,8 +10,8 @@ public class Fragment {
     separators.put("snake", "_");
     separators.put("param", "-");
     separators.put("slash", "/");
-    separators.put("camel", "(?=[A-Z])");
-    separators.put("pascal", "(?=[A-Z])");
+    separators.put("camel", "(?<![A-Z0-9])(?=[A-Z])|(?=[A-Z][^A-Z0-9])|(?=[0-9]([a-z]|[A-Z]{2}))");
+    separators.put("pascal", "(?<![A-Z0-9])(?=[A-Z])|(?=[A-Z][^A-Z0-9])|(?=[0-9]([a-z]|[A-Z]{2}))");
   }
 
   public final boolean greedy;
@@ -34,8 +34,8 @@ public class Fragment {
 
     slices = new ArrayList<>();
     String[] words = text.split(separator);
-    for (int i = words.length - 1; i >= 0; i--) {
-      slices.add(words[i].toLowerCase());
+    for (String word : words) {
+      slices.add(word.toLowerCase());
     }
     return slices;
   }
@@ -54,8 +54,8 @@ public class Fragment {
       return false;
     }
 
-    for (int i = 0; i < targetSize; i++) {
-      if (!target.get(i).equals(source.get(i))) {
+    for (int i = 1; i <= targetSize; i++) {
+      if (!target.get(targetSize - i).equals(source.get(sourceSize - i))) {
         return false;
       }
     }
