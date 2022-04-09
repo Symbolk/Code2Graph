@@ -65,7 +65,7 @@ public class CacheTest {
     setUp("springmvc", "sagan");
 
     URITree tree = new URITree();
-    loadCache(cachePath, tree);
+    loadCache(cachePath, tree, null, null);
 
     URIPattern def = new URIPattern(false, "*.java");
     def.addLayer("(&functionName)/(&modelName).addAttribute", Language.JAVA);

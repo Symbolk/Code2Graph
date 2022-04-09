@@ -48,7 +48,7 @@ public class IdentifierSearch {
   private static final String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   private static String cacheDir =
-          System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
+      System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
 
   private static final String otPath = otDir + "/search-in-" + repoName + "-" + commitID + ".csv";
 
@@ -80,7 +80,7 @@ public class IdentifierSearch {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-//          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+          //          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
@@ -88,7 +88,7 @@ public class IdentifierSearch {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
-      if (loadCache(cacheDir, GraphUtil.getUriTree()) == null) {
+      if (loadCache(cacheDir, GraphUtil.getUriTree(), null, null) == null) {
         initCache(framework, repoPath, cacheDir);
       }
       c2g.generateXLL(GraphUtil.getGraph());

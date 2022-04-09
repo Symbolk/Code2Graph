@@ -91,12 +91,21 @@ public final class URI extends URIBase<Layer> implements Serializable {
 
   private static List<String> pre = Arrays.asList("\\*", "\\(", "\\)", "\\/", "\\[", "\\]");
 
-  public static String checkInvalidCh(String name) {
+  public static String checkInvalidCh(String symbol) {
     for (String ch : pre) {
       Pattern p = Pattern.compile(ch);
-      Matcher m = p.matcher(name);
-      name = m.replaceAll("\\" + ch);
+      Matcher m = p.matcher(symbol);
+      symbol = m.replaceAll("\\" + ch);
     }
-    return name;
+    return symbol;
+  }
+
+  public static String removeEscapeCh(String symbol) {
+    for (String ch : pre) {
+      Pattern p = Pattern.compile("\\\\" + ch);
+      Matcher m = p.matcher(symbol);
+      symbol = m.replaceAll(ch);
+    }
+    return symbol;
   }
 }

@@ -91,7 +91,7 @@ public class XLLEvaluation {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
-      if (loadCache(cacheDir, GraphUtil.getUriTree()) == null) {
+      if (loadCache(cacheDir, GraphUtil.getUriTree(), null, null) == null) {
         initCache(framework, repoPath, cacheDir);
       }
       c2g.generateXLL(GraphUtil.getGraph());
