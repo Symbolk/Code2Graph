@@ -66,25 +66,35 @@ public class Project {
     return links;
   }
 
-  public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
-    Map<URI, Set<URI>> changes = new HashMap<>();
+  public void rename(URI oldUri, URI newUri, Map<URI, Set<URI>> changes) {
     for (Link link : links) {
       if (link.def.equals(oldUri)) {
         Capture o = link.rule.def.match(newUri, link.input);
         if (o == null) continue;
         Capture output = link.output.clone();
         output.putAll(o);
-        URI uri = link.rule.use.refactor(link.use, link.input, output);
-        changes.computeIfAbsent(link.use, k -> new HashSet<>()).add(uri);
+        URI oldUri2 = link.use;
+        URI newUri2 = link.rule.use.refactor(oldUri2, link.input, output);
+        changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
+        link.use = newUri2;
+        rename(oldUri2, newUri2, changes);
       } else if (link.use.equals(oldUri)) {
         Capture o = link.rule.use.match(newUri, link.input);
         if (o == null) continue;
         Capture output = link.output.clone();
         output.putAll(o);
-        URI uri = link.rule.def.refactor(link.def, link.input, output);
-        changes.computeIfAbsent(link.def, k -> new HashSet<>()).add(uri);
+        URI oldUri2 = link.def;
+        URI newUri2 = link.rule.def.refactor(oldUri2, link.input, output);
+        link.def = newUri2;
+        changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
+        rename(oldUri2, newUri2, changes);
       }
     }
+  }
+
+  public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
+    Map<URI, Set<URI>> changes = new HashMap<>();
+    rename(oldUri, newUri, changes);
 
     List<Pair<URI, URI>> result = new ArrayList<>();
     for (URI source : changes.keySet()) {

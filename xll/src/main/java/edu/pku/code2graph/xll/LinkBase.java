@@ -3,8 +3,8 @@ package edu.pku.code2graph.xll;
 import edu.pku.code2graph.model.URIBase;
 
 public class LinkBase<T extends URIBase<?>> {
-  public final T def;
-  public final T use;
+  public T def;
+  public T use;
   public final String name;
   public final boolean hidden;
 
