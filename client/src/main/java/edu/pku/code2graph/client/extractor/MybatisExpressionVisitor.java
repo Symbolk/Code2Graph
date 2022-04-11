@@ -140,7 +140,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
           //          String[] idtfSplit = identifier.split("/");
           //          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
           //          identifier = String.join("/", idtfSplit);
-          identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
+          identifier = identifier + '/' + URI.checkInvalidCh(split[0].split("\\(")[0]);
 
           String para_qname = split[0];
           String para_name =
@@ -148,6 +148,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
 
           URI uri = new URI(false, uriFilePath);
           uri.addLayer(identifier, Language.JAVA);
+          uri.addLayer(para_name, Language.ANY);
 
           ElementNode pn =
               new ElementNode(
