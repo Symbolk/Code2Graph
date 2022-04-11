@@ -67,23 +67,34 @@ public class Project {
   }
 
   public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
-    List<Pair<URI, URI>> result = new ArrayList<>();
+    Map<URI, Set<URI>> changes = new HashMap<>();
     for (Link link : links) {
       if (link.def.equals(oldUri)) {
         Capture o = link.rule.def.match(newUri, link.input);
         if (o == null) continue;
         Capture output = link.output.clone();
         output.putAll(o);
-        URI i = link.rule.use.refactor(link.use, link.input, output);
-        result.add(new ImmutablePair<>(link.use, i));
+        URI uri = link.rule.use.refactor(link.use, link.input, output);
+        changes.computeIfAbsent(link.use, k -> new HashSet<>()).add(uri);
       } else if (link.use.equals(oldUri)) {
         Capture o = link.rule.use.match(newUri, link.input);
         if (o == null) continue;
         Capture output = link.output.clone();
         output.putAll(o);
-        URI i = link.rule.def.refactor(link.def, link.input, output);
-        result.add(new ImmutablePair<>(link.def, i));
+        URI uri = link.rule.def.refactor(link.def, link.input, output);
+        changes.computeIfAbsent(link.def, k -> new HashSet<>()).add(uri);
       }
+    }
+
+    List<Pair<URI, URI>> result = new ArrayList<>();
+    for (URI source : changes.keySet()) {
+      Set<URI> targets = changes.get(source);
+      if (targets.size() > 1) {
+        System.out.println("ambiguous rename: " + source);
+        System.out.println(targets);
+      }
+      URI target = (URI) targets.toArray()[0];
+      result.add(new ImmutablePair<>(source, target));
     }
     return result;
   }

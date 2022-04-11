@@ -76,7 +76,7 @@ public class Fragment {
     boolean upper = format.equals("camel") || format.equals("pascal");
     boolean initial = format.equals("camel");
     for (int index = 0; index < source.size(); index++) {
-      String word = source.get(source.size() - 1 - index);
+      String word = source.get(index);
       if (upper) {
         if (index > 0 || !initial) {
           builder.append(capitalize(word));
