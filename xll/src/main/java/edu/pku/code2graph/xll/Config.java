@@ -41,7 +41,7 @@ public class Config {
   }
 
   private void toposort(Map<String, List<String>> flowGraph, Map<String, Object> rawRules) {
-    Map<String, Integer> degrees = new HashMap<>();
+    Map<String, Integer> degrees = new LinkedHashMap<>();
     for (String name : rawRules.keySet()) {
       if (!flowGraph.containsKey(name)) {
         logger.warn("unused rule definition {}", name);
