@@ -489,6 +489,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       graph.addVertex(node);
       graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
 
+      pushScope(identifier);
+
       // check annotation type and possible refs
       // add possible refs into use pool
       ITypeBinding typeBinding = annotation.resolveTypeBinding();
@@ -520,6 +522,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           parseExpression(innerValue);
         }
       }
+
+      popScope();
     }
   }
 

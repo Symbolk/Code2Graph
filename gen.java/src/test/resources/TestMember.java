@@ -23,6 +23,7 @@ public class TestMember extends A implements B {
   }
 
   // method decl
+  @Param("test")
   public A fun(A a) throws IOException {
     // instance creation
     A b = new A();
