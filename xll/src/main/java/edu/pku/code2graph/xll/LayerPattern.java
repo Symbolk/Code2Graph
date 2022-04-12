@@ -34,14 +34,37 @@ public class LayerPattern extends LayerBase {
    */
   public Capture match(Layer layer, Capture variables) {
     Capture result = new Capture();
+    if (match(layer, variables, result)) {
+      return result;
+    } else {
+      return null;
+    }
+  }
 
+    /**
+     * match layer, return null if not matched, or a capture as result
+     * @param layer input layer
+     * @param variables context variables
+     * @param result result capture
+     * @return captures
+     */
+  public boolean match(Layer layer, Capture variables, Capture result) {
     // perform pattern matching
     for (AttributePattern matcher : matchers) {
       String target = layer.get(matcher.key);
-      if (target == null) return null;
-      if (!matcher.match(target, variables, result)) return null;
+      if (target == null) return false;
+      if (!matcher.match(target, variables, result)) return false;
     }
+    return true;
+  }
 
-    return result;
+  public Layer refactor(Layer target, Capture input, Capture output) {
+    Layer layer = new Layer();
+    for (AttributePattern matcher : matchers) {
+      String result = matcher.refactor(target.get(matcher.key), input, output);
+      if (result == null) return null;
+      layer.put(matcher.key, result);
+    }
+    return layer;
   }
 }

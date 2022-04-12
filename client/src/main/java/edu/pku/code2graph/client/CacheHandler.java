@@ -9,6 +9,8 @@ import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.model.Range;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
@@ -86,7 +88,8 @@ public class CacheHandler {
     }
   }
 
-  public static URITree loadCache(String cacheDir, URITree tree) throws IOException {
+  public static Pair<URITree, URI> loadCache(
+      String cacheDir, URITree tree, String renamedName, Range renamedRange) throws IOException {
     File cache = new File(cacheDir);
 
     if (!cache.exists()) {
@@ -99,6 +102,7 @@ public class CacheHandler {
       return null;
     }
 
+    URI renamedURI = null;
     LinkedList<File> dirs = new LinkedList<>();
     dirs.add(cache);
     while (!dirs.isEmpty()) {
@@ -107,28 +111,43 @@ public class CacheHandler {
       if (files == null) continue;
       for (File file : files) {
         if (file.isDirectory()) dirs.add(file);
-        else loadCacheFromEachFile(file.getAbsolutePath(), tree);
+        else {
+          URI retURI =
+              loadCacheFromEachFile(file.getAbsolutePath(), tree, renamedName, renamedRange);
+          renamedURI = retURI == null ? renamedURI : retURI;
+        }
       }
     }
-    return tree;
+    return new MutablePair<>(tree, renamedURI);
   }
 
-  public static URITree loadCacheFromEachFile(String file, URITree tree) throws IOException {
+  public static URI loadCacheFromEachFile(
+      String file, URITree tree, String renamedName, Range renamedRange) throws IOException {
     CsvReader reader = new CsvReader(file);
     reader.readHeaders();
     String[] cacheHeaders = reader.getHeaders();
     if (cacheHeaders.length <= 1) {
-      return tree;
+      return null;
     }
     String uriHeader = cacheHeaders[0], rangeHeader = cacheHeaders[1];
+    URI renamedURI = null;
     while (reader.readRecord()) {
       String uriCache = reader.get(uriHeader);
+      URI thisURI = new URI(uriCache);
       String rangeCache = reader.get(rangeHeader);
-      Range range = new Range(rangeCache);
+      Range range = new Range(rangeCache, thisURI.getLayer(0).get("identifier"));
       tree.add(uriCache, range);
+      String symbol = Rename.getSymbolOfURI(thisURI);
+      if (renamedName != null
+          && renamedRange != null
+          && symbol != null
+          && symbol.endsWith(renamedName)
+          && renamedRange.coversInSameLine(renamedRange)) {
+        renamedURI = thisURI;
+      }
     }
     reader.close();
-    return tree;
+    return renamedURI;
   }
 
   public static void initGenerators() {

@@ -10,15 +10,14 @@ import edu.pku.code2graph.gen.Register;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.xll.Config;
-import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.xll.Project;
+import edu.pku.code2graph.xll.Link;
 import edu.pku.code2graph.xll.pattern.AttributePattern;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.*;
 
@@ -202,12 +201,13 @@ public class Code2Graph {
     return GraphUtil.getGraph();
   }
 
-  public void generateXLL(Graph<Node, Edge> graph) throws FileNotFoundException {
+  public void generateXLL(Graph<Node, Edge> graph) throws IOException {
     if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
       logger.info("start detecting xll");
-      Config config = Config.load(xllConfigPath);
+      Project project = Project.load(xllConfigPath);
       URITree tree = GraphUtil.getUriTree();
-      List<Link> links = config.link(tree);
+      project.setTree(tree);
+      List<Link> links = project.link();
       logger.info("- #xll = {}", links.size());
       this.xllLinks = links;
 

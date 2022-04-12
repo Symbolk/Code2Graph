@@ -2,22 +2,19 @@ package edu.pku.code2graph.client.evaluation.tools;
 
 import com.csvreader.CsvWriter;
 import edu.pku.code2graph.client.Code2Graph;
-import edu.pku.code2graph.client.MybatisPreprocesser;
 import edu.pku.code2graph.client.evaluation.model.Identifier;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
-import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.xll.Link;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
-import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -51,7 +48,7 @@ public class IdentifierSearch {
   private static final String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   private static String cacheDir =
-          System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
+      System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
 
   private static final String otPath = otDir + "/search-in-" + repoName + "-" + commitID + ".csv";
 
@@ -83,7 +80,7 @@ public class IdentifierSearch {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-//          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+          //          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
@@ -91,7 +88,7 @@ public class IdentifierSearch {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
-      if (loadCache(cacheDir, GraphUtil.getUriTree()) == null) {
+      if (loadCache(cacheDir, GraphUtil.getUriTree(), null, null) == null) {
         initCache(framework, repoPath, cacheDir);
       }
       c2g.generateXLL(GraphUtil.getGraph());

@@ -16,4 +16,8 @@ public class LanguagePattern extends AttributePattern {
     if (target.equals("ANY")) return true;
     return source.equals(target);
   }
+
+  public String refactor(String target, Capture input, Capture output) {
+    return target;
+  }
 }
