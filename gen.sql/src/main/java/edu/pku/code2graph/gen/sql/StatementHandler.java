@@ -405,7 +405,9 @@ public class StatementHandler {
                       uri.addLayer(idtf, Language.ANY);
                       en.setUri(uri);
                       graph.addVertex(en);
-                      GraphUtil.addNode(en);
+                      if (currentQueryId == null) {
+                        GraphUtil.addNode(en);
+                      }
                       graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
                       addToNodeMap(en);
@@ -438,7 +440,9 @@ public class StatementHandler {
             uri.addLayer(idtf, Language.ANY);
             en.setUri(uri);
             graph.addVertex(en);
-            GraphUtil.addNode(en);
+            if (currentQueryId == null) {
+              GraphUtil.addNode(en);
+            }
             graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
             addToNodeMap(en);
@@ -606,7 +610,9 @@ public class StatementHandler {
     uri.addLayer(identifierMap.get(en), Language.ANY);
     en.setUri(uri);
     graph.addVertex(en);
-    GraphUtil.addNode(en);
+    if (currentQueryId == null) {
+      GraphUtil.addNode(en);
+    }
 
     addToNodeMap(en);
   }

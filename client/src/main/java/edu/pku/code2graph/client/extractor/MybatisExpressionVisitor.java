@@ -67,7 +67,10 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
               fragment.toString(),
               name,
               qname,
-              JdtService.getIdentifier(fragment));
+              JdtService.getIdentifier(fragment),
+              (layer) -> {
+                layer.put("varType", fd.getType().toString());
+              });
 
       if (packageName != null) {
         fieldMap.get(packageName).put(name, node.getUri());
@@ -137,7 +140,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
           //          String[] idtfSplit = identifier.split("/");
           //          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
           //          identifier = String.join("/", idtfSplit);
-          identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
+          identifier = identifier + '/' + URI.checkInvalidCh(split[0].split("\\(")[0]);
 
           String para_qname = split[0];
           String para_name =
@@ -145,6 +148,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
 
           URI uri = new URI(false, uriFilePath);
           uri.addLayer(identifier, Language.JAVA);
+          uri.addLayer(para_name, Language.ANY);
 
           ElementNode pn =
               new ElementNode(
@@ -180,7 +184,10 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
                   p.toString(),
                   para_name,
                   para_qname,
-                  JdtService.getIdentifier(p));
+                  JdtService.getIdentifier(p),
+                  (layer) -> {
+                    layer.put("varType", p.getType().toString());
+                  });
 
           node.setRange(computeRange(p));
           graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
