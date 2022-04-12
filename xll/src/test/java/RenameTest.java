@@ -14,9 +14,10 @@ public class RenameTest {
     URI uri1 = new URI("def://main/res/layout/activity_main.xml[language=FILE]"
         + "//RelativeLayout/Button/android:id[language=XML]"
         + "//@+id\\/button_login[language=ANY]");
-    tree.add(uri1);
-    tree.add("use://main/java/com/example/demo/MainActivity.java[language=FILE]"
+    URI uri2 = new URI("use://main/java/com/example/demo/MainActivity.java[language=FILE]"
         + "//R.id.buttonLogin[language=JAVA]");
+    tree.add(uri1);
+    tree.add(uri2);
 
     URIPattern def = new URIPattern(false, "(&layoutName).xml");
     def.addLayer("android:id", Language.XML);
@@ -28,11 +29,17 @@ public class RenameTest {
     Project project = new Project();
     project.setTree(tree);
     project.addRule(new Rule(def, use));
-    project.link();
 
-    List<Pair<URI, URI>> renames = project.rename(uri1, new URI("def://main/res/layout/activity_main.xml[language=FILE]"
-        + "//RelativeLayout/Button/android:id[language=XML]"
-        + "//@+id\\/button_logout[language=ANY]"));
+    List<Pair<URI, URI>> renames;
+//    project.link();
+//    renames = project.rename(uri1, new URI("def://main/res/layout/activity_main.xml[language=FILE]"
+//        + "//RelativeLayout/Button/android:id[language=XML]"
+//        + "//@+id\\/button_logout[language=ANY]"));
+//    System.out.println(renames);
+
+    project.link();
+    renames = project.rename(uri2, new URI("use://main/java/com/example/demo/MainActivity.java[language=FILE]"
+        + "//R.id.buttonLogout[language=JAVA]"));
     System.out.println(renames);
   }
 }

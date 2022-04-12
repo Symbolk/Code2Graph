@@ -115,11 +115,11 @@ public class IdentifierPattern extends AttributePattern {
     StringBuilder builder = new StringBuilder();
     for (int i = 1; i <= count; ++i) {
       Token token = symbols.get(i - 1);
-      builder.append(target.substring(lastIndex, matcher.start(i)).replace("__slash__", "/"));
+      builder.append(target.substring(lastIndex, matcher.start(i)).replace("__slash__", "\\/"));
       builder.append(output.get(token.name).toString(token.modifier));
       lastIndex = matcher.end(i);
     }
 
-    return builder.append(target.substring(lastIndex).replace("__slash__", "/")).toString();
+    return builder.append(target.substring(lastIndex).replace("__slash__", "\\/")).toString();
   }
 }
