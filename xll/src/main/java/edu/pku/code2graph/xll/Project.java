@@ -18,11 +18,14 @@ public class Project {
   private URITree tree;
 
   // runtime properties
-  private final List<Link> links = new ArrayList<>();
+  private Map<URI, Set<URI>> changes;
+  private List<Link> links;
   private final Map<String, Set<Capture>> contexts = new HashMap<>();
   private final Set<URI> visited = new HashSet<>();
 
-  public Project() {}
+  public Project() {
+    registerHooks();
+  }
 
   static public Project load(String path) throws IOException {
     return new ConfigLoader(path).getProject();
@@ -37,6 +40,8 @@ public class Project {
   }
 
   public List<Link> link() {
+    links = new ArrayList<>();
+
     // create patterns and match
     for (Map.Entry<String, Rule> entry : rules.entrySet()) {
       String name = entry.getKey();
@@ -66,35 +71,53 @@ public class Project {
     return links;
   }
 
-  public void rename(URI oldUri, URI newUri, Map<URI, Set<URI>> changes) {
-    for (Link link : links) {
-      if (link.def.equals(oldUri)) {
-        Capture o = link.rule.def.match(newUri, link.input);
-        if (o == null) continue;
-        Capture output = link.output.clone();
-        output.putAll(o);
-        URI oldUri2 = link.use;
-        URI newUri2 = link.rule.use.refactor(oldUri2, link.input, output);
-        changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
-        link.use = newUri2;
-        rename(oldUri2, newUri2, changes);
-      } else if (link.use.equals(oldUri)) {
-        Capture o = link.rule.use.match(newUri, link.input);
-        if (o == null) continue;
-        Capture output = link.output.clone();
-        output.putAll(o);
-        URI oldUri2 = link.def;
-        URI newUri2 = link.rule.def.refactor(oldUri2, link.input, output);
-        link.def = newUri2;
-        changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
-        rename(oldUri2, newUri2, changes);
+  public interface RenameHandler {
+    void action(URI oldUri, URI newUri);
+  }
+
+  private List<RenameHandler> handlers = new ArrayList<>();
+
+  public void handleRename(RenameHandler handler) {
+    handlers.add(handler);
+  }
+
+  private void registerHooks() {
+    handleRename((oldUri, newUri) -> {
+      for (Link link : links) {
+        if (link.def.equals(oldUri)) {
+          Capture o = link.rule.def.match(newUri, link.input);
+          if (o == null) continue;
+          Capture output = link.output.clone();
+          output.putAll(o);
+          URI oldUri2 = link.use;
+          URI newUri2 = link.rule.use.refactor(oldUri2, link.input, output);
+          changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
+          link.use = newUri2;
+          propagate(oldUri2, newUri2);
+        } else if (link.use.equals(oldUri)) {
+          Capture o = link.rule.use.match(newUri, link.input);
+          if (o == null) continue;
+          Capture output = link.output.clone();
+          output.putAll(o);
+          URI oldUri2 = link.def;
+          URI newUri2 = link.rule.def.refactor(oldUri2, link.input, output);
+          link.def = newUri2;
+          changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
+          propagate(oldUri2, newUri2);
+        }
       }
+    });
+  }
+
+  public void propagate(URI oldUri, URI newUri) {
+    for (RenameHandler handler : handlers) {
+      handler.action(oldUri, newUri);
     }
   }
 
   public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
-    Map<URI, Set<URI>> changes = new HashMap<>();
-    rename(oldUri, newUri, changes);
+    changes = new HashMap<>();
+    propagate(oldUri, newUri);
 
     List<Pair<URI, URI>> result = new ArrayList<>();
     for (URI source : changes.keySet()) {
