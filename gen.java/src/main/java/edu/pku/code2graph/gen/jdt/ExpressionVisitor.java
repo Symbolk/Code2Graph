@@ -309,7 +309,9 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       node.setRange(computeRange(fragment));
 
       // annotations
+      pushScope(name);
       parseAnnotations(fd.modifiers(), node);
+      popScope();
 
       if (binding != null) {
         usePool.add(Triple.of(node, EdgeType.DATA_TYPE, binding.getType().getQualifiedName()));
@@ -342,6 +344,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     node.setRange(computeRange(md));
 
+    pushScope(name);
+
     // annotations
     parseAnnotations(md.modifiers(), node);
 
@@ -358,38 +362,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
       // create element nodes
       List<SingleVariableDeclaration> paras = md.parameters();
       for (SingleVariableDeclaration p : paras) {
-        if (p.toString().trim().startsWith("@Param")
-            || p.toString().trim().startsWith("@ModelAttribute")) {
-          String identifier = JdtService.getIdentifier(p);
-          String[] split = p.toString().trim().split(" ");
-          identifier = identifier.replace(".", "/").replaceAll("\\(.+?\\)", "");
-          //          String[] idtfSplit = identifier.split("/");
-          //          idtfSplit[idtfSplit.length - 1] = URI.checkInvalidCh(split[0]);
-          //          identifier = String.join("/", idtfSplit);
-          identifier = identifier + '/' + URI.checkInvalidCh(split[0]);
-
-          String para_qname = split[0];
-          String para_name =
-              para_qname.substring(para_qname.indexOf('"') + 1, para_qname.length() - 2);
-
-          URI uri = new URI(false, uriFilePath);
-          uri.addLayer(identifier, Language.JAVA);
-
-          ElementNode pn =
-              new ElementNode(
-                  GraphUtil.nid(),
-                  Language.JAVA,
-                  NodeType.VAR_DECLARATION,
-                  p.toString(),
-                  para_name,
-                  para_qname,
-                  uri);
-
-          graph.addVertex(pn);
-          defPool.put(para_qname, pn);
-          GraphUtil.addNode(pn);
-          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
-        }
         String para_name = p.getName().getFullyQualifiedName();
         String para_qname = para_name;
         IVariableBinding b = p.resolveBinding();
@@ -409,8 +381,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                   layer.put("varType", p.getType().toString());
                 });
 
-        node.setRange(computeRange(p));
+        pn.setRange(computeRange(p));
         graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
+
+        pushScope(para_name);
+        parseAnnotations(p.modifiers(), node);
+        popScope();
 
         ITypeBinding paraBinding = p.getType().resolveBinding();
         if (paraBinding != null) {
@@ -422,15 +398,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     // TODO: add exception types
     if (!md.thrownExceptionTypes().isEmpty()) {}
 
-    // TODO: process body here or else where?
-    if (md.getBody() != null) {
-      if (!md.getBody().statements().isEmpty()) {
-        parseBodyBlock(md.getBody(), md.getName().toString(), qname)
-            .ifPresent(
-                blockNode ->
-                    graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
-      }
-    }
+    popScope();
+
+    parseBodyBlock(md.getBody(), md.getName().toString(), qname)
+        .ifPresent(
+            blockNode ->
+                graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
     return true;
   }
 
@@ -483,13 +456,13 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               annotation.toString(),
               identifier);
       node.setRange(computeRange(annotation));
-      node.setUri(createIdentifier(identifier));
+      node.setUri(createIdentifier("@" + identifier));
       GraphUtil.addNode(node);
 
       graph.addVertex(node);
       graph.addEdge(annotatedNode, node, new Edge(GraphUtil.eid(), EdgeType.ANNOTATION));
 
-      pushScope(identifier);
+      pushScope("@" + identifier);
 
       // check annotation type and possible refs
       // add possible refs into use pool

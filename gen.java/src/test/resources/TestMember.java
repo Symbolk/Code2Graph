@@ -2,7 +2,9 @@ package com.github.test;
 
 import java.io.IOException;
 
+@Param4
 public class TestMember extends A implements B {
+  @Param3
   private A prop1, prop2;
 
   // constructor
@@ -15,7 +17,7 @@ public class TestMember extends A implements B {
     super(val);
   }
 
-  // initiaiizer block
+  // initializer block
   {
     a = new A(5);
     // super field access
@@ -23,8 +25,8 @@ public class TestMember extends A implements B {
   }
 
   // method decl
-  @Param("test")
-  public A fun(A a) throws IOException {
+  @Param1("test")
+  public A fun(@Param2("test2222") A a) throws IOException {
     // instance creation
     A b = new A();
     Integer x = a.getA();
