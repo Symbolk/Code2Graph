@@ -17,6 +17,14 @@ flowgraph:
     - r-queryId-update
   r-paramAnno-delete:
     - r-queryId-delete
+  r-paramAnno-select-no-jdbc:
+    - r-queryId-select
+  r-paramAnno-insert-no-jdbc:
+    - r-queryId-insert
+  r-paramAnno-update-no-jdbc:
+    - r-queryId-update
+  r-paramAnno-delete-no-jdbc:
+    - r-queryId-delete
   r-paramVarname-select:
     - r-queryId-select
   r-paramVarname-insert:
@@ -24,6 +32,14 @@ flowgraph:
   r-paramVarname-update:
     - r-queryId-update
   r-paramVarname-delete:
+    - r-queryId-delete
+  r-paramVarname-select-no-jdbc:
+    - r-queryId-select
+  r-paramVarname-insert-no-jdbc:
+    - r-queryId-insert
+  r-paramVarname-update-no-jdbc:
+    - r-queryId-update
+  r-paramVarname-delete-no-jdbc:
     - r-queryId-delete
   #  r-parameterType:
   #    - $
@@ -35,6 +51,14 @@ flowgraph:
     - $
   r-paramType-identifier-delete:
     - $
+  r-paramType-identifier-select-no-jdbc:
+    - $
+  r-paramType-identifier-insert-no-jdbc:
+    - $
+  r-paramType-identifier-update-no-jdbc:
+    - $
+  r-paramType-identifier-delete-no-jdbc:
+    - $
   #  r-resultType:
   #    - $
   r-resultType-identifier-select:
@@ -44,6 +68,14 @@ flowgraph:
   r-resultType-identifier-update:
     - $
   r-resultType-identifier-delete:
+    - $
+  r-resultType-identifier-select-no-jdbc:
+    - $
+  r-resultType-identifier-insert-no-jdbc:
+    - $
+  r-resultType-identifier-update-no-jdbc:
+    - $
+  r-resultType-identifier-delete-no-jdbc:
     - $
   #  r-include-ref:
   #    - r-parameterType
@@ -138,9 +170,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: "(&mapperInterface)/(&queryId)/@Param"
-      inline:
-        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param\("(name)"\)
+#      inline:
+#        identifier: (name)
 
   r-paramAnno-insert:
     use:
@@ -154,9 +186,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: "(&mapperInterface)/(&queryId)/@Param"
-      inline:
-        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
+#      inline:
+#        identifier: (name)
 
   r-paramAnno-update:
     use:
@@ -170,9 +202,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: "(&mapperInterface)/(&queryId)/@Param"
-      inline:
-        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
+#      inline:
+#        identifier: (name)
 
   r-paramAnno-delete:
     use:
@@ -186,9 +218,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: "(&mapperInterface)/(&queryId)/@Param"
-      inline:
-        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
+#      inline:
+#        identifier: (name)
 
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
   r-paramVarname-select:
@@ -336,7 +368,7 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: (name)
+        identifier: "#{(name),*}"
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java
@@ -350,7 +382,7 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: (name)
+        identifier: "#{(name),*}"
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java
@@ -364,7 +396,7 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: (name)
+        identifier: "#{(name),*}"
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java
@@ -378,7 +410,241 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: (name)
+        identifier: "#{(name),*}"
+    def:
+      lang: JAVA
+      file: (resTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  # <select> select * from xx=#{name,jdbcType=yy} </select> <-> @Param("name")
+  r-paramAnno-select-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'select'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param\("(name)"\)
+
+  r-paramAnno-insert-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'insert'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
+#      inline:
+#        identifier: (name)
+
+  r-paramAnno-update-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'update'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
+#      inline:
+#        identifier: (name)
+
+  r-paramAnno-delete-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'delete'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
+#      inline:
+#        identifier: (name)
+
+  # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
+  r-paramVarname-select-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "select"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-insert-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "insert"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-update-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "update"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: ""#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-delete-no-jdbc:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "delete"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  # <select parameterType="a.b.c"> #{name,jdbcType=xx} </select> <-> a/b/c.java/class/name
+  r-paramType-identifier-select-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: select
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-insert-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: insert
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-update-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: update
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-delete-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: delete
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  # <select resultType="a.b.c"> #{name,jdbcType=xx} </select> <-> a/b/c.java/class/name
+  r-resultType-identifier-select-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: select
+      queryId: (queryId)
+      resultType: (resTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (resTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-resultType-identifier-insert-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: insert
+      queryId: (queryId)
+      resultType: (resTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (resTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-resultType-identifier-update-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: update
+      queryId: (queryId)
+      resultType: (resTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (resTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-resultType-identifier-delete-no-jdbc:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: delete
+      queryId: (queryId)
+      resultType: (resTypePackage:dot).(class)
+      inline:
+        identifier: "#{(name)}"
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java

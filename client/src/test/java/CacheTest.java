@@ -48,7 +48,7 @@ public class CacheTest {
     Linker linker = new Linker(GraphUtil.getUriTree(), def, use);
     linker.link();
     System.out.println(linker.links);
-    System.out.println(linker.captures);
+    System.out.println(linker.context);
   }
 
   @Test
@@ -65,7 +65,7 @@ public class CacheTest {
     setUp("springmvc", "sagan");
 
     URITree tree = new URITree();
-    loadCache(cachePath, tree);
+    loadCache(cachePath, tree, null, null);
 
     URIPattern def = new URIPattern(false, "*.java");
     def.addLayer("(&functionName)/(&modelName).addAttribute", Language.JAVA);
@@ -78,7 +78,7 @@ public class CacheTest {
     Linker linker = new Linker(tree, def, use);
     linker.link();
     System.out.println(linker.links);
-    System.out.println(linker.captures);
+    System.out.println(linker.context);
   }
 
   @Test

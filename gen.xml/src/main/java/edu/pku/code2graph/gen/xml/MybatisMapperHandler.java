@@ -240,6 +240,7 @@ public class MybatisMapperHandler extends AbstractHandler {
               }
 
               currentEle.addIdentifer(node.getUri());
+              GraphUtil.addNode(node);
             }
           }
 
