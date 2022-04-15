@@ -202,9 +202,9 @@ public class RenameEvaluation {
     iptReader.readHeaders();
     String[] iptHeaders = iptReader.getHeaders();
     if (!isInput && iptHeaders.length != 4) {
-      logger.error("Ground truth header num expected 3, but got " + iptHeaders.length);
+      logger.error("Ground truth header num expected 4, but got " + iptHeaders.length);
       return null;
-    } else if (isInput && iptHeaders.length != 5) {
+    } else if (isInput && iptHeaders.length != 4) {
       logger.error("Input header num expected 4, but got " + iptHeaders.length);
       return null;
     }
@@ -213,8 +213,6 @@ public class RenameEvaluation {
         uriHeader = iptHeaders[1],
         uriIdHeader = iptHeaders[2],
         newURIHeader = iptHeaders[3];
-    String langHeader = null;
-    if (isInput) langHeader = iptHeaders[4];
     int caseId = 0;
     List<List<Pair<Identifier, String>>> res = new ArrayList<>();
     while (iptReader.readRecord()) {
@@ -223,13 +221,9 @@ public class RenameEvaluation {
       }
       caseId = Integer.parseInt(iptReader.get(caseIdHeader));
 
-      String language = null;
-      if (langHeader != null) {
-        language = iptReader.get(langHeader);
-      }
       Identifier newId =
           new Identifier(
-              iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)), language);
+              iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)));
       res.get(caseId - 1).add(new MutablePair<>(newId, iptReader.get(newURIHeader)));
     }
 

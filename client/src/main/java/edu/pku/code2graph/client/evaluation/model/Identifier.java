@@ -13,23 +13,37 @@ import java.util.Map;
 public class Identifier {
   public static Map<String, Integer> uriCnt = new HashMap<>();
   private final String uri;
+  private URI uriObj;
   private final Integer id;
   private final String lang;
 
   // optional
   private Node node;
 
-  public Identifier(String uri, Integer id, String lang) {
+  public Identifier(String uri, Integer id) {
     this.uri = uri;
+    this.uriObj = new URI(uri);
     this.id = id;
-    this.lang = lang;
+    String lang = uriObj.getLayer(uriObj.getLayerCount() - 1).get("language");
+    if (lang.equals("FILE")) {
+      String[] split = uriObj.getLayer(uriObj.getLayerCount() - 1).get("identifier").split("\\.");
+      lang = split[split.length - 1].toUpperCase();
+    }
+    this.lang =
+        lang.equals("ANY") ? uriObj.getLayer(uriObj.getLayerCount() - 2).get("language") : lang;
   }
 
   public Identifier(String uri, Integer id, Node node) {
     this.uri = uri;
+    this.uriObj = new URI(uri);
     this.id = id;
     this.node = node;
-    this.lang = node.getLanguage().toString();
+    String lang = uriObj.getLayer(uriObj.getLayerCount() - 1).get("language");
+    if (lang.equals("FILE")) {
+      String[] split = uriObj.getLayer(uriObj.getLayerCount() - 1).get("identifier").split("\\.");
+      lang = split[split.length - 1].toUpperCase();
+    }
+    this.lang = lang.equals("ANY") ? uriObj.getLayer(uriObj.getLayerCount() - 2).get("language") : lang;
   }
 
   public String getUri() {
