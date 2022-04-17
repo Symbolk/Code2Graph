@@ -15,6 +15,11 @@ public final class Link extends LinkBase<URI> {
   }
 
   @Override
+  public Link clone() {
+    return new Link(def, use, rule, input, output);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
