@@ -33,7 +33,7 @@ public class IdentifierPattern extends AttributePattern {
             .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
             .replaceAll("/\\*\\*", "(?:/.+)?")
-            .replaceAll("\\*", "\\\\w+")
+            .replaceAll("\\*", "[^/]+")
             .replaceAll("\\{", "\\\\{");
 
     Matcher matcher = VARIABLE.matcher(source);
