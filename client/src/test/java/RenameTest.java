@@ -60,4 +60,30 @@ public class RenameTest {
     assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
     System.out.println(res.getRenameInfoList());
   }
+
+  @Test
+  public void testRename1() {
+    repoName = "GSYVideoPlayer";
+    configPath =
+        System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
+    repoPath = System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
+    cachePath = System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
+
+    Range range =
+        new Range(
+            "51:28~51:52",
+            "def://gsyVideoPlayer-java/src/main/res/layout/video_progress_dialog.xml" +
+                    "[language=FILE]//RelativeLayout/RelativeLayout/LinearLayout/ProgressBar/android:id[language=XML]" +
+                    "//@+id\\\\/duration_progressbar[language=ANY]");
+    RenameResult res =
+        calcRenameResult(
+            repoPath,
+            cachePath,
+            "@+id\\/duration_progressbar",
+            range,
+            "@+id\\/duration_progress_bar",
+            configPath);
+    assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
+    System.out.println(res.getRenameInfoList());
+  }
 }
