@@ -112,9 +112,14 @@ public class Rename {
         Range range = node.getRange();
         String symbol = getSymbolOfURI(newURI);
         if (symbol != null) {
+          String language = newURI.getLayer(newURI.getLayerCount() - 1).get("language");
           RenameInfo renameInfo =
               new RenameInfo(
-                  range, symbol, newURI.getLayer(newURI.getLayerCount() - 1).get("language"));
+                  range,
+                  symbol,
+                  language.equals("ANY")
+                      ? newURI.getLayer(newURI.getLayerCount() - 2).get("language")
+                      : language);
           renameInfos.add(renameInfo);
         }
       }
