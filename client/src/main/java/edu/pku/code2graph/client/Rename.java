@@ -35,10 +35,6 @@ public class Rename {
   private static String projectPath = null;
   private static String cachePath = null;
 
-  static {
-    initLogger();
-  }
-
   public static void initCache(String projectDir, String cacheDir)
       throws IOException, ParserConfigurationException, SAXException {
     projectPath = projectDir;
