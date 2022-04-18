@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Project {
   private final static Logger logger = LoggerFactory.getLogger(Project.class);
@@ -75,7 +76,7 @@ public class Project {
     void action(URI oldUri, URI newUri);
   }
 
-  private List<RenameHandler> handlers = new ArrayList<>();
+  private final List<RenameHandler> handlers = new ArrayList<>();
 
   public void handleRename(RenameHandler handler) {
     handlers.add(handler);
@@ -110,6 +111,7 @@ public class Project {
   }
 
   public void propagate(URI oldUri, URI newUri) {
+    if (oldUri.equals(newUri)) return;
     for (RenameHandler handler : handlers) {
       handler.action(oldUri, newUri);
     }
@@ -117,7 +119,9 @@ public class Project {
 
   public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
     changes = new HashMap<>();
+    List<Link> links = this.links.stream().map(Link::clone).collect(Collectors.toList());
     propagate(oldUri, newUri);
+    this.links = links;
 
     List<Pair<URI, URI>> result = new ArrayList<>();
     for (URI source : changes.keySet()) {
