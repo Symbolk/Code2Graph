@@ -65,6 +65,25 @@ public class SpringHandler extends AbstractHandler {
           }
         });
 
+    String eleContent = ele.ownText();
+    if (eleContent.contains("${")) {
+      List<DialectNode> nodesInText = dialectParser.parseTreeToList(eleContent);
+      if (!nodesInText.isEmpty()) {
+        for (DialectNode dn : nodesInText) {
+          String parentIdtf = getIdentifier("");
+          ElementNode eleContentNode =
+              (ElementNode)
+                  DialectNodeToGnode(
+                      dn,
+                      null,
+                      parentIdtf.length() > 0
+                          ? parentIdtf.substring(0, parentIdtf.length() - 1)
+                          : "");
+          graph.addEdge(en, eleContentNode, new Edge(GraphUtil.eid(), NodeType.INLINE));
+        }
+      }
+    }
+
     Elements children = ele.children();
     children.forEach(this::traverseChidren);
     stack.pop();
@@ -75,7 +94,7 @@ public class SpringHandler extends AbstractHandler {
     String curIdtf =
         parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + URI.checkInvalidCh(current.getName());
     URI uri = new URI(true, uriFilePath);
-    uri.addLayer(getIdentifier(attrName), Language.HTML);
+    if (attrName != null) uri.addLayer(getIdentifier(attrName), Language.HTML);
     uri.addLayer(curIdtf, Language.ANY);
     ElementNode en =
         new ElementNode(
