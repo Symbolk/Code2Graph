@@ -205,7 +205,7 @@ public class AndroidHandler extends AbstractHandler {
           defPool.put(value, en);
         } else {
           // references
-          if (value.startsWith("@") && !value.startsWith("@android:")) {
+          if (value.startsWith("@")) {
             URI refURI = new URI(false, uriFilePath);
             refURI.addLayer(idtf + "/" + URI.checkInvalidCh(key), Language.XML);
             refURI.addLayer(URI.checkInvalidCh(value), Language.ANY);
