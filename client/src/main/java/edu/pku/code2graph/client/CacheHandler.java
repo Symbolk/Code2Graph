@@ -47,9 +47,6 @@ public class CacheHandler {
     GraphUtil.clearGraph();
 
     switchFramework(framework, projectDir);
-    if (framework.equals("mybatis")) {
-      MybatisPreprocesser.preprocessMapperXmlFile(projectDir);
-    }
 
     FileUtil.setRootPath(projectDir);
     Map<String, List<String>> ext2FilePaths =
