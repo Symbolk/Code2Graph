@@ -19,7 +19,9 @@ public class MybatisMapperHandler extends AbstractHandler {
   private Map<String, Map<String, MybatisElement>> sqlMap = new HashMap<>();
   private Map<String, Map<String, MybatisElement>> queryMap = new HashMap<>();
   private Map<String, String> xmlToJavaMapper = new HashMap<>();
-  private List<String> linkToken = Arrays.asList("where", "and", "or");
+  private List<String> linkToken = Arrays.asList("where", "set", "and", "or");
+  private Stack<String> suffixToken = new Stack<>();
+  private Stack<Boolean> shoulTrim = new Stack<>();
 
   private JsqlGenerator sqlGenerator = new JsqlGenerator();
   private String currentId;
@@ -64,6 +66,21 @@ public class MybatisMapperHandler extends AbstractHandler {
       throws SAXException {
     String currentParam = null;
     String currentRes = null;
+    String prefix = "";
+    String suffix = "";
+    boolean oveerideSuffix = false;
+    if (attributes != null) {
+      prefix = attributes.getValue("prefix");
+      suffix = attributes.getValue("suffix");
+      oveerideSuffix = attributes.getValue("suffixOverrides") != null;
+      prefix = prefix == null ? "" : prefix;
+      suffix = suffix == null ? "" : suffix;
+      suffixToken.push(suffix);
+      shoulTrim.push(oveerideSuffix);
+    }
+    if (prefix.length() > 0)
+      currentEle.setQuery(
+          currentEle.getQuery() + (currentEle.getQuery().length() == 0 ? "" : "\n") + prefix);
     switch (qName) {
       case "mapper":
         if (attributes != null) {
@@ -132,9 +149,13 @@ public class MybatisMapperHandler extends AbstractHandler {
         break;
       case "where":
         if (currentId != null && currentEle != null) {
-          currentEle.setQuery(currentEle.getQuery() + "where");
+          currentEle.setQuery(currentEle.getQuery() + "\nwhere");
         }
         break;
+      case "set":
+        if (currentId != null && currentEle != null) {
+          currentEle.setQuery(currentEle.getQuery() + "\nset");
+        }
       case "include":
         String refid = null;
         if (attributes != null) {
@@ -168,7 +189,8 @@ public class MybatisMapperHandler extends AbstractHandler {
       String attrName = attributes.getQName(i);
       String attrVal = attributes.getValue(i);
       URI attrUri = new URI(false, uriFilePath);
-      attrUri.addLayer(qName + "/" + attrName, Language.XML);
+      attrUri.addLayer(
+          qName.equals("mapper") ? "" : "mapper/" + qName + "/" + attrName, Language.XML);
       attrUri.addLayer(URI.checkInvalidCh(attrVal), Language.ANY);
 
       ElementNode attrEle =
@@ -189,6 +211,10 @@ public class MybatisMapperHandler extends AbstractHandler {
 
   @Override
   public void endElement(String uri, String localName, String qName) {
+    String suffix = suffixToken.pop();
+    boolean toTrim = shoulTrim.pop();
+    if (toTrim) currentEle.setQuery(trimQuery(currentEle.getQuery()));
+    if (suffix.length() > 0) currentEle.setQuery(currentEle.getQuery() + " " + suffix);
     switch (qName) {
       case "sql":
         if (currentId != null && currentEle != null)
@@ -203,6 +229,7 @@ public class MybatisMapperHandler extends AbstractHandler {
         if (currentId != null && currentEle != null) {
           queryMap.get(uriFilePath).put(currentId, currentEle);
           String query = currentEle.getQuery();
+          query = trimQuery(query);
           String idtf = "mapper/" + qName;
           Language lang = Language.XML;
           Graph<Node, Edge> graph =
@@ -264,6 +291,25 @@ public class MybatisMapperHandler extends AbstractHandler {
     }
   }
 
+  private String trimQuery(String query) {
+    while (query.endsWith(",")) {
+      query = query.substring(0, query.length() - 1);
+    }
+    String[] queryTokens = query.split("\\s+");
+    String lastToken = queryTokens[queryTokens.length - 1];
+    if (linkToken.contains(lastToken.toLowerCase())) {
+      query = replaceLast(query, lastToken, "");
+    }
+    return query;
+  }
+
+  public static String replaceLast(String text, String strToReplace, String replaceWithThis) {
+    int split = text.lastIndexOf(strToReplace);
+    return text.substring(0, split)
+        + replaceWithThis
+        + text.substring(split + strToReplace.length());
+  }
+
   @Override
   public void characters(char[] ch, int start, int length) throws SAXException {
     if (currentId != null && currentEle != null) {
@@ -271,14 +317,20 @@ public class MybatisMapperHandler extends AbstractHandler {
       //    System.out.print(tempString);
       if (content.trim().length() != 0) {
         String currentQuery = currentEle.getQuery();
-        String[] queryTokens = currentQuery.split("\\s+");
+        String[] queryTokens = currentQuery.trim().split("\\s+");
         String lastToken = queryTokens[queryTokens.length - 1];
         String[] contentTokens = content.trim().split("\\s+");
         String firstToken = contentTokens[0];
 
-        if (linkToken.contains(lastToken.toLowerCase())
+        if ((linkToken.contains(lastToken.toLowerCase()) || lastToken.endsWith("("))
             && linkToken.contains(firstToken.toLowerCase())) {
           content = content.replaceFirst(firstToken, "");
+        } else if (linkToken.contains(firstToken.toLowerCase()) && lastToken.endsWith(",")) {
+          String oldLastToken = lastToken;
+          while (lastToken.endsWith(","))
+            lastToken = lastToken.substring(0, lastToken.length() - 1);
+          currentQuery = replaceLast(currentQuery, oldLastToken, lastToken);
+          currentEle.setQuery(currentQuery);
         }
 
         currentEle.setQuery(
