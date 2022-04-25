@@ -1,7 +1,5 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.LinkBase;
-
 import java.util.*;
 
 public class Rule extends LinkBase<URIPattern> {
@@ -10,8 +8,9 @@ public class Rule extends LinkBase<URIPattern> {
   static private int index = 0;
 
   public Rule(final URIPattern def, final URIPattern use) {
-    super(def, use, "#" + ++index, false);
+    super(def, use, "#" + ++index);
     this.deps = new ArrayList<>();
+    this.deps.add("$");
   }
 
   public Rule(final Map<String, Object> rule, final List<String> deps, final String name) {

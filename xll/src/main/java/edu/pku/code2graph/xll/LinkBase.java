@@ -1,10 +1,16 @@
-package edu.pku.code2graph.model;
+package edu.pku.code2graph.xll;
 
-public class LinkBase<T extends URIBase> {
-  public final T def;
-  public final T use;
+import edu.pku.code2graph.model.URIBase;
+
+public class LinkBase<T extends URIBase<?>> {
+  public T def;
+  public T use;
   public final String name;
   public final boolean hidden;
+
+  public LinkBase(final T def, final T use, final String name) {
+    this(def, use, name, false);
+  }
 
   public LinkBase(final T def, final T use, final String name, final boolean hidden) {
     this.def = def;

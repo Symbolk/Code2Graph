@@ -1,5 +1,5 @@
 import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.xll.Link;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
 import edu.pku.code2graph.xll.URIPattern;
@@ -12,8 +12,8 @@ public class LinkerTest {
     for (Link link : linker.links) {
       System.out.println(link);
     }
-    System.out.println("captures: " + linker.captures.size());
-    for (Capture capture : linker.captures) {
+    System.out.println("captures: " + linker.context.size());
+    for (Capture capture : linker.context) {
       System.out.println(capture);
     }
     assert linker.links.size() == count;
@@ -118,7 +118,7 @@ public class LinkerTest {
     use.addLayer("R.id.(name)", Language.JAVA);
 
     Linker linker2 = new Linker(tree, def, use);
-    for (Capture variables : linker1.captures) {
+    for (Capture variables : linker1.context) {
       linker2.link(variables);
     }
     check(linker2, 4);
@@ -165,7 +165,7 @@ public class LinkerTest {
     use.addLayer("${(name)}");
 
     Linker linker2 = new Linker(tree, def, use);
-    for (Capture variables : linker1.captures) {
+    for (Capture variables : linker1.context) {
       linker2.link(variables);
     }
     check(linker2, 1);

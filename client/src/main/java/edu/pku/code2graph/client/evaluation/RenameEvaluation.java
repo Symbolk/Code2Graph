@@ -3,7 +3,6 @@ package edu.pku.code2graph.client.evaluation;
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import edu.pku.code2graph.client.Code2Graph;
-import edu.pku.code2graph.client.MybatisPreprocesser;
 import edu.pku.code2graph.client.evaluation.model.Identifier;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
@@ -11,10 +10,13 @@ import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.*;
-import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.util.GraphUtil;
+import edu.pku.code2graph.xll.Link;
+import edu.pku.code2graph.xll.Project;
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
-import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -26,6 +28,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static edu.pku.code2graph.client.CacheHandler.initCache;
+import static edu.pku.code2graph.client.CacheHandler.loadCache;
 
 class EvaluationResult {
   double precision;
@@ -56,17 +62,20 @@ public class RenameEvaluation {
           + "/client/src/main/resources/"
           + framework
           + "/rename/groundtruth";
+  private static String cacheDir =
+      System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
   private static String gtPath = gtDir + "/" + repoName + ".csv";
   private static String iptPath = gtPath.replace("groundtruth", "input");
   private static String otPath = gtPath.replace("groundtruth", "output");
   private static String metricResPath = gtPath.replace("groundtruth", "metric_stats");
 
-  private static final String[] csvHeaders = {"caseID", "uri", "uriID"};
+  private static final String[] csvHeaders = {"caseID", "uri", "uriID", "newURI"};
 
   private static Code2Graph c2g;
   private static GitService gitService;
 
   private static List<Link> xllLinks = new ArrayList<>();
+  private static Project project = null;
 
   private static List<EvaluationResult> evaResults = new ArrayList<>();
 
@@ -97,7 +106,7 @@ public class RenameEvaluation {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+          //          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
@@ -105,11 +114,19 @@ public class RenameEvaluation {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
-      Graph<Node, Edge> graph = c2g.generateGraph();
-      xllLinks = c2g.getXllLinks();
+      if (loadCache(cacheDir, GraphUtil.getUriTree(), null, null) == null) {
+        initCache(framework, repoPath, cacheDir);
+      }
 
-      List<List<Identifier>> renamedIdList = getRenamed();
-      List<List<Identifier>> gtIdList = getGroundtruth();
+      project = Project.load(configPath);
+      project.setTree(GraphUtil.getUriTree());
+
+      //      c2g.generateXLL(GraphUtil.getGraph());
+      xllLinks = project.link();
+      //      xllLinks = c2g.getXllLinks();
+
+      List<List<Pair<Identifier, String>>> renamedIdList = getRenamed();
+      List<List<Pair<Identifier, String>>> gtIdList = getGroundtruth();
       allIdsInRepo = Identifier.getAllIdentifiers();
 
       if (renamedIdList == null) return;
@@ -124,15 +141,16 @@ public class RenameEvaluation {
       }
 
       int idx = 0;
-      List<List<Identifier>> allCases = new ArrayList<>();
-      for (List<Identifier> renamedIds : renamedIdList) {
-        iptLangThisCase = renamedIds.get(0).getLang();
-        Set<String> renamedUris = new HashSet<>();
-        for (Identifier renamedId : renamedIds) renamedUris.add(renamedId.getUri());
-        List<Link> links = new ArrayList<>(xllLinks);
-        Set<URI> uriToRename = extractURIToRename(links, renamedUris);
+      List<List<Pair<Identifier, String>>> allCases = new ArrayList<>();
+      for (List<Pair<Identifier, String>> renamedIdsWithNewURI : renamedIdList) {
+        iptLangThisCase = renamedIdsWithNewURI.get(0).getLeft().getLang();
+        Set<Pair<String, String>> renamedUris = new HashSet<>();
+        for (Pair<Identifier, String> renamedId : renamedIdsWithNewURI)
+          renamedUris.add(new MutablePair<>(renamedId.getLeft().getUri(), renamedId.getRight()));
+        //        List<Link> links = new ArrayList<>(xllLinks);
+        Set<Pair<URI, URI>> uriToRename = extractURIToRename(renamedUris);
 
-        List<Identifier> oneCase = testRename(uriToRename, gtIdList.get(idx++));
+        List<Pair<Identifier, String>> oneCase = testRename(uriToRename, gtIdList.get(idx++));
         allCases.add(oneCase);
       }
 
@@ -173,49 +191,47 @@ public class RenameEvaluation {
     }
   }
 
-  private static List<List<Identifier>> getIdsFromCsv(String path) throws IOException {
+  private static List<List<Pair<Identifier, String>>> getIdsFromCsv(String path)
+      throws IOException {
     return getIdsFromCsv(path, false);
   }
 
-  private static List<List<Identifier>> getIdsFromCsv(String path, boolean isInput)
+  private static List<List<Pair<Identifier, String>>> getIdsFromCsv(String path, boolean isInput)
       throws IOException {
     CsvReader iptReader = new CsvReader(path);
     iptReader.readHeaders();
     String[] iptHeaders = iptReader.getHeaders();
-    if (!isInput && iptHeaders.length != 3) {
-      logger.error("Ground truth header num expected 3, but got " + iptHeaders.length);
+    if (!isInput && iptHeaders.length != 4) {
+      logger.error("Ground truth header num expected 4, but got " + iptHeaders.length);
       return null;
     } else if (isInput && iptHeaders.length != 4) {
       logger.error("Input header num expected 4, but got " + iptHeaders.length);
       return null;
     }
 
-    String caseIdHeader = iptHeaders[0], uriHeader = iptHeaders[1], uriIdHeader = iptHeaders[2];
-    String langHeader = null;
-    if (isInput) langHeader = iptHeaders[3];
+    String caseIdHeader = iptHeaders[0],
+        uriHeader = iptHeaders[1],
+        uriIdHeader = iptHeaders[2],
+        newURIHeader = iptHeaders[3];
     int caseId = 0;
-    List<List<Identifier>> res = new ArrayList<>();
+    List<List<Pair<Identifier, String>>> res = new ArrayList<>();
     while (iptReader.readRecord()) {
       if (Integer.parseInt(iptReader.get(caseIdHeader)) != caseId) {
         res.add(new ArrayList<>());
       }
       caseId = Integer.parseInt(iptReader.get(caseIdHeader));
 
-      String language = null;
-      if (langHeader != null) {
-        language = iptReader.get(langHeader);
-      }
       Identifier newId =
           new Identifier(
-              iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)), language);
-      res.get(caseId - 1).add(newId);
+              iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)));
+      res.get(caseId - 1).add(new MutablePair<>(newId, iptReader.get(newURIHeader)));
     }
 
     return res;
   }
 
   // collect renamed identifiers
-  private static List<List<Identifier>> getRenamed() throws IOException {
+  private static List<List<Pair<Identifier, String>>> getRenamed() throws IOException {
     if (!Files.exists(Paths.get(iptPath))) {
       logger.error("Input file: {} does not exist!", iptPath);
       return null;
@@ -225,7 +241,7 @@ public class RenameEvaluation {
   }
 
   // collect groundtruth identifiers
-  private static List<List<Identifier>> getGroundtruth() throws IOException {
+  private static List<List<Pair<Identifier, String>>> getGroundtruth() throws IOException {
     if (!Files.exists(Paths.get(gtPath))) {
       logger.error("Ground truth file: {} does not exist!", gtPath);
       return null;
@@ -235,41 +251,29 @@ public class RenameEvaluation {
   }
 
   // extract uri of identifiers to rename
-  private static Set<URI> extractURIToRename(List<Link> links, Set<String> ids) {
-    Set<URI> res = new HashSet<>();
-    Set<String> newIds = new HashSet<>();
-    List<Link> toRemove = new ArrayList<>();
-    for (Link link : links) {
-      boolean defInIds = ids.contains(link.def.toString()),
-          useInIds = ids.contains(link.use.toString());
-      if (defInIds && !useInIds) {
-        res.add(link.use);
-        newIds.add(link.use.toString());
-        toRemove.add(link);
-      } else if (useInIds && !defInIds) {
-        res.add(link.def);
-        newIds.add(link.def.toString());
-        toRemove.add(link);
-      }
-    }
-
-    links.removeAll(toRemove);
-    if (!newIds.isEmpty()) {
-      Set<URI> next = extractURIToRename(links, newIds);
-      res.addAll(next);
+  private static Set<Pair<URI, URI>> extractURIToRename(Set<Pair<String, String>> oldAndNewIds) {
+    Set<Pair<URI, URI>> res = new HashSet<>();
+    for (Pair<String, String> idPair : oldAndNewIds) {
+      URI oldURI = new URI(idPair.getLeft());
+      URI newURI = new URI(idPair.getRight());
+      List<Pair<URI, URI>> toRename = project.rename(oldURI, newURI);
+      res.addAll(toRename);
     }
     return res;
   }
 
   // compare results with gt and return identifiers
-  private static List<Identifier> testRename(Set<URI> uriToRename, List<Identifier> gt) {
-    Set<String> uriStrs = new HashSet<>();
-    uriToRename.forEach((uri) -> uriStrs.add(uri.toString()));
+  private static List<Pair<Identifier, String>> testRename(
+      Set<Pair<URI, URI>> uriToRename, List<Pair<Identifier, String>> gt) {
+    Set<Pair<String, String>> uriStrs = new HashSet<>();
+    uriToRename.forEach(
+        (pair) ->
+            uriStrs.add(new MutablePair<>(pair.getLeft().toString(), pair.getRight().toString())));
 
-    List<Identifier> idToRename = getIdentifiersToRename(uriStrs, allIdsInRepo);
+    List<Pair<Identifier, String>> idToRename = getIdentifiersToRename(uriStrs, allIdsInRepo);
 
-    Set<Identifier> otSet = new HashSet<>(idToRename);
-    Set<Identifier> gtSet = new HashSet<>(gt);
+    Set<Pair<Identifier, String>> otSet = new HashSet<>(idToRename);
+    Set<Pair<Identifier, String>> gtSet = new HashSet<>(gt);
 
     int intersectionNum = MetricUtil.intersectSize(otSet, gtSet);
     // compute precision/recall
@@ -285,22 +289,26 @@ public class RenameEvaluation {
   }
 
   // get identifiers to rename from specific uris
-  private static List<Identifier> getIdentifiersToRename(
-      Set<String> uriStrsToRename, List<Identifier> allIds) {
-    List<Identifier> res = new ArrayList<>();
+  private static List<Pair<Identifier, String>> getIdentifiersToRename(
+      Set<Pair<String, String>> uriStrsToRename, List<Identifier> allIds) {
+    List<Pair<Identifier, String>> res = new ArrayList<>();
 
     for (Identifier id : allIds) {
       if (id.getLang().equals(iptLangThisCase)) continue;
       String uriStr = id.getUri();
-      if (uriStrsToRename.contains(uriStr)) {
-        res.add(id);
+      List<Pair<String, String>> filteredURIs =
+          uriStrsToRename.stream()
+              .filter((pair) -> pair.getLeft().equals(uriStr))
+              .collect(Collectors.toList());
+      for (Pair<String, String> filteredURI : filteredURIs) {
+        res.add(new MutablePair<>(id, filteredURI.getRight()));
       }
     }
 
     return res;
   }
 
-  private static void exportToRename(List<List<Identifier>> casesOt, String filePath)
+  private static void exportToRename(List<List<Pair<Identifier, String>>> casesOt, String filePath)
       throws IOException {
     File outFile = new File(filePath);
     if (!outFile.exists()) {
@@ -312,10 +320,12 @@ public class RenameEvaluation {
     writer.writeRecord(csvHeaders);
 
     int idx = 0;
-    for (List<Identifier> oneCase : casesOt) {
+    for (List<Pair<Identifier, String>> oneCase : casesOt) {
       idx++;
-      for (Identifier id : oneCase) {
-        String[] record = {String.valueOf(idx), id.getUri(), id.getId().toString()};
+      for (Pair<Identifier, String> id : oneCase) {
+        String[] record = {
+          String.valueOf(idx), id.getLeft().getUri(), id.getLeft().getId().toString(), id.getRight()
+        };
         writer.writeRecord(record);
       }
     }

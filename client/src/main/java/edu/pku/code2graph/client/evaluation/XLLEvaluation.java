@@ -3,23 +3,21 @@ package edu.pku.code2graph.client.evaluation;
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import edu.pku.code2graph.client.Code2Graph;
-import edu.pku.code2graph.client.MybatisPreprocesser;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
-import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.GraphUtil;
-import edu.pku.code2graph.model.Link;
+import edu.pku.code2graph.xll.Link;
+import edu.pku.code2graph.xll.LinkBase;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
-import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -93,7 +91,7 @@ public class XLLEvaluation {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
-      if (loadCache(cacheDir, GraphUtil.getUriTree()) == null) {
+      if (loadCache(cacheDir, GraphUtil.getUriTree(), null, null) == null) {
         initCache(framework, repoPath, cacheDir);
       }
       c2g.generateXLL(GraphUtil.getGraph());
@@ -244,9 +242,12 @@ public class XLLEvaluation {
       logger.error("Output header num expected 3, but " + otHeaders.length);
       return;
     }
-    Set<Link> links = new HashSet<>();
+    Set<LinkBase<URI>> links = new HashSet<>();
     while (otReader.readRecord()) {
-      links.add(new Link(new URI(otReader.get(0)), new URI(otReader.get(1)), otReader.get(2), false));
+      URI def = new URI(otReader.get(0));
+      URI use = new URI(otReader.get(1));
+      String name = otReader.get(2);
+      links.add(new LinkBase<>(def, use, name));
     }
     otReader.close();
 

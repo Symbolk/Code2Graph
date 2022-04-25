@@ -60,6 +60,10 @@ public class Range implements Serializable {
     return endColumn;
   }
 
+  public String getFileName() {
+    return fileName;
+  }
+
   public void setEndColumn(int endColumn) {
     this.endColumn = endColumn;
   }
@@ -76,7 +80,23 @@ public class Range implements Serializable {
     if (range == null) {
       return false;
     }
+    if (this.fileName != null && range.fileName != null && !this.fileName.equals(range.fileName)) {
+      return false;
+    }
     return this.endLine >= range.getStartLine() && range.getEndLine() >= this.startLine;
+  }
+
+  public boolean coversInSameLine(Range range) {
+    if (range == null) {
+      return false;
+    }
+    if (this.fileName != null && range.fileName != null && !this.fileName.equals(range.fileName)) {
+      return false;
+    }
+    return this.endLine == range.getEndLine()
+        && this.startLine == range.startLine
+        && this.endColumn >= range.endColumn
+        && this.startColumn <= range.startColumn;
   }
 
   public boolean isValid() {

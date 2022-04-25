@@ -3,18 +3,17 @@ package edu.pku.code2graph.xll;
 import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Scanner {
   /**
    * uri pattern cache
    */
-  private final Map<Capture, Result> cache = new HashMap<>();
+  private final Map<Capture, Map<Capture, Map<URI, Capture>>> cache = new HashMap<>();
 
-  private Result results;
+  private Map<Capture, Map<URI, Capture>> result;
   private Capture variables;
 
   public final URIPattern pattern;
@@ -25,18 +24,15 @@ public class Scanner {
     this.linker = linker;
   }
 
-  public static class Result extends HashMap<Capture, Pair<List<URI>, Set<Capture>>> {}
-
   public void scan(URITree tree, int index, Capture current) {
     if (pattern.getLayerCount() == index) {
       if (tree.uri != null && !linker.visited.contains(tree.uri)) {
         Capture key = current
             .project(linker.rule.def.symbols)
             .project(linker.rule.use.symbols);
-        Pair<List<URI>, Set<Capture>> pair = results
-            .computeIfAbsent(key, k -> new ImmutablePair<>(new ArrayList<>(), new HashSet<>()));
-        pair.getLeft().add(tree.uri);
-        pair.getRight().add(current);
+        result
+            .computeIfAbsent(key, k -> new HashMap<>())
+            .put(tree.uri, current);
       }
       return;
     }
@@ -49,16 +45,16 @@ public class Scanner {
     }
   }
 
-  public Result scan(Capture variables) {
+  public Map<Capture, Map<URI, Capture>> scan(Capture variables) {
     // check cache
     this.variables = variables = variables.project(pattern.anchors);
     if (cache.containsKey(variables)) {
       return cache.get(variables);
     }
 
-    results = new Result();
+    result = new HashMap<>();
     scan(linker.tree, 0, new Capture());
-    cache.put(variables, results);
-    return results;
+    cache.put(variables, result);
+    return result;
   }
 }
