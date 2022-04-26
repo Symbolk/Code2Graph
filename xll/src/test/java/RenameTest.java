@@ -31,15 +31,37 @@ public class RenameTest {
     project.addRule(new Rule(def, use));
 
     List<Pair<URI, URI>> renames;
-//    project.link();
-//    renames = project.rename(uri1, new URI("def://main/res/layout/activity_main.xml[language=FILE]"
-//        + "//RelativeLayout/Button/android:id[language=XML]"
-//        + "//@+id\\/button_logout[language=ANY]"));
-//    System.out.println(renames);
 
     project.link();
     renames = project.rename(uri2, new URI("use://main/java/com/example/demo/MainActivity.java[language=FILE]"
         + "//R.id.buttonLogout[language=JAVA]"));
+    System.out.println(renames);
+  }
+
+  @Test
+  public void test2() {
+    URITree tree = new URITree();
+    URI uri1 = new URI("def://BlogController.java[language=FILE]"
+        + "//showPost/return[language=JAVA]"
+        + "//blog.show[language=ANY]");
+    URI uri2 = new URI("def://root/blog/show.html[language=FILE]");
+    tree.add(uri1);
+    tree.add(uri2);
+
+    URIPattern def = new URIPattern(false, "(htmlFile...).html");
+
+    URIPattern use = new URIPattern(true, "(javaFile).java");
+    use.addLayer("(functionName)/return", Language.JAVA);
+    use.addLayer("(htmlFile:dot)");
+
+    Project project = new Project();
+    project.setTree(tree);
+    project.addRule(new Rule(def, use));
+
+    List<Pair<URI, URI>> renames;
+
+    project.link();
+    renames = project.rename(uri2, new URI("def://root/blog/hide.html[language=FILE]"));
     System.out.println(renames);
   }
 }
