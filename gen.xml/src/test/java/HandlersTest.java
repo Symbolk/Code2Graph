@@ -1,19 +1,20 @@
-import edu.pku.code2graph.gen.xml.AbstractHandler;
-import edu.pku.code2graph.gen.xml.AndroidHandler;
-import edu.pku.code2graph.gen.xml.SaxGenerator;
-import edu.pku.code2graph.gen.xml.TestDemo;
+import edu.pku.code2graph.gen.xml.*;
 import edu.pku.code2graph.io.GraphVizExporter;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.ElementNode;
 import edu.pku.code2graph.model.Node;
+import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.jgrapht.Graph;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
@@ -69,6 +70,25 @@ public class HandlersTest {
         }
       }
     }
+  }
+
+  @Test
+  public void testMybatis() throws ParserConfigurationException, SAXException {
+    MybatisMapperHandler handler = new MybatisMapperHandler();
+    SAXParserFactory factory = SAXParserFactory.newInstance();
+    SAXParser parser = factory.newSAXParser();
+
+    String filePath = "src/test/resources/mybatis.xml";
+
+    File file = new File(filePath);
+    handler.setFilePath(FilenameUtils.separatorsToUnix(filePath));
+    try {
+      parser.parse(file, handler);
+    } catch (SAXException | IOException e) {
+      System.out.println(filePath);
+    }
+    URITree tree = GraphUtil.getUriTree();
+    GraphVizExporter.printAsDot(GraphUtil.getGraph());
   }
 
   @Test
