@@ -202,4 +202,77 @@ public class LinkerTest {
     linker.link();
     check(linker, 1);
   }
+
+  @Test
+  public void flowGraphTest() {
+    URITree tree = new URITree();
+
+    tree.add("def://jeecg-boot/jeecg-boot-module-system/src/main/java/org/jeecg/modules/system/mapper/SysUserMapper.java[language=FILE]");
+    tree.add("use://jeecg-boot/jeecg-boot-module-system/src/main/java/org/jeecg/modules/system/mapper/SysUserMapper.java[language=FILE]//SysUserMapper/getUserByName[language=JAVA]");
+    tree.add("use://jeecg-boot/jeecg-boot-module-system/src/main/java/org/jeecg/modules/system/mapper/SysUserMapper.java[language=FILE]//SysUserMapper/getUserByName/username[varType=String,language=JAVA]");
+    tree.add("def://jeecg-boot/jeecg-boot-module-system/src/main/java/org/jeecg/modules/system/mapper/SysUserMapper.java[language=FILE]//SysUserMapper/getUserByName/username/@Param[language=JAVA]//username[language=ANY]");
+    tree.add("def://jeecg-boot/jeecg-boot-module-system/target/classes/org/jeecg/modules/system/mapper/xml/SysUserMapper.xml[language=FILE]//mapper/namespace[language=XML]//org.jeecg.modules.system.mapper.SysUserMapper[language=ANY]");
+    tree.add("def://jeecg-boot/jeecg-boot-module-system/target/classes/org/jeecg/modules/system/mapper/xml/SysUserMapper.xml[language=FILE]//mapper/select/id[language=XML,resultType=org.jeecg.modules.system.entity.SysUser,queryId=getUserByName]//getUserByName[language=ANY]");
+    tree.add("use://jeecg-boot/jeecg-boot-module-system/target/classes/org/jeecg/modules/system/mapper/xml/SysUserMapper.xml[language=FILE]//mapper/select[language=XML,resultType=org.jeecg.modules.system.entity.SysUser,queryId=getUserByName]//Select/Where/=/#{username}[language=ANY]");
+
+    URIPattern def, use;
+
+    // r-mapperBinding
+    // <mapper namespace="a.b.c"> <-> a/b/c.java
+    def = new URIPattern(false, "(packagePath...).java");
+
+    use = new URIPattern(true, "(xmlFile).xml");
+    use.addLayer("mapper/namespace", Language.XML);
+    use.addLayer("(packagePath:dot)");
+
+    Linker linker1 = new Linker(tree, def, use);
+    linker1.link();
+    check(linker1, 1);
+
+    // r-queryId-select
+    // mapper/(queryId) [func] <-> <select queryId=(queryId)>
+    def = new URIPattern(false, "(&xmlFile).xml");
+    def.addLayer("select/id", Language.XML);
+    def.addLayer("(queryId)");
+
+    use = new URIPattern(true, "(&packagePath:slash).java");
+    use.addLayer("(mapperInterface)/(queryId)", Language.JAVA);
+
+    Linker linker2 = new Linker(tree, def, use);
+    for (Capture variables : linker1.context) {
+      linker2.link(variables);
+    }
+    linker2.link();
+    check(linker2, 1);
+
+    // r-paramAnno-select-no-jdbc
+    // <select> select * from xx=#{name,jdbcType=yy} </select> <-> @Param("name")
+    def = new URIPattern(false, "(&packagePath:slash).java");
+    def.addLayer("(&mapperInterface)/(&queryId)/(a)/@Param", Language.JAVA);
+    def.addLayer("(name)");
+
+    use = new URIPattern(true, "(&xmlFile).xml");
+    LayerPattern layer = use.addLayer("select", Language.XML);
+    layer.put("queryId", "(&queryId)");
+    use.addLayer("#{(name)}", Language.SQL);
+
+    Linker linker3 = new Linker(tree, def, use);
+    for (Capture variables : linker2.context) {
+      linker3.link(variables);
+    }
+    linker3.link();
+    check(linker3, 1);
+
+    // r-paramVarname-select-no-jdbc
+    // <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
+    def = new URIPattern(false, "(&packagePath:slash).java");
+    def.addLayer("(&mapperInterface)/(&queryId)/(name)", Language.JAVA);
+
+    Linker linker4 = new Linker(tree, def, use);
+    for (Capture variables : linker2.context) {
+      linker4.link(variables);
+    }
+    linker4.link();
+    check(linker4, 1);
+  }
 }
