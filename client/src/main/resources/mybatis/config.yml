@@ -170,9 +170,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/(a)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-insert:
     use:
@@ -186,9 +186,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-update:
     use:
@@ -202,9 +202,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-delete:
     use:
@@ -218,9 +218,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
   r-paramVarname-select:
@@ -429,7 +429,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/(a)/@Param\("(name)"\)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-insert-no-jdbc:
     use:
@@ -443,9 +445,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-update-no-jdbc:
     use:
@@ -459,9 +461,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-delete-no-jdbc:
     use:
@@ -475,9 +477,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
   r-paramVarname-select-no-jdbc:
