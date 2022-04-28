@@ -71,6 +71,14 @@ public class URIPattern extends URIBase<LayerPattern> {
   public URI refactor(URI target, Capture input, Capture output) {
     URI uri = new URI();
     uri.isRef = isRef;
+    Capture p = match(target, input);
+    for (String key : output.keySet()) {
+      Fragment current = p.get(key);
+      if (current == null) continue;
+      if (output.get(key).greedy || current.greedy) {
+        output.get(key).align(current.slice());
+      }
+    }
     for (int index = 0; index < layers.size(); ++index) {
       Layer result = layers.get(index).refactor(target.getLayer(index), input, output);
       if (result == null) return null;
