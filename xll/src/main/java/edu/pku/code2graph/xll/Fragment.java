@@ -18,7 +18,7 @@ public class Fragment {
   public String text;
   public final String plain;
   public final String format;
-  private List<String> slices;
+  private LinkedList<String> slices;
 
   public Fragment(String text, String format) {
     this.text = text;
@@ -32,7 +32,7 @@ public class Fragment {
     Modifier modifier = modifiers.get(format);
     if (modifier == null) return null;
 
-    slices = new ArrayList<>();
+    slices = new LinkedList<>();
     String[] words = modifier.split(text);
     for (String word : words) {
       slices.add(word.toLowerCase());
@@ -62,10 +62,16 @@ public class Fragment {
     return true;
   }
 
-  public void align(int length) {
-    int count = slice().size() - length;
-    while (count-- > 0) {
-      slices.remove(0);
+  public void align(List<String> words) {
+    int count = slice().size() - words.size();
+    if (count > 0) {
+      while (count-- > 0) {
+        slices.removeFirst();
+      }
+    } else {
+      while (count++ < 0) {
+        slices.addFirst(words.get(-count));
+      }
     }
     text = toString(format);
   }

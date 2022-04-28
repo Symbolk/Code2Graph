@@ -74,8 +74,9 @@ public class URIPattern extends URIBase<LayerPattern> {
     Capture p = match(target, input);
     for (String key : output.keySet()) {
       Fragment current = p.get(key);
-      if (output.get(key).greedy && current != null) {
-        output.get(key).align(current.slice().size());
+      if (current == null) continue;
+      if (output.get(key).greedy || current.greedy) {
+        output.get(key).align(current.slice());
       }
     }
     for (int index = 0; index < layers.size(); ++index) {

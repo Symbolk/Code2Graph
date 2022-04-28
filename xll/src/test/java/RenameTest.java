@@ -61,7 +61,9 @@ public class RenameTest {
     List<Pair<URI, URI>> renames;
 
     project.link();
-    renames = project.rename(uri2, new URI("def://root/blog/hide.html[language=FILE]"));
+    renames = project.rename(uri1, new URI("def://BlogController.java[language=FILE]"
+        + "//showPost/return[language=JAVA]"
+        + "//blog.hide[language=ANY]"));
     System.out.println(renames);
   }
 }
