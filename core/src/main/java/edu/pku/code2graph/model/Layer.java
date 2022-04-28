@@ -21,6 +21,13 @@ public final class Layer extends LayerBase {
   }
 
   @Override
+  public Layer clone() {
+    Layer layer = new Layer();
+    layer.putAll(this);
+    return layer;
+  }
+
+  @Override
   public int hashCode() {
     return toString().hashCode();
   }

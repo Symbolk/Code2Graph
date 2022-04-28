@@ -41,13 +41,13 @@ public class LayerPattern extends LayerBase {
     }
   }
 
-    /**
-     * match layer, return null if not matched, or a capture as result
-     * @param layer input layer
-     * @param variables context variables
-     * @param result result capture
-     * @return captures
-     */
+  /**
+   * match layer, return null if not matched, or a capture as result
+   * @param layer input layer
+   * @param variables context variables
+   * @param result result capture
+   * @return captures
+   */
   public boolean match(Layer layer, Capture variables, Capture result) {
     // perform pattern matching
     for (AttributePattern matcher : matchers) {
@@ -59,7 +59,7 @@ public class LayerPattern extends LayerBase {
   }
 
   public Layer refactor(Layer target, Capture input, Capture output) {
-    Layer layer = new Layer();
+    Layer layer = target.clone();
     for (AttributePattern matcher : matchers) {
       String result = matcher.refactor(target.get(matcher.key), input, output);
       if (result == null) return null;

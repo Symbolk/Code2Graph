@@ -16,11 +16,11 @@ import java.io.IOException;
 public class Extraction {
   private static Logger logger = LoggerFactory.getLogger(Extraction.class);
 
-  private static String framework = "android";
+  private static String framework = "mybatis";
 
   // bilibili-android-client BookReader CloudReader XposedInstaller Douya Phonograph LeafPic
   // EhViewer NewPipe AntennaPod
-  private static String repoName = "AntennaPod";
+  private static String repoName = "jeecg-boot";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
 
