@@ -37,8 +37,8 @@ public class XLLEvaluation {
   private static Logger logger = LoggerFactory.getLogger(XLLEvaluation.class);
 
   // test one repo at a time
-  private static String framework = "android";
-  private static String repoName = "NewPipe";
+  private static String framework = "mybatis";
+  private static String repoName = "jeecg-boot";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static String configPath =

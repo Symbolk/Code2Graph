@@ -3,92 +3,92 @@ flowgraph:
     - $
   r-queryId-select:
     - r-mapperBinding
-  r-queryId-insert:
-    - r-mapperBinding
-  r-queryId-update:
-    - r-mapperBinding
-  r-queryId-delete:
-    - r-mapperBinding
-  r-paramAnno-select:
-    - r-queryId-select
-  r-paramAnno-insert:
-    - r-queryId-insert
-  r-paramAnno-update:
-    - r-queryId-update
-  r-paramAnno-delete:
-    - r-queryId-delete
+#  r-queryId-insert:
+#    - r-mapperBinding
+#  r-queryId-update:
+#    - r-mapperBinding
+#  r-queryId-delete:
+#    - r-mapperBinding
+#  r-paramAnno-select:
+#    - r-queryId-select
+#  r-paramAnno-insert:
+#    - r-queryId-insert
+#  r-paramAnno-update:
+#    - r-queryId-update
+#  r-paramAnno-delete:
+#    - r-queryId-delete
   r-paramAnno-select-no-jdbc:
     - r-queryId-select
-  r-paramAnno-insert-no-jdbc:
-    - r-queryId-insert
-  r-paramAnno-update-no-jdbc:
-    - r-queryId-update
-  r-paramAnno-delete-no-jdbc:
-    - r-queryId-delete
-  r-paramVarname-select:
-    - r-queryId-select
-  r-paramVarname-insert:
-    - r-queryId-insert
-  r-paramVarname-update:
-    - r-queryId-update
-  r-paramVarname-delete:
-    - r-queryId-delete
+#  r-paramAnno-insert-no-jdbc:
+#    - r-queryId-insert
+#  r-paramAnno-update-no-jdbc:
+#    - r-queryId-update
+#  r-paramAnno-delete-no-jdbc:
+#    - r-queryId-delete
+#  r-paramVarname-select:
+#    - r-queryId-select
+#  r-paramVarname-insert:
+#    - r-queryId-insert
+#  r-paramVarname-update:
+#    - r-queryId-update
+#  r-paramVarname-delete:
+#    - r-queryId-delete
   r-paramVarname-select-no-jdbc:
     - r-queryId-select
-  r-paramVarname-insert-no-jdbc:
-    - r-queryId-insert
-  r-paramVarname-update-no-jdbc:
-    - r-queryId-update
-  r-paramVarname-delete-no-jdbc:
-    - r-queryId-delete
-  #  r-parameterType:
-  #    - $
-  r-paramType-identifier-select:
-    - $
-  r-paramType-identifier-insert:
-    - $
-  r-paramType-identifier-update:
-    - $
-  r-paramType-identifier-delete:
-    - $
-  r-paramType-identifier-select-no-jdbc:
-    - $
-  r-paramType-identifier-insert-no-jdbc:
-    - $
-  r-paramType-identifier-update-no-jdbc:
-    - $
-  r-paramType-identifier-delete-no-jdbc:
-    - $
-  #  r-resultType:
-  #    - $
-  r-resultType-identifier-select:
-    - $
-  r-resultType-identifier-insert:
-    - $
-  r-resultType-identifier-update:
-    - $
-  r-resultType-identifier-delete:
-    - $
-  r-resultType-identifier-select-no-jdbc:
-    - $
-  r-resultType-identifier-insert-no-jdbc:
-    - $
-  r-resultType-identifier-update-no-jdbc:
-    - $
-  r-resultType-identifier-delete-no-jdbc:
-    - $
-  #  r-include-ref:
-  #    - r-parameterType
-  #    - r-resultType
-  #    - r-queryId
-  #  r-ref-param:
-  #    - r-include-ref
-  #  r-res-param:
-  #    - r-include-ref
-  #  r-sql-paramAnno:
-  #    - r-include-ref
-  #  r-sql-paramVarname:
-  #    - r-include-ref
+#  r-paramVarname-insert-no-jdbc:
+#    - r-queryId-insert
+#  r-paramVarname-update-no-jdbc:
+#    - r-queryId-update
+#  r-paramVarname-delete-no-jdbc:
+#    - r-queryId-delete
+#  #  r-parameterType:
+#  #    - $
+#  r-paramType-identifier-select:
+#    - $
+#  r-paramType-identifier-insert:
+#    - $
+#  r-paramType-identifier-update:
+#    - $
+#  r-paramType-identifier-delete:
+#    - $
+#  r-paramType-identifier-select-no-jdbc:
+#    - $
+#  r-paramType-identifier-insert-no-jdbc:
+#    - $
+#  r-paramType-identifier-update-no-jdbc:
+#    - $
+#  r-paramType-identifier-delete-no-jdbc:
+#    - $
+#  #  r-resultType:
+#  #    - $
+#  r-resultType-identifier-select:
+#    - $
+#  r-resultType-identifier-insert:
+#    - $
+#  r-resultType-identifier-update:
+#    - $
+#  r-resultType-identifier-delete:
+#    - $
+#  r-resultType-identifier-select-no-jdbc:
+#    - $
+#  r-resultType-identifier-insert-no-jdbc:
+#    - $
+#  r-resultType-identifier-update-no-jdbc:
+#    - $
+#  r-resultType-identifier-delete-no-jdbc:
+#    - $
+#  #  r-include-ref:
+#  #    - r-parameterType
+#  #    - r-resultType
+#  #    - r-queryId
+#  #  r-ref-param:
+#  #    - r-include-ref
+#  #  r-res-param:
+#  #    - r-include-ref
+#  #  r-sql-paramAnno:
+#  #    - r-include-ref
+#  #  r-sql-paramVarname:
+#  #    - r-include-ref
 
 rules:
   # <mapper namespace="a.b.c"> <-> a/b/c.java
@@ -170,9 +170,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/(a)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-insert:
     use:
@@ -186,9 +186,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-update:
     use:
@@ -202,9 +202,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-delete:
     use:
@@ -218,9 +218,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
   r-paramVarname-select:
@@ -429,7 +429,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/(a)/@Param\("(name)"\)
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-insert-no-jdbc:
     use:
@@ -443,9 +445,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-update-no-jdbc:
     use:
@@ -459,9 +461,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/@Param
+      inline:
+        identifier: (name)
 
   r-paramAnno-delete-no-jdbc:
     use:
@@ -475,9 +477,9 @@ rules:
     def:
       lang: JAVA
       file: (&packagePath:slash).java
-      identifier: (&mapperInterface)/(&queryId)/@Param\("(name)"\)
-#      inline:
-#        identifier: (name)
+      identifier: (&mapperInterface)/(&queryId)/@Param
+      inline:
+        identifier: (name)
 
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
   r-paramVarname-select-no-jdbc:

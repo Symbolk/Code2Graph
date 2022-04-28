@@ -27,7 +27,12 @@ public class ConfigLoader {
   private void parse(Map<String, Object> config) {
     Map<String, List<String>> flowGraph = (Map<String, List<String>>) config.get("flowgraph");
     Map<String, Object> rawRules = (Map<String, Object>) config.get("rules");
-    toposort(flowGraph, rawRules);
+//    toposort(flowGraph, rawRules);
+    for (String name : flowGraph.keySet()) {
+      List<String> deps = flowGraph.get(name);
+      Rule rule = new Rule((Map<String, Object>) rawRules.get(name), deps, name);
+      project.addRule(rule);
+    }
   }
 
   public Project getProject() {
@@ -41,7 +46,7 @@ public class ConfigLoader {
   }
 
   private void toposort(Map<String, List<String>> flowGraph, Map<String, Object> rawRules) {
-    Map<String, Integer> degrees = new HashMap<>();
+    Map<String, Integer> degrees = new LinkedHashMap<>();
     for (String name : rawRules.keySet()) {
       if (!flowGraph.containsKey(name)) {
         logger.warn("unused rule definition {}", name);
