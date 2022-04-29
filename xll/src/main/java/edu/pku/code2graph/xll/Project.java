@@ -67,6 +67,7 @@ public class Project {
   }
 
   public void rename(URI oldUri, URI newUri, Map<URI, Set<URI>> changes) {
+    if (!changes.computeIfAbsent(oldUri, k -> new HashSet<>()).add(newUri)) return;
     for (Link link : links) {
       if (link.def.equals(oldUri)) {
         Capture o = link.rule.def.match(newUri, link.input);
@@ -75,7 +76,6 @@ public class Project {
         output.putAll(o);
         URI oldUri2 = link.use;
         URI newUri2 = link.rule.use.refactor(oldUri2, link.input, output);
-        changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
         link.use = newUri2;
         rename(oldUri2, newUri2, changes);
       } else if (link.use.equals(oldUri)) {
@@ -86,7 +86,6 @@ public class Project {
         URI oldUri2 = link.def;
         URI newUri2 = link.rule.def.refactor(oldUri2, link.input, output);
         link.def = newUri2;
-        changes.computeIfAbsent(oldUri2, k -> new HashSet<>()).add(newUri2);
         rename(oldUri2, newUri2, changes);
       }
     }
@@ -96,6 +95,7 @@ public class Project {
     Map<URI, Set<URI>> changes = new HashMap<>();
     rename(oldUri, newUri, changes);
 
+    changes.remove(oldUri);
     List<Pair<URI, URI>> result = new ArrayList<>();
     for (URI source : changes.keySet()) {
       Set<URI> targets = changes.get(source);
