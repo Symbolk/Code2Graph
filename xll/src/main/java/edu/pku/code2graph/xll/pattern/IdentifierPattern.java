@@ -69,7 +69,7 @@ public class IdentifierPattern extends AttributePattern {
     // step 2: replace symbols
     String[] segments = VARIABLE.split(source, -1);
     if (segments[0].equals("")) {
-      source = "(.+)?" + String.join("([\\w-.]+)", segments).substring(9);
+      source = "(.+)" + String.join("([\\w-.]+)", segments).substring(9);
     } else {
       source = String.join("([\\w-.]+)", segments);
     }

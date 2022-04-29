@@ -3,22 +3,22 @@ package edu.pku.code2graph.xll;
 import java.util.*;
 
 public class Fragment {
-  private static final Map<String, String> separators = new HashMap<>();
+  private static final Map<String, Modifier> modifiers = new HashMap<>();
 
   static {
-    separators.put("dot", "\\.");
-    separators.put("snake", "_");
-    separators.put("param", "-");
-    separators.put("slash", "/");
-    separators.put("camel", "(?<![A-Z0-9])(?=[A-Z])|(?=[A-Z][^A-Z0-9])|(?=[0-9]([a-z]|[A-Z]{2}))");
-    separators.put("pascal", "(?<![A-Z0-9])(?=[A-Z])|(?=[A-Z][^A-Z0-9])|(?=[0-9]([a-z]|[A-Z]{2}))");
+    modifiers.put("dot", new Modifier.Separator("."));
+    modifiers.put("snake", new Modifier.Separator("_"));
+    modifiers.put("param", new Modifier.Separator("-"));
+    modifiers.put("slash", new Modifier.Separator("/"));
+    modifiers.put("camel", new Modifier.Capital(true));
+    modifiers.put("pascal", new Modifier.Capital(false));
   }
 
   public final boolean greedy;
-  public final String text;
+  public String text;
   public final String plain;
   public final String format;
-  private List<String> slices;
+  private LinkedList<String> slices;
 
   public Fragment(String text, String format) {
     this.text = text;
@@ -29,11 +29,11 @@ public class Fragment {
 
   public List<String> slice() {
     if (slices != null) return slices;
-    String separator = separators.get(format);
-    if (separator == null) return null;
+    Modifier modifier = modifiers.get(format);
+    if (modifier == null) return null;
 
-    slices = new ArrayList<>();
-    String[] words = text.split(separator);
+    slices = new LinkedList<>();
+    String[] words = modifier.split(text);
     for (String word : words) {
       slices.add(word.toLowerCase());
     }
@@ -62,31 +62,30 @@ public class Fragment {
     return true;
   }
 
-  static String capitalize(String word) {
-    return (char) (word.charAt(0) - 32) + word.substring(1);
+  public void align(List<String> words) {
+    int count = slice().size() - words.size();
+    if (count > 0) {
+      while (count-- > 0) {
+        slices.removeFirst();
+      }
+    } else {
+      while (count++ < 0) {
+        slices.addFirst(words.get(-count));
+      }
+    }
+    text = toString(format);
   }
 
   public String toString(String format) {
     List<String> source = slice();
     if (source == null) return text;
-    String separator = separators.get(format);
-    if (separator == null) return text;
+    Modifier modifier = modifiers.get(format);
+    if (modifier == null) return text;
 
     StringBuilder builder = new StringBuilder();
-    boolean upper = format.equals("camel") || format.equals("pascal");
-    boolean initial = format.equals("camel");
     for (int index = 0; index < source.size(); index++) {
       String word = source.get(index);
-      if (upper) {
-        if (index > 0 || !initial) {
-          builder.append(capitalize(word));
-        } else {
-          builder.append(word);
-        }
-      } else {
-        if (index > 0) builder.append(separator);
-        builder.append(word);
-      }
+      modifier.append(builder, word, index);
     }
     return builder.toString();
   }
