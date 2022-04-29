@@ -8,6 +8,7 @@ public class Fragment {
   public String text;
   public final String plain;
   public final String format;
+  private boolean isAuto;
   private LinkedList<String> slices;
 
   public Fragment(String text, String format) {
@@ -19,7 +20,7 @@ public class Fragment {
       } else if (text.contains("-")) {
         format = "param";
       } else if (text.contains("_")) {
-        format = "camel";
+        format = "snake";
       } else if (text.contains(".")) {
         format = "dot";
       } else {
