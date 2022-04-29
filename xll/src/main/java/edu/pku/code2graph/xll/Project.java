@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Project {
   private final static Logger logger = LoggerFactory.getLogger(Project.class);
@@ -18,7 +19,7 @@ public class Project {
   private URITree tree;
 
   // runtime properties
-  private final List<Link> links = new ArrayList<>();
+  private List<Link> links = new ArrayList<>();
   private final Map<String, Set<Capture>> contexts = new HashMap<>();
   private final Set<URI> visited = new HashSet<>();
 
@@ -106,9 +107,11 @@ public class Project {
 
   public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
     Map<URI, Set<URI>> changes = new HashMap<>();
-    rename(oldUri, newUri, changes);
+    List<Link> links = this.links.stream().map(Link::clone).collect(Collectors.toList());
 
+    rename(oldUri, newUri, changes);
     changes.remove(oldUri);
+    this.links = links;
     List<Pair<URI, URI>> result = new ArrayList<>();
     for (URI source : changes.keySet()) {
       Set<URI> targets = changes.get(source);
