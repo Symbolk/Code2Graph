@@ -46,15 +46,16 @@ public class Fragment {
     return true;
   }
 
-  public void align(List<String> words) {
-    int count = slice().size() - words.size();
-    if (count > 0) {
-      while (count-- > 0) {
-        slices.removeFirst();
+  public void align(Fragment old, Fragment contra) {
+    slice();
+    int offset = contra.slice().size() - old.slice().size();
+    if (offset > 0) {
+      while (offset-- > 0) {
+        slices.addFirst(contra.slice().get(offset));
       }
     } else {
-      while (count++ < 0) {
-        slices.addFirst(words.get(-count));
+      while (offset++ < 0) {
+        slices.removeFirst();
       }
     }
     text = toString(format);

@@ -34,7 +34,7 @@ public class RenameTest {
 
     project.link();
     renames = project.rename(uri2, new URI("use://main/java/com/example/demo/MainActivity.java[language=FILE]"
-        + "//R.id.buttonLogout[language=JAVA]"));
+        + "//R.id.buttonLogoutView[language=JAVA]"));
     System.out.println(renames);
   }
 
@@ -63,7 +63,7 @@ public class RenameTest {
     project.link();
     renames = project.rename(uri1, new URI("def://BlogController.java[language=FILE]"
         + "//showPost/return[language=JAVA]"
-        + "//blog\\/showLogin[language=ANY]"));
+        + "//blog\\/path\\/showLogin[language=ANY]"));
     System.out.println(renames);
   }
 }
