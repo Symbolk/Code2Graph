@@ -6,8 +6,29 @@ import java.util.LinkedList;
 import java.util.Map;
 
 public abstract class Modifier {
+  final String prefix;
+  final boolean ignoreFirst;
+
+  protected Modifier(String prefix, boolean ignoreFirst) {
+    this.prefix = prefix;
+    this.ignoreFirst = ignoreFirst;
+  }
+
+  static String capitalize(String word) {
+    return (char) (word.charAt(0) - 32) + word.substring(1);
+  }
+
+  void append(StringBuilder builder, String word, int index) {
+    if (index > 0) builder.append(prefix);
+    if (prefix.isEmpty() && (index > 0 || !ignoreFirst)) {
+      builder.append(capitalize(word));
+    } else {
+      builder.append(word);
+    }
+  }
+
   abstract LinkedList<String> split(String text);
-  abstract void append(StringBuilder builder, String word, int index);
+
   static final Map<String, Modifier> registry = new HashMap<>();
 
   static {
@@ -24,33 +45,21 @@ public abstract class Modifier {
   }
 
   public static class Separator extends Modifier {
-    final String text;
     final String regex;
 
-    Separator(String text) {
-      this.text = text;
-      this.regex = text.replace(".", "\\.");
+    Separator(String prefix) {
+      super(prefix, true);
+      this.regex = prefix.replace(".", "\\.");
     }
 
     LinkedList<String> split(String text) {
       return new LinkedList<>(Arrays.asList(text.split(regex)));
     }
-
-    void append(StringBuilder builder, String word, int index) {
-      if (index > 0) builder.append(text);
-      builder.append(word);
-    }
   }
 
   public static class Capital extends Modifier {
-    final boolean ignoreFirst;
-
     Capital(boolean ignoreFirst) {
-      this.ignoreFirst = ignoreFirst;
-    }
-
-    static String capitalize(String word) {
-      return (char) (word.charAt(0) - 32) + word.substring(1);
+      super("", ignoreFirst);
     }
 
     LinkedList<String> split(String text) {
@@ -59,14 +68,6 @@ public abstract class Modifier {
         result.add(word.toLowerCase());
       }
       return result;
-    }
-
-    void append(StringBuilder builder, String word, int index) {
-      if (index > 0 || !ignoreFirst) {
-        builder.append(capitalize(word));
-      } else {
-        builder.append(word);
-      }
     }
   }
 }

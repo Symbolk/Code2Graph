@@ -13,6 +13,19 @@ public class Fragment {
   public Fragment(String text, String format) {
     this.text = text;
     this.plain = text.toLowerCase().replaceAll("[^0-9a-z]", "");
+    if (format.equals("auto")) {
+      if (text.contains("/")) {
+        format = "slash";
+      } else if (text.contains("-")) {
+        format = "param";
+      } else if (text.contains("_")) {
+        format = "camel";
+      } else if (text.contains(".")) {
+        format = "dot";
+      } else {
+        format = "camel";
+      }
+    }
     this.format = format;
     this.greedy = format.equals("slash");
   }

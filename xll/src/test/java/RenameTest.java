@@ -52,7 +52,7 @@ public class RenameTest {
 
     URIPattern use = new URIPattern(true, "(javaFile).java");
     use.addLayer("(functionName)/return", Language.JAVA);
-    use.addLayer("(htmlFile:slash)");
+    use.addLayer("(htmlFile)");
 
     Project project = new Project();
     project.setTree(tree);
