@@ -7,12 +7,10 @@ import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 public class AbstractHandler {
-  protected Logger logger = LoggerFactory.getLogger(DocumentHandler.class);
+  protected Logger logger = LoggerFactory.getLogger(AbstractHandler.class);
 
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 

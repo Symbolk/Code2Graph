@@ -217,174 +217,174 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
   private void parseStatementForLayout(Statement stmt) {
     switch (stmt.getNodeType()) {
       case ASTNode.BLOCK:
-      {
-        Block block = (Block) stmt;
-        if (block.statements().isEmpty()) {
-          return;
-        } else {
-          for (Object st : block.statements()) {
-            parseStatementForLayout((Statement) st);
-          }
-          return;
-        }
-      }
-      case ASTNode.RETURN_STATEMENT:
-      {
-        Expression expression = ((ReturnStatement) stmt).getExpression();
-        if (expression != null && expression.getNodeType() == ASTNode.STRING_LITERAL) {
-          Pattern pathRegex = Pattern.compile("[\\w-/]+");
-          String returnExpr = expression.toString();
-          if (returnExpr != null
-                  && !returnExpr.trim().isEmpty()
-                  && pathRegex.matcher(returnExpr).find()) {
-            currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
-            currentReturnLiteral = true;
+        {
+          Block block = (Block) stmt;
+          if (block.statements().isEmpty()) {
+            return;
+          } else {
+            for (Object st : block.statements()) {
+              parseStatementForLayout((Statement) st);
+            }
             return;
           }
-        } else if (expression != null
-                && expression.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION) {
-          // For specific repos
-          if (!((ClassInstanceCreation) expression).arguments().isEmpty()
-                  && ((Expression) ((ClassInstanceCreation) expression).arguments().get(0))
-                  .getNodeType()
-                  == ASTNode.STRING_LITERAL) {
-            Pattern pathRegex = Pattern.compile("[\\w-/]+");
-            String returnExpr =
-                    ((Expression) ((ClassInstanceCreation) expression).arguments().get(0)).toString();
-            if (returnExpr != null
-                    && !returnExpr.trim().isEmpty()
-                    && pathRegex.matcher(returnExpr).find()) {
-              currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
-              currentReturnLiteral = true;
-              return;
-            }
-          }
-        } else if (expression != null && expression.getNodeType() == ASTNode.METHOD_INVOCATION) {
-          // For specific repos
-          if (!((MethodInvocation) expression).arguments().isEmpty()
-                  && ((Expression) ((MethodInvocation) expression).arguments().get(0)).getNodeType()
-                  == ASTNode.STRING_LITERAL) {
-            Pattern pathRegex = Pattern.compile("[\\w-/]+");
-            String returnExpr =
-                    ((Expression) ((MethodInvocation) expression).arguments().get(0)).toString();
-            if (returnExpr != null
-                    && !returnExpr.trim().isEmpty()
-                    && pathRegex.matcher(returnExpr).find()
-                    && !returnExpr.equals("\".html\"")
-                    && !returnExpr.equals("\".jsp\"")) {
-              currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
-              currentReturnLiteral = true;
-              return;
-            }
-          }
         }
-        break;
-      }
-      // control
+      case ASTNode.RETURN_STATEMENT:
+        {
+          Expression expression = ((ReturnStatement) stmt).getExpression();
+          if (expression != null && expression.getNodeType() == ASTNode.STRING_LITERAL) {
+            Pattern pathRegex = Pattern.compile("[\\w-/]+");
+            String returnExpr = expression.toString();
+            if (returnExpr != null
+                && !returnExpr.trim().isEmpty()
+                && pathRegex.matcher(returnExpr).find()) {
+              currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+              currentReturnLiteral = true;
+              return;
+            }
+          } else if (expression != null
+              && expression.getNodeType() == ASTNode.CLASS_INSTANCE_CREATION) {
+            // For specific repos
+            if (!((ClassInstanceCreation) expression).arguments().isEmpty()
+                && ((Expression) ((ClassInstanceCreation) expression).arguments().get(0))
+                        .getNodeType()
+                    == ASTNode.STRING_LITERAL) {
+              Pattern pathRegex = Pattern.compile("[\\w-/]+");
+              String returnExpr =
+                  ((Expression) ((ClassInstanceCreation) expression).arguments().get(0)).toString();
+              if (returnExpr != null
+                  && !returnExpr.trim().isEmpty()
+                  && pathRegex.matcher(returnExpr).find()) {
+                currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+                currentReturnLiteral = true;
+                return;
+              }
+            }
+          } else if (expression != null && expression.getNodeType() == ASTNode.METHOD_INVOCATION) {
+            // For specific repos
+            if (!((MethodInvocation) expression).arguments().isEmpty()
+                && ((Expression) ((MethodInvocation) expression).arguments().get(0)).getNodeType()
+                    == ASTNode.STRING_LITERAL) {
+              Pattern pathRegex = Pattern.compile("[\\w-/]+");
+              String returnExpr =
+                  ((Expression) ((MethodInvocation) expression).arguments().get(0)).toString();
+              if (returnExpr != null
+                  && !returnExpr.trim().isEmpty()
+                  && pathRegex.matcher(returnExpr).find()
+                  && !returnExpr.equals("\".html\"")
+                  && !returnExpr.equals("\".jsp\"")) {
+                currentTemplate = returnExpr.substring(1, returnExpr.length() - 1);
+                currentReturnLiteral = true;
+                return;
+              }
+            }
+          }
+          break;
+        }
+        // control
       case ASTNode.IF_STATEMENT:
-      {
-        IfStatement ifStatement = (IfStatement) stmt;
+        {
+          IfStatement ifStatement = (IfStatement) stmt;
 
-        if (ifStatement.getThenStatement() != null) {
-          parseStatementForLayout(ifStatement.getThenStatement());
+          if (ifStatement.getThenStatement() != null) {
+            parseStatementForLayout(ifStatement.getThenStatement());
+          }
+          if (ifStatement.getElseStatement() != null) {
+            parseStatementForLayout(ifStatement.getElseStatement());
+          }
+          return;
         }
-        if (ifStatement.getElseStatement() != null) {
-          parseStatementForLayout(ifStatement.getElseStatement());
-        }
-        return;
-      }
       case ASTNode.FOR_STATEMENT:
-      {
-        ForStatement forStatement = (ForStatement) stmt;
-        parseStatementForLayout(forStatement.getBody());
-        return;
-      }
+        {
+          ForStatement forStatement = (ForStatement) stmt;
+          parseStatementForLayout(forStatement.getBody());
+          return;
+        }
 
       case ASTNode.ENHANCED_FOR_STATEMENT:
-      {
-        EnhancedForStatement eForStatement = (EnhancedForStatement) stmt;
+        {
+          EnhancedForStatement eForStatement = (EnhancedForStatement) stmt;
 
-        SingleVariableDeclaration p = eForStatement.getParameter();
-        String para_name = p.getName().getFullyQualifiedName();
-        String para_qname = para_name;
-        IVariableBinding b = p.resolveBinding();
-        if (b != null && b.getVariableDeclaration() != null) {
-          para_qname =
-                  JdtService.getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+          SingleVariableDeclaration p = eForStatement.getParameter();
+          String para_name = p.getName().getFullyQualifiedName();
+          String para_qname = para_name;
+          IVariableBinding b = p.resolveBinding();
+          if (b != null && b.getVariableDeclaration() != null) {
+            para_qname =
+                JdtService.getMethodQNameFromBinding(b.getDeclaringMethod()) + "." + para_name;
+          }
+
+          parseStatementForLayout(eForStatement.getBody());
+
+          return;
         }
-
-        parseStatementForLayout(eForStatement.getBody());
-
-        return;
-      }
       case ASTNode.DO_STATEMENT:
-      {
-        DoStatement doStatement = ((DoStatement) stmt);
+        {
+          DoStatement doStatement = ((DoStatement) stmt);
 
-        Statement doBody = doStatement.getBody();
-        if (doBody != null) {
-          parseStatementForLayout(doBody);
+          Statement doBody = doStatement.getBody();
+          if (doBody != null) {
+            parseStatementForLayout(doBody);
+          }
+          return;
         }
-        return;
-      }
       case ASTNode.WHILE_STATEMENT:
-      {
-        WhileStatement whileStatement = (WhileStatement) stmt;
+        {
+          WhileStatement whileStatement = (WhileStatement) stmt;
 
-        Statement whileBody = whileStatement.getBody();
-        if (whileBody != null) {
-          parseStatementForLayout(whileBody);
+          Statement whileBody = whileStatement.getBody();
+          if (whileBody != null) {
+            parseStatementForLayout(whileBody);
+          }
+          return;
         }
-        return;
-      }
       case ASTNode.TRY_STATEMENT:
-      {
-        TryStatement tryStatement = (TryStatement) stmt;
+        {
+          TryStatement tryStatement = (TryStatement) stmt;
 
-        Statement tryBody = tryStatement.getBody();
-        if (tryBody != null) {
-          parseStatementForLayout(tryBody);
+          Statement tryBody = tryStatement.getBody();
+          if (tryBody != null) {
+            parseStatementForLayout(tryBody);
 
-          List<CatchClause> catchClauses = tryStatement.catchClauses();
-          if (catchClauses != null && !catchClauses.isEmpty()) {
-            for (CatchClause catchClause : catchClauses) {
-              ITypeBinding binding = catchClause.getException().getType().resolveBinding();
+            List<CatchClause> catchClauses = tryStatement.catchClauses();
+            if (catchClauses != null && !catchClauses.isEmpty()) {
+              for (CatchClause catchClause : catchClauses) {
+                ITypeBinding binding = catchClause.getException().getType().resolveBinding();
 
-              if (catchClause.getBody() != null) {
-                parseBodyBlockForLayout(catchClause.getBody());
+                if (catchClause.getBody() != null) {
+                  parseBodyBlockForLayout(catchClause.getBody());
+                }
               }
             }
+            if (tryStatement.getFinally() != null) {
+              parseBodyBlockForLayout(tryStatement.getFinally());
+            }
           }
-          if (tryStatement.getFinally() != null) {
-            parseBodyBlockForLayout(tryStatement.getFinally());
-          }
+          return;
         }
-        return;
-      }
       case ASTNode.SWITCH_STATEMENT:
-      {
-        SwitchStatement switchStatement = (SwitchStatement) stmt;
+        {
+          SwitchStatement switchStatement = (SwitchStatement) stmt;
 
-        Expression expression = switchStatement.getExpression();
-        // treat case as an implicit block of statements
-        for (int i = 0; i < switchStatement.statements().size(); ++i) {
-          Object nxt = switchStatement.statements().get(i);
-          if (nxt instanceof SwitchCase) {
-            while (i + 1 < switchStatement.statements().size()) {
-              Object nxxt = switchStatement.statements().get(++i);
-              if (nxxt instanceof BreakStatement) {
-                break;
-              } else if (nxxt instanceof SwitchCase) {
-                i -= 1;
-                break;
-              } else if (nxxt instanceof Statement) {
-                parseStatementForLayout((Statement) nxxt);
+          Expression expression = switchStatement.getExpression();
+          // treat case as an implicit block of statements
+          for (int i = 0; i < switchStatement.statements().size(); ++i) {
+            Object nxt = switchStatement.statements().get(i);
+            if (nxt instanceof SwitchCase) {
+              while (i + 1 < switchStatement.statements().size()) {
+                Object nxxt = switchStatement.statements().get(++i);
+                if (nxxt instanceof BreakStatement) {
+                  break;
+                } else if (nxxt instanceof SwitchCase) {
+                  i -= 1;
+                  break;
+                } else if (nxxt instanceof Statement) {
+                  parseStatementForLayout((Statement) nxxt);
+                }
               }
             }
           }
+          return;
         }
-        return;
-      }
     }
 
     return;
@@ -688,7 +688,11 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           parseArguments(root, mi.arguments());
           popScope();
 
-          if (exp.toString().contains("addAttribute") || exp.toString().contains("setAttribute")) {
+          if (exp.toString().contains("addAttribute(")
+              || exp.toString().contains("setAttribute(")
+              || exp.toString().contains("addObject(")
+              || exp.toString().contains("getParameter(")
+              || exp.toString().startsWith("model") && exp.toString().contains("put(")) {
             //          parseArguments(root, mi.arguments(), addedToMap);
             String identifier = root.getUri().getIdentifier();
             String arg = mi.arguments().get(0).toString();
