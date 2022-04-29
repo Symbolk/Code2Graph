@@ -1,19 +1,9 @@
 package edu.pku.code2graph.xll;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Fragment {
-  private static final Map<String, Modifier> modifiers = new HashMap<>();
-
-  static {
-    modifiers.put("dot", new Modifier.Separator("."));
-    modifiers.put("snake", new Modifier.Separator("_"));
-    modifiers.put("param", new Modifier.Separator("-"));
-    modifiers.put("slash", new Modifier.Separator("/"));
-    modifiers.put("camel", new Modifier.Capital(true));
-    modifiers.put("pascal", new Modifier.Capital(false));
-  }
-
   public final boolean greedy;
   public String text;
   public final String plain;
@@ -29,9 +19,8 @@ public class Fragment {
 
   public List<String> slice() {
     if (slices != null) return slices;
-    Modifier modifier = modifiers.get(format);
+    Modifier modifier = Modifier.from(format);
     if (modifier == null) return null;
-
     return slices = modifier.split(text);
   }
 
@@ -74,7 +63,7 @@ public class Fragment {
   public String toString(String format) {
     List<String> source = slice();
     if (source == null) return text;
-    Modifier modifier = modifiers.get(format);
+    Modifier modifier = Modifier.from(format);
     if (modifier == null) return text;
 
     StringBuilder builder = new StringBuilder();

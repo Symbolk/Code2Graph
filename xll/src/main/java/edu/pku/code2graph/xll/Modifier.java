@@ -1,11 +1,27 @@
 package edu.pku.code2graph.xll;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 public abstract class Modifier {
   abstract LinkedList<String> split(String text);
   abstract void append(StringBuilder builder, String word, int index);
+  static final Map<String, Modifier> registry = new HashMap<>();
+
+  static {
+    registry.put("dot", new Modifier.Separator("."));
+    registry.put("snake", new Modifier.Separator("_"));
+    registry.put("param", new Modifier.Separator("-"));
+    registry.put("slash", new Modifier.Separator("/"));
+    registry.put("camel", new Modifier.Capital(true));
+    registry.put("pascal", new Modifier.Capital(false));
+  }
+
+  public static Modifier from(String format) {
+    return registry.get(format);
+  }
 
   public static class Separator extends Modifier {
     final String text;
