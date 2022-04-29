@@ -32,12 +32,7 @@ public class Fragment {
     Modifier modifier = modifiers.get(format);
     if (modifier == null) return null;
 
-    slices = new LinkedList<>();
-    String[] words = modifier.split(text);
-    for (String word : words) {
-      slices.add(word.toLowerCase());
-    }
-    return slices;
+    return slices = modifier.split(text);
   }
 
   public boolean match(Fragment fragment) {
