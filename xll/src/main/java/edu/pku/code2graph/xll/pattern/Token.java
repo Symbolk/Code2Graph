@@ -9,6 +9,7 @@ public class Token {
   public final String name;
   public final String modifier;
   public final boolean isAnchor;
+  public final boolean isGreedy;
 
   public Token(Matcher matcher) {
     this.start = matcher.start();
@@ -20,6 +21,7 @@ public class Token {
       : matcher.group(2) != null
         ? matcher.group(2)
         : "auto";
+    this.isGreedy = modifier.equals("slash");
   }
 
   public String replace(String source, String capture, int offset) {
