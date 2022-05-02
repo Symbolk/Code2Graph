@@ -37,8 +37,8 @@ public class XLLEvaluation {
   private static Logger logger = LoggerFactory.getLogger(XLLEvaluation.class);
 
   // test one repo at a time
-  private static String framework = "mybatis";
-  private static String repoName = "jeecg-boot";
+  private static String framework = "android";
+  private static String repoName = "NewPipe";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static String configPath =
@@ -83,7 +83,7 @@ public class XLLEvaluation {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-//          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+          //          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
@@ -91,10 +91,20 @@ public class XLLEvaluation {
 
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
+      long parsingDuration = 0;
       if (loadCache(cacheDir, GraphUtil.getUriTree(), null, null) == null) {
+        long startTime = System.currentTimeMillis();
         initCache(framework, repoPath, cacheDir);
+        long endTime = System.currentTimeMillis();
+        parsingDuration = endTime - startTime;
       }
+      long startTime = System.currentTimeMillis();
       c2g.generateXLL(GraphUtil.getGraph());
+      long endTime = System.currentTimeMillis();
+      long matchingDuration = endTime - startTime;
+      logger.info("Parsing Time: {} ms", parsingDuration);
+      logger.info("XLL matching Time: {} ms", matchingDuration);
+
       xllLinks = c2g.getXllLinks();
       logger.info("Exporting xll to file {}", repoName);
       exportXLLLinks(xllLinks, otPath);
