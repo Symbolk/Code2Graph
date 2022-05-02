@@ -222,8 +222,7 @@ public class RenameEvaluation {
       caseId = Integer.parseInt(iptReader.get(caseIdHeader));
 
       Identifier newId =
-          new Identifier(
-              iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)));
+          new Identifier(iptReader.get(uriHeader), Integer.parseInt(iptReader.get(uriIdHeader)));
       res.get(caseId - 1).add(new MutablePair<>(newId, iptReader.get(newURIHeader)));
     }
 
@@ -275,7 +274,21 @@ public class RenameEvaluation {
     Set<Pair<Identifier, String>> otSet = new HashSet<>(idToRename);
     Set<Pair<Identifier, String>> gtSet = new HashSet<>(gt);
 
-    int intersectionNum = MetricUtil.intersectSize(otSet, gtSet);
+    Set<String> otSetStr = new HashSet<>(), gtSetStr = new HashSet<>();
+    otSet.forEach(
+        pair -> {
+          String line =
+              pair.getLeft().getUri() + "," + pair.getLeft().getId() + "," + pair.getRight();
+          otSetStr.add(line);
+        });
+    gtSet.forEach(
+        pair -> {
+          String line =
+              pair.getLeft().getUri() + "," + pair.getLeft().getId() + "," + pair.getRight();
+          gtSetStr.add(line);
+        });
+
+    int intersectionNum = MetricUtil.intersectSize(otSetStr, gtSetStr);
     // compute precision/recall
     double precision = MetricUtil.computeProportion(intersectionNum, otSet.size());
     double recall = MetricUtil.computeProportion(intersectionNum, gtSet.size());
