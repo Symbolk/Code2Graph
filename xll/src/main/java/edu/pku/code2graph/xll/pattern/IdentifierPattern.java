@@ -15,7 +15,7 @@ public class IdentifierPattern extends AttributePattern {
   private final boolean pass;
   private int offset = 0;
   private String source;
-  private final List<Token> anchors = new ArrayList<>();
+  private final List<Token> tokens = new ArrayList<>();
   private final List<Token> symbols = new ArrayList<>();
 
   public IdentifierPattern(String name, String identifier, URIPattern root) {
@@ -39,13 +39,13 @@ public class IdentifierPattern extends AttributePattern {
     Matcher matcher = VARIABLE.matcher(source);
     while (matcher.find()) {
       Token token = new Token(matcher);
-      if (token.modifier.equals("slash")) {
+      if (token.isGreedy && matcher.start() == 8) {
         source = source.substring(8);
         offset = 8;
       }
+      tokens.add(token);
       if (token.isAnchor) {
         root.anchors.add(token.name);
-        anchors.add(token);
       } else {
         root.symbols.add(token.name);
         symbols.add(token);
@@ -53,27 +53,28 @@ public class IdentifierPattern extends AttributePattern {
     }
   }
 
+  private String replacement(Token token, Capture input) {
+    if (token.isAnchor) {
+      Fragment fragment = input.get(token.name);
+      if (fragment != null) return fragment.text;
+    }
+
+    String regexp = token.isGreedy ? "[\\w-./]*" : "[\\w-.]+";
+    if (token.isAnchor) return regexp;
+    return "(" + regexp + ")";
+  }
+
+  /**
+   * replace anchors and symbols
+   * @param input input capture
+   * @return regexp
+   */
   private String prepare(Capture input) {
-    // step 1: replace anchors
     String source = this.source;
-    for (int index = anchors.size(); index > 0; --index) {
-      Token anchor = anchors.get(index - 1);
-      String value = input.containsKey(anchor.name)
-          ? input.get(anchor.name).text
-          : anchor.modifier.equals("slash")
-          ? "[\\w-./]+"
-          : "[\\w-.]+";
-      source = anchor.replace(source, value, offset);
+    for (int index = tokens.size(); index > 0; --index) {
+      Token token = tokens.get(index - 1);
+      source = token.replace(source, replacement(token, input), offset);
     }
-
-    // step 2: replace symbols
-    String[] segments = VARIABLE.split(source, -1);
-    if (segments[0].equals("")) {
-      source = "(.+)" + String.join("([\\w-.]+)", segments).substring(9);
-    } else {
-      source = String.join("([\\w-.]+)", segments);
-    }
-
     return source;
   }
 
