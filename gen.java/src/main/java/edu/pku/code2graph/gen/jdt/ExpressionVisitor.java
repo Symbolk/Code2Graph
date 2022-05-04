@@ -33,6 +33,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
   private List<String> annotationList = Arrays.asList("Select", "Update", "Insert", "Delete");
 
   private JsqlGenerator generator = new JsqlGenerator();
+  private Map<String, List<ElementNode>> identifierMap = generator.getIdentifiers();
 
   @Override
   public void preVisit(ASTNode node) {
@@ -409,8 +410,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
     parseBodyBlock(md.getBody(), md.getName().toString(), qname)
         .ifPresent(
-            blockNode ->
-                graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+            blockNode -> graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
     return true;
   }
 
@@ -447,7 +447,12 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
                 lang,
                 idtf,
                 annotatedNode.getUri(),
-                "");
+                idtf);
+
+        List<ElementNode> identifierById = identifierMap.get(idtf);
+        for (ElementNode node : identifierById) {
+          GraphUtil.addNode(node);
+        }
 
         Map<String, List<RelationNode>> queryList = generator.getQueries();
         if (annotatedNode != null && queryList.get("") != null) {

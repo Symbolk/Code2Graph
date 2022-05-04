@@ -190,7 +190,8 @@ public class MybatisMapperHandler extends AbstractHandler {
       String attrVal = attributes.getValue(i);
       URI attrUri = new URI(false, uriFilePath);
       attrUri.addLayer(
-          qName.equals("mapper") ? "" : "mapper/" + qName + "/" + attrName, Language.XML);
+          qName.equals("mapper") ? qName + "/" + attrName : "mapper/" + qName + "/" + attrName,
+          Language.XML);
       attrUri.addLayer(URI.checkInvalidCh(attrVal), Language.ANY);
 
       ElementNode attrEle =
