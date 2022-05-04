@@ -115,7 +115,7 @@ public class AttributeTest {
   @Test
   public void greedyCaptureTest2() {
     Matcher matcher = new Matcher("identifier", "(0...)/foo");
-    matcher.shouldFail("foo"); // greedy capture do not match empty content
+    matcher.shouldPass("foo", new String[]{""});
     matcher.shouldPass("bar/foo", new String[]{"bar"});
     matcher.shouldPass("bar/baz/foo", new String[]{"bar/baz"});
     matcher.shouldFail("bar/baz/foo/qux");
@@ -133,7 +133,7 @@ public class AttributeTest {
   @Test
   public void greedyCaptureTest4() {
     Matcher matcher = new Matcher("identifier", "foo/(0...)/qux");
-    matcher.shouldFail("foo/qux"); // greedy capture do not match empty content
+    matcher.shouldPass("foo/qux", new String[]{""});
     matcher.shouldPass("foo/bar/qux", new String[]{"bar"});
     matcher.shouldPass("foo/bar/baz/qux", new String[]{"bar/baz"});
     matcher.shouldFail("foo/bar/baz");
