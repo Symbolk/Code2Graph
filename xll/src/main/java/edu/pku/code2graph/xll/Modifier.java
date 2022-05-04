@@ -14,6 +14,7 @@ public abstract class Modifier {
     }
 
     String[] split(String text) {
+      if (text.isEmpty()) return new String[]{};
       return text.split(regex);
     }
 

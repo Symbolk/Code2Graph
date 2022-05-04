@@ -53,6 +53,7 @@ public class Fragment {
     if (!greedy && sourceSize > targetSize || sourceSize < targetSize) {
       return false;
     }
+    if (targetSize == 0 && sourceSize > 0) return false;
 
     for (int i = 1; i <= targetSize; i++) {
       if (!target.get(targetSize - i).equals(source.get(sourceSize - i))) {
