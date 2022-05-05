@@ -171,8 +171,8 @@ public class CacheHandler {
         break;
       case "mybatis":
         langs.add(Language.JAVA);
-        langs.add(Language.XML);
-        langs.add(Language.SQL);
+//        langs.add(Language.XML);
+//        langs.add(Language.SQL);
         MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
       default:
         logger.error("framework not valid");

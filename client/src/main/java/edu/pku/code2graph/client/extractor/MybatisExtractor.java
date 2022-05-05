@@ -154,7 +154,10 @@ public class MybatisExtractor extends AbstractExtractor {
             boolean hasMatched = false;
             if (parameterType != null) {
               for (String classPackagePath : fieldMap.keySet()) {
-                if (classPackagePath.endsWith(parameterType)) {
+                int pointer = classPackagePath.lastIndexOf(parameterType);
+                if (pointer + parameterType.length() == classPackagePath.length()
+                    && (pointer > 0 && classPackagePath.charAt(pointer - 1) == '.'
+                        || pointer == 0)) {
                   if (fieldMap.get(classPackagePath).get(symbol) != null) {
                     hasMatched = true;
                     uriPairs.add(
@@ -179,13 +182,29 @@ public class MybatisExtractor extends AbstractExtractor {
               }
             }
           } else {
+            if (name.equals("id")
+                && identifier
+                    .getLayer(0)
+                    .get("identifier")
+                    .equals(
+                        "jeecg-boot/jeecg-boot-module-system/src/main/java/org/jeecg/modules/system/mapper/xml/SysUserMapper.xml")) {
+              System.out.println("aaa");
+            }
             String resultType = query.getResultType();
             if (resultType != null) {
               for (String classPackagePath : fieldMap.keySet()) {
-                if (classPackagePath.endsWith(resultType)) {
+                int pointer = classPackagePath.lastIndexOf(resultType);
+                if (pointer + resultType.length() == classPackagePath.length()
+                    && (pointer > 0 && classPackagePath.charAt(pointer - 1) == '.'
+                        || pointer == 0)) {
+                  String fieldName = underscoreToCamel(name);
                   if (fieldMap.get(classPackagePath).get(name) != null)
                     uriPairs.add(
                         new ImmutablePair<>(identifier, fieldMap.get(classPackagePath).get(name)));
+                  if (fieldMap.get(classPackagePath).get(fieldName) != null)
+                    uriPairs.add(
+                        new ImmutablePair<>(
+                            identifier, fieldMap.get(classPackagePath).get(fieldName)));
                 }
               }
             }
@@ -195,5 +214,16 @@ public class MybatisExtractor extends AbstractExtractor {
     }
 
     uriPairs = removeDuplicateUriPair(uriPairs);
+  }
+
+  private String underscoreToCamel(String symbol) {
+    String[] split = symbol.split("_");
+    StringBuilder result = new StringBuilder();
+    if (split.length > 0) result.append(split[0]);
+    for (int i = 1; i < split.length; i++) {
+      String seg = split[i].substring(0, 1).toUpperCase() + split[i].substring(1);
+      result.append(seg);
+    }
+    return result.toString();
   }
 }
