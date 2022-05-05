@@ -14,7 +14,7 @@ import java.util.*;
 public class AbstractExtractor {
   public List<Pair<URI, URI>> uriPairs = new ArrayList<>();
 
-  public void writeToFile(String filePath, String[] headers) throws IOException {
+  public void writeToFile(String filePath, String[] headers, String framework) throws IOException {
     File outFile = new File(filePath);
     if (!outFile.exists()) {
       outFile.createNewFile();
@@ -24,7 +24,9 @@ public class AbstractExtractor {
     Set<Pair<String, String>> pairSet = new HashSet<>();
     for (Pair<URI, URI> pair : uriPairs) {
       String left = pair.getLeft().toString(), right = pair.getRight().toString();
-      pairSet.add(new ImmutablePair<>(left, right));
+      if (framework.equals("Android")) pairSet.add(new ImmutablePair<>(left, right));
+      else if (framework.equals("SpringMVC") || framework.equals("Mybatis"))
+        pairSet.add(new ImmutablePair<>(right, left));
     }
     for (Pair<String, String> pair : pairSet) {
       String left = pair.getLeft(), right = pair.getRight();
