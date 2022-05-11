@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Project {
   private final static Logger logger = LoggerFactory.getLogger(Project.class);
@@ -18,7 +19,7 @@ public class Project {
   private URITree tree;
 
   // runtime properties
-  private final List<Link> links = new ArrayList<>();
+  private List<Link> links = new ArrayList<>();
   private final Map<String, Set<Capture>> contexts = new HashMap<>();
   private final Set<URI> visited = new HashSet<>();
 
@@ -66,36 +67,51 @@ public class Project {
     return links;
   }
 
+  private URI infer(URI oldUri, URI newUri, URI contra, URIPattern cis, URIPattern trans, Capture input) {
+    Capture oldCap = cis.match(oldUri, input);
+    Capture newCap = cis.match(newUri, input);
+    Capture contraCap = trans.match(contra, input);
+    if (newCap == null) return null;
+    Capture output = input.clone();
+    output.putAll(contraCap);
+    output.putAll(newCap);
+    for (String key : newCap.keySet()) {
+      Fragment oldFrag = oldCap.get(key);
+      Fragment newFrag = newCap.get(key);
+      Fragment contraFrag = contraCap.get(key);
+      if (contraFrag != null) {
+        newFrag.align(oldFrag, contraFrag);
+      }
+    }
+    return trans.refactor(contra, input, output);
+  }
+
   public void rename(URI oldUri, URI newUri, Map<URI, Set<URI>> changes) {
     if (!changes.computeIfAbsent(oldUri, k -> new HashSet<>()).add(newUri)) return;
     for (Link link : links) {
       if (link.def.equals(oldUri)) {
-        Capture o = link.rule.def.match(newUri, link.input);
-        if (o == null) continue;
-        Capture output = link.output.clone();
-        output.putAll(o);
-        URI oldUri2 = link.use;
-        URI newUri2 = link.rule.use.refactor(oldUri2, link.input, output);
-        link.use = newUri2;
-        rename(oldUri2, newUri2, changes);
+        URI contra = link.use;
+        URI result = infer(oldUri, newUri, contra, link.rule.def, link.rule.use, link.input);
+        if (result == null) continue;
+        link.use = result;
+        rename(contra, result, changes);
       } else if (link.use.equals(oldUri)) {
-        Capture o = link.rule.use.match(newUri, link.input);
-        if (o == null) continue;
-        Capture output = link.output.clone();
-        output.putAll(o);
-        URI oldUri2 = link.def;
-        URI newUri2 = link.rule.def.refactor(oldUri2, link.input, output);
-        link.def = newUri2;
-        rename(oldUri2, newUri2, changes);
+        URI contra = link.def;
+        URI result = infer(oldUri, newUri, contra, link.rule.use, link.rule.def, link.input);
+        if (result == null) continue;
+        link.def = result;
+        rename(contra, result, changes);
       }
     }
   }
 
   public List<Pair<URI, URI>> rename(URI oldUri, URI newUri) {
     Map<URI, Set<URI>> changes = new HashMap<>();
-    rename(oldUri, newUri, changes);
+    List<Link> links = this.links.stream().map(Link::clone).collect(Collectors.toList());
 
+    rename(oldUri, newUri, changes);
     changes.remove(oldUri);
+    this.links = links;
     List<Pair<URI, URI>> result = new ArrayList<>();
     for (URI source : changes.keySet()) {
       Set<URI> targets = changes.get(source);

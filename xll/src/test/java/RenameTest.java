@@ -34,7 +34,7 @@ public class RenameTest {
 
     project.link();
     renames = project.rename(uri2, new URI("use://main/java/com/example/demo/MainActivity.java[language=FILE]"
-        + "//R.id.buttonLogout[language=JAVA]"));
+        + "//R.id.buttonLogoutView[language=JAVA]"));
     System.out.println(renames);
   }
 
@@ -43,7 +43,7 @@ public class RenameTest {
     URITree tree = new URITree();
     URI uri1 = new URI("def://BlogController.java[language=FILE]"
         + "//showPost/return[language=JAVA]"
-        + "//blog.show[language=ANY]");
+        + "//blog\\/show[language=ANY]");
     URI uri2 = new URI("def://root/blog/show.html[language=FILE]");
     tree.add(uri1);
     tree.add(uri2);
@@ -52,7 +52,7 @@ public class RenameTest {
 
     URIPattern use = new URIPattern(true, "(javaFile).java");
     use.addLayer("(functionName)/return", Language.JAVA);
-    use.addLayer("(htmlFile:dot)");
+    use.addLayer("(htmlFile)");
 
     Project project = new Project();
     project.setTree(tree);
@@ -63,7 +63,7 @@ public class RenameTest {
     project.link();
     renames = project.rename(uri1, new URI("def://BlogController.java[language=FILE]"
         + "//showPost/return[language=JAVA]"
-        + "//blog.hide[language=ANY]"));
+        + "//blog\\/path\\/showLogin[language=ANY]"));
     System.out.println(renames);
   }
 }
