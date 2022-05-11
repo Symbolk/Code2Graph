@@ -1,6 +1,14 @@
 flowgraph:
   r-mapperBinding:
     - $
+  r-embed-param:
+    - $
+  r-embed-param-dollar:
+    - $
+  r-embed:
+    - $
+  r-embed-dollar:
+    - $
   r-queryId-select:
     - r-mapperBinding
   r-queryId-insert:
@@ -17,6 +25,14 @@ flowgraph:
     - r-queryId-update
   r-paramAnno-delete:
     - r-queryId-delete
+  r-paramAnno-select-dollar:
+    - r-queryId-select
+  r-paramAnno-insert-dollar:
+    - r-queryId-insert
+  r-paramAnno-update-dollar:
+    - r-queryId-update
+  r-paramAnno-delete-dollar:
+    - r-queryId-delete
   r-paramAnno-select-no-jdbc:
     - r-queryId-select
   r-paramAnno-insert-no-jdbc:
@@ -24,6 +40,14 @@ flowgraph:
   r-paramAnno-update-no-jdbc:
     - r-queryId-update
   r-paramAnno-delete-no-jdbc:
+    - r-queryId-delete
+  r-paramAnno-select-no-jdbc-dollar:
+    - r-queryId-select
+  r-paramAnno-insert-no-jdbc-dollar:
+    - r-queryId-insert
+  r-paramAnno-update-no-jdbc-dollar:
+    - r-queryId-update
+  r-paramAnno-delete-no-jdbc-dollar:
     - r-queryId-delete
   r-paramVarname-select:
     - r-queryId-select
@@ -33,6 +57,14 @@ flowgraph:
     - r-queryId-update
   r-paramVarname-delete:
     - r-queryId-delete
+  r-paramVarname-select-dollar:
+    - r-queryId-select
+  r-paramVarname-insert-dollar:
+    - r-queryId-insert
+  r-paramVarname-update-dollar:
+    - r-queryId-update
+  r-paramVarname-delete-dollar:
+    - r-queryId-delete
   r-paramVarname-select-no-jdbc:
     - r-queryId-select
   r-paramVarname-insert-no-jdbc:
@@ -40,6 +72,14 @@ flowgraph:
   r-paramVarname-update-no-jdbc:
     - r-queryId-update
   r-paramVarname-delete-no-jdbc:
+    - r-queryId-delete
+  r-paramVarname-select-no-jdbc-dollar:
+    - r-queryId-select
+  r-paramVarname-insert-no-jdbc-dollar:
+    - r-queryId-insert
+  r-paramVarname-update-no-jdbc-dollar:
+    - r-queryId-update
+  r-paramVarname-delete-no-jdbc-dollar:
     - r-queryId-delete
   #  r-parameterType:
   #    - $
@@ -51,6 +91,14 @@ flowgraph:
     - $
   r-paramType-identifier-delete:
     - $
+  r-paramType-identifier-select-dollar:
+    - $
+  r-paramType-identifier-insert-dollar:
+    - $
+  r-paramType-identifier-update-dollar:
+    - $
+  r-paramType-identifier-delete-dollar:
+    - $
   r-paramType-identifier-select-no-jdbc:
     - $
   r-paramType-identifier-insert-no-jdbc:
@@ -59,16 +107,24 @@ flowgraph:
     - $
   r-paramType-identifier-delete-no-jdbc:
     - $
+  r-paramType-identifier-select-no-jdbc-dollar:
+    - $
+  r-paramType-identifier-insert-no-jdbc-dollar:
+    - $
+  r-paramType-identifier-update-no-jdbc-dollar:
+    - $
+  r-paramType-identifier-delete-no-jdbc-dollar:
+    - $
   #  r-resultType:
   #    - $
-  r-resultType-identifier-select:
-    - $
-  r-resultType-identifier-insert:
-    - $
-  r-resultType-identifier-update:
-    - $
-  r-resultType-identifier-delete:
-    - $
+#  r-resultType-identifier-select:
+#    - $
+#  r-resultType-identifier-insert:
+#    - $
+#  r-resultType-identifier-update:
+#    - $
+#  r-resultType-identifier-delete:
+#    - $
   r-resultType-identifier-select-no-jdbc:
     - $
   r-resultType-identifier-insert-no-jdbc:
@@ -222,6 +278,70 @@ rules:
       inline:
         identifier: (name)
 
+  r-paramAnno-select-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'select'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
+  r-paramAnno-insert-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'insert'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
+  r-paramAnno-update-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'update'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
+  r-paramAnno-delete-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'delete'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
   r-paramVarname-select:
     use:
@@ -274,6 +394,62 @@ rules:
       inline:
         lang: SQL
         identifier: "#{(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-select-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "select"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-insert-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "insert"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-update-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "update"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-delete-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "delete"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name),jdbcType=*}"
     def:
       lang: JAVA
       file: (&packagePath:slash).java
@@ -348,6 +524,62 @@ rules:
       file: (paramTypePackage...)/(class).java
       identifier: (class)/(name)
 
+  r-paramType-identifier-select-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: select
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-insert-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: insert
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-update-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: update
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-delete-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: delete
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name),jdbcType=*}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
   #  r-resultType:
   #    use:
   #      lang: XML
@@ -360,61 +592,117 @@ rules:
   #      file: (*resTypePackage:slash).java
 
   # <select resultType="a.b.c"> #{name,jdbcType=xx} </select> <-> a/b/c.java/class/name
-  r-resultType-identifier-select:
-    use:
-      lang: XML
-      file: (xmlFile).xml
-      identifier: select
-      queryId: (queryId)
-      resultType: (resTypePackage:dot).(class)
-      inline:
-        identifier: "#{(name),*}"
-    def:
-      lang: JAVA
-      file: (resTypePackage...)/(class).java
-      identifier: (class)/(name)
-
-  r-resultType-identifier-insert:
-    use:
-      lang: XML
-      file: (xmlFile).xml
-      identifier: insert
-      queryId: (queryId)
-      resultType: (resTypePackage:dot).(class)
-      inline:
-        identifier: "#{(name),*}"
-    def:
-      lang: JAVA
-      file: (resTypePackage...)/(class).java
-      identifier: (class)/(name)
-
-  r-resultType-identifier-update:
-    use:
-      lang: XML
-      file: (xmlFile).xml
-      identifier: update
-      queryId: (queryId)
-      resultType: (resTypePackage:dot).(class)
-      inline:
-        identifier: "#{(name),*}"
-    def:
-      lang: JAVA
-      file: (resTypePackage...)/(class).java
-      identifier: (class)/(name)
-
-  r-resultType-identifier-delete:
-    use:
-      lang: XML
-      file: (xmlFile).xml
-      identifier: delete
-      queryId: (queryId)
-      resultType: (resTypePackage:dot).(class)
-      inline:
-        identifier: "#{(name),*}"
-    def:
-      lang: JAVA
-      file: (resTypePackage...)/(class).java
-      identifier: (class)/(name)
+#  r-resultType-identifier-select:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: select
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "#{(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-insert:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: insert
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "#{(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-update:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: update
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "#{(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-delete:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: delete
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "#{(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-select-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: select
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-insert-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: insert
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-update-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: update
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-delete-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: delete
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name),*}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
 
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> @Param("name")
   r-paramAnno-select-no-jdbc:
@@ -481,6 +769,70 @@ rules:
       inline:
         identifier: (name)
 
+  r-paramAnno-select-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'select'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
+  r-paramAnno-insert-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'insert'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
+  r-paramAnno-update-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'update'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
+  r-paramAnno-delete-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: 'delete'
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: (&mapperInterface)/(&queryId)/(a)/@Param
+      inline:
+        identifier: (name)
+
   # <select> select * from xx=#{name,jdbcType=yy} </select> <-> func(int name)
   r-paramVarname-select-no-jdbc:
     use:
@@ -518,7 +870,7 @@ rules:
       queryId: (&queryId)
       inline:
         lang: SQL
-        identifier: ""#{(name)}"
+        identifier: "#{(name)}"
     def:
       lang: JAVA
       file: (&packagePath:slash).java
@@ -533,6 +885,62 @@ rules:
       inline:
         lang: SQL
         identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-select-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "select"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-insert-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "insert"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-update-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "update"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (&packagePath:slash).java
+      identifier: "(&mapperInterface)/(&queryId)/(name)"
+
+  r-paramVarname-delete-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (&xmlFile).xml
+      identifier: "delete"
+      queryId: (&queryId)
+      inline:
+        lang: SQL
+        identifier: "${(name)}"
     def:
       lang: JAVA
       file: (&packagePath:slash).java
@@ -595,6 +1003,62 @@ rules:
       file: (paramTypePackage...)/(class).java
       identifier: (class)/(name)
 
+  r-paramType-identifier-select-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: select
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-insert-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: insert
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-update-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: update
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
+  r-paramType-identifier-delete-no-jdbc-dollar:
+    use:
+      lang: XML
+      file: (xmlFile).xml
+      identifier: delete
+      queryId: (queryId)
+      parameterType: (paramTypePackage:dot).(class)
+      inline:
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (paramTypePackage...)/(class).java
+      identifier: (class)/(name)
+
   # <select resultType="a.b.c"> #{name,jdbcType=xx} </select> <-> a/b/c.java/class/name
   r-resultType-identifier-select-no-jdbc:
     use:
@@ -604,7 +1068,7 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: "#{(name)}"
+        identifier: (name)
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java
@@ -618,7 +1082,7 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: "#{(name)}"
+        identifier: (name)
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java
@@ -632,7 +1096,7 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: "#{(name)}"
+        identifier: (name)
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java
@@ -646,11 +1110,123 @@ rules:
       queryId: (queryId)
       resultType: (resTypePackage:dot).(class)
       inline:
-        identifier: "#{(name)}"
+        identifier: (name)
     def:
       lang: JAVA
       file: (resTypePackage...)/(class).java
       identifier: (class)/(name)
+
+#  r-resultType-identifier-select-no-jdbc-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: select
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name)}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-insert-no-jdbc-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: insert
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name)}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-update-no-jdbc-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: update
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name)}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+#
+#  r-resultType-identifier-delete-no-jdbc-dollar:
+#    use:
+#      lang: XML
+#      file: (xmlFile).xml
+#      identifier: delete
+#      queryId: (queryId)
+#      resultType: (resTypePackage:dot).(class)
+#      inline:
+#        identifier: "${(name)}"
+#    def:
+#      lang: JAVA
+#      file: (resTypePackage...)/(class).java
+#      identifier: (class)/(name)
+
+  r-embed-param:
+    use:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)
+      inline:
+        language: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)/(par)/@Param
+      inline:
+        identifier: (name)
+
+  r-embed-param-dollar:
+    use:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)
+      inline:
+        language: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)/(par)/@Param
+      inline:
+        identifier: (name)
+
+  r-embed:
+    use:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)
+      inline:
+        language: SQL
+        identifier: "#{(name)}"
+    def:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)/(name)
+
+  r-embed-dollar:
+    use:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)
+      inline:
+        language: SQL
+        identifier: "${(name)}"
+    def:
+      lang: JAVA
+      file: (embedSQL).java
+      identifier: (Class)/(Function)/(name)
 
   # TODO: express include tag in query with queryId more naturally
   # <select queryId="query"><include refid="ref"></select>
