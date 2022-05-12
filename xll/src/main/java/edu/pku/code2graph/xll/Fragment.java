@@ -1,43 +1,41 @@
 package edu.pku.code2graph.xll;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 public class Fragment {
-  private static final Map<String, Modifier> modifiers = new HashMap<>();
-
-  static {
-    modifiers.put("dot", new Modifier.Separator("."));
-    modifiers.put("snake", new Modifier.Separator("_"));
-    modifiers.put("param", new Modifier.Separator("-"));
-    modifiers.put("slash", new Modifier.Separator("/"));
-    modifiers.put("camel", new Modifier.Capital(true));
-    modifiers.put("pascal", new Modifier.Capital(false));
-  }
-
   public final boolean greedy;
   public String text;
   public final String plain;
   public final String format;
+  private boolean isAuto;
   private LinkedList<String> slices;
 
   public Fragment(String text, String format) {
     this.text = text;
     this.plain = text.toLowerCase().replaceAll("[^0-9a-z]", "");
+    if (format.equals("auto")) {
+      if (text.contains("/")) {
+        format = "slash";
+      } else if (text.contains("-")) {
+        format = "param";
+      } else if (text.contains("_")) {
+        format = "snake";
+      } else if (text.contains(".")) {
+        format = "dot";
+      } else {
+        format = "camel";
+      }
+    }
     this.format = format;
     this.greedy = format.equals("slash");
   }
 
   public List<String> slice() {
     if (slices != null) return slices;
-    Modifier modifier = modifiers.get(format);
+    Modifier modifier = Modifier.from(format);
     if (modifier == null) return null;
-
-    slices = new LinkedList<>();
-    String[] words = modifier.split(text);
-    for (String word : words) {
-      slices.add(word.toLowerCase());
-    }
-    return slices;
+    return slices = modifier.split(text);
   }
 
   public boolean match(Fragment fragment) {
@@ -63,15 +61,16 @@ public class Fragment {
     return true;
   }
 
-  public void align(List<String> words) {
-    int count = slice().size() - words.size();
-    if (count > 0) {
-      while (count-- > 0) {
-        slices.removeFirst();
+  public void align(Fragment old, Fragment contra) {
+    slice();
+    int offset = contra.slice().size() - old.slice().size();
+    if (offset > 0) {
+      while (offset-- > 0) {
+        slices.addFirst(contra.slice().get(offset));
       }
     } else {
-      while (count++ < 0) {
-        slices.addFirst(words.get(-count));
+      while (offset++ < 0) {
+        slices.removeFirst();
       }
     }
     text = toString(format);
@@ -80,7 +79,7 @@ public class Fragment {
   public String toString(String format) {
     List<String> source = slice();
     if (source == null) return text;
-    Modifier modifier = modifiers.get(format);
+    Modifier modifier = Modifier.from(format);
     if (modifier == null) return text;
 
     StringBuilder builder = new StringBuilder();

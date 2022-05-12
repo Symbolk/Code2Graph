@@ -126,9 +126,19 @@ public class SpringExtractor extends AbstractExtractor {
     String fileWithoutExt = split[split.length - 2];
     if (uri.getLayerCount() == 1) {
       for (String key : viewPathReturns.keySet()) {
-        if (fileWithoutExt.endsWith(key) || filename.endsWith(key)) {
+        String[] filePathSplit = fileWithoutExt.split("/");
+        String fileNameWithoutExt = filePathSplit[filePathSplit.length - 1];
+        filePathSplit = filename.split("/");
+        String fileName = filePathSplit[filePathSplit.length - 1];
+        if (key.contains("/") && (fileWithoutExt.endsWith(key) || filename.endsWith(key))
+            || fileNameWithoutExt.equals(key)
+            || fileName.equals(key)) {
           for (URI val : viewPathReturns.get(key)) {
-            uriPairs.add(new ImmutablePair<>(val, uri));
+            int pos = filename.indexOf("src/main");
+            if (pos == -1) continue;
+            String prefix = filename.substring(0, pos);
+            if (val.getLayer(0).get("identifier").startsWith(prefix))
+              uriPairs.add(new ImmutablePair<>(val, uri));
           }
         }
       }
@@ -138,10 +148,20 @@ public class SpringExtractor extends AbstractExtractor {
     String sym = uri.getSymbol();
     sym = sym.substring(2, sym.length() - 1).trim();
     for (String key : javaURIS.keySet()) {
-      if (fileWithoutExt.endsWith(key) || filename.endsWith(key)) {
+      String[] filePathSplit = fileWithoutExt.split("/");
+      String fileNameWithoutExt = filePathSplit[filePathSplit.length - 1];
+      filePathSplit = filename.split("/");
+      String fileName = filePathSplit[filePathSplit.length - 1];
+      if (key.contains("/") && (fileWithoutExt.endsWith(key) || filename.endsWith(key))
+          || fileNameWithoutExt.equals(key)
+          || fileName.equals(key)) {
         for (URI val : javaURIS.get(key)) {
           if (val.getSymbol().equals(sym)) {
-            uriPairs.add(new ImmutablePair<>(uri, val));
+            int pos = filename.indexOf("src/main");
+            if (pos == -1) continue;
+            String prefix = filename.substring(0, pos);
+            if (val.getLayer(0).get("identifier").startsWith(prefix))
+              uriPairs.add(new ImmutablePair<>(uri, val));
           }
         }
       }

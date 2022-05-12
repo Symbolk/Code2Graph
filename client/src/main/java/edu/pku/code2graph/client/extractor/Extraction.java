@@ -82,22 +82,22 @@ public class Extraction {
   private static void generateSpringGT() throws IOException {
     SpringExtractor extractor = new SpringExtractor();
     extractor.generateInstances(repoPath, repoPath);
-    String[] headers = {"use", "def"};
-    extractor.writeToFile(gtPath, headers);
+    String[] headers = {"def", "use"};
+    extractor.writeToFile(gtPath, headers, "SpringMVC");
   }
 
   private static void generateAndroidGT() throws IOException {
     AndroidExtractor extractor = new AndroidExtractor();
     extractor.generateInstances(repoPath, repoPath);
     String[] headers = {"def", "use"};
-    extractor.writeToFile(gtPath, headers);
+    extractor.writeToFile(gtPath, headers, "Android");
   }
 
   private static void generateMybatisGT()
       throws IOException, ParserConfigurationException, SAXException {
     MybatisExtractor extractor = new MybatisExtractor();
     extractor.generateInstances(repoPath, repoPath);
-    String[] headers = {"use", "def"};
-    extractor.writeToFile(gtPath, headers);
+    String[] headers = {"def", "use"};
+    extractor.writeToFile(gtPath, headers, "Mybatis");
   }
 }

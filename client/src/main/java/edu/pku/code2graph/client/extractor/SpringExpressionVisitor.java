@@ -691,7 +691,6 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
           if (exp.toString().contains("addAttribute(")
               || exp.toString().contains("setAttribute(")
               || exp.toString().contains("addObject(")
-              || exp.toString().contains("getParameter(")
               || exp.toString().startsWith("model") && exp.toString().contains("put(")) {
             //          parseArguments(root, mi.arguments(), addedToMap);
             String identifier = root.getUri().getIdentifier();
