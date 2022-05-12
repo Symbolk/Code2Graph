@@ -96,4 +96,52 @@ public class RenameTest {
         + "//EverydayAdapter/ThreeHolder/onBindingView/setOnClick/binding.llThreeOneThird[language=JAVA]"));
     System.out.println(renames);
   }
+
+  @Test
+  public void test4() {
+    URITree tree = new URITree();
+
+    URI uri0 = new URI("def://app/src/main/res/layout/fragment_description.xml[language=FILE]"
+        + "//androidx.core.widget.NestedScrollView/androidx.constraintlayout.widget.ConstraintLayout/TextView/app:layout_constraintEnd_toStartOf[language=XML]"
+        + "//@+id\\\\/detail_select_description_button[language=ANY]");
+    URI uri1 = new URI("def://app/src/main/res/layout/fragment_description.xml[language=FILE]"
+        + "//androidx.core.widget.NestedScrollView/androidx.constraintlayout.widget.ConstraintLayout/ImageView/android:id[language=XML]"
+        + "//@+id\\\\/detail_select_description_button[language=ANY]");
+    URI uri2 = new URI("use://app/src/main/java/org/schabi/newpipe/fragments/detail/DescriptionFragment.java[language=FILE]"
+        + "//DescriptionFragment/disableDescriptionSelection/TooltipCompat.setTooltipText/binding.detailSelectDescriptionButton[language=JAVA]");
+    tree.add(uri0);
+    tree.add(uri1);
+    tree.add(uri2);
+
+    Project project = new Project();
+    project.setTree(tree);
+
+    URIPattern def = new URIPattern(false, "(&layoutName).xml");
+    def.addLayer("android:id", Language.XML);
+    def.addLayer("@+id\\/(name)");
+
+    URIPattern use = new URIPattern(true, "(&javaFile).java");
+    use.addLayer("(&bindingVar).(name:camel)", Language.JAVA);
+
+    project.addRule(new Rule(def, use));
+
+    def = new URIPattern(false, "(&layoutName).xml");
+    def.addLayer("android:id", Language.XML);
+    def.addLayer("@+id\\/(name)");
+
+    use = new URIPattern(true, "(&layoutName).xml");
+    use.addLayer("*constraint*", Language.XML);
+    use.addLayer("@+id\\/(name)");
+
+    project.addRule(new Rule(def, use));
+
+    List<Pair<URI, URI>> renames;
+
+    project.link();
+    renames = project.rename(uri2, new URI("use://app/src/main/java/org/schabi/newpipe/fragments/detail/DescriptionFragment.java[language=FILE]"
+        + "//DescriptionFragment/disableDescriptionSelection/TooltipCompat.setTooltipText/binding.detailedSelectDescriptionButton[language=JAVA]"));
+    System.out.println(renames.size());
+    System.out.println(renames.get(0));
+    System.out.println(renames.get(1));
+  }
 }
