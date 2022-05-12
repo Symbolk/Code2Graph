@@ -3,11 +3,19 @@ flowgraph:
     - $
   r-menu:
     - $
+  r-dataBindingClassLink:
+    - $
   r-id:
     - r-layout
     - r-menu
+    - r-dataBindingClassLink
     - $
-  r-dataBindingClassLink:
+  r-android-id:
+    - r-layout
+    - r-menu
+    - r-dataBindingClassLink
+    - $
+  r-dataBindingClass:
     - $
   r-include-layout:
     - r-dataBindingClassLink
@@ -61,19 +69,28 @@ rules:
       inline:
         identifier: '@+id\/(name)'
 
+  r-android-id:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: android.R.id.(name)
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@android:id\/(name)'
+
   # <data class="bindingName"> <-> bindingName bindingVar
   r-dataBindingClass:
+    hidden: true
     use:
       lang: JAVA
       file: '(javaFile).java'
-      identifier: "(bindingVar)"
-      varType: bindingName
+      identifier: (layoutName:pascal)Binding
     def:
       lang: XML
-      file: '(layoutName).xml'
-      identifier: data/class
-      inline:
-        identifier: (bindingName)
+      file: (layoutName:snake).xml
 
   # binding.setContentView(this, R.layout.layoutName) <-> layoutName.xml
   r-dataBindingLayout:
@@ -145,7 +162,7 @@ rules:
         identifier: '@+id\/(name:snake)'
 
   r-xml-inner:
-    hidden: true
+#    hidden: true
     def:
       lang: XML
       file: (&layoutName).xml
@@ -155,8 +172,9 @@ rules:
     use:
       lang: XML
       file: (&layoutName).xml
+      identifier: "*to*"
       inline:
-        identifier: '@id\/(&name)'
+        identifier: '*\/(&name)'
   r-xml-include-inner:
     hidden: true
     def:
