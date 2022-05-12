@@ -32,7 +32,7 @@ public class IdentifierPattern extends AttributePattern {
             .replaceAll("\\$", "\\\\\\$")
             .replaceAll("\\+", "\\\\+")
             .replaceAll("\\*\\*/", "(?:.+/)?")
-            .replaceAll("/\\*\\*", "(?:/.+)?")
+            .replaceAll("/\\*\\*$", "(?:/.+)?")
             .replaceAll("\\*", "[^/]+")
             .replaceAll("\\{", "\\\\{");
 
@@ -59,7 +59,7 @@ public class IdentifierPattern extends AttributePattern {
       if (fragment != null) return fragment.text;
     }
 
-    String regexp = token.isGreedy ? "[\\w-./]*" : "[\\w-.]+";
+    String regexp = token.isGreedy ? ".+" : "[^/]+";
     if (token.isAnchor) return regexp;
     return "(" + regexp + ")";
   }
@@ -75,7 +75,9 @@ public class IdentifierPattern extends AttributePattern {
       Token token = tokens.get(index - 1);
       source = token.replace(source, replacement(token, input), offset);
     }
-    return source;
+    return source
+        .replaceAll("\\(\\.\\+\\)/", "(?:(.+)/)?")
+        .replaceAll("/\\(\\.\\+\\)$", "(?:/(.+))?");
   }
 
   public boolean match(String target, Capture input, Capture result) {
@@ -90,11 +92,11 @@ public class IdentifierPattern extends AttributePattern {
 
     int count = matcher.groupCount();
     for (int i = 1; i <= count; ++i) {
-      String value = matcher.group(i)
-          .replace("__slash__", "/");
+      String value = matcher.group(i);
+      if (value == null) value = "";
+      value = value.replace("__slash__", "/");
       Token token = symbols.get(i - 1);
       Fragment fragment = new Fragment(value, token.modifier);
-      if (fragment.plain.isEmpty()) return false;
       if (!result.accept(token.name, fragment)) return false;
     }
 
