@@ -3,23 +3,38 @@ flowgraph:
     - $
   r-menu:
     - $
+  r-dataBindingClassLink:
+    - $
+  r-id:
+    - r-layout
+    - r-menu
+    - r-dataBindingClassLink
+    - $
+  r-android-id:
+    - r-layout
+    - r-menu
+    - r-dataBindingClassLink
+    - $
+  r-dataBindingClass:
+    - $
   r-include-layout:
     - r-dataBindingClassLink
     - r-layout
   r-include-id:
     - r-include-layout
-  r-id:
-    - r-layout
-    - r-menu
-    - $
-  r-dataBindingClassLink:
-    - $
   r-include-dataBinding:
     - r-include-layout
   r-dataBinding:
     - r-dataBindingClassLink
     - r-layout
 #    - $
+  r-xml-inner:
+    - r-id
+    - r-dataBinding
+  r-xml-include-inner:
+    - r-include-id
+  r-xml-include-inter:
+    - r-include-id
 
 rules:
   # setContentView(R.layout.layoutName) <-> layoutName.xml
@@ -54,19 +69,28 @@ rules:
       inline:
         identifier: '@+id\/(name)'
 
+  r-android-id:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: android.R.id.(name)
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@android:id\/(name)'
+
   # <data class="bindingName"> <-> bindingName bindingVar
   r-dataBindingClass:
+    hidden: true
     use:
       lang: JAVA
       file: '(javaFile).java'
-      identifier: "(bindingVar)"
-      varType: bindingName
+      identifier: (layoutName:pascal)Binding
     def:
       lang: XML
-      file: '(layoutName).xml'
-      identifier: data/class
-      inline:
-        identifier: (bindingName)
+      file: (layoutName:snake).xml
 
   # binding.setContentView(this, R.layout.layoutName) <-> layoutName.xml
   r-dataBindingLayout:
@@ -83,7 +107,7 @@ rules:
       lang: JAVA
       file: (javaFile).java
       identifier: (bindingVar)
-      varType: (layoutName:capitalized)Binding
+      varType: (layoutName:pascal)Binding
     def:
       lang: XML
       file: (layoutName:snake).xml
@@ -93,13 +117,13 @@ rules:
     use:
       lang: JAVA
       file: '(&javaFile).java'
-      identifier: (&bindingVar).(widgetId)
+      identifier: (&bindingVar).(name:camel)
     def:
       lang: XML
       file: (&layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@+id\/(widgetId:snake)'
+        identifier: '@+id\/(name)'
 
   r-include-layout:
     hidden: true
@@ -108,7 +132,7 @@ rules:
       file: (&layoutName).xml
       identifier: include/layout
       inline:
-        identifier: '@layout/(includeLayout)'
+        identifier: '@layout\/(includeLayout)'
     def:
       lang: XML
       file: (includeLayout).xml
@@ -129,10 +153,51 @@ rules:
     use:
       lang: JAVA
       file: '(&javaFile).java'
-      identifier: (&bindingVar).(widgetId)
+      identifier: (&bindingVar).(name)
     def:
       lang: XML
       file: (&includeLayout).xml
       identifier: android:id
       inline:
-        identifier: '@+id\/(widgetId:snake)'
+        identifier: '@+id\/(name:snake)'
+
+  r-xml-inner:
+#    hidden: true
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(&name)'
+    use:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: "*to*"
+      inline:
+        identifier: '*\/(&name)'
+  r-xml-include-inner:
+    hidden: true
+    def:
+      lang: XML
+      file: (&includeLayout).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+    use:
+      lang: XML
+      file: (&includeLayout).xml
+      inline:
+        identifier: '@id\/(&name)'
+  r-xml-include-inter:
+    hidden: true
+    def:
+      lang: XML
+      file: (&includeLayout).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+    use:
+      lang: XML
+      file: (&layoutName).xml
+      inline:
+        identifier: '*\/(&name)'

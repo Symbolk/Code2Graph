@@ -1,47 +1,210 @@
 flowgraph:
-  r-htmlPath:
+  r-htmlPath-strict:
     - $
-  r-jspPath:
+  r-jspPath-strict:
     - $
-  r-jspPath-in-func:
-    - $
-  r-htmlPath-in-func:
-    - $
+#  r-htmlPath:
+#    - $
+#  r-jspPath:
+#    - $
+#  r-jspPath-in-func:
+#    - $
+#  r-htmlPath-in-func:
+#    - $
   r-viewPathHtml:
     - $
   r-viewPathJsp:
     - $
-  r-setAttr:
-    - r-htmlPath
-    - r-viewPathHtml
-    - r-htmlPath-in-func
-  r-setAttrJsp:
-    - r-jspPath
-    - r-viewPathJsp
-    - r-jspPath-in-func
-  r-addAttr:
-    - r-htmlPath
-    - r-viewPathHtml
-    - r-htmlPath-in-func
-  r-addAttrJsp:
-    - r-jspPath
-    - r-viewPathJsp
-    - r-jspPath-in-func
-  r-global-model:
-    - r-htmlPath
-    - r-viewPathHtml
-    - r-htmlPath-in-func
-  r-global-model-jsp:
-    - r-jspPath
-    - r-viewPathJsp
-    - r-jspPath-in-func
-#  r-global-model-addAttr:
+  r-htmlPath-slash:
+    - $
+  r-jspPath-slash:
+    - $
+#  r-jspPath-in-func-slash:
+#    - $
+#  r-htmlPath-in-func-slash:
+#    - $
+  r-viewPathHtml-slash:
+    - $
+  r-viewPathJsp-slash-strict:
+    - $
+#  r-viewPathJsp-slash:
+#    - $
+  r-modelMap:
+    - r-htmlPath-strict
+    - r-jspPath-strict
 #    - r-htmlPath
+#    - r-jspPath
+#    - r-jspPath-in-func
+#    - r-htmlPath-in-func
+    - r-viewPathHtml
+    - r-viewPathJsp
+    - r-htmlPath-slash
+    - r-jspPath-slash
+#    - r-jspPath-in-func-slash
+#    - r-htmlPath-in-func-slash
+    - r-viewPathHtml-slash
+    - r-viewPathJsp-slash-strict
+#    - r-viewPathJsp-slash
+  r-setAttr:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+    - r-htmlPath-slash
+    - r-viewPathHtml-slash
+#    - r-htmlPath-in-func-slash
+  r-setAttrJsp:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+    - r-jspPath-slash
+    - r-viewPathJsp-slash-strict
+#    - r-viewPathJsp-slash
+#    - r-jspPath-in-func-slash
+  r-addAttr:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+    - r-htmlPath-slash
+    - r-viewPathHtml-slash
+#    - r-htmlPath-in-func-slash
+  r-addAttrJsp:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+    - r-jspPath-slash
+    - r-viewPathJsp-slash-strict
+#    - r-viewPathJsp-slash
+#    - r-jspPath-in-func-slash
+  r-global-model:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+    - r-htmlPath-slash
+    - r-viewPathHtml-slash
+#    - r-htmlPath-in-func-slash
+  r-getAttr:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-getAttrJsp:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-global-model-jsp:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-setAttr-dot:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-setAttrJsp-dot:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-addAttr-dot:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-addAttrJsp-dot:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-getAttr-dot:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-getAttrJsp-dot:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-global-model-dot:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-global-model-jsp-dot:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-setAttr-blank:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-setAttrJsp-blank:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-addAttr-blank:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-addAttrJsp-blank:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-getAttr-blank:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-getAttrJsp-blank:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  r-global-model-blank:
+    - r-htmlPath-strict
+#    - r-htmlPath
+    - r-viewPathHtml
+#    - r-htmlPath-in-func
+  r-global-model-jsp-blank:
+    - r-jspPath-strict
+#    - r-jspPath
+    - r-viewPathJsp
+#    - r-jspPath-in-func
+  #  r-global-model-addAttr:
+  #    - r-htmlPath
+  r-modelMap-put:
+    - r-modelMap
+  r-modelMap-put-jsp:
+    - r-modelMap
+  r-modelMap-put-dot:
+    - r-modelMap
+  r-modelMap-put-jsp-dot:
+    - r-modelMap
+  r-modelMap-put-blank:
+    - r-modelMap
+  r-modelMap-put-jsp-blank:
+    - r-modelMap
   r-mav-htmlPath:
     - $
   r-mav-modelName:
     - r-mav-htmlPath
   r-mav-attr:
+    - r-mav-modelName
+  r-mav-attr-dot:
+    - r-mav-modelName
+  r-mav-attr-blank:
     - r-mav-modelName
 
 rules:
@@ -50,7 +213,7 @@ rules:
     def:
       lang: JAVA
       file: (&javaFile).java
-      identifier: '(&functionName)/(&modelName).addAttribute'
+      identifier: '(&functionName)/*addAttribute'
       inline:
         identifier: (name)
     use:
@@ -60,11 +223,40 @@ rules:
       inline:
         identifier: "${(name)}"
 
+  r-addAttr-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*addAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-addAttr-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*addAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
+
   r-addAttrJsp:
     def:
       lang: JAVA
       file: (&javaFile).java
-      identifier: '(&functionName)/(&modelName).addAttribute'
+      identifier: '(&functionName)/*addAttribute'
       inline:
         identifier: (name)
     use:
@@ -73,13 +265,42 @@ rules:
       identifier: "**"
       inline:
         identifier: "${(name)}"
+
+  r-addAttrJsp-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*addAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-addAttrJsp-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*addAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
 
   # model.addAttribute("name", ) <-> ${name}
   r-setAttr:
     def:
       lang: JAVA
       file: (&javaFile).java
-      identifier: '(&functionName)/(&modelName).setAttribute'
+      identifier: '(&functionName)/*setAttribute'
       inline:
         identifier: (name)
     use:
@@ -89,11 +310,40 @@ rules:
       inline:
         identifier: "${(name)}"
 
+  r-setAttr-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*setAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-setAttr-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*setAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
+
   r-setAttrJsp:
     def:
       lang: JAVA
       file: (&javaFile).java
-      identifier: '(&functionName)/(&modelName).setAttribute'
+      identifier: '(&functionName)/*setAttribute'
       inline:
         identifier: (name)
     use:
@@ -103,71 +353,353 @@ rules:
       inline:
         identifier: "${(name)}"
 
-  # functionName(Model modelName) <-> modelName.addAttribute("name", )
+  r-setAttrJsp-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*setAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-setAttrJsp-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*setAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
+
+
+  r-getAttr:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*getParameter'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name)}"
+
+  r-getAttr-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*getAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-getAttr-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*getAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
+
+  r-getAttrJsp:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*getAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name)}"
+
+  r-getAttrJsp-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*getAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-getAttrJsp-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/*getAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
+
+  # functionName(ModelMap modelName) <-> modelName.put("name", )
   # optional
-#  r-modelName:
-#    use:
-#      lang: JAVA
-#      file: (&javaFile).java
-#      identifier: "(&functionName)/(modelName)"
-#    def:
-#      lang: JAVA
-#      file: (&javaFile).java
-#      identifier: (modelName)
+  r-modelMap:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: "(&functionName)/**/(modelMap)"
+      varType: ModelMap
+    use:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: (&functionName)/(modelMap).put
+
+
+  r-modelMap-put:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: "(&functionName)/**/(&modelMap).put"
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name)}"
+
+  r-modelMap-put-jsp:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: "(&functionName)/**/(&modelMap).put"
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name)}"
+
+  r-modelMap-put-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: "(&functionName)/**/(&modelMap).put"
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-modelMap-put-jsp-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: "(&functionName)/**/(&modelMap).put"
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-modelMap-put-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: "(&functionName)/**/(&modelMap).put"
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
+
+  r-modelMap-put-jsp-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: "(&functionName)/**/(&modelMap).put"
+      inline:
+        identifier: (name)
+    use:
+      lang: HTML
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
 
   # return "htmlPath" <-> htmlPath.html
   # TODO 捕获组可以包含多个segment吗？
   r-htmlPath:
     use:
       lang: JAVA
-      file: (javaFile).java
-      identifier: (functionName)/return
+      file: (root...)/src/main/**/(javaFile).java
+      identifier: (functionName)/return/**
       inline:
-        identifier: (htmlFile)
+        identifier: (htmlFile...)
     def:
       lang: FILE
-      file: (htmlFile...).html
+      file: (root...)/src/main/(htmlFile...).html
+
+  r-htmlPath-strict:
+    use:
+      lang: JAVA
+      file: (root...)/src/main/**/(javaFile).java
+      identifier: (functionName)/return/**
+      inline:
+        identifier: (htmlFile...)
+    def:
+      lang: FILE
+      file: (root...)/src/main/(htmlFile...).html
+
+  r-htmlPath-slash:
+    use:
+      lang: JAVA
+      file: (root...)/src/main/**/(javaFile).java
+      identifier: (functionName)/return/**
+      inline:
+        identifier: \/(htmlFile...)
+    def:
+      lang: FILE
+      file: (root...)/src/main/(htmlFile...).html
 
   r-jspPath:
     use:
       lang: JAVA
-      file: (javaFile).java
-      identifier: (functionName)/return
-      inline:
-        identifier: (jspFile)
-    def:
-      lang: FILE
-      file: (jspFile...).jsp
-
-  r-jspPath-in-func:
-    use:
-      lang: JAVA
-      file: (javaFile).java
+      file: (root...)/src/main/**/(javaFile).java
       identifier: (functionName)/return/**
       inline:
-        identifier: (jspFile)
+        identifier: (jspFile...)
     def:
       lang: FILE
-      file: (jspFile...).jsp
+      file: (root...)/src/main/(jspFile...).jsp
 
-  r-htmlPath-in-func:
+  r-jspPath-strict:
     use:
       lang: JAVA
-      file: (javaFile).java
+      file: (root...)/src/main/**/(javaFile).java
       identifier: (functionName)/return/**
       inline:
-        identifier: (htmlFile)
+        identifier: (jspFile...)
     def:
       lang: FILE
-      file: (htmlFile...).html
+      file: (root...)/src/main/(jspFile...).jsp
+
+  r-jspPath-slash:
+    use:
+      lang: JAVA
+      file: (root...)/src/main/**/(javaFile).java
+      identifier: (functionName)/return/**
+      inline:
+        identifier: \/(jspFile...)
+    def:
+      lang: FILE
+      file: (root...)/src/main/(jspFile...).jsp
+
+#  r-jspPath-in-func:
+#    use:
+#      lang: JAVA
+#      file: (javaFile).java
+#      identifier: (functionName)/return
+#      inline:
+#        identifier: (jspFile...)
+#    def:
+#      lang: FILE
+#      file: (jspFile...).jsp
+#
+#  r-jspPath-in-func-slash:
+#    use:
+#      lang: JAVA
+#      file: (javaFile).java
+#      identifier: (functionName)/return
+#      inline:
+#        identifier: \/(jspFile...)
+#    def:
+#      lang: FILE
+#      file: (jspFile...).jsp
+
+#  r-htmlPath-in-func:
+#    use:
+#      lang: JAVA
+#      file: (root)/src/main/**/(javaFile).java
+#      identifier: (functionName)/return
+#      inline:
+#        identifier: (htmlFile...)
+#    def:
+#      lang: FILE
+#      file: (root)/src/main/(htmlFile...).html
+#
+#  r-htmlPath-in-func-slash:
+#    use:
+#      lang: JAVA
+#      file: (javaFile).java
+#      identifier: (functionName)/return
+#      inline:
+#        identifier: \/(htmlFile...)
+#    def:
+#      lang: FILE
+#      file: (htmlFile...).html
 
   r-viewPathHtml:
     use:
       lang: JAVA
       file: (javaFile).java
-      identifier: (functionName)/return
+      identifier: (functionName)/return/**
       inline:
-        identifier: (htmlFile).html
+        identifier: (htmlFile...).html
+    def:
+      lang: FILE
+      file: (htmlFile...).html
+
+  r-viewPathHtml-slash:
+    use:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (functionName)/return/**
+      inline:
+        identifier: \/(htmlFile...).html
     def:
       lang: FILE
       file: (htmlFile...).html
@@ -176,12 +708,34 @@ rules:
     use:
       lang: JAVA
       file: (javaFile).java
-      identifier: (functionName)/return
+      identifier: (functionName)/return/**
       inline:
-        identifier: (jspFile).jsp
+        identifier: (jspFile...).jsp
     def:
       lang: FILE
       file: (jspFile...).jsp
+
+  r-viewPathJsp-slash:
+    use:
+      lang: JAVA
+      file: (root...)/src/main/**/(javaFile).java
+      identifier: (functionName)/return/**
+      inline:
+        identifier: \/(jspFile...).jsp
+    def:
+      lang: FILE
+      file: (root...)/src/main/(jspFile...).jsp
+
+  r-viewPathJsp-slash-strict:
+    use:
+      lang: JAVA
+      file: (root...)/src/main/**/(javaFile).java
+      identifier: (functionName)/return/**
+      inline:
+        identifier: \/(jspFile...).jsp
+    def:
+      lang: FILE
+      file: (root...)/src/main/(jspFile...).jsp
 
   # mav.setViewName("htmlPath") <-> htmlPath.html
   r-mav-htmlPath:
@@ -190,7 +744,7 @@ rules:
       file: (javaFile).java
       identifier: '(mav).setViewName'
       inline:
-        identifier: (htmlFile)
+        identifier: (htmlFile...)
     def:
       lang: FILE
       file: (htmlFile...).html
@@ -201,7 +755,7 @@ rules:
       file: (javaFile).java
       identifier: '(mav).setViewName'
       inline:
-        identifier: (jspFile)
+        identifier: (jspFile...)
     def:
       lang: FILE
       file: (jspFile...).jsp
@@ -236,6 +790,35 @@ rules:
       inline:
         identifier: "${(&name)}"
 
+  r-mav-attr-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&controller)/(&functionName)/(&mav)/addObject'
+      inline:
+        identifier: (&name)
+    use:
+      lang: OTHER
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(&name).*}"
+
+  r-mav-attr-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&controller)/(&functionName)/(&mav)/addObject'
+      inline:
+        identifier: (&name)
+    use:
+      lang: OTHER
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(&name) }"
+
   # @ModelAttribute("name") <-> ${name}
   r-global-model:
     def:
@@ -251,6 +834,35 @@ rules:
       inline:
         identifier: "${(name)}"
 
+  r-global-model-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/@ModelAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: OTHER
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-global-model-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/@ModelAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: OTHER
+      file: (&htmlFile).html
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
+
   r-global-model-jsp:
     def:
       lang: JAVA
@@ -264,6 +876,35 @@ rules:
       identifier: "**"
       inline:
         identifier: "${(name)}"
+
+  r-global-model-jsp-dot:
+    hidden: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/@ModelAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: OTHER
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name).*}"
+
+  r-global-model-jsp-blank:
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: '(&functionName)/@ModelAttribute'
+      inline:
+        identifier: (name)
+    use:
+      lang: OTHER
+      file: (&jspFile).jsp
+      identifier: "**"
+      inline:
+        identifier: "${(name) }"
 
   # @ModelAttribute & addAttribute("name") <-> ${name}
 #  r-global-model-addAttr:
