@@ -53,6 +53,7 @@ public abstract class Modifier {
     }
 
     LinkedList<String> split(String text) {
+      if (text.isEmpty()) return new LinkedList<>();
       return new LinkedList<>(Arrays.asList(text.split(regex)));
     }
   }

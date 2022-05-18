@@ -4,16 +4,23 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Fragment {
-  public final boolean greedy;
   public String text;
-  public final String plain;
-  public final String format;
-  private boolean isAuto;
+  public String plain;
+  public String format;
+  public boolean greedy;
   private LinkedList<String> slices;
 
   public Fragment(String text, String format) {
+    setText(text);
+    setFormat(format);
+  }
+
+  public void setText(String text) {
     this.text = text;
-    this.plain = text.toLowerCase().replaceAll("[^0-9a-z]", "");
+    this.plain = text.toLowerCase().replaceAll("[^a-z\\d]", "");
+  }
+
+  public void setFormat(String format) {
     if (format.equals("auto")) {
       if (text.contains("/")) {
         format = "slash";
@@ -51,6 +58,7 @@ public class Fragment {
     if (!greedy && sourceSize > targetSize || sourceSize < targetSize) {
       return false;
     }
+    if (targetSize == 0 && sourceSize > 0) return false;
 
     for (int i = 1; i <= targetSize; i++) {
       if (!target.get(targetSize - i).equals(source.get(sourceSize - i))) {
@@ -72,7 +80,8 @@ public class Fragment {
         slices.removeFirst();
       }
     }
-    text = toString(format);
+    setFormat(contra.format);
+    setText(toString(format));
   }
 
   public String toString(String format) {

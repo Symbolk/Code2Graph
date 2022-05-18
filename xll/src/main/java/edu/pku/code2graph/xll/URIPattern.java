@@ -70,7 +70,7 @@ public class URIPattern extends URIBase<LayerPattern> {
 
   public URI refactor(URI target, Capture input, Capture output) {
     URI uri = new URI();
-    uri.isRef = isRef;
+    uri.isRef = target.isRef;
     for (int index = 0; index < layers.size(); ++index) {
       Layer result = layers.get(index).refactor(target.getLayer(index), input, output);
       if (result == null) return null;
