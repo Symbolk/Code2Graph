@@ -256,7 +256,17 @@ public class RenameEvaluation {
       URI oldURI = new URI(idPair.getLeft());
       URI newURI = new URI(idPair.getRight());
       List<Pair<URI, URI>> toRename = project.rename(oldURI, newURI);
-      res.addAll(toRename);
+      res.addAll(
+          toRename.stream()
+              .filter(
+                  (pair) -> {
+                    URI left = pair.getLeft();
+                    URI right = pair.getRight();
+                    return !left.getLayer(left.getLayerCount() - 1)
+                        .get("identifier")
+                        .equals(right.getLayer(right.getLayerCount() - 1).get("identifier"));
+                  })
+              .collect(Collectors.toList()));
     }
     return res;
   }
