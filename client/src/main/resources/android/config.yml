@@ -61,25 +61,25 @@ rules:
     use:
       lang: JAVA
       file: '(&javaFile).java'
-      identifier: R.id.(name)
+      identifier: R.id.(name:snake)
     def:
       lang: XML
       file: (&layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@+id\/(name)'
+        identifier: '@+id\/(name:snake)'
 
   r-android-id:
     use:
       lang: JAVA
       file: '(&javaFile).java'
-      identifier: android.R.id.(name)
+      identifier: android.R.id.(name:snake)
     def:
       lang: XML
       file: (&layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@android:id\/(name)'
+        identifier: '@android:id\/(name:snake)'
 
   # <data class="bindingName"> <-> bindingName bindingVar
   r-dataBindingClass:
