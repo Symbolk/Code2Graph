@@ -44,13 +44,21 @@ public class URIPattern extends URIBase<LayerPattern> {
     return layer;
   }
 
+  public Capture match(URI uri) {
+    return match(uri, new Capture(), true);
+  }
+
+  public Capture match(URI uri, Capture variables) {
+    return match(uri, variables, false);
+  }
+
   /**
    * Match uri, return null if not matched, or a match with captured groups
    *
    * @param uri uri
    * @return captures
    */
-  public Capture match(URI uri, Capture variables) {
+  public Capture match(URI uri, Capture variables, boolean ignoreAnchors) {
     // Part 1: match protocol
     if (!isRef && uri.isRef) return null;
 
@@ -62,7 +70,7 @@ public class URIPattern extends URIBase<LayerPattern> {
     Capture result = new Capture();
     for (int i = 0; i < depth; ++i) {
       LayerPattern layer = layers.get(i);
-      if (!layer.match(uri.getLayer(i), variables, result)) return null;
+      if (!layer.match(uri.getLayer(i), variables, result, ignoreAnchors)) return null;
     }
 
     return result;

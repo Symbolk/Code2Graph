@@ -53,14 +53,14 @@ public class IdentifierPattern extends AttributePattern {
     }
   }
 
-  private String replacement(Token token, Capture input) {
-    if (token.isAnchor) {
+  private String replacement(Token token, Capture input, boolean ignoreAnchors) {
+    if (token.isAnchor && !ignoreAnchors) {
       Fragment fragment = input.get(token.name);
       if (fragment != null) return fragment.text;
     }
 
     String regexp = token.isGreedy ? ".+" : "[^/]+";
-    if (token.isAnchor) return regexp;
+    if (token.isAnchor && !ignoreAnchors) return regexp;
     return "(" + regexp + ")";
   }
 
@@ -69,21 +69,22 @@ public class IdentifierPattern extends AttributePattern {
    * @param input input capture
    * @return regexp
    */
-  private String prepare(Capture input) {
+  private String prepare(Capture input, boolean ignoreAnchors) {
     String source = this.source;
     for (int index = tokens.size(); index > 0; --index) {
       Token token = tokens.get(index - 1);
-      source = token.replace(source, replacement(token, input), offset);
+      source = token.replace(source, replacement(token, input, ignoreAnchors), offset);
     }
     return source
         .replaceAll("\\(\\.\\+\\)/", "(?:(.+)/)?")
         .replaceAll("/\\(\\.\\+\\)$", "(?:/(.+))?");
   }
 
-  public boolean match(String target, Capture input, Capture result) {
+  public boolean match(String target, Capture input, Capture result, boolean ignoreAnchors) {
     if (pass) return true;
 
-    String source = prepare(input);
+    List<Token> tokens = ignoreAnchors ? this.tokens : this.symbols;
+    String source = prepare(input, ignoreAnchors);
     target = target.replace("\\/", "__slash__");
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
@@ -95,7 +96,7 @@ public class IdentifierPattern extends AttributePattern {
       String value = matcher.group(i);
       if (value == null) value = "";
       value = value.replace("__slash__", "/");
-      Token token = symbols.get(i - 1);
+      Token token = tokens.get(i - 1);
       Fragment fragment = new Fragment(value, token.modifier);
       if (!result.accept(token.name, fragment)) return false;
     }
@@ -106,7 +107,7 @@ public class IdentifierPattern extends AttributePattern {
   public String refactor(String target, Capture input, Capture output) {
     if (pass) return target;
 
-    String source = prepare(input);
+    String source = prepare(input, true);
     target = target.replace("\\/", "__slash__");
 
     Pattern regexp = Pattern.compile(source, Pattern.CASE_INSENSITIVE);
@@ -117,9 +118,14 @@ public class IdentifierPattern extends AttributePattern {
     int lastIndex = 0;
     StringBuilder builder = new StringBuilder();
     for (int i = 1; i <= count; ++i) {
-      Token token = symbols.get(i - 1);
+      Token token = tokens.get(i - 1);
       builder.append(target.substring(lastIndex, matcher.start(i)).replace("__slash__", "\\/"));
-      builder.append(output.get(token.name).toString(token.modifier));
+      Fragment fragment = output.get(token.name);
+      if (fragment != null) {
+        builder.append(fragment.toString(token.modifier));
+      } else {
+        builder.append(matcher.group(i));
+      }
       lastIndex = matcher.end(i);
     }
 

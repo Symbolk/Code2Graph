@@ -41,6 +41,10 @@ public class LayerPattern extends LayerBase {
     }
   }
 
+  public boolean match(Layer layer, Capture variables, Capture result) {
+    return match(layer, variables, result, false);
+  }
+
   /**
    * match layer, return null if not matched, or a capture as result
    * @param layer input layer
@@ -48,12 +52,12 @@ public class LayerPattern extends LayerBase {
    * @param result result capture
    * @return captures
    */
-  public boolean match(Layer layer, Capture variables, Capture result) {
+  public boolean match(Layer layer, Capture variables, Capture result, boolean ignoreAnchors) {
     // perform pattern matching
     for (AttributePattern matcher : matchers) {
       String target = layer.get(matcher.key);
       if (target == null) return false;
-      if (!matcher.match(target, variables, result)) return false;
+      if (!matcher.match(target, variables, result, ignoreAnchors)) return false;
     }
     return true;
   }

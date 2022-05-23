@@ -10,31 +10,31 @@ flowgraph:
     - r-menu
     - r-dataBindingClassLink
     - $
-  r-android-id:
-    - r-layout
-    - r-menu
-    - r-dataBindingClassLink
-    - $
-  r-dataBindingClass:
-    - $
-  r-include-layout:
-    - r-dataBindingClassLink
-    - r-layout
-  r-include-id:
-    - r-include-layout
-  r-include-dataBinding:
-    - r-include-layout
+#  r-android-id:
+#    - r-layout
+#    - r-menu
+#    - r-dataBindingClassLink
+#    - $
+#  r-dataBindingClass:
+#    - $
+#  r-include-layout:
+#    - r-dataBindingClassLink
+#    - r-layout
+#  r-include-id:
+#    - r-include-layout
+#  r-include-dataBinding:
+#    - r-include-layout
   r-dataBinding:
     - r-dataBindingClassLink
     - r-layout
-#    - $
+    - $
   r-xml-inner:
     - r-id
     - r-dataBinding
-  r-xml-include-inner:
-    - r-include-id
-  r-xml-include-inter:
-    - r-include-id
+#  r-xml-include-inner:
+#    - r-include-id
+#  r-xml-include-inter:
+#    - r-include-id
 
 rules:
   # setContentView(R.layout.layoutName) <-> layoutName.xml

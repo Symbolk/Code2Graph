@@ -69,7 +69,7 @@ public class Project {
 
   private URI infer(URI oldUri, URI newUri, URI contra, URIPattern cis, URIPattern trans, Capture input) {
     Capture oldCap = cis.match(oldUri, input);
-    Capture newCap = cis.match(newUri, input);
+    Capture newCap = cis.match(newUri);
     Capture contraCap = trans.match(contra, input);
     if (newCap == null) return null;
     Capture output = input.clone();
