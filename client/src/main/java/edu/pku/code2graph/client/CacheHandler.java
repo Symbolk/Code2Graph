@@ -85,6 +85,10 @@ public class CacheHandler {
     }
   }
 
+  public static Pair<URITree, URI> loadCache(String cacheDir, URITree tree) throws IOException {
+    return loadCache(cacheDir, tree, null, null);
+  }
+
   public static Pair<URITree, URI> loadCache(
       String cacheDir, URITree tree, String renamedName, Range renamedRange) throws IOException {
     File cache = new File(cacheDir);
@@ -171,8 +175,8 @@ public class CacheHandler {
         break;
       case "mybatis":
         langs.add(Language.JAVA);
-//        langs.add(Language.XML);
-//        langs.add(Language.SQL);
+        //        langs.add(Language.XML);
+        //        langs.add(Language.SQL);
         MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
       default:
         logger.error("framework not valid");
