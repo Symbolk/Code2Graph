@@ -158,7 +158,22 @@ public class GitServiceJGit implements GitService {
   }
 
   @Override
+  public String getLongHEADCommitId() {
+    return "HEAD";
+  }
+
+  @Override
   public boolean checkoutByCommitID(String commitID) {
     return false;
+  }
+
+  @Override
+  public boolean checkoutByLongCommitID(String commitID) {
+    return false;
+  }
+
+  @Override
+  public List<String> getCommitHistory() {
+    return null;
   }
 }
