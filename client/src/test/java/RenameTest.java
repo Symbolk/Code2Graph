@@ -11,6 +11,7 @@ import java.io.IOException;
 import static edu.pku.code2graph.client.CacheHandler.initCache;
 import static edu.pku.code2graph.client.Rename.calcRenameResult;
 
+import static edu.pku.code2graph.client.Rename.updateCache;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RenameTest {
@@ -22,6 +23,20 @@ public class RenameTest {
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static String cachePath =
       System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
+
+  @Test
+  public void testInit() throws IOException, ParserConfigurationException, SAXException {
+    initCache(framework, repoPath, cachePath);
+  }
+
+  @Test
+  public void testUpdate() throws IOException, ParserConfigurationException, SAXException {
+    updateCache(
+        repoPath,
+        repoPath
+            + "/app/src/main/java/de/robv/android/xposed/installer/DownloadDetailsActivity.java.csv",
+        cachePath);
+  }
 
   @Test
   public void testRename1() throws IOException, ParserConfigurationException, SAXException {
@@ -81,7 +96,7 @@ public class RenameTest {
   public void testRename3() throws IOException, ParserConfigurationException, SAXException {
     repoName = "XposedInstaller";
     configPath =
-            System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
+        System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
     repoPath = System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
     cachePath = System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
 
@@ -90,17 +105,10 @@ public class RenameTest {
       initCache(framework, repoPath, cachePath);
     }
 
-    Range range =
-            new Range(
-                    "9:20~9:31", "app/src/main/res/layout/toolbar.xml");
+    Range range = new Range("9:20~9:31", "app/src/main/res/layout/toolbar.xml");
     RenameResult res =
-            calcRenameResult(
-                    repoPath,
-                    cachePath,
-                    "@+id\\/toolbar",
-                    range,
-                    "@+id\\/tool_bar",
-                    configPath);
+        calcRenameResult(
+            repoPath, cachePath, "@+id\\/toolbar", range, "@+id\\/tool_bar", configPath);
     assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
     System.out.println(res.getRenameInfoList());
   }
