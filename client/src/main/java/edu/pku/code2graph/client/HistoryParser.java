@@ -1,7 +1,9 @@
 package edu.pku.code2graph.client;
 
+import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
+import edu.pku.code2graph.util.FileUtil;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.slf4j.Logger;
@@ -10,9 +12,11 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static edu.pku.code2graph.client.CacheHandler.initCache;
+import static edu.pku.code2graph.client.CacheHandler.updateCache;
 
 public class HistoryParser {
   private static Logger logger = LoggerFactory.getLogger(HistoryParser.class);
@@ -39,8 +43,9 @@ public class HistoryParser {
 
     try {
       List<String> commits = gitService.getCommitHistory();
-      for (String commit : commits) {
-        initCacheForCommit(commit.replace("\"", ""));
+      for (int i = 0; i < commits.size() - 1; i++) {
+        initCacheForCommitByUpdate(
+            commits.get(i).replace("\"", ""), commits.get(i + i).replace("\"", ""));
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -66,6 +71,31 @@ public class HistoryParser {
       logger.info("Successfully checkout to {}", commit);
     }
 
-    initCache(framework, repoPath, cacheDir + "/" + commit);
+    initCache(framework, repoPath, Paths.get(cacheDir, commit).toString());
+  }
+
+  public static void initCacheForCommitByUpdate(String commitA, String commitB)
+      throws IOException, ParserConfigurationException, SAXException {
+    if (!gitService.checkoutByLongCommitID(commitB)) {
+      logger.error("Failed to checkout to {}", commitB);
+      return;
+    } else {
+      logger.info("Successfully checkout to {}", commitB);
+    }
+
+    String cacheA = Paths.get(cacheDir, commitA).toString(),
+        cacheB = Paths.get(cacheDir, commitB).toString();
+    FileUtil.clearDir(cacheB);
+    FileUtil.copyDir(cacheA, cacheB);
+
+    List<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commitA);
+    for (DiffFile file : diffFiles) {
+      updateCache(
+          framework, repoPath, file.getARelativePath(), Paths.get(cacheDir, commitB).toString());
+      if (!file.getBRelativePath().equals(file.getARelativePath())) {
+        updateCache(
+            framework, repoPath, file.getBRelativePath(), Paths.get(cacheDir, commitB).toString());
+      }
+    }
   }
 }
