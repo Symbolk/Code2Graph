@@ -21,6 +21,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -60,6 +61,12 @@ public class CacheHandler {
   public static void updateCache(
       String framework, String projectDir, String modifiedFilePath, String cacheDir)
       throws IOException, ParserConfigurationException, SAXException {
+    if(!new File(Paths.get(projectDir, modifiedFilePath).toString()).exists()){
+      File file = new File(cacheDir, modifiedFilePath + ".csv");
+      if(file.exists())
+        file.delete();
+      return;
+    }
     GraphUtil.clearGraph();
 
     switchFramework(framework, projectDir);
@@ -67,7 +74,7 @@ public class CacheHandler {
     FileUtil.setRootPath(projectDir);
     Map<String, List<String>> ext2FilePaths =
         FileUtil.categorizeFilesByExtensionInLanguages(
-            Arrays.asList(modifiedFilePath), supportedLanguages);
+            Arrays.asList(Paths.get(projectDir, modifiedFilePath).toString() ), supportedLanguages);
 
     if (ext2FilePaths.isEmpty()) {
       logger.info("Modified file is in language not supported.");
@@ -76,13 +83,7 @@ public class CacheHandler {
 
     Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
 
-    int fileCnt = writeUrisToCache(cacheDir);
-    assert (fileCnt <= 1);
-
-    if (fileCnt == 0) {
-      File file = new File(cacheDir, modifiedFilePath + ".csv");
-      file.deleteOnExit();
-    }
+    writeUrisToCache(cacheDir);
   }
 
   public static Pair<URITree, URI> loadCache(String cacheDir, URITree tree) throws IOException {
@@ -230,6 +231,7 @@ public class CacheHandler {
                   }
                 }
               });
+          writer.flush();
           writer.close();
         });
 
