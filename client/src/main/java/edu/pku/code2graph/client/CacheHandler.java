@@ -230,7 +230,6 @@ public class CacheHandler {
                   }
                 }
               });
-          writer.flush();
           writer.close();
         });
 

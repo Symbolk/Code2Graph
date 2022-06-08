@@ -43,10 +43,15 @@ public class HistoryParser {
 
     try {
       List<String> commits = gitService.getCommitHistory();
-      for (int i = 0; i < commits.size() - 1; i++) {
+      String initCommit = commits.get(0).replace("\"", "");
+      if(!commits.isEmpty())
+        initCacheForCommit(commits.get(0).replace("\"", ""));
+      int size = commits.size() - 1;
+      for (int i = 0; i < size; i++) {
         initCacheForCommitByUpdate(
-            commits.get(i).replace("\"", ""), commits.get(i + i).replace("\"", ""));
+            commits.get(i).replace("\"", ""), commits.get(i + 1).replace("\"", ""));
       }
+      gitService.checkoutByLongCommitID(initCommit);
     } catch (Exception e) {
       e.printStackTrace();
     }
