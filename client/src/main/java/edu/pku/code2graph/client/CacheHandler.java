@@ -77,7 +77,6 @@ public class CacheHandler {
             Arrays.asList(Paths.get(projectDir, modifiedFilePath).toString() ), supportedLanguages);
 
     if (ext2FilePaths.isEmpty()) {
-      logger.info("Modified file is in language not supported.");
       return;
     }
 

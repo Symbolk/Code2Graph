@@ -90,9 +90,12 @@ public class HistoryParser {
 
     List<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commitA);
     for (DiffFile file : diffFiles) {
-      updateCache(
-          framework, repoPath, file.getARelativePath(), Paths.get(cacheDir, commitB).toString());
-      if (!file.getBRelativePath().equals(file.getARelativePath())) {
+      if (!file.getARelativePath().isEmpty()) {
+        updateCache(
+            framework, repoPath, file.getARelativePath(), Paths.get(cacheDir, commitB).toString());
+      }
+      if (!file.getBRelativePath().isEmpty()
+          && !file.getBRelativePath().equals(file.getARelativePath())) {
         updateCache(
             framework, repoPath, file.getBRelativePath(), Paths.get(cacheDir, commitB).toString());
       }
