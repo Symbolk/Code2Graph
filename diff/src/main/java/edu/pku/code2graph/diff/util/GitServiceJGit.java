@@ -176,4 +176,9 @@ public class GitServiceJGit implements GitService {
   public List<String> getCommitHistory() {
     return null;
   }
+
+  @Override
+  public String getFileAtCommit(String filePath, String commit) {
+    return null;
+  }
 }

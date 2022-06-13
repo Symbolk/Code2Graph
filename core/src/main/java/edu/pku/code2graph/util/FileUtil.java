@@ -339,13 +339,21 @@ public class FileUtil {
       }
     }
 
+    //    File fromDir = new File(from);
+    //    File toDIr = new File(to);
+    //    try {
+    //      FileUtils.copyDirectory(fromDir, toDIr);
+    //    } catch (Exception e) {
+    //      e.printStackTrace();
+    //      return false;
+    //    }
+
     return true;
   }
 
   public static void copyFile(String from, String to) throws IOException {
     String parentFolder = Paths.get(to).getParent().toString();
-    if(parentFolder.length()!=0)
-      createDir(Paths.get(to).getParent().toString());
+    if (parentFolder.length() != 0) createDir(Paths.get(to).getParent().toString());
     Files.copy(Paths.get(from), Paths.get(to));
   }
 }

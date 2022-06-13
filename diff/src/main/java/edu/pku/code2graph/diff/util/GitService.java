@@ -140,4 +140,12 @@ public interface GitService {
    * @return commits
    */
   List<String> getCommitHistory();
+
+  /**
+   * get file at certain commit
+   *
+
+   * @return commits
+   */
+  String getFileAtCommit(String filePath, String commit);
 }

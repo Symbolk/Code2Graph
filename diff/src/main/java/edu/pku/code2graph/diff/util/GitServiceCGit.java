@@ -811,4 +811,15 @@ public class GitServiceCGit implements GitService {
     }
     return Arrays.asList(commits);
   }
+
+  @Override
+  public String getFileAtCommit(String filePath, String commit) {
+    String fileContent =
+        SysUtil.runSystemCommand(
+            repoPath, StandardCharsets.UTF_8, "git", "show", commit + ":" + filePath);
+    if (fileContent.trim().startsWith("fatal") || fileContent.trim().isEmpty()) {
+      return "";
+    }
+    return fileContent;
+  }
 }
