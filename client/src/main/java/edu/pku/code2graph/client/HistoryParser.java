@@ -37,6 +37,7 @@ public class HistoryParser {
       System.getProperty("user.home") + "/coding/xll/history/" + framework + "/" + repoName;
   private static String tmpPath =
       System.getProperty("user.home") + "/coding/xll/tmp/" + framework + "/" + repoName;
+  private static String commitListPath = cacheDir + "/commits.txt";
   private static GitService gitService;
 
   public static void main(String[] args) {
@@ -50,17 +51,21 @@ public class HistoryParser {
         tmpPath = repoPath;
       }
       String initCommit = "";
-      if(!commits.isEmpty())
-        initCommit = commits.get(0).replace("\"", "");
+
+      File commitList = new File(commitListPath);
+      BufferedWriter writer = new BufferedWriter(new FileWriter(commitList));
+      if (!commits.isEmpty()) initCommit = commits.get(0).replace("\"", "");
+      writer.write(initCommit + "\n");
       if (!initCommit.isEmpty()) initCacheForCommit(initCommit);
       int size = commits.size() - 1;
       for (int i = 0; i < size; i++) {
+        writer.write(commits.get(i + 1).replace("\"", "") + "\n");
         initCacheForCommitByUpdate(
             commits.get(i).replace("\"", ""), commits.get(i + 1).replace("\"", ""));
       }
-      if(useCheckout)
-        gitService.checkoutByLongCommitID(initCommit);
-      else{
+      writer.close();
+      if (useCheckout) gitService.checkoutByLongCommitID(initCommit);
+      else {
         File file = new File(tmpPath);
         file.delete();
       }
