@@ -1,3 +1,5 @@
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.util.GraphUtil;
@@ -93,18 +95,15 @@ public class CacheTest {
 
   @Test
   public void testSHALoad()
-      throws ParserConfigurationException, NoSuchAlgorithmException, IOException, SAXException {
+      throws ParserConfigurationException, NoSuchAlgorithmException, IOException, SAXException,
+          NonexistPathException, InvalidRepoException {
     setUp("android", "CloudReader");
     repoPath =
-        System.getProperty("user.dir")
-            + "/src/main/resources/"
-            + framework
-            + "/repos/"
-            + repoName;
+        System.getProperty("user.dir") + "/src/main/resources/" + framework + "/repos/" + repoName;
     cachePath =
         System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
     URITree tree = GraphUtil.getUriTree();
-    loadCacheSHA(framework, repoPath, cachePath, tree, null, null);
+    loadFor(framework, repoPath, cachePath, "a35861233ca4ab9f30946d600fcf79a329e21fff", tree);
   }
 
   @Test

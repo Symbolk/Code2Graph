@@ -2,6 +2,10 @@ package edu.pku.code2graph.client;
 
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
+import edu.pku.code2graph.diff.util.GitService;
+import edu.pku.code2graph.diff.util.GitServiceCGit;
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
@@ -275,6 +279,26 @@ public class CacheHandler {
     }
 
     return new MutablePair<>(tree, renamedURI);
+  }
+
+  public static URITree loadFor(
+      String framework, String repoPath, String cacheDir, String commit, URITree tree)
+      throws NonexistPathException, IOException, InvalidRepoException, ParserConfigurationException,
+          NoSuchAlgorithmException, SAXException {
+    GitService gitService = new GitServiceCGit(repoPath);
+    String headCommit = gitService.getLongHEADCommitId();
+
+    if (!gitService.checkoutByLongCommitID(commit)) {
+      logger.error("Failed to checkout to {}", commit);
+      return null;
+    } else {
+      logger.info("Successfully checkout to {}", commit);
+    }
+
+    loadCacheSHA(framework, repoPath, cacheDir, tree, null, null);
+
+    gitService.checkoutByLongCommitID(headCommit);
+    return tree;
   }
 
   public static URI loadCacheFromEachFile(
