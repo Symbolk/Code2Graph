@@ -92,6 +92,22 @@ public class CacheTest {
   }
 
   @Test
+  public void testSHALoad()
+      throws ParserConfigurationException, NoSuchAlgorithmException, IOException, SAXException {
+    setUp("android", "CloudReader");
+    repoPath =
+        System.getProperty("user.dir")
+            + "/src/main/resources/"
+            + framework
+            + "/repos/"
+            + repoName;
+    cachePath =
+        System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
+    URITree tree = GraphUtil.getUriTree();
+    loadCacheSHA(framework, repoPath, cachePath, tree, null, null);
+  }
+
+  @Test
   public void testAndroid() throws IOException, ParserConfigurationException, SAXException {
     setUp("android", "CloudReader");
     initCache(framework, repoPath, cachePath);
