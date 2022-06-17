@@ -18,11 +18,12 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,6 +47,17 @@ public class CacheHandler {
 
   public static void initCache(String framework, String projectDir, String cacheDir)
       throws IOException, ParserConfigurationException, SAXException {
+    try {
+      initCache(framework, projectDir, cacheDir, false);
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+      logger.error("no such algorithm");
+    }
+  }
+
+  public static void initCache(
+      String framework, String projectDir, String cacheDir, boolean shaPath)
+      throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
     GraphUtil.clearGraph();
 
     switchFramework(framework, projectDir);
@@ -56,7 +68,84 @@ public class CacheHandler {
 
     Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
 
-    writeUrisToCache(cacheDir);
+    Map<String, String> file2SHA = null;
+    if (shaPath)
+      file2SHA =
+          getShaPath(
+              ext2FilePaths.values().stream()
+                  .reduce(
+                      new ArrayList<>(),
+                      (acc, list) -> {
+                        acc.addAll(list);
+                        return acc;
+                      }));
+
+    writeUrisToCache(projectDir, cacheDir, file2SHA);
+  }
+
+  public static void initCache(
+      String framework,
+      String projectDir,
+      String modifiedFilePath,
+      String cacheDir,
+      boolean shaPath)
+      throws ParserConfigurationException, SAXException, NoSuchAlgorithmException, IOException {
+    initCache(framework, projectDir, List.of(modifiedFilePath), cacheDir, shaPath);
+  }
+
+  public static void initCache(
+      String framework,
+      String projectDir,
+      List<String> modifiedFilePaths,
+      String cacheDir,
+      boolean shaPath)
+      throws ParserConfigurationException, SAXException, NoSuchAlgorithmException, IOException {
+    GraphUtil.clearGraph();
+    switchFramework(framework, projectDir);
+    FileUtil.setRootPath(projectDir);
+
+    List<String> fileToParse = new ArrayList<>();
+    for (String modifiedFilePath : modifiedFilePaths) {
+      String fullPath = Paths.get(projectDir, modifiedFilePath).toString();
+      if (!new File(fullPath).exists()) {
+        File file = new File(cacheDir, modifiedFilePath + ".csv");
+        if (file.exists()) file.delete();
+        continue;
+      }
+      fileToParse.add(fullPath);
+    }
+    Map<String, List<String>> ext2FilePaths =
+        FileUtil.categorizeFilesByExtensionInLanguages(fileToParse, supportedLanguages);
+
+    if (ext2FilePaths.isEmpty()) {
+      return;
+    }
+
+    Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
+
+    Map<String, String> file2SHA = null;
+    if (shaPath)
+      file2SHA =
+          getShaPath(
+              ext2FilePaths.values().stream()
+                  .reduce(
+                      new ArrayList<>(),
+                      (acc, list) -> {
+                        acc.addAll(list);
+                        return acc;
+                      }));
+
+    writeUrisToCache(projectDir, cacheDir, file2SHA);
+  }
+
+  public static void updateCache(
+      String framework, String projectDir, String modifiedFilePath, String cacheDir)
+      throws IOException, ParserConfigurationException, SAXException {
+    updateCache(
+        framework,
+        projectDir,
+        List.of(Paths.get(projectDir, modifiedFilePath).toString()),
+        cacheDir);
   }
 
   public static void updateCache(
@@ -84,17 +173,7 @@ public class CacheHandler {
 
     Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
 
-    writeUrisToCache(cacheDir);
-  }
-
-  public static void updateCache(
-      String framework, String projectDir, String modifiedFilePath, String cacheDir)
-      throws IOException, ParserConfigurationException, SAXException {
-    updateCache(
-        framework,
-        projectDir,
-        Arrays.asList(Paths.get(projectDir, modifiedFilePath).toString()),
-        cacheDir);
+    writeUrisToCache(projectDir, cacheDir, null);
   }
 
   public static Pair<URITree, URI> loadCache(String cacheDir, URITree tree) throws IOException {
@@ -206,7 +285,8 @@ public class CacheHandler {
     supportedLanguages = initLang(newFramework, repoPath);
   }
 
-  private static int writeUrisToCache(String cacheDir) {
+  private static int writeUrisToCache(
+      String projectDir, String cacheDir, Map<String, String> file2SHA) {
     AtomicInteger fileCount = new AtomicInteger();
     URITree tree = GraphUtil.getUriTree();
     Map<String, List<Node>> nodesOfFiles = getAllEleFromTree(tree);
@@ -214,7 +294,12 @@ public class CacheHandler {
         (file, nodes) -> {
           if (nodes.isEmpty()) return;
           fileCount.getAndIncrement();
-          String cacheFile = new File(cacheDir, file + ".csv").toString();
+          Path cachePath = Paths.get(cacheDir, file + ".csv");
+          if (file2SHA != null)
+            cachePath =
+                Paths.get(cacheDir, file2SHA.get(Paths.get(projectDir, file).toString()) + ".csv");
+
+          String cacheFile = new File(String.valueOf(cachePath)).toString();
           try {
             FileUtil.createFile(cacheFile);
           } catch (IOException e) {
@@ -265,5 +350,32 @@ public class CacheHandler {
 
   private static List<Node> getEleForEachFile(URITree fileTree) {
     return fileTree.getAllNodes();
+  }
+
+  private static Map<String, String> getShaPath(List<String> filePaths)
+      throws NoSuchAlgorithmException, IOException {
+    Map<String, String> file2SHA = new HashMap<>();
+    for (String fileName : filePaths) {
+      byte[] buffer = new byte[8192];
+      int count;
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName));
+      while ((count = bis.read(buffer)) > 0) {
+        digest.update(buffer, 0, count);
+      }
+      digest.update(fileName.getBytes());
+      bis.close();
+
+      byte[] hash = digest.digest();
+      StringBuilder hexString = new StringBuilder();
+      for (byte b : hash) {
+        final String hex = Integer.toHexString(0xff & b);
+        if (hex.length() == 1) hexString.append('0');
+        hexString.append(hex);
+      }
+      file2SHA.put(fileName, hexString.toString());
+    }
+
+    return file2SHA;
   }
 }
