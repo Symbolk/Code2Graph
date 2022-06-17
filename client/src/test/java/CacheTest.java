@@ -9,6 +9,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 import static edu.pku.code2graph.client.CacheHandler.*;
 
@@ -79,6 +80,15 @@ public class CacheTest {
     linker.link();
     System.out.println(linker.links);
     System.out.println(linker.context);
+  }
+
+  @Test
+  public void testSHA()
+      throws IOException, ParserConfigurationException, NoSuchAlgorithmException, SAXException {
+    setUp("android", "CloudReader");
+    cachePath =
+        System.getProperty("user.home") + "/coding/xll/sha-cache/" + framework + "/" + repoName;
+    initCache(framework, repoPath, cachePath, true);
   }
 
   @Test
