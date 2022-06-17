@@ -16,10 +16,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import static edu.pku.code2graph.client.CacheHandler.initCache;
-import static edu.pku.code2graph.client.CacheHandler.updateCache;
 
 public class HistoryParser {
   private static Logger logger = LoggerFactory.getLogger(HistoryParser.class);
@@ -34,7 +34,7 @@ public class HistoryParser {
           + "/repos/"
           + repoName;
   private static String cacheDir =
-      System.getProperty("user.home") + "/coding/xll/history/" + framework + "/" + repoName;
+      System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
   private static String tmpPath =
       System.getProperty("user.home") + "/coding/xll/tmp/" + framework + "/" + repoName;
   private static String commitListPath = cacheDir + "/commits.txt";
@@ -53,7 +53,9 @@ public class HistoryParser {
       String initCommit = "";
 
       File commitList = new File(commitListPath);
+      if (!commitList.exists()) FileUtil.createFile(commitListPath);
       BufferedWriter writer = new BufferedWriter(new FileWriter(commitList));
+
       if (!commits.isEmpty()) initCommit = commits.get(0).replace("\"", "");
       writer.write(initCommit + "\n");
       if (!initCommit.isEmpty()) initCacheForCommit(initCommit);
@@ -64,6 +66,7 @@ public class HistoryParser {
             commits.get(i).replace("\"", ""), commits.get(i + 1).replace("\"", ""));
       }
       writer.close();
+
       if (useCheckout) gitService.checkoutByLongCommitID(initCommit);
       else {
         File file = new File(tmpPath);
@@ -85,7 +88,7 @@ public class HistoryParser {
   }
 
   public static void initCacheForCommit(String commit)
-      throws IOException, ParserConfigurationException, SAXException {
+      throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
     if (useCheckout && !gitService.checkoutByLongCommitID(commit)) {
       logger.error("Failed to checkout to {}", commit);
       return;
@@ -93,11 +96,11 @@ public class HistoryParser {
       logger.info("Successfully checkout to {}", commit);
     }
 
-    initCache(framework, tmpPath, Paths.get(cacheDir, commit).toString());
+    initCache(framework, tmpPath, cacheDir, true);
   }
 
   public static void initCacheForCommitByUpdate(String commitA, String commitB)
-      throws IOException, ParserConfigurationException, SAXException {
+      throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
     if (useCheckout && !gitService.checkoutByLongCommitID(commitB)) {
       logger.error("Failed to checkout to {}", commitB);
       return;
@@ -107,11 +110,6 @@ public class HistoryParser {
 
     if (!useCheckout) logger.info("store uritree for {}", commitB);
 
-    String cacheA = Paths.get(cacheDir, commitA).toString(),
-        cacheB = Paths.get(cacheDir, commitB).toString();
-    FileUtil.clearDir(cacheB);
-    FileUtil.copyDir(cacheA, cacheB);
-
     List<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commitA);
     for (DiffFile file : diffFiles) {
       if (!file.getARelativePath().isEmpty()) {
@@ -120,8 +118,7 @@ public class HistoryParser {
           String fileContent = gitService.getFileAtCommit(pathA, commitB);
           overwriteOrDelete(Paths.get(tmpPath, pathA).toString(), fileContent);
         }
-        updateCache(
-            framework, tmpPath, file.getARelativePath(), Paths.get(cacheDir, commitB).toString());
+        initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
       }
       if (!file.getBRelativePath().isEmpty()
           && !file.getBRelativePath().equals(file.getARelativePath())) {
@@ -130,8 +127,7 @@ public class HistoryParser {
           String fileContent = gitService.getFileAtCommit(pathB, commitB);
           overwriteOrDelete(Paths.get(tmpPath, pathB).toString(), fileContent);
         }
-        updateCache(
-            framework, tmpPath, file.getBRelativePath(), Paths.get(cacheDir, commitB).toString());
+        initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
       }
     }
   }
