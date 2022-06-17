@@ -21,6 +21,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,22 +60,23 @@ public class CacheHandler {
   }
 
   public static void updateCache(
-      String framework, String projectDir, String modifiedFilePath, String cacheDir)
-      throws IOException, ParserConfigurationException, SAXException {
-    if(!new File(Paths.get(projectDir, modifiedFilePath).toString()).exists()){
-      File file = new File(cacheDir, modifiedFilePath + ".csv");
-      if(file.exists())
-        file.delete();
-      return;
-    }
+      String framework, String projectDir, List<String> modifiedFilePaths, String cacheDir)
+      throws ParserConfigurationException, SAXException, IOException {
     GraphUtil.clearGraph();
-
     switchFramework(framework, projectDir);
-
     FileUtil.setRootPath(projectDir);
+    List<String> fileToParse = new ArrayList<>();
+    for (String modifiedFilePath : modifiedFilePaths) {
+      String fullPath = Paths.get(projectDir, modifiedFilePath).toString();
+      if (!new File(fullPath).exists()) {
+        File file = new File(cacheDir, modifiedFilePath + ".csv");
+        if (file.exists()) file.delete();
+        continue;
+      }
+      fileToParse.add(fullPath);
+    }
     Map<String, List<String>> ext2FilePaths =
-        FileUtil.categorizeFilesByExtensionInLanguages(
-            Arrays.asList(Paths.get(projectDir, modifiedFilePath).toString() ), supportedLanguages);
+        FileUtil.categorizeFilesByExtensionInLanguages(fileToParse, supportedLanguages);
 
     if (ext2FilePaths.isEmpty()) {
       return;
@@ -83,6 +85,16 @@ public class CacheHandler {
     Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
 
     writeUrisToCache(cacheDir);
+  }
+
+  public static void updateCache(
+      String framework, String projectDir, String modifiedFilePath, String cacheDir)
+      throws IOException, ParserConfigurationException, SAXException {
+    updateCache(
+        framework,
+        projectDir,
+        Arrays.asList(Paths.get(projectDir, modifiedFilePath).toString()),
+        cacheDir);
   }
 
   public static Pair<URITree, URI> loadCache(String cacheDir, URITree tree) throws IOException {
@@ -210,7 +222,7 @@ public class CacheHandler {
             logger.warn("can't create file " + cacheFile);
             return;
           }
-          CsvWriter writer = new CsvWriter(cacheFile, ',', Charset.forName("UTF-8"));
+          CsvWriter writer = new CsvWriter(cacheFile, ',', StandardCharsets.UTF_8);
           try {
             writer.writeRecord(headers);
           } catch (IOException e) {
