@@ -42,3 +42,7 @@ gradle.properties
 
 # MacOS file system
 *.DS_Store
+
+# history parser
+client/src/main/resources/*/repos/
+client/src/main/resources/*/history/

@@ -317,4 +317,43 @@ public class FileUtil {
       return "";
     }
   }
+
+  public static Boolean copyDir(String from, String to) throws IOException {
+    if (!Paths.get(from).toFile().isDirectory()) {
+      return false;
+    }
+
+    LinkedList<File> dirs = new LinkedList<>();
+    dirs.add(new File(from));
+
+    while (!dirs.isEmpty()) {
+      File dir = dirs.removeFirst();
+      File[] files = dir.listFiles();
+      for (File file : files) {
+        if (file.isDirectory()) {
+          dirs.add(file);
+        } else {
+          copyFile(
+              file.getPath(), String.valueOf(Paths.get(to, getRelativePath(from, file.getPath()))));
+        }
+      }
+    }
+
+    //    File fromDir = new File(from);
+    //    File toDIr = new File(to);
+    //    try {
+    //      FileUtils.copyDirectory(fromDir, toDIr);
+    //    } catch (Exception e) {
+    //      e.printStackTrace();
+    //      return false;
+    //    }
+
+    return true;
+  }
+
+  public static void copyFile(String from, String to) throws IOException {
+    String parentFolder = Paths.get(to).getParent().toString();
+    if (parentFolder.length() != 0) createDir(Paths.get(to).getParent().toString());
+    Files.copy(Paths.get(from), Paths.get(to));
+  }
 }

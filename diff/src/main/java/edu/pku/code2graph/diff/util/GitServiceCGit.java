@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /** Implementation of helper functions based on the output of git commands. */
@@ -778,9 +779,47 @@ public class GitServiceCGit implements GitService {
   }
 
   @Override
+  public String getLongHEADCommitId() {
+    String output =
+        SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "rev-parse", "HEAD");
+    return output.trim();
+  }
+
+  @Override
   public boolean checkoutByCommitID(String commitID) {
     SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "checkout", "-f", commitID);
     String curId = getHEADCommitId();
     return curId.equals(commitID);
+  }
+
+  @Override
+  public boolean checkoutByLongCommitID(String commitID) {
+    SysUtil.runSystemCommand(repoPath, StandardCharsets.UTF_8, "git", "checkout", "-f", commitID);
+    String curId = getLongHEADCommitId();
+    return curId.equals(commitID);
+  }
+
+  @Override
+  public List<String> getCommitHistory() {
+    String output =
+        SysUtil.runSystemCommand(
+            repoPath, StandardCharsets.UTF_8, "git", "log", "--pretty=format:\"%H\"");
+    String[] commits = output.trim().split("\n");
+    List<String> results = new ArrayList<>();
+    for (String commit : commits) {
+      results.add(commit.replace("\"", ""));
+    }
+    return Arrays.asList(commits);
+  }
+
+  @Override
+  public String getFileAtCommit(String filePath, String commit) {
+    String fileContent =
+        SysUtil.runSystemCommand(
+            repoPath, StandardCharsets.UTF_8, "git", "show", commit + ":" + filePath);
+    if (fileContent.trim().startsWith("fatal") || fileContent.trim().isEmpty()) {
+      return "";
+    }
+    return fileContent;
   }
 }

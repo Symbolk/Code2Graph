@@ -108,6 +108,14 @@ public interface GitService {
   String getHEADCommitId();
 
   /**
+   * Get complete current commit id of repo
+   *
+
+   * @return
+   */
+  String getLongHEADCommitId();
+
+  /**
    * Checkout the repo to specific commitID
    *
 
@@ -115,4 +123,29 @@ public interface GitService {
    * @return success or not
    */
   boolean checkoutByCommitID(String commitID);
+
+  /**
+   * Checkout the repo to specific complete commitID
+   *
+
+   * @param commitID
+   * @return success or not
+   */
+  boolean checkoutByLongCommitID(String commitID);
+
+  /**
+   * get commit history
+   *
+
+   * @return commits
+   */
+  List<String> getCommitHistory();
+
+  /**
+   * get file at certain commit
+   *
+
+   * @return commits
+   */
+  String getFileAtCommit(String filePath, String commit);
 }
