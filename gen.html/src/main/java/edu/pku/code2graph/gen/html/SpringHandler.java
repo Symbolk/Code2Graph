@@ -35,12 +35,7 @@ public class SpringHandler extends AbstractHandler {
             ele instanceof Document ? "" : ele.normalName(),
             uri);
     GraphUtil.addNode(en);
-    graph.addVertex(en);
     stack.push(en);
-
-    if (!stack.isEmpty()) {
-      graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
-    }
 
     List<Attribute> attrs = ele.attributes().asList();
     attrs.forEach(
@@ -53,14 +48,11 @@ public class SpringHandler extends AbstractHandler {
                   attr.getKey() + "=" + attr.getValue(),
                   attr.getKey());
           logger.debug("attr:" + attr.getKey() + "=" + attr.getValue());
-          graph.addVertex(rn);
-          graph.addEdge(en, rn, new Edge(GraphUtil.eid(), NodeType.ATTR));
 
           List<DialectNode> dnodes = dialectParser.parseTreeToList(attr.getValue());
           if (!dnodes.isEmpty()) {
             for (DialectNode dn : dnodes) {
-              ElementNode attrEn = (ElementNode) DialectNodeToGnode(dn, attr.getKey(), "");
-              graph.addEdge(rn, attrEn, new Edge(GraphUtil.eid(), NodeType.INLINE));
+              DialectNodeToGnode(dn, attr.getKey(), "");
             }
           }
         });
@@ -71,15 +63,10 @@ public class SpringHandler extends AbstractHandler {
       if (!nodesInText.isEmpty()) {
         for (DialectNode dn : nodesInText) {
           String parentIdtf = getIdentifier("");
-          ElementNode eleContentNode =
-              (ElementNode)
-                  DialectNodeToGnode(
-                      dn,
-                      null,
-                      parentIdtf.length() > 0
-                          ? parentIdtf.substring(0, parentIdtf.length() - 1)
-                          : "");
-          graph.addEdge(en, eleContentNode, new Edge(GraphUtil.eid(), NodeType.INLINE));
+          DialectNodeToGnode(
+              dn,
+              null,
+              parentIdtf.length() > 0 ? parentIdtf.substring(0, parentIdtf.length() - 1) : "");
         }
       }
     }
@@ -105,12 +92,10 @@ public class SpringHandler extends AbstractHandler {
             current.getName(),
             current.getName(),
             uri);
-    graph.addVertex(en);
     GraphUtil.addNode(en);
 
     for (DialectNode child : node.getChildren()) {
-      ElementNode childNode = (ElementNode) DialectNodeToGnode(child, attrName, curIdtf);
-      graph.addEdge(en, childNode, new Edge(GraphUtil.eid(), NodeType.CHILD));
+      DialectNodeToGnode(child, attrName, curIdtf);
     }
 
     return en;
