@@ -15,8 +15,6 @@ import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.model.Range;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
@@ -47,9 +45,6 @@ public class CacheHandler {
   private static final Generators generator;
 
   static {
-    BasicConfigurator.configure();
-    org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
-
     initGenerators();
     generator = Generators.getInstance();
   }
