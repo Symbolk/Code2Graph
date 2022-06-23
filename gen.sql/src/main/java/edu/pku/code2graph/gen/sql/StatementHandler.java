@@ -50,8 +50,8 @@ public class StatementHandler {
   protected String filePath;
   protected String uriFilePath;
 
-  public static Map<String, List<ElementNode>> idToIdentifierEn = Collections.synchronizedMap(new HashMap<>());
-  public static Map<String, List<RelationNode>> idToQueryRn = Collections.synchronizedMap(new HashMap<>());
+  public Map<String, List<ElementNode>> idToIdentifierEn = Collections.synchronizedMap(new HashMap<>());
+  public Map<String, List<RelationNode>> idToQueryRn = Collections.synchronizedMap(new HashMap<>());
   private String currentQueryId;
 
   // parent uri (mybatis xml element)

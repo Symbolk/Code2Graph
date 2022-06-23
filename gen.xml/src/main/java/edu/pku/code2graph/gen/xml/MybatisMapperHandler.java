@@ -30,9 +30,6 @@ public class MybatisMapperHandler extends AbstractHandler {
   private ElementNode mapperEle;
   private ElementNode queryEle;
 
-  private Map<String, List<ElementNode>> identifierMap = sqlGenerator.getIdentifiers();
-  private Map<String, List<RelationNode>> queryTypeMap = sqlGenerator.getQueries();
-
   @Override
   public void startDocument() throws SAXException {
     logger.debug("Start Parsing {}", uriFilePath);
@@ -229,8 +226,8 @@ public class MybatisMapperHandler extends AbstractHandler {
           Graph<Node, Edge> graph =
               sqlGenerator.generate(
                   query, filePath, lang, idtf, currentEle.getNode().getUri(), currentId);
-          List<ElementNode> identifierById = identifierMap.get(currentId);
-          List<RelationNode> queryById = queryTypeMap.get(currentId);
+          List<ElementNode> identifierById = sqlGenerator.getIdentifiers().get(currentId);
+          List<RelationNode> queryById = sqlGenerator.getQueries().get(currentId);
           List<ElementNode> identifierInQuery = new ArrayList<>();
           int minLayerOfNode = 0;
           if (identifierById != null && !identifierById.isEmpty())
