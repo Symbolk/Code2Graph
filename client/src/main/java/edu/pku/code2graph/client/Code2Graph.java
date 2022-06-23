@@ -217,17 +217,6 @@ public class Code2Graph {
       for (Link link : links) {
         i += 1;
         logger.debug("XLL#{}  {}, {}", i, link.def.toString(), link.use.toString());
-        // get nodes by URI
-        List<Node> source = tree.get(link.def);
-        List<Node> target = tree.get(link.use);
-        Double weight = 1.0D;
-
-        // create XLL edge
-        for (Node left : source) {
-          for (Node right : target) {
-            graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
-          }
-        }
       }
     }
   }
