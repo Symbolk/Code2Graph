@@ -94,7 +94,7 @@ public class XLLEvaluation {
       long parsingDuration = 0;
 
       long startTime = System.currentTimeMillis();
-      Graph<Node, Edge> graph = c2g.generateGraph();
+      Graph<Node, Edge> graph = c2g.generateURIs();
       long endTime = System.currentTimeMillis();
       parsingDuration = endTime - startTime;
 

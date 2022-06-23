@@ -97,7 +97,7 @@ public class Generators extends Registry<String, Generator, Register> {
 
   public Graph<Node, Edge> generateFromFilesParallel(Map<String, List<String>> ext2FilePaths)
       throws UnsupportedOperationException, IOException {
-    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(12);
+    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
     for (Map.Entry<String, List<String>> entry : ext2FilePaths.entrySet()) {
       Generator generator = get(entry.getValue().get(0));
       if (generator == null) {
