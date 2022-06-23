@@ -3,10 +3,7 @@ package edu.pku.code2graph.model;
 import edu.pku.code2graph.util.GraphUtil;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class URITree implements Serializable {
   public final Map<Layer, URITree> children = new HashMap<>();
@@ -38,7 +35,6 @@ public class URITree implements Serializable {
             "",
             "",
             uri);
-    GraphUtil.getGraph().addVertex(node);
     node.setRange(range);
     add(new URI(source)).add(node);
 
