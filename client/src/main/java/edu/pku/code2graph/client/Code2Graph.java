@@ -218,7 +218,7 @@ public class Code2Graph {
 
       // construct graph with intra-language nodes and edges
       logger.info("start building graph");
-      Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
+      Graph<Node, Edge> graph = generator.generateFromFilesParallel(ext2FilePaths);
       logger.info("- #nodes = " + graph.vertexSet().size());
       logger.info("- #edges = " + graph.edgeSet().size());
     } catch (IOException e) {

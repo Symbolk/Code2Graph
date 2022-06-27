@@ -83,7 +83,6 @@ public class XLLEvaluation {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
@@ -94,6 +93,9 @@ public class XLLEvaluation {
       long parsingDuration = 0;
 
       long startTime = System.currentTimeMillis();
+      if(framework.equals("mybatis")){
+        MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+      }
       Graph<Node, Edge> graph = c2g.generateURIs();
       long endTime = System.currentTimeMillis();
       parsingDuration = endTime - startTime;
