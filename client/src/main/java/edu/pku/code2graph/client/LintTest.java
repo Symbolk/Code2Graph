@@ -5,6 +5,7 @@ import com.google.common.base.Stopwatch;
 import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
+import edu.pku.code2graph.gen.xml.MybatisPreprocesser;
 import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;

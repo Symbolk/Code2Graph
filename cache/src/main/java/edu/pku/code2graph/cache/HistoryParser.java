@@ -1,4 +1,4 @@
-package edu.pku.code2graph.client;
+package edu.pku.code2graph.cache;
 
 import edu.pku.code2graph.diff.model.DiffFile;
 import edu.pku.code2graph.diff.util.GitService;
@@ -19,7 +19,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-import static edu.pku.code2graph.client.CacheHandler.initCache;
+import static edu.pku.code2graph.cache.CacheHandler.initCache;
 
 public class HistoryParser {
   private static Logger logger = LoggerFactory.getLogger(HistoryParser.class);
@@ -29,7 +29,7 @@ public class HistoryParser {
   private static String repoName = "CloudReader";
   private static String repoPath =
       System.getProperty("user.dir")
-          + "/client/src/main/resources/"
+          + "/cache/src/main/resources/"
           + framework
           + "/repos/"
           + repoName;
@@ -118,7 +118,7 @@ public class HistoryParser {
           String fileContent = gitService.getFileAtCommit(pathA, commitB);
           overwriteOrDelete(Paths.get(tmpPath, pathA).toString(), fileContent);
         }
-        initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
+        CacheHandler.initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
       }
       if (!file.getBRelativePath().isEmpty()
           && !file.getBRelativePath().equals(file.getARelativePath())) {
@@ -127,7 +127,7 @@ public class HistoryParser {
           String fileContent = gitService.getFileAtCommit(pathB, commitB);
           overwriteOrDelete(Paths.get(tmpPath, pathB).toString(), fileContent);
         }
-        initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
+        CacheHandler.initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
       }
     }
   }
