@@ -3,12 +3,14 @@ package edu.pku.code2graph.client.evaluation;
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
 import edu.pku.code2graph.client.Code2Graph;
+import edu.pku.code2graph.client.MybatisPreprocesser;
 import edu.pku.code2graph.diff.RepoAnalyzer;
 import edu.pku.code2graph.diff.util.GitService;
 import edu.pku.code2graph.diff.util.GitServiceCGit;
 import edu.pku.code2graph.diff.util.MetricUtil;
 import edu.pku.code2graph.exception.InvalidRepoException;
 import edu.pku.code2graph.exception.NonexistPathException;
+import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
@@ -18,6 +20,7 @@ import edu.pku.code2graph.xll.LinkBase;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
+import org.jgrapht.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -29,9 +32,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-
-import static edu.pku.code2graph.client.CacheHandler.initCache;
-import static edu.pku.code2graph.client.CacheHandler.loadCache;
 
 public class XLLEvaluation {
   private static Logger logger = LoggerFactory.getLogger(XLLEvaluation.class);
@@ -83,7 +83,6 @@ public class XLLEvaluation {
           c2g.addSupportedLanguage(Language.JAVA);
           c2g.addSupportedLanguage(Language.XML);
           c2g.addSupportedLanguage(Language.SQL);
-          //          MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
           break;
         default:
           c2g.addSupportedLanguage(Language.JAVA);
@@ -92,15 +91,18 @@ public class XLLEvaluation {
       logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
       // for testXLLDetection, run once and save the output, then comment
       long parsingDuration = 0;
-      if (loadCache(cacheDir, GraphUtil.getUriTree(), null, null) == null) {
-        long startTime = System.currentTimeMillis();
-        initCache(framework, repoPath, cacheDir);
-        long endTime = System.currentTimeMillis();
-        parsingDuration = endTime - startTime;
-      }
+
       long startTime = System.currentTimeMillis();
-      c2g.generateXLL(GraphUtil.getGraph());
+      if(framework.equals("mybatis")){
+        MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+      }
+      Graph<Node, Edge> graph = c2g.generateURIs();
       long endTime = System.currentTimeMillis();
+      parsingDuration = endTime - startTime;
+
+      startTime = System.currentTimeMillis();
+      c2g.generateXLL(GraphUtil.getGraph());
+      endTime = System.currentTimeMillis();
       long matchingDuration = endTime - startTime;
       logger.info("Parsing Time: {} ms", parsingDuration);
       logger.info("XLL matching Time: {} ms", matchingDuration);
@@ -112,11 +114,11 @@ public class XLLEvaluation {
       // compare by solely loading csv files
       testXLLDetection();
       //            testCochange();
-    } catch (ParserConfigurationException
-        | SAXException
-        | NonexistPathException
+    } catch (NonexistPathException
         | IOException
-        | InvalidRepoException e) {
+        | InvalidRepoException
+        | SAXException
+        | ParserConfigurationException e) {
       e.printStackTrace();
     }
   }

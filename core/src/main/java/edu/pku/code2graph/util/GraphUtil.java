@@ -4,25 +4,22 @@ import edu.pku.code2graph.model.*;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.builder.GraphTypeBuilder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class GraphUtil {
   // singleton across a graph building process (but for diff?)
   private static Graph<Node, Edge> graph;
   // FIXME use global counter as a compromise for performance,
   // BUT may skip or jump an id if adding node or edge failed (which means graph not changed)
-  private static Integer nodeCount;
-  private static Integer edgeCount;
+  private static AtomicInteger nodeCount;
+  private static AtomicInteger edgeCount;
   // sets of URIs that possibly have XLL
   private static URITree uriTree;
 
   static {
     graph = initGraph();
-    nodeCount = 0;
-    edgeCount = 0;
+    nodeCount = new AtomicInteger(0);
+    edgeCount = new AtomicInteger(0);
     uriTree = new URITree();
   }
 
@@ -45,9 +42,9 @@ public class GraphUtil {
    *
    * @return
    */
-  public static Integer nid() {
+  public synchronized static Integer nid() {
     // return graph.vertexSet().size() + 1;
-    return ++nodeCount;
+    return nodeCount.getAndIncrement();
   }
 
   /**
@@ -56,7 +53,7 @@ public class GraphUtil {
    * @return
    */
   public static Integer eid() {
-    return ++edgeCount;
+    return edgeCount.getAndIncrement();
   }
 
   public static Graph<Node, Edge> getGraph() {
@@ -65,8 +62,8 @@ public class GraphUtil {
 
   public static void clearGraph() {
     graph = initGraph();
-    nodeCount = 0;
-    edgeCount = 0;
+    nodeCount = new AtomicInteger(0);
+    edgeCount = new AtomicInteger(0);
     uriTree = new URITree();
   }
 
@@ -75,11 +72,11 @@ public class GraphUtil {
    *
    * @param node
    */
-  public static void addNode(Node node) {
+  public synchronized static void addNode(Node node) {
     uriTree.add(node.getUri()).add(node);
   }
 
-  public static URITree getUriTree() {
+  public static synchronized URITree getUriTree() {
     return uriTree;
   }
 }

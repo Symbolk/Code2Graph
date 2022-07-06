@@ -81,7 +81,8 @@ public class Code2Graph {
     this.xllConfigPath = xllConfigPath;
   }
 
-  public void registerAttribute(String key, Class<? extends AttributePattern> value) throws Exception {
+  public void registerAttribute(String key, Class<? extends AttributePattern> value)
+      throws Exception {
     AttributePattern.register(key, value);
   }
 
@@ -181,6 +182,35 @@ public class Code2Graph {
    */
   public Graph<Node, Edge> generateGraph(Map<String, List<String>> ext2FilePaths) {
     try {
+      generateURIs(ext2FilePaths);
+      generateXLL(graph);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    return GraphUtil.getGraph();
+  }
+
+  /**
+   * Construct graph from a list of source files
+   *
+   * @return
+   */
+  public Graph<Node, Edge> generateURIs() {
+    // collect the path list of source files in supported languages
+    Map<String, List<String>> ext2FilePaths =
+        FileUtil.listFilePathsInLanguages(this.repoPath, this.supportedLanguages);
+    return generateURIs(ext2FilePaths);
+  }
+
+  /**
+   * Construct graph from a map from extension to a list of file paths
+   *
+   * @param ext2FilePaths
+   * @return
+   */
+  public Graph<Node, Edge> generateURIs(Map<String, List<String>> ext2FilePaths) {
+    try {
       logger.info("#languages = {}", ext2FilePaths.size());
       for (Map.Entry<String, List<String>> entry : ext2FilePaths.entrySet()) {
         logger.info("- #{} = {}", entry.getKey(), entry.getValue().size());
@@ -188,12 +218,9 @@ public class Code2Graph {
 
       // construct graph with intra-language nodes and edges
       logger.info("start building graph");
-      Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
+      Graph<Node, Edge> graph = generator.generateFromFilesParallel(ext2FilePaths);
       logger.info("- #nodes = " + graph.vertexSet().size());
       logger.info("- #edges = " + graph.edgeSet().size());
-
-      // build cross-language linking (XLL) edges
-      generateXLL(graph);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -217,17 +244,6 @@ public class Code2Graph {
       for (Link link : links) {
         i += 1;
         logger.debug("XLL#{}  {}, {}", i, link.def.toString(), link.use.toString());
-        // get nodes by URI
-        List<Node> source = tree.get(link.def);
-        List<Node> target = tree.get(link.use);
-        Double weight = 1.0D;
-
-        // create XLL edge
-        for (Node left : source) {
-          for (Node right : target) {
-            graph.addEdge(left, right, new Edge(GraphUtil.eid(), xllType, weight, false, true));
-          }
-        }
       }
     }
   }
