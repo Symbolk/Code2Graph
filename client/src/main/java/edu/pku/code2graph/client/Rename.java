@@ -1,5 +1,6 @@
 package edu.pku.code2graph.client;
 
+import edu.pku.code2graph.cache.CacheHandler;
 import edu.pku.code2graph.client.model.RenameInfo;
 import edu.pku.code2graph.client.model.RenameResult;
 import edu.pku.code2graph.client.model.RenameStatusCode;

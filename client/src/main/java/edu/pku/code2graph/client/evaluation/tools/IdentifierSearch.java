@@ -28,8 +28,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import static edu.pku.code2graph.client.CacheHandler.initCache;
-import static edu.pku.code2graph.client.CacheHandler.loadCache;
+import static edu.pku.code2graph.cache.CacheHandler.initCache;
+import static edu.pku.code2graph.cache.CacheHandler.loadCache;
 
 public class IdentifierSearch {
   private static final Logger logger = LoggerFactory.getLogger(IdentifierSearch.class);

@@ -1,4 +1,4 @@
-package edu.pku.code2graph.client;
+package edu.pku.code2graph.gen.xml;
 
 import edu.pku.code2graph.gen.xml.MybatisMapperHandler;
 import edu.pku.code2graph.util.FileUtil;

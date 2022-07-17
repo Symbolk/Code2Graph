@@ -1,12 +1,10 @@
 package edu.pku.code2graph.client.extractor;
 
-import edu.pku.code2graph.client.MybatisPreprocesser;
+import edu.pku.code2graph.gen.xml.MybatisPreprocesser;
 import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
-import edu.pku.code2graph.gen.xml.MybatisMapperHandler;
 import edu.pku.code2graph.gen.xml.model.MybatisElement;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.util.FileUtil;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
@@ -17,10 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class MybatisExtractor extends AbstractExtractor {
@@ -188,7 +183,6 @@ public class MybatisExtractor extends AbstractExtractor {
                     .get("identifier")
                     .equals(
                         "jeecg-boot/jeecg-boot-module-system/src/main/java/org/jeecg/modules/system/mapper/xml/SysUserMapper.xml")) {
-              System.out.println("aaa");
             }
             String resultType = query.getResultType();
             if (resultType != null) {
