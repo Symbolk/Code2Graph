@@ -8,7 +8,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 
-import static edu.pku.code2graph.client.CacheHandler.initCache;
+import static edu.pku.code2graph.cache.CacheHandler.initCache;
 import static edu.pku.code2graph.client.Rename.calcRenameResult;
 
 import static edu.pku.code2graph.client.Rename.updateCache;

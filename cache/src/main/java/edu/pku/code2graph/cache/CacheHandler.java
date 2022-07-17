@@ -1,4 +1,4 @@
-package edu.pku.code2graph.client;
+package edu.pku.code2graph.cache;
 
 import com.csvreader.CsvReader;
 import com.csvreader.CsvWriter;
@@ -9,6 +9,7 @@ import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.gen.Generator;
 import edu.pku.code2graph.gen.Generators;
 import edu.pku.code2graph.gen.Register;
+import edu.pku.code2graph.gen.xml.MybatisPreprocesser;
 import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
@@ -312,7 +313,7 @@ public class CacheHandler {
       String rangeCache = reader.get(rangeHeader);
       Range range = new Range(rangeCache, thisURI.getLayer(0).get("identifier"));
       tree.add(uriCache, range);
-      String symbol = Rename.getSymbolOfURI(thisURI);
+      String symbol = getSymbolOfURI(thisURI);
       if (renamedName != null
           && renamedRange != null
           && symbol != null
@@ -460,5 +461,23 @@ public class CacheHandler {
     }
 
     return file2SHA;
+  }
+
+  public static String getSymbolOfURI(URI uri) {
+    String lastLayer = uri.getLayer(uri.getLayerCount() - 1).get("identifier");
+    int split = -1;
+    for (int i = lastLayer.length() - 1; i >= 0; i--) {
+      if (lastLayer.charAt(i) == '/') {
+        if (i >= 2 && lastLayer.charAt(i - 1) == '\\') {
+          continue;
+        } else {
+          split = i;
+          break;
+        }
+      }
+    }
+    if (split == -1) return lastLayer;
+    if (split + 1 >= lastLayer.length()) return null;
+    else return URI.removeEscapeCh(lastLayer.substring(split + 1));
   }
 }

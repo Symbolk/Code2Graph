@@ -13,7 +13,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 
-import static edu.pku.code2graph.client.CacheHandler.*;
+import static edu.pku.code2graph.cache.CacheHandler.*;
+
 
 public class CacheTest {
   private static String framework = "android";
@@ -103,7 +104,7 @@ public class CacheTest {
     cachePath =
         System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
     URITree tree = GraphUtil.getUriTree();
-    loadFor(framework, repoPath, cachePath, "a35861233ca4ab9f30946d600fcf79a329e21fff", tree);
+    loadFor(framework, repoPath, cachePath, "2a0ac6cb6a9191992458d6b7ff9bba48244be085", tree);
   }
 
   @Test
