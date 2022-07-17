@@ -15,6 +15,15 @@ public class URIPattern extends URIBase<LayerPattern> {
 
   public URIPattern() {}
 
+  public URIPattern(URI uri) {
+    this.isRef = uri.isRef;
+    int count = uri.getLayerCount();
+    for (int i = 0; i < count; ++i) {
+      Layer layer = uri.getLayer(i);
+      addLayer(new LayerPattern(layer, this));
+    }
+  }
+
   public URIPattern(boolean isRef, String file) {
     this.isRef = isRef;
     addLayer(file, Language.FILE);

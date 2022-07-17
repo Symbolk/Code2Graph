@@ -19,6 +19,13 @@ public class LayerPattern extends LayerBase {
     put("language", language.toString());
   }
 
+  public LayerPattern(Layer layer, URIPattern root) {
+    this.root = root;
+    for (String key : layer.keySet()) {
+      put(key, layer.get(key));
+    }
+  }
+
   @Override
   public String put(String key, String value) {
     String result = super.put(key, value);
