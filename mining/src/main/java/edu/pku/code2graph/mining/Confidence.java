@@ -7,7 +7,7 @@ public class Confidence {
     if (product <= 0) {
       return sum / (1 - Math.min(Math.abs(a), Math.abs(b)));
     } else {
-      return sum + product * Math.signum(sum);
+      return sum - product * Math.signum(sum);
     }
   }
 }
