@@ -1,24 +1,48 @@
+import com.csvreader.CsvReader;
+import edu.pku.code2graph.model.URITree;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class MiningTest {
   private static Logger logger = LoggerFactory.getLogger(MiningTest.class);
 
-  public void test(String framework, String repoName) throws IOException {
-    String cacheDir = System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
-    String commitListPath = cacheDir + "/commits.txt";
+  private ArrayList<String> getCommits(String cacheDir, URITree tree) throws IOException {
+    String commitsPath = cacheDir + "/commits.txt";
 
-    FileReader fr = new FileReader(commitListPath);
+    FileReader fr = new FileReader(commitsPath);
     BufferedReader br = new BufferedReader(fr);
+    ArrayList<String> commits = new ArrayList<>();
     String line;
     while ((line = br.readLine()) != null) {
-      System.out.println(line);
+      commits.add(line);
+      try {
+        CsvReader reader = new CsvReader(cacheDir + "/" + line + ".csv");
+        reader.readHeaders();
+        String[] cacheHeaders = reader.getHeaders();
+        String uriHeader = cacheHeaders[0];
+        while (reader.readRecord()) {
+          String source = reader.get(uriHeader);
+          tree.add(source);
+        }
+        reader.close();
+        System.out.println(line);
+      } catch (Exception e) {
+        System.out.println("Error: " + e.getMessage());
+      }
     }
     br.close();
     fr.close();
+    return commits;
+  }
+
+  private void test(String framework, String repoName) throws IOException {
+    String cacheDir = System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
+    ArrayList<String> commits = getCommits(cacheDir, new URITree());
+    System.out.println(commits.size());
   }
 
   @Test
