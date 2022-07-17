@@ -54,10 +54,20 @@ public class URITree implements Serializable {
     return root.nodes;
   }
 
+  public Set<URI> keySet() {
+    Set<URI> result = new HashSet<>();
+    if (uri != null) result.add(uri);
+    children.forEach((key, value) -> {
+      result.addAll(value.keySet());
+    });
+    return result;
+  }
+
   public List<Node> getAllNodes() {
-    URITree root = this;
-    List<Node> res = new ArrayList<>(nodes);
-    children.forEach((key, value) -> res.addAll(value.getAllNodes()));
-    return res;
+    List<Node> result = new ArrayList<>(nodes);
+    children.forEach((key, value) -> {
+      result.addAll(value.getAllNodes());
+    });
+    return result;
   }
 }
