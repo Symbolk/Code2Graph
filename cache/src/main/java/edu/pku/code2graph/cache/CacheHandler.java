@@ -185,6 +185,35 @@ public class CacheHandler {
     return loadCache(cacheDir, tree, null, null);
   }
 
+  public static void loadCache(String cacheDir, Set<String> tree) throws IOException {
+    File cache = new File(cacheDir);
+
+    if (!cache.exists()) {
+      logger.error("cache dir " + cacheDir + " not found");
+      return;
+    }
+
+    if (!cache.isDirectory()) {
+      logger.error("cache dir path " + cacheDir + " not direct to a directory");
+      return;
+    }
+
+    URI renamedURI = null;
+    LinkedList<File> dirs = new LinkedList<>();
+    dirs.add(cache);
+    while (!dirs.isEmpty()) {
+      File dir = dirs.removeFirst();
+      File[] files = dir.listFiles();
+      if (files == null) continue;
+      for (File file : files) {
+        if (file.isDirectory()) dirs.add(file);
+        else {
+          loadCacheToSet(file.getAbsolutePath(), tree);
+        }
+      }
+    }
+  }
+
   public static Pair<URITree, URI> loadCache(
       String cacheDir, URITree tree, String renamedName, Range renamedRange) throws IOException {
     File cache = new File(cacheDir);
@@ -289,8 +318,8 @@ public class CacheHandler {
       String repoName,
       String cacheDir)
       throws IOException, NonexistPathException, InvalidRepoException {
-    String repoPath = System.getProperty("user.dir")
-        + "/src/main/resources/"
+    String repoPath = System.getProperty("user.dir").substring(0, System.getProperty("user.dir").lastIndexOf("/"))
+        + "/cache/src/main/resources/"
         + framework
         + "/repos/"
         + repoName;
@@ -305,9 +334,15 @@ public class CacheHandler {
     while ((line = br.readLine()) != null) {
       commits.add(line);
       try {
-        gitService.checkoutByLongCommitID(line);
-        Collection<String> hashes = CacheHandler.getCacheSHA(framework, repoPath, cacheDir);
+        if (!gitService.checkoutByLongCommitID(line)) {
+          System.out.println("Failed to checkout to " + line);
+          break;
+        } else {
+          logger.info("Successfully checkout to {}", line);
+        }
+        Collection<String> hashes = getCacheSHA(framework, repoPath, cacheDir);
         result.put(line, hashes);
+        System.out.println(line + " " + hashes.size());
       } catch (Exception e) {
         System.out.println("Error: " + e.getMessage());
       }
@@ -336,6 +371,20 @@ public class CacheHandler {
 
     gitService.checkoutByLongCommitID(headCommit);
     return tree;
+  }
+
+  public static void loadCacheToSet(String file, Set<String> tree) throws IOException {
+    CsvReader reader = new CsvReader(file);
+    reader.readHeaders();
+    String[] cacheHeaders = reader.getHeaders();
+    if (cacheHeaders.length <= 1) {
+      return;
+    }
+    String uriHeader = cacheHeaders[0];
+    while (reader.readRecord()) {
+      tree.add(reader.get(uriHeader));
+    }
+    reader.close();
   }
 
   public static URI loadCacheFromEachFile(
