@@ -185,6 +185,35 @@ public class CacheHandler {
     return loadCache(cacheDir, tree, null, null);
   }
 
+  public static void loadCache(String cacheDir, Set<String> tree) throws IOException {
+    File cache = new File(cacheDir);
+
+    if (!cache.exists()) {
+      logger.error("cache dir " + cacheDir + " not found");
+      return;
+    }
+
+    if (!cache.isDirectory()) {
+      logger.error("cache dir path " + cacheDir + " not direct to a directory");
+      return;
+    }
+
+    URI renamedURI = null;
+    LinkedList<File> dirs = new LinkedList<>();
+    dirs.add(cache);
+    while (!dirs.isEmpty()) {
+      File dir = dirs.removeFirst();
+      File[] files = dir.listFiles();
+      if (files == null) continue;
+      for (File file : files) {
+        if (file.isDirectory()) dirs.add(file);
+        else {
+          loadCacheToSet(file.getAbsolutePath(), tree);
+        }
+      }
+    }
+  }
+
   public static Pair<URITree, URI> loadCache(
       String cacheDir, URITree tree, String renamedName, Range renamedRange) throws IOException {
     File cache = new File(cacheDir);
@@ -226,6 +255,27 @@ public class CacheHandler {
       String renamedName,
       Range renamedRange)
       throws ParserConfigurationException, SAXException, NoSuchAlgorithmException, IOException {
+    Collection<String> file2SHA = getCacheSHA(framework, projectDir, cacheDir);
+
+    URI renamedURI = null;
+    for (String cacheName : file2SHA) {
+      Path cachePath = Paths.get(cacheDir, cacheName + ".csv");
+      if (!cachePath.toFile().exists()) {
+        logger.error("cache {} not found!", cachePath);
+        return null;
+      }
+      URI retURI = loadCacheFromEachFile(cachePath.toString(), tree, renamedName, renamedRange);
+      renamedURI = retURI == null ? renamedURI : retURI;
+    }
+
+    return new MutablePair<>(tree, renamedURI);
+  }
+
+  public static Collection<String> getCacheSHA(
+      String framework,
+      String projectDir,
+      String cacheDir)
+      throws NoSuchAlgorithmException, IOException, ParserConfigurationException, SAXException {
     GraphUtil.clearGraph();
     switchFramework(framework, projectDir);
     FileUtil.setRootPath(projectDir);
@@ -260,21 +310,47 @@ public class CacheHandler {
                   acc.addAll(list);
                   return acc;
                 });
-    Map<String, String> file2SHA = getShaPath(fileList);
+    return getShaPath(fileList).values();
+  }
 
-    URI renamedURI = null;
-    for (String fileName : fileList) {
-      String cacheName = file2SHA.get(fileName);
-      Path cachePath = Paths.get(cacheDir, cacheName + ".csv");
-      if (!cachePath.toFile().exists()) {
-        logger.error("cache {} not found!", cachePath);
-        return null;
+  public static Map<String, Collection<String>> loadForAll(
+      String framework,
+      String repoName,
+      String cacheDir)
+      throws IOException, NonexistPathException, InvalidRepoException {
+    String repoPath = System.getProperty("user.dir").substring(0, System.getProperty("user.dir").lastIndexOf("/"))
+        + "/cache/src/main/resources/"
+        + framework
+        + "/repos/"
+        + repoName;
+    String commitsPath = cacheDir + "/commits.txt";
+    FileReader fr = new FileReader(commitsPath);
+    BufferedReader br = new BufferedReader(fr);
+    ArrayList<String> commits = new ArrayList<>();
+    GitService gitService = new GitServiceCGit(repoPath);
+    String headCommit = gitService.getLongHEADCommitId();
+    String line;
+    Map<String, Collection<String>> result = new LinkedHashMap<>();
+    while ((line = br.readLine()) != null) {
+      commits.add(line);
+      try {
+        if (!gitService.checkoutByLongCommitID(line)) {
+          System.out.println("Failed to checkout to " + line);
+          break;
+        } else {
+          logger.info("Successfully checkout to {}", line);
+        }
+        Collection<String> hashes = getCacheSHA(framework, repoPath, cacheDir);
+        result.put(line, hashes);
+        System.out.println(line + " " + hashes.size());
+      } catch (Exception e) {
+        System.out.println("Error: " + e.getMessage());
       }
-      URI retURI = loadCacheFromEachFile(cachePath.toString(), tree, renamedName, renamedRange);
-      renamedURI = retURI == null ? renamedURI : retURI;
     }
-
-    return new MutablePair<>(tree, renamedURI);
+    gitService.checkoutByLongCommitID(headCommit);
+    br.close();
+    fr.close();
+    return result;
   }
 
   public static URITree loadFor(
@@ -295,6 +371,20 @@ public class CacheHandler {
 
     gitService.checkoutByLongCommitID(headCommit);
     return tree;
+  }
+
+  public static void loadCacheToSet(String file, Set<String> tree) throws IOException {
+    CsvReader reader = new CsvReader(file);
+    reader.readHeaders();
+    String[] cacheHeaders = reader.getHeaders();
+    if (cacheHeaders.length <= 1) {
+      return;
+    }
+    String uriHeader = cacheHeaders[0];
+    while (reader.readRecord()) {
+      tree.add(reader.get(uriHeader));
+    }
+    reader.close();
   }
 
   public static URI loadCacheFromEachFile(

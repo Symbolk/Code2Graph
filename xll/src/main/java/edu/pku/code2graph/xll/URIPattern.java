@@ -1,9 +1,6 @@
 package edu.pku.code2graph.xll;
 
-import edu.pku.code2graph.model.Language;
-import edu.pku.code2graph.model.Layer;
-import edu.pku.code2graph.model.URI;
-import edu.pku.code2graph.model.URIBase;
+import edu.pku.code2graph.model.*;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -14,6 +11,15 @@ public class URIPattern extends URIBase<LayerPattern> {
   public final Set<String> anchors = new HashSet<>();
 
   public URIPattern() {}
+
+  public URIPattern(URIBase uri) {
+    this.isRef = uri.isRef;
+    int count = uri.getLayerCount();
+    for (int i = 0; i < count; ++i) {
+      LayerBase layer = uri.getLayer(i);
+      addLayer(new LayerPattern(layer, this));
+    }
+  }
 
   public URIPattern(boolean isRef, String file) {
     this.isRef = isRef;

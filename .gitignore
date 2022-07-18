@@ -44,5 +44,5 @@ gradle.properties
 *.DS_Store
 
 # history parser
-client/src/main/resources/*/repos/
+repos/
 client/src/main/resources/*/history/

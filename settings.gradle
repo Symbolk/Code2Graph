@@ -10,5 +10,6 @@ include 'core',
         'gen.xml',
         'gen.kotlin',
         'gen.html',
-        'gen.sql'
+        'gen.sql',
+        'mining'
 
