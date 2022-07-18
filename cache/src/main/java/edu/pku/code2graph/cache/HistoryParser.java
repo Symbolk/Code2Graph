@@ -56,14 +56,13 @@ public class HistoryParser {
       if (!commitList.exists()) FileUtil.createFile(commitListPath);
       BufferedWriter writer = new BufferedWriter(new FileWriter(commitList));
 
-      if (!commits.isEmpty()) initCommit = commits.get(0).replace("\"", "");
+      if (!commits.isEmpty()) initCommit = commits.get(commits.size() - 1).replace("\"", "");
       writer.write(initCommit + "\n");
       if (!initCommit.isEmpty()) initCacheForCommit(initCommit);
       int size = commits.size() - 1;
-      for (int i = 0; i < size; i++) {
-        writer.write(commits.get(i + 1).replace("\"", "") + "\n");
-        initCacheForCommitByUpdate(
-            commits.get(i).replace("\"", ""), commits.get(i + 1).replace("\"", ""));
+      for (int i = size - 1; i >= 0; i--) {
+        writer.write(commits.get(i).replace("\"", "") + "\n");
+        initCacheForCommitByUpdate(commits.get(i).replace("\"", ""));
       }
       writer.close();
 
@@ -99,23 +98,23 @@ public class HistoryParser {
     initCache(framework, tmpPath, cacheDir, true);
   }
 
-  public static void initCacheForCommitByUpdate(String commitA, String commitB)
+  public static void initCacheForCommitByUpdate(String commitA)
       throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
-    if (useCheckout && !gitService.checkoutByLongCommitID(commitB)) {
-      logger.error("Failed to checkout to {}", commitB);
+    if (useCheckout && !gitService.checkoutByLongCommitID(commitA)) {
+      logger.error("Failed to checkout to {}", commitA);
       return;
     } else if (useCheckout) {
-      logger.info("Successfully checkout to {}", commitB);
+      logger.info("Successfully checkout to {}", commitA);
     }
 
-    if (!useCheckout) logger.info("store uritree for {}", commitB);
+    if (!useCheckout) logger.info("store uritree for {}", commitA);
 
     List<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commitA);
     for (DiffFile file : diffFiles) {
       if (!file.getARelativePath().isEmpty()) {
         if (!useCheckout) {
           String pathA = file.getARelativePath();
-          String fileContent = gitService.getFileAtCommit(pathA, commitB);
+          String fileContent = gitService.getFileAtCommit(pathA, commitA);
           overwriteOrDelete(Paths.get(tmpPath, pathA).toString(), fileContent);
         }
         CacheHandler.initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
@@ -124,7 +123,7 @@ public class HistoryParser {
           && !file.getBRelativePath().equals(file.getARelativePath())) {
         if (!useCheckout) {
           String pathB = file.getBRelativePath();
-          String fileContent = gitService.getFileAtCommit(pathB, commitB);
+          String fileContent = gitService.getFileAtCommit(pathB, commitA);
           overwriteOrDelete(Paths.get(tmpPath, pathB).toString(), fileContent);
         }
         CacheHandler.initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
