@@ -20,7 +20,7 @@ public class Analyzer {
   public int cochanges = 0;
   public URITree tree = new URITree();
   public ArrayList<Rule> rules = new ArrayList<>();
-  public Map<Candidate, Double> graph = new HashMap<>();
+  public Map<Candidate, Credit> graph = new HashMap<>();
 
   private HistoryLoader history;
 
@@ -32,9 +32,9 @@ public class Analyzer {
     HistoryLoader.Diff diff = history.diff(hash);
     String format;
     format = String.format("[%s] +%d", hash, diff.additions.size());
-    collect(diff.additions, format);
+    collect(diff.additions, hash, format);
     format = String.format("[%s] -%d", hash, diff.deletions.size());
-    collect(diff.deletions, format);
+    collect(diff.deletions, hash, format);
   }
 
   public void analyzeAll() throws IOException {
@@ -43,7 +43,7 @@ public class Analyzer {
     }
   }
 
-  public void collect(Collection<String> uris, String format) {
+  public void collect(Collection<String> uris, String commit, String format) {
     // categorized by language
     // pay special attention to the file names
     Map<String, List<Pair<String, String>>> clusters = new HashMap<>();
@@ -68,22 +68,21 @@ public class Analyzer {
     StringBuilder builder = new StringBuilder(format);
     String[] keys = clusters.keySet().toArray(new String[0]);
     String[] notes = Arrays.stream(keys).map(k -> k + ": " + clusters.get(k).size()).toArray(String[]::new);
-    builder.append(" (").append(String.join(", ", notes)).append(")");
-    int edgeCount = 0;
+    builder.append(" (").append(String.join(", ", notes)).append(") -> ");
+    int estimated = 0;
     for (int i = 0; i < keys.length - 1; ++i) {
       int size1 = clusters.get(keys[i]).size();
       for (int j = i + 1; j < keys.length; ++j) {
         int size2 = clusters.get(keys[j]).size();
-        edgeCount += size1 * size2;
+        estimated += size1 * size2;
       }
     }
-    if (edgeCount > MAX_COCHANGE_SIZE) {
-      builder.append(" -> pruned");
+    if (estimated > MAX_COCHANGE_SIZE) {
+      builder.append("pruned");
       System.out.println(builder);
       return;
     }
-    cochanges += edgeCount;
-    System.out.println(builder);
+    cochanges += estimated;
 
     // build n-partite graph
     String[] languages = clusters.keySet().toArray(new String[0]);
@@ -94,25 +93,24 @@ public class Analyzer {
         List<Pair<String, String>> cluster2 = clusters.get(languages[j]);
         for (Pair<String, String> entry1 : cluster1) {
           for (Pair<String, String> entry2 : cluster2) {
-            if (!Confidence.intersects(entry1.getLeft(), entry2.getLeft())) continue;
+            double similarity = Confidence.similarity(entry1.getLeft(), entry2.getLeft());
+            if (similarity == 0.) continue;
             Candidate candidate = new Candidate(entry1.getRight(), entry2.getRight());
-            entries.add(new ImmutablePair<>(candidate, 1.));
+            entries.add(new ImmutablePair<>(candidate, similarity));
           }
         }
       }
     }
 
     // normalize the graph
-    int size = entries.size();
+    int density = entries.size();
+    System.out.println(builder.append(density).append(" collected"));
     for (Pair<Candidate, Double> entry : entries) {
-      link(entry.getKey(), entry.getValue() / size);
+      Credit.Record record = new Credit.Record(commit, entry.getValue(), density);
+      Credit credit = graph.computeIfAbsent(entry.getKey(), k -> new Credit());
+      credit.add(record);
+      sum = Confidence.add(sum, record.value);
     }
-  }
-
-  public void link(Candidate candidate, double confidence) {
-    double value = Confidence.add(graph.getOrDefault(candidate, 0.), confidence);
-    sum = Confidence.add(sum, confidence);
-    graph.put(candidate, value);
   }
 
   public void normalize() {
@@ -128,7 +126,7 @@ public class Analyzer {
   }
 
   public void generalize(URI left, URI right) {
-    double value = graph.get(new Candidate(left.toString(), right.toString()));
+    double value = graph.get(new Candidate(left.toString(), right.toString())).value;
     if (value <= 0) return;
     boolean flag = false;
     URIPattern patternL = new URIPattern(left);
@@ -175,7 +173,7 @@ public class Analyzer {
     for (Link link : linker.links) {
       URI left = link.def;
       URI right = link.use;
-      double value = graph.get(new Candidate(left.toString(), right.toString()));
+      double value = graph.get(new Candidate(left.toString(), right.toString())).value;
       sum = Confidence.add(sum, value);
     }
     return sum;

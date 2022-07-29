@@ -1,14 +1,14 @@
 import edu.pku.code2graph.cache.HistoryLoader;
 import edu.pku.code2graph.mining.Analyzer;
 import edu.pku.code2graph.mining.Candidate;
+import edu.pku.code2graph.mining.Credit;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 
 public class MiningTest {
   private static Logger logger = LoggerFactory.getLogger(MiningTest.class);
@@ -19,12 +19,19 @@ public class MiningTest {
     analyzer.analyzeAll();
     System.out.println("cochanges: " + analyzer.cochanges);
     System.out.println("candidates: " + analyzer.graph.size());
-    Optional<Map.Entry<Candidate, Double>> entry = analyzer.graph.entrySet().stream().max((o1, o2) -> {
-      return (int) Math.signum(o1.getValue() - o2.getValue());
-    });
-    entry.ifPresent(e -> {
-      System.out.println(e.getKey().toString() + ": " + e.getValue());
-    });
+    Iterator<Map.Entry<Candidate, Credit>> it = analyzer.graph.entrySet().stream().sorted((o1, o2) -> {
+      return Double.compare(o2.getValue().value, o1.getValue().value);
+    }).iterator();
+    for (int i = 0; i < 10; ++i) {
+      if (!it.hasNext()) break;
+      Map.Entry<Candidate, Credit> entry = it.next();
+      System.out.println("- " + entry.getKey().left);
+      System.out.println("- " + entry.getKey().right);
+      System.out.println("value: " + entry.getValue().value);
+      for (Credit.Record record : entry.getValue().history) {
+        System.out.println(record);
+      }
+    }
   }
 
   private void testHistory(String framework, String repoName, String head) throws IOException {

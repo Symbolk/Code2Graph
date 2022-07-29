@@ -23,21 +23,28 @@ public class Confidence {
     return new ImmutablePair<>(input.substring(0, index), input.substring(index + 1));
   }
 
-  static public boolean intersects(String s1, String s2) {
-    Set<String> words1 = slices(s1);
-    Set<String> words2 = slices(s2);
-    for (String word1 : words1) {
-      if (words2.contains(word1)) return true;
+  static public Double similarity(String s1, String s2) {
+    Pair<Set<String>, Integer> slices1 = slices(s1);
+    Pair<Set<String>, Integer> slices2 = slices(s2);
+    int length = 0;
+    for (String word : slices1.getLeft()) {
+      if (!slices2.getLeft().contains(word)) continue;
+      length += word.length();
     }
-    return false;
+    if (length == 0) return 0.;
+    return 2. * length / (slices1.getRight() + slices2.getRight());
   }
 
-  static public Set<String> slices(String input) {
+  static public Pair<Set<String>, Integer> slices(String input) {
     Set<String> result = new HashSet<>();
+    int length = 0;
     for (String word : input.split("[^0-9a-zA-Z]|(?<=[a-z])(?=[A-Z])|(?=[A-Z][a-z])|(?=[0-9]([a-z]|[A-Z]{2}))")) {
-      if (word.length() > 1) result.add(word.toLowerCase());
+      if (word.length() > 1) {
+        result.add(word.toLowerCase());
+        length += word.length();
+      }
     }
-    return result;
+    return new ImmutablePair<>(result, length);
   }
 
   static public int lcs(String s1, String s2) {
