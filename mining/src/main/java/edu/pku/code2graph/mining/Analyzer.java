@@ -10,9 +10,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 
 public class Analyzer {
-  double sum = 0;
-  int positive = 0;
-  int negative = 0;
+  public double sum = 0;
+  public int positive = 0;
+  public int negative = 0;
   public URITree tree = new URITree();
   public ArrayList<Rule> rules = new ArrayList<>();
   private HashMap<String, HashMap<String, Double>> graph = new HashMap<>();
@@ -24,22 +24,22 @@ public class Analyzer {
     for (String source : uris) {
       URI uri = new URI(source);
       Layer last = uri.layers.get(uri.layers.size() - 1);
-      String language = last.get("language");
       Pair<String, String> identifier = Confidence.splitLast(last.get("identifier"), '/');
-      if (language.equals("FILE")) {
+      if (uri.layers.size() == 1) {
         Pair<String, String> division = Confidence.splitLast(identifier.getRight(), '.');
         String extension = division.getRight().toUpperCase();
         List<Pair<String, String>> cluster = clusters.computeIfAbsent(extension, k -> new ArrayList<>());
         cluster.add(new ImmutablePair<>(division.getLeft(), source));
       } else {
-        List<Pair<String, String>> group = clusters.computeIfAbsent(language, k -> new ArrayList<>());
-        group.add(new ImmutablePair<>(identifier.getRight(), source));
+        String language = uri.layers.get(1).get("language");
+        List<Pair<String, String>> cluster = clusters.computeIfAbsent(language, k -> new ArrayList<>());
+        cluster.add(new ImmutablePair<>(identifier.getRight(), source));
       }
     }
 
     // build n-partite graph
     String[] languages = clusters.keySet().toArray(new String[clusters.size()]);
-    for (int i = 0; i < languages.length - 1; ++i) {
+    for (int i = 0; i < languages.length; ++i) {
       System.out.println(String.format("  %s: %d", languages[i], clusters.get(languages[i]).size()));
     }
     for (int i = 0; i < languages.length - 1; ++i) {
