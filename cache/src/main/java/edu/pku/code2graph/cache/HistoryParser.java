@@ -17,8 +17,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.List;
 
+import static edu.pku.code2graph.cache.CacheHandler.getCacheSHA;
 import static edu.pku.code2graph.cache.CacheHandler.initCache;
 
 public class HistoryParser {
@@ -56,13 +58,26 @@ public class HistoryParser {
       if (!commitList.exists()) FileUtil.createFile(commitListPath);
       BufferedWriter writer = new BufferedWriter(new FileWriter(commitList));
 
-      if (!commits.isEmpty()) initCommit = commits.get(commits.size() - 1).replace("\"", "");
-      writer.write(initCommit + "\n");
-      if (!initCommit.isEmpty()) initCacheForCommit(initCommit);
       int size = commits.size() - 1;
+      if (!commits.isEmpty()) initCommit = commits.get(size).replace("\"", "");
+      writer.write(initCommit);
+      Collection<String> hashes = initCacheForCommit(initCommit);
+      if (hashes != null) {
+        for (String hash : hashes) {
+          writer.write("," + hash);
+        }
+      }
+      writer.write("\n");
+
       for (int i = size - 1; i >= 0; i--) {
-        writer.write(commits.get(i).replace("\"", "") + "\n");
-        initCacheForCommitByUpdate(commits.get(i).replace("\"", ""));
+        writer.write(commits.get(i).replace("\"", ""));
+        hashes = initCacheForCommitByUpdate(commits.get(i).replace("\"", ""));
+        if (hashes != null) {
+          for (String hash : hashes) {
+            writer.write("," + hash);
+          }
+        }
+        writer.write("\n");
       }
       writer.close();
 
@@ -86,23 +101,26 @@ public class HistoryParser {
     }
   }
 
-  public static void initCacheForCommit(String commit)
+  public static Collection<String> initCacheForCommit(String commit)
       throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
     if (useCheckout && !gitService.checkoutByLongCommitID(commit)) {
       logger.error("Failed to checkout to {}", commit);
-      return;
+      return null;
     } else if (useCheckout) {
       logger.info("Successfully checkout to {}", commit);
     }
 
     initCache(framework, tmpPath, cacheDir, true);
+
+    if (!useCheckout) return null;
+    return getCacheSHA(framework, repoPath, cacheDir);
   }
 
-  public static void initCacheForCommitByUpdate(String commitA)
+  public static Collection<String> initCacheForCommitByUpdate(String commitA)
       throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
     if (useCheckout && !gitService.checkoutByLongCommitID(commitA)) {
       logger.error("Failed to checkout to {}", commitA);
-      return;
+      return null;
     } else if (useCheckout) {
       logger.info("Successfully checkout to {}", commitA);
     }
@@ -129,6 +147,9 @@ public class HistoryParser {
         CacheHandler.initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
       }
     }
+
+    if (!useCheckout) return null;
+    return getCacheSHA(framework, repoPath, cacheDir);
   }
 
   private static void overwriteOrDelete(String filePath, String fileContent) throws IOException {

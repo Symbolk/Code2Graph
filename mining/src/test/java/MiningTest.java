@@ -6,9 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class MiningTest {
@@ -21,11 +18,11 @@ public class MiningTest {
     for (Collection<String> hashes : result.values()) {
       files.addAll(hashes);
     }
-    System.out.println(result.size());
-    System.out.println(files.size());
+    System.out.println("total commits: " + result.size());
+    System.out.println("total files: " + files.size());
     Set<String> tree = new HashSet<>();
     CacheHandler.loadCache(cacheDir, tree);
-    System.out.println(tree.size());
+    System.out.println("total uris: " + tree.size());
   }
 
   @Test

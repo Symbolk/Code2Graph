@@ -326,26 +326,19 @@ public class CacheHandler {
     String commitsPath = cacheDir + "/commits.txt";
     FileReader fr = new FileReader(commitsPath);
     BufferedReader br = new BufferedReader(fr);
-    ArrayList<String> commits = new ArrayList<>();
     GitService gitService = new GitServiceCGit(repoPath);
     String headCommit = gitService.getLongHEADCommitId();
     String line;
     Map<String, Collection<String>> result = new LinkedHashMap<>();
     while ((line = br.readLine()) != null) {
-      commits.add(line);
-      try {
-        if (!gitService.checkoutByLongCommitID(line)) {
-          System.out.println("Failed to checkout to " + line);
-          break;
-        } else {
-          logger.info("Successfully checkout to {}", line);
-        }
-        Collection<String> hashes = getCacheSHA(framework, repoPath, cacheDir);
-        result.put(line, hashes);
-        System.out.println(line + " " + hashes.size());
-      } catch (Exception e) {
-        System.out.println("Error: " + e.getMessage());
+      StringTokenizer st = new StringTokenizer(line, ",");
+      String commitId = st.nextToken();
+      Collection<String> hashes = new HashSet<>();
+      result.put(commitId, hashes);
+      while (st.hasMoreTokens()) {
+        hashes.add(st.nextToken());
       }
+      System.out.println(commitId + " " + hashes.size());
     }
     gitService.checkoutByLongCommitID(headCommit);
     br.close();
