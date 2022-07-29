@@ -185,35 +185,6 @@ public class CacheHandler {
     return loadCache(cacheDir, tree, null, null);
   }
 
-  public static void loadCache(String cacheDir, Set<String> tree) throws IOException {
-    File cache = new File(cacheDir);
-
-    if (!cache.exists()) {
-      logger.error("cache dir " + cacheDir + " not found");
-      return;
-    }
-
-    if (!cache.isDirectory()) {
-      logger.error("cache dir path " + cacheDir + " not direct to a directory");
-      return;
-    }
-
-    URI renamedURI = null;
-    LinkedList<File> dirs = new LinkedList<>();
-    dirs.add(cache);
-    while (!dirs.isEmpty()) {
-      File dir = dirs.removeFirst();
-      File[] files = dir.listFiles();
-      if (files == null) continue;
-      for (File file : files) {
-        if (file.isDirectory()) dirs.add(file);
-        else {
-          loadCacheToSet(file.getAbsolutePath(), tree);
-        }
-      }
-    }
-  }
-
   public static Pair<URITree, URI> loadCache(
       String cacheDir, URITree tree, String renamedName, Range renamedRange) throws IOException {
     File cache = new File(cacheDir);
@@ -311,38 +282,6 @@ public class CacheHandler {
                   return acc;
                 });
     return getShaPath(fileList).values();
-  }
-
-  public static Map<String, Collection<String>> loadForAll(
-      String framework,
-      String repoName,
-      String cacheDir)
-      throws IOException, NonexistPathException, InvalidRepoException {
-    String repoPath = System.getProperty("user.dir").substring(0, System.getProperty("user.dir").lastIndexOf("/"))
-        + "/cache/src/main/resources/"
-        + framework
-        + "/repos/"
-        + repoName;
-    String commitsPath = cacheDir + "/commits.txt";
-    FileReader fr = new FileReader(commitsPath);
-    BufferedReader br = new BufferedReader(fr);
-    GitService gitService = new GitServiceCGit(repoPath);
-    String headCommit = gitService.getLongHEADCommitId();
-    String line;
-    Map<String, Collection<String>> result = new LinkedHashMap<>();
-    while ((line = br.readLine()) != null) {
-      StringTokenizer st = new StringTokenizer(line, ",");
-      String commitId = st.nextToken();
-      Collection<String> hashes = new HashSet<>();
-      result.put(commitId, hashes);
-      while (st.hasMoreTokens()) {
-        hashes.add(st.nextToken());
-      }
-    }
-    gitService.checkoutByLongCommitID(headCommit);
-    br.close();
-    fr.close();
-    return result;
   }
 
   public static URITree loadFor(
