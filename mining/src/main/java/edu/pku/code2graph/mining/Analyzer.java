@@ -5,30 +5,56 @@ import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
-public class Baseline {
+public class Analyzer {
   double sum = 0;
-  double negative = 0;
+  int positive = 0;
+  int negative = 0;
   public URITree tree = new URITree();
   public ArrayList<Rule> rules = new ArrayList<>();
-  private HashMap<URI, HashMap<URI, Double>> graph = new HashMap<>();
+  private HashMap<String, HashMap<String, Double>> graph = new HashMap<>();
 
-  public void connect(URI a, URI b, double confidence) {
-    HashMap<URI, Double> map1 = graph.computeIfAbsent(a, k -> new HashMap<>());
-    HashMap<URI, Double> map2 = graph.computeIfAbsent(b, k -> new HashMap<>());
+  public void addAll(Collection<String> uris) {
+    // categorized by language
+    Map<String, List<String>> clusters = new HashMap<>();
+    for (String source : uris) {
+      URI uri = new URI(source);
+      String language = uri.layers.get(uri.layers.size() - 1).get("language");
+      clusters.computeIfAbsent(language, k -> new ArrayList<>()).add(source);
+    }
+
+    // build n-partite graph
+    String[] languages = clusters.keySet().toArray(new String[clusters.size()]);
+    for (int i = 0; i < languages.length - 1; ++i) {
+      System.out.println(String.format("  %s: %d", languages[i], clusters.get(languages[i]).size()));
+      List<String> leftUris = clusters.get(languages[i]);
+      for (int j = i + 1; j < languages.length; ++j) {
+        List<String> rightUris = clusters.get(languages[j]);
+        for (String leftUri : leftUris) {
+          for (String rightUri : rightUris) {
+            connect(leftUri, rightUri, 1);
+          }
+        }
+      }
+    }
+  }
+
+  public void connect(String a, String b, double confidence) {
+    HashMap<String, Double> map1 = graph.computeIfAbsent(a, k -> new HashMap<>());
+    HashMap<String, Double> map2 = graph.computeIfAbsent(b, k -> new HashMap<>());
     double value = Confidence.add(map1.getOrDefault(b, 0.), confidence);
     sum = Confidence.add(sum, confidence);
+    positive++;
     if (confidence == 0) negative++;
     map1.put(b, value);
     map2.put(a, value);
   }
 
   public void normalize() {
-    for (URI left : graph.keySet()) {
-      for (URI right : graph.keySet()) {
-        HashMap<URI, Double> map = graph.get(left);
+    for (String left : graph.keySet()) {
+      for (String right : graph.keySet()) {
+        HashMap<String, Double> map = graph.get(left);
         double value = map.get(right);
         if (value == 0) {
           map.put(right, -sum / negative);

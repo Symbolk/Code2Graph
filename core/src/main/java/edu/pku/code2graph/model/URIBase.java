@@ -6,7 +6,7 @@ import java.util.List;
 public abstract class URIBase<T extends LayerBase> {
   public boolean isRef;
 
-  protected List<T> layers = new ArrayList<>();
+  public List<T> layers = new ArrayList<>();
 
   public int getLayerCount() {
     return layers.size();

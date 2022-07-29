@@ -7,15 +7,18 @@ import java.util.*;
 
 import static edu.pku.code2graph.cache.CacheHandler.loadCacheToSet;
 
-public class History extends ArrayList<URITree> {
+public class HistoryLoader extends ArrayList<URITree> {
   String cacheDir;
   Map<String, List<String>> commits = new LinkedHashMap<>();
-  Map<String, Set<String>> files = new HashMap<>();
+  Map<String, Set<String>> snapshots = new HashMap<>();
+  Analyzer analyzer = new Analyzer();
 
-  public History(String framework, String repoName) throws IOException {
+  public HistoryLoader(String framework, String repoName) throws IOException {
     cacheDir = System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
     loadCommits();
-    loadFiles();
+    loadSnapshots();
+    loadAll();
+    System.out.println(analyzer.positive);
   }
 
   private void loadCommits() throws IOException {
@@ -37,7 +40,7 @@ public class History extends ArrayList<URITree> {
     System.out.println("total commits: " + commits.size());
   }
 
-  private void loadFiles() throws IOException {
+  private void loadSnapshots() throws IOException {
     File[] files = new File(cacheDir).listFiles((dir, name) -> {
       return name.endsWith(".csv");
     });
@@ -46,7 +49,7 @@ public class History extends ArrayList<URITree> {
     for (File file : files) {
       Set<String> uris = new HashSet<>();
       String name = file.getName();
-      this.files.put(name.substring(0, name.length() - 4), uris);
+      snapshots.put(name.substring(0, name.length() - 4), uris);
       loadCacheToSet(file.getAbsolutePath(), uris);
       uriAll.addAll(uris);
     }
@@ -62,19 +65,19 @@ public class History extends ArrayList<URITree> {
     }
   }
 
-  public Diff diffCommit(String head, String base, int age) {
+  public void diffCommit(String head, String base, int age) {
     List<String> headFiles = commits.get(head);
     List<String> baseFiles = commits.getOrDefault(base, new ArrayList<>());
-    Diff diff = new Diff(age);
+    CommitDiff diff = new CommitDiff(age);
     for (String file : headFiles) {
       if (baseFiles.contains(file)) continue;
-      for (String uri : files.get(file)) {
+      for (String uri : snapshots.get(file)) {
         diff.additions.add(uri);
       }
     }
     for (String file : baseFiles) {
       if (headFiles.contains(file)) continue;
-      for (String uri : files.get(file)) {
+      for (String uri : snapshots.get(file)) {
         if (diff.additions.contains(uri)) {
           diff.additions.remove(uri);
         } else {
@@ -82,15 +85,17 @@ public class History extends ArrayList<URITree> {
         }
       }
     }
-    return diff;
+    System.out.println(head);
+    analyzer.addAll(diff.additions);
+    analyzer.addAll(diff.deletions);
   }
 
-  public class Diff {
+  public class CommitDiff {
     public final Set<String> additions = new HashSet<>();
     public final Set<String> deletions = new HashSet<>();
     public final int age;
 
-    Diff(int age) {
+    CommitDiff(int age) {
       this.age = age;
     }
   }

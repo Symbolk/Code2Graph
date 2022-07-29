@@ -29,7 +29,7 @@ public class HistoryParser {
 
   public static Boolean useCheckout = true;
   public static String framework = "android";
-  private static String repoName = "XposedInstaller";
+  private static String repoName = "NewPipe";
   private static String repoPath =
       System.getProperty("user.dir")
           + "/cache/src/main/resources/"
