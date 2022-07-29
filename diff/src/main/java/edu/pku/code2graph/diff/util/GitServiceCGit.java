@@ -803,7 +803,7 @@ public class GitServiceCGit implements GitService {
   public List<String> getCommitHistory() {
     String output =
         SysUtil.runSystemCommand(
-            repoPath, StandardCharsets.UTF_8, "git", "log", "--pretty=format:\"%H\"");
+            repoPath, StandardCharsets.UTF_8, "git", "log", "--pretty=%H", "--reverse");
     String[] commits = output.trim().split("\n");
     List<String> results = new ArrayList<>();
     for (String commit : commits) {

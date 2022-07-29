@@ -338,7 +338,6 @@ public class CacheHandler {
       while (st.hasMoreTokens()) {
         hashes.add(st.nextToken());
       }
-      System.out.println(commitId + " " + hashes.size());
     }
     gitService.checkoutByLongCommitID(headCommit);
     br.close();
