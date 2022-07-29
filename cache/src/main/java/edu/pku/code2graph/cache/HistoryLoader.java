@@ -8,17 +8,17 @@ import java.util.*;
 import static edu.pku.code2graph.cache.CacheHandler.loadCacheToSet;
 
 public class HistoryLoader {
-  private String cacheDir;
+  private String root;
   public Map<String, Commit> commits = new LinkedHashMap<>();
-  private Map<String, Set<String>> files = new HashMap<>();
+  public Map<String, Set<String>> files = new HashMap<>();
 
   public HistoryLoader(String framework, String repoName) throws IOException {
-    cacheDir = System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
+    root = System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
     loadCommits();
   }
 
   private void loadCommits() throws IOException {
-    String commitsPath = cacheDir + "/commits.txt";
+    String commitsPath = root + "/commits.txt";
     FileReader fr = new FileReader(commitsPath);
     BufferedReader br = new BufferedReader(fr);
     String line;
@@ -38,7 +38,7 @@ public class HistoryLoader {
     if (result != null) return result;
     result = new HashSet<>();
     files.put(hash, result);
-    loadCacheToSet(cacheDir + "/" + hash + ".csv", result);
+    loadCacheToSet(root + "/" + hash + ".csv", result);
     return result;
   }
 

@@ -1,10 +1,14 @@
 import edu.pku.code2graph.cache.HistoryLoader;
 import edu.pku.code2graph.mining.Analyzer;
+import edu.pku.code2graph.mining.Candidate;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Optional;
 
 public class MiningTest {
   private static Logger logger = LoggerFactory.getLogger(MiningTest.class);
@@ -13,7 +17,14 @@ public class MiningTest {
     HistoryLoader history = new HistoryLoader(framework, repoName);
     Analyzer analyzer = new Analyzer(history);
     analyzer.analyzeAll();
-    System.out.println(analyzer.positive);
+    System.out.println("cochanges: " + analyzer.cochanges);
+    System.out.println("candidates: " + analyzer.graph.size());
+    Optional<Map.Entry<Candidate, Double>> entry = analyzer.graph.entrySet().stream().max((o1, o2) -> {
+      return (int) Math.signum(o1.getValue() - o2.getValue());
+    });
+    entry.ifPresent(e -> {
+      System.out.println(e.getKey().toString() + ": " + e.getValue());
+    });
   }
 
   private void testHistory(String framework, String repoName, String head) throws IOException {
@@ -25,7 +36,7 @@ public class MiningTest {
 
   @Test
   public void testCloudReader() throws Exception {
-    testHistory("android", "CloudReader", "3cc129d9d39397c6732e213f4deb69832d86db3c");
+    testHistory("android", "CloudReader");
   }
 
   @Test

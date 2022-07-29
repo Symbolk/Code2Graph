@@ -12,12 +12,15 @@ import java.io.IOException;
 import java.util.*;
 
 public class Analyzer {
+  public static int MAX_COCHANGE_SIZE = 1000000;
+
   public double sum = 0;
   public int positive = 0;
   public int negative = 0;
+  public int cochanges = 0;
   public URITree tree = new URITree();
   public ArrayList<Rule> rules = new ArrayList<>();
-  private HashMap<String, HashMap<String, Double>> graph = new HashMap<>();
+  public Map<Candidate, Double> graph = new HashMap<>();
 
   private HistoryLoader history;
 
@@ -27,10 +30,11 @@ public class Analyzer {
 
   public void analyze(String hash) throws IOException {
     HistoryLoader.Diff diff = history.diff(hash);
-    System.out.println(hash + ": " + diff.additions.size());
-    collect(diff.additions);
-    System.out.println(hash + ": " + diff.deletions.size());
-    collect(diff.deletions);
+    String format;
+    format = String.format("[%s] +%d", hash, diff.additions.size());
+    collect(diff.additions, format);
+    format = String.format("[%s] -%d", hash, diff.deletions.size());
+    collect(diff.deletions, format);
   }
 
   public void analyzeAll() throws IOException {
@@ -39,7 +43,7 @@ public class Analyzer {
     }
   }
 
-  public void collect(Collection<String> uris) {
+  public void collect(Collection<String> uris, String format) {
     // categorized by language
     // pay special attention to the file names
     Map<String, List<Pair<String, String>>> clusters = new HashMap<>();
@@ -59,11 +63,31 @@ public class Analyzer {
       }
     }
 
-    // build n-partite graph
-    String[] languages = clusters.keySet().toArray(new String[clusters.size()]);
-    for (int i = 0; i < languages.length; ++i) {
-      System.out.println(String.format("  %s: %d", languages[i], clusters.get(languages[i]).size()));
+    // estimate graph size
+    if (clusters.isEmpty()) return;
+    StringBuilder builder = new StringBuilder(format);
+    String[] keys = clusters.keySet().toArray(new String[0]);
+    String[] notes = Arrays.stream(keys).map(k -> k + ": " + clusters.get(k).size()).toArray(String[]::new);
+    builder.append(" (").append(String.join(", ", notes)).append(")");
+    int edgeCount = 0;
+    for (int i = 0; i < keys.length - 1; ++i) {
+      int size1 = clusters.get(keys[i]).size();
+      for (int j = i + 1; j < keys.length; ++j) {
+        int size2 = clusters.get(keys[j]).size();
+        edgeCount += size1 * size2;
+      }
     }
+    if (edgeCount > MAX_COCHANGE_SIZE) {
+      builder.append(" -> pruned");
+      System.out.println(builder);
+      return;
+    }
+    cochanges += edgeCount;
+    System.out.println(builder);
+
+    // build n-partite graph
+    String[] languages = clusters.keySet().toArray(new String[0]);
+    List<Pair<Candidate, Double>> entries = new ArrayList<>();
     for (int i = 0; i < languages.length - 1; ++i) {
       List<Pair<String, String>> cluster1 = clusters.get(languages[i]);
       for (int j = i + 1; j < languages.length; ++j) {
@@ -71,39 +95,40 @@ public class Analyzer {
         for (Pair<String, String> entry1 : cluster1) {
           for (Pair<String, String> entry2 : cluster2) {
             if (!Confidence.intersects(entry1.getLeft(), entry2.getLeft())) continue;
-//            System.out.println(entry1.getLeft() + " " + entry2.getLeft());
-            link(entry1.getRight(), entry2.getRight(), 1);
+            Candidate candidate = new Candidate(entry1.getRight(), entry2.getRight());
+            entries.add(new ImmutablePair<>(candidate, 1.));
           }
         }
       }
     }
-  }
 
-  public void link(String a, String b, double confidence) {
-    HashMap<String, Double> map1 = graph.computeIfAbsent(a, k -> new HashMap<>());
-    HashMap<String, Double> map2 = graph.computeIfAbsent(b, k -> new HashMap<>());
-    double value = Confidence.add(map1.getOrDefault(b, 0.), confidence);
-    sum = Confidence.add(sum, confidence);
-    positive++;
-    if (confidence == 0) negative++;
-    map1.put(b, value);
-    map2.put(a, value);
-  }
-
-  public void normalize() {
-    for (String left : graph.keySet()) {
-      for (String right : graph.keySet()) {
-        HashMap<String, Double> map = graph.get(left);
-        double value = map.get(right);
-        if (value == 0) {
-          map.put(right, -sum / negative);
-        }
-      }
+    // normalize the graph
+    int size = entries.size();
+    for (Pair<Candidate, Double> entry : entries) {
+      link(entry.getKey(), entry.getValue() / size);
     }
   }
 
+  public void link(Candidate candidate, double confidence) {
+    double value = Confidence.add(graph.getOrDefault(candidate, 0.), confidence);
+    sum = Confidence.add(sum, confidence);
+    graph.put(candidate, value);
+  }
+
+  public void normalize() {
+//    for (String left : graph.keySet()) {
+//      for (String right : graph.keySet()) {
+//        HashMap<String, Double> map = graph.get(left);
+//        double value = map.get(right);
+//        if (value == 0) {
+//          map.put(right, -sum / negative);
+//        }
+//      }
+//    }
+  }
+
   public void generalize(URI left, URI right) {
-    double value = graph.get(left).get(right);
+    double value = graph.get(new Candidate(left.toString(), right.toString()));
     if (value <= 0) return;
     boolean flag = false;
     URIPattern patternL = new URIPattern(left);
@@ -150,7 +175,7 @@ public class Analyzer {
     for (Link link : linker.links) {
       URI left = link.def;
       URI right = link.use;
-      double value = graph.get(left).get(right);
+      double value = graph.get(new Candidate(left.toString(), right.toString()));
       sum = Confidence.add(sum, value);
     }
     return sum;
