@@ -19,10 +19,11 @@ public class MiningTest {
     analyzer.analyzeAll();
     System.out.println("cochanges: " + analyzer.cochanges);
     System.out.println("candidates: " + analyzer.graph.size());
+    System.out.println("uris: " + history.getUriCount());
     Iterator<Map.Entry<Candidate, Credit>> it = analyzer.graph.entrySet().stream().sorted((o1, o2) -> {
       return Double.compare(o2.getValue().value, o1.getValue().value);
     }).iterator();
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 30; ++i) {
       if (!it.hasNext()) break;
       Map.Entry<Candidate, Credit> entry = it.next();
       System.out.println("- " + entry.getKey().left);

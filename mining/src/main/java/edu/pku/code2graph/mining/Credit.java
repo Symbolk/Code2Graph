@@ -7,12 +7,18 @@ public class Credit {
   public double value = 0.;
   public List<Record> history = new ArrayList<>();
 
-  public void add(double value) {
-    this.value = Confidence.add(this.value, value);
+  static public double add(double a, double b) {
+    double sum = a + b;
+    double product = a * b;
+    if (product <= 0) {
+      return sum / (1 - Math.min(Math.abs(a), Math.abs(b)));
+    } else {
+      return sum - product * Math.signum(sum);
+    }
   }
 
   public void add(Record record) {
-    this.value = Confidence.add(this.value, record.value);
+    this.value = add(this.value, record.value);
     this.history.add(record);
   }
 

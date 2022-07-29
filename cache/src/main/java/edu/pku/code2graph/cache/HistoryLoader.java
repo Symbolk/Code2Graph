@@ -42,6 +42,14 @@ public class HistoryLoader {
     return result;
   }
 
+  public int getUriCount() {
+    Set<String> all = new HashSet<>();
+    for (String hash : files.keySet()) {
+      all.addAll(files.get(hash));
+    }
+    return all.size();
+  }
+
   public Diff diff(String hash) throws IOException {
     Commit head = commits.get(hash);
     Commit base = commits.getOrDefault(head.parent, new Commit());

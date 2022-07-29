@@ -86,6 +86,7 @@ public class Analyzer {
 
     // build n-partite graph
     String[] languages = clusters.keySet().toArray(new String[0]);
+    Map<String, Integer> degrees = new HashMap<>();
     List<Pair<Candidate, Double>> entries = new ArrayList<>();
     for (int i = 0; i < languages.length - 1; ++i) {
       List<Pair<String, String>> cluster1 = clusters.get(languages[i]);
@@ -95,7 +96,11 @@ public class Analyzer {
           for (Pair<String, String> entry2 : cluster2) {
             double similarity = Confidence.similarity(entry1.getLeft(), entry2.getLeft());
             if (similarity == 0.) continue;
-            Candidate candidate = new Candidate(entry1.getRight(), entry2.getRight());
+            String source1 = entry1.getRight();
+            String source2 = entry2.getRight();
+            Candidate candidate = new Candidate(source1, source2);
+            degrees.put(source1, degrees.computeIfAbsent(source1, k -> 0) + 1);
+            degrees.put(source2, degrees.computeIfAbsent(source2, k -> 0) + 1);
             entries.add(new ImmutablePair<>(candidate, similarity));
           }
         }
@@ -103,13 +108,14 @@ public class Analyzer {
     }
 
     // normalize the graph
-    int density = entries.size();
-    System.out.println(builder.append(density).append(" collected"));
+    System.out.println(builder.append(entries.size()).append(" collected"));
     for (Pair<Candidate, Double> entry : entries) {
+      Candidate candidate = entry.getKey();
+      int density = degrees.get(candidate.left) * degrees.get(candidate.right);
       Credit.Record record = new Credit.Record(commit, entry.getValue(), density);
-      Credit credit = graph.computeIfAbsent(entry.getKey(), k -> new Credit());
+      Credit credit = graph.computeIfAbsent(candidate, k -> new Credit());
       credit.add(record);
-      sum = Confidence.add(sum, record.value);
+      sum = Credit.add(sum, record.value);
     }
   }
 
@@ -174,7 +180,7 @@ public class Analyzer {
       URI left = link.def;
       URI right = link.use;
       double value = graph.get(new Candidate(left.toString(), right.toString())).value;
-      sum = Confidence.add(sum, value);
+      sum = Credit.add(sum, value);
     }
     return sum;
   }

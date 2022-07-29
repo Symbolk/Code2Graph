@@ -7,16 +7,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Confidence {
-  static public double add(double a, double b) {
-    double sum = a + b;
-    double product = a * b;
-    if (product <= 0) {
-      return sum / (1 - Math.min(Math.abs(a), Math.abs(b)));
-    } else {
-      return sum - product * Math.signum(sum);
-    }
-  }
-
   static public Pair<String, String> splitLast(String input, char delimiter) {
     int index = input.lastIndexOf(delimiter);
     if (index == -1) return new ImmutablePair<>(input, "");
