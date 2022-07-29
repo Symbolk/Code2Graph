@@ -1,18 +1,16 @@
-package edu.pku.code2graph.mining;
+package edu.pku.code2graph.cache;
 
-import edu.pku.code2graph.cache.CommitCache;
-import edu.pku.code2graph.model.URITree;
-
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
 import static edu.pku.code2graph.cache.CacheHandler.loadCacheToSet;
 
-public class HistoryLoader extends ArrayList<URITree> {
-  String cacheDir;
-  LinkedHashMap<String, CommitCache> commits = new LinkedHashMap<>();
-  Map<String, Set<String>> fileCache = new HashMap<>();
-  public Analyzer analyzer = new Analyzer();
+public class HistoryLoader {
+  private String cacheDir;
+  public Map<String, Commit> commits = new LinkedHashMap<>();
+  private Map<String, Set<String>> files = new HashMap<>();
 
   public HistoryLoader(String framework, String repoName) throws IOException {
     cacheDir = System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
@@ -26,7 +24,7 @@ public class HistoryLoader extends ArrayList<URITree> {
     String line;
     String parent = null;
     while ((line = br.readLine()) != null) {
-      CommitCache commit = new CommitCache(parent, line);
+      Commit commit = new Commit(parent, line);
       parent = commit.hash;
       commits.put(parent, commit);
     }
@@ -35,26 +33,19 @@ public class HistoryLoader extends ArrayList<URITree> {
     System.out.println("total commits: " + commits.size());
   }
 
-  public void loadAll() throws IOException {
-    int age = 0;
-    for (String current : commits.keySet()) {
-      diffCommit(current, ++age);
-    }
-  }
-
   private Set<String> loadFile(String hash) throws IOException {
-    Set<String> result = fileCache.get(hash);
+    Set<String> result = files.get(hash);
     if (result != null) return result;
     result = new HashSet<>();
-    fileCache.put(hash, result);
+    files.put(hash, result);
     loadCacheToSet(cacheDir + "/" + hash + ".csv", result);
     return result;
   }
 
-  public void diffCommit(String hash, int age) throws IOException {
-    CommitCache head = commits.get(hash);
-    CommitCache base = commits.getOrDefault(head.parent, new CommitCache());
-    CommitDiff diff = new CommitDiff(age);
+  public Diff diff(String hash) throws IOException {
+    Commit head = commits.get(hash);
+    Commit base = commits.getOrDefault(head.parent, new Commit());
+    Diff diff = new Diff();
     for (String file : head.files) {
       if (base.files.contains(file)) continue;
       for (String uri : loadFile(file)) {
@@ -71,19 +62,11 @@ public class HistoryLoader extends ArrayList<URITree> {
         }
       }
     }
-    System.out.println(hash + ": " + diff.additions.size());
-    analyzer.addAll(diff.additions);
-    System.out.println(hash + ": " + diff.deletions.size());
-    analyzer.addAll(diff.deletions);
+    return diff;
   }
 
-  public class CommitDiff {
+  public static class Diff {
     public final Set<String> additions = new HashSet<>();
     public final Set<String> deletions = new HashSet<>();
-    public final int age;
-
-    CommitDiff(int age) {
-      this.age = age;
-    }
   }
 }

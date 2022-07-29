@@ -1,5 +1,6 @@
 package edu.pku.code2graph.mining;
 
+import edu.pku.code2graph.cache.HistoryLoader;
 import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
@@ -7,6 +8,7 @@ import edu.pku.code2graph.xll.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.io.IOException;
 import java.util.*;
 
 public class Analyzer {
@@ -17,7 +19,27 @@ public class Analyzer {
   public ArrayList<Rule> rules = new ArrayList<>();
   private HashMap<String, HashMap<String, Double>> graph = new HashMap<>();
 
-  public void addAll(Collection<String> uris) {
+  private HistoryLoader history;
+
+  public Analyzer(HistoryLoader history) {
+    this.history = history;
+  }
+
+  public void analyze(String hash) throws IOException {
+    HistoryLoader.Diff diff = history.diff(hash);
+    System.out.println(hash + ": " + diff.additions.size());
+    collect(diff.additions);
+    System.out.println(hash + ": " + diff.deletions.size());
+    collect(diff.deletions);
+  }
+
+  public void analyzeAll() throws IOException {
+    for (String hash : history.commits.keySet()) {
+      analyze(hash);
+    }
+  }
+
+  public void collect(Collection<String> uris) {
     // categorized by language
     // pay special attention to the file names
     Map<String, List<Pair<String, String>>> clusters = new HashMap<>();
@@ -50,14 +72,14 @@ public class Analyzer {
           for (Pair<String, String> entry2 : cluster2) {
             if (!Confidence.intersects(entry1.getLeft(), entry2.getLeft())) continue;
 //            System.out.println(entry1.getLeft() + " " + entry2.getLeft());
-            connect(entry1.getRight(), entry2.getRight(), 1);
+            link(entry1.getRight(), entry2.getRight(), 1);
           }
         }
       }
     }
   }
 
-  public void connect(String a, String b, double confidence) {
+  public void link(String a, String b, double confidence) {
     HashMap<String, Double> map1 = graph.computeIfAbsent(a, k -> new HashMap<>());
     HashMap<String, Double> map2 = graph.computeIfAbsent(b, k -> new HashMap<>());
     double value = Confidence.add(map1.getOrDefault(b, 0.), confidence);

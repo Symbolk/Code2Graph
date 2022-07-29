@@ -1,4 +1,5 @@
-import edu.pku.code2graph.mining.HistoryLoader;
+import edu.pku.code2graph.cache.HistoryLoader;
+import edu.pku.code2graph.mining.Analyzer;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,15 +10,17 @@ public class MiningTest {
   private static Logger logger = LoggerFactory.getLogger(MiningTest.class);
 
   private void testHistory(String framework, String repoName) throws IOException {
-    HistoryLoader loader = new HistoryLoader(framework, repoName);
-    loader.loadAll();
-    System.out.println(loader.analyzer.positive);
+    HistoryLoader history = new HistoryLoader(framework, repoName);
+    Analyzer analyzer = new Analyzer(history);
+    analyzer.analyzeAll();
+    System.out.println(analyzer.positive);
   }
 
   private void testHistory(String framework, String repoName, String head) throws IOException {
-    HistoryLoader loader = new HistoryLoader(framework, repoName);
-    loader.diffCommit(head, 0);
-    System.out.println(loader.analyzer.positive);
+    HistoryLoader history = new HistoryLoader(framework, repoName);
+    Analyzer analyzer = new Analyzer(history);
+    analyzer.analyze(head);
+    System.out.println(analyzer.positive);
   }
 
   @Test
