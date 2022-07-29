@@ -4,6 +4,8 @@ import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -17,23 +19,38 @@ public class Analyzer {
 
   public void addAll(Collection<String> uris) {
     // categorized by language
-    Map<String, List<String>> clusters = new HashMap<>();
+    // pay special attention to the file names
+    Map<String, List<Pair<String, String>>> clusters = new HashMap<>();
     for (String source : uris) {
       URI uri = new URI(source);
-      String language = uri.layers.get(uri.layers.size() - 1).get("language");
-      clusters.computeIfAbsent(language, k -> new ArrayList<>()).add(source);
+      Layer last = uri.layers.get(uri.layers.size() - 1);
+      String language = last.get("language");
+      Pair<String, String> identifier = Confidence.splitLast(last.get("identifier"), '/');
+      if (language.equals("FILE")) {
+        Pair<String, String> division = Confidence.splitLast(identifier.getRight(), '.');
+        String extension = division.getRight().toUpperCase();
+        List<Pair<String, String>> cluster = clusters.computeIfAbsent(extension, k -> new ArrayList<>());
+        cluster.add(new ImmutablePair<>(division.getLeft(), source));
+      } else {
+        List<Pair<String, String>> group = clusters.computeIfAbsent(language, k -> new ArrayList<>());
+        group.add(new ImmutablePair<>(identifier.getRight(), source));
+      }
     }
 
     // build n-partite graph
     String[] languages = clusters.keySet().toArray(new String[clusters.size()]);
     for (int i = 0; i < languages.length - 1; ++i) {
       System.out.println(String.format("  %s: %d", languages[i], clusters.get(languages[i]).size()));
-      List<String> leftUris = clusters.get(languages[i]);
+    }
+    for (int i = 0; i < languages.length - 1; ++i) {
+      List<Pair<String, String>> cluster1 = clusters.get(languages[i]);
       for (int j = i + 1; j < languages.length; ++j) {
-        List<String> rightUris = clusters.get(languages[j]);
-        for (String leftUri : leftUris) {
-          for (String rightUri : rightUris) {
-            connect(leftUri, rightUri, 1);
+        List<Pair<String, String>> cluster2 = clusters.get(languages[j]);
+        for (Pair<String, String> entry1 : cluster1) {
+          for (Pair<String, String> entry2 : cluster2) {
+            if (!Confidence.intersects(entry1.getLeft(), entry2.getLeft())) continue;
+//            System.out.println(entry1.getLeft() + " " + entry2.getLeft());
+            connect(entry1.getRight(), entry2.getRight(), 1);
           }
         }
       }
