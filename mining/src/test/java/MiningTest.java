@@ -1,55 +1,69 @@
-import edu.pku.code2graph.exception.InvalidRepoException;
-import edu.pku.code2graph.exception.NonexistPathException;
-import edu.pku.code2graph.model.URITree;
-import edu.pku.code2graph.cache.CacheHandler;
+import edu.pku.code2graph.cache.HistoryLoader;
+import edu.pku.code2graph.mining.Analyzer;
+import edu.pku.code2graph.mining.Candidate;
+import edu.pku.code2graph.mining.Credit;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
 
 public class MiningTest {
   private static Logger logger = LoggerFactory.getLogger(MiningTest.class);
 
-  private void test(String framework, String repoName) throws Exception {
-    String cacheDir = System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
-    Map<String, Collection<String>> result = CacheHandler.loadForAll(framework, repoName, cacheDir);
-    Set<String> files = new HashSet<>();
-    for (Collection<String> hashes : result.values()) {
-      files.addAll(hashes);
+  private void testHistory(String framework, String repoName) throws IOException {
+    HistoryLoader history = new HistoryLoader(framework, repoName);
+    Analyzer analyzer = new Analyzer(history);
+    analyzer.analyzeAll();
+    System.out.println("cochanges: " + analyzer.cochanges);
+    System.out.println("candidates: " + analyzer.graph.size());
+    System.out.println("uris: " + history.getUriCount());
+    Iterator<Map.Entry<Candidate, Credit>> it = analyzer.graph.entrySet().stream().sorted((o1, o2) -> {
+      return Double.compare(o2.getValue().value, o1.getValue().value);
+    }).iterator();
+    for (int i = 0; i < 30; ++i) {
+      if (!it.hasNext()) break;
+      Map.Entry<Candidate, Credit> entry = it.next();
+      System.out.println("- " + entry.getKey().left);
+      System.out.println("- " + entry.getKey().right);
+      System.out.println("value: " + entry.getValue().value);
+      for (Credit.Record record : entry.getValue().history) {
+        System.out.println(record);
+      }
     }
-    System.out.println(result.size());
-    System.out.println(files.size());
-    Set<String> tree = new HashSet<>();
-    CacheHandler.loadCache(cacheDir, tree);
-    System.out.println(tree.size());
+  }
+
+  private void testHistory(String framework, String repoName, String head) throws IOException {
+    HistoryLoader history = new HistoryLoader(framework, repoName);
+    Analyzer analyzer = new Analyzer(history);
+    analyzer.analyze(head);
+    System.out.println(analyzer.positive);
   }
 
   @Test
   public void testCloudReader() throws Exception {
-    test("android", "CloudReader");
+    testHistory("android", "CloudReader");
   }
 
   @Test
   public void testGSYVideoPlayer() throws Exception {
-    test("android", "GSYVideoPlayer");
+    testHistory("android", "GSYVideoPlayer");
   }
 
   @Test
   public void testNewPipe() throws Exception {
-    test("android", "NewPipe");
+    testHistory("android", "NewPipe");
   }
 
   @Test
   public void testVirtualXposed() throws Exception {
-    test("android", "VirtualXposed");
+    testHistory("android", "VirtualXposed");
   }
 
   @Test
   public void testXposedInstaller() throws Exception {
-    test("android", "XposedInstaller");
+    testHistory("android", "XposedInstaller");
   }
 }

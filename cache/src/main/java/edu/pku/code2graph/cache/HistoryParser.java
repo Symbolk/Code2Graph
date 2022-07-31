@@ -17,8 +17,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
+import java.util.Collection;
 import java.util.List;
 
+import static edu.pku.code2graph.cache.CacheHandler.getCacheSHA;
 import static edu.pku.code2graph.cache.CacheHandler.initCache;
 
 public class HistoryParser {
@@ -26,7 +29,7 @@ public class HistoryParser {
 
   public static Boolean useCheckout = true;
   public static String framework = "android";
-  private static String repoName = "CloudReader";
+  private static String repoName = "NewPipe";
   private static String repoPath =
       System.getProperty("user.dir")
           + "/cache/src/main/resources/"
@@ -40,11 +43,14 @@ public class HistoryParser {
   private static String commitListPath = cacheDir + "/commits.txt";
   private static GitService gitService;
 
+  private static List<String> commits;
+  private static BufferedWriter writer;
+
   public static void main(String[] args) {
     init();
 
     try {
-      List<String> commits = gitService.getCommitHistory();
+      commits = gitService.getCommitHistory();
       if (!useCheckout) {
         FileUtil.copyDir(repoPath, tmpPath);
       } else {
@@ -54,15 +60,10 @@ public class HistoryParser {
 
       File commitList = new File(commitListPath);
       if (!commitList.exists()) FileUtil.createFile(commitListPath);
-      BufferedWriter writer = new BufferedWriter(new FileWriter(commitList));
-
-      if (!commits.isEmpty()) initCommit = commits.get(commits.size() - 1).replace("\"", "");
-      writer.write(initCommit + "\n");
-      if (!initCommit.isEmpty()) initCacheForCommit(initCommit);
-      int size = commits.size() - 1;
-      for (int i = size - 1; i >= 0; i--) {
-        writer.write(commits.get(i).replace("\"", "") + "\n");
-        initCacheForCommitByUpdate(commits.get(i).replace("\"", ""));
+      System.out.println(commitListPath);
+      writer = new BufferedWriter(new FileWriter(commitList));
+      for (int i = 0; i < commits.size(); i++) {
+        initCacheForCommit(i);
       }
       writer.close();
 
@@ -86,49 +87,53 @@ public class HistoryParser {
     }
   }
 
-  public static void initCacheForCommit(String commit)
+  public static void initCacheForCommit(int index)
       throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
+    writer.write(commits.get(index));
+    String commit = commits.get(index);
     if (useCheckout && !gitService.checkoutByLongCommitID(commit)) {
       logger.error("Failed to checkout to {}", commit);
+      writer.write("\n");
       return;
     } else if (useCheckout) {
-      logger.info("Successfully checkout to {}", commit);
+      String progress = new DecimalFormat("0.00%").format((double) index / commits.size());
+      logger.info("Successfully checkout to {} ({})", commit, progress);
     }
 
-    initCache(framework, tmpPath, cacheDir, true);
-  }
+    if (index == 0) {
+      initCache(framework, tmpPath, cacheDir, true);
+    } else {
+      if (!useCheckout) logger.info("store uri tree for {}", commit);
 
-  public static void initCacheForCommitByUpdate(String commitA)
-      throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
-    if (useCheckout && !gitService.checkoutByLongCommitID(commitA)) {
-      logger.error("Failed to checkout to {}", commitA);
-      return;
-    } else if (useCheckout) {
-      logger.info("Successfully checkout to {}", commitA);
-    }
-
-    if (!useCheckout) logger.info("store uritree for {}", commitA);
-
-    List<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commitA);
-    for (DiffFile file : diffFiles) {
-      if (!file.getARelativePath().isEmpty()) {
-        if (!useCheckout) {
-          String pathA = file.getARelativePath();
-          String fileContent = gitService.getFileAtCommit(pathA, commitA);
-          overwriteOrDelete(Paths.get(tmpPath, pathA).toString(), fileContent);
+      List<DiffFile> diffFiles = gitService.getChangedFilesAtCommit(commit);
+      for (DiffFile file : diffFiles) {
+        if (!file.getARelativePath().isEmpty()) {
+          if (!useCheckout) {
+            String pathA = file.getARelativePath();
+            String fileContent = gitService.getFileAtCommit(pathA, commit);
+            overwriteOrDelete(Paths.get(tmpPath, pathA).toString(), fileContent);
+          }
+          CacheHandler.initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
         }
-        CacheHandler.initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
-      }
-      if (!file.getBRelativePath().isEmpty()
-          && !file.getBRelativePath().equals(file.getARelativePath())) {
-        if (!useCheckout) {
-          String pathB = file.getBRelativePath();
-          String fileContent = gitService.getFileAtCommit(pathB, commitA);
-          overwriteOrDelete(Paths.get(tmpPath, pathB).toString(), fileContent);
+        if (!file.getBRelativePath().isEmpty()
+            && !file.getBRelativePath().equals(file.getARelativePath())) {
+          if (!useCheckout) {
+            String pathB = file.getBRelativePath();
+            String fileContent = gitService.getFileAtCommit(pathB, commit);
+            overwriteOrDelete(Paths.get(tmpPath, pathB).toString(), fileContent);
+          }
+          CacheHandler.initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
         }
-        CacheHandler.initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
       }
     }
+
+    if (useCheckout) {
+      Collection<String> hashes = getCacheSHA(framework, repoPath, cacheDir);
+      for (String hash : hashes) {
+        writer.write("," + hash);
+      }
+    }
+    writer.write("\n");
   }
 
   private static void overwriteOrDelete(String filePath, String fileContent) throws IOException {
