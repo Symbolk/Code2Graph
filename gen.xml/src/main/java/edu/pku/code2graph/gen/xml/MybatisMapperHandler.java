@@ -30,9 +30,6 @@ public class MybatisMapperHandler extends AbstractHandler {
   private ElementNode mapperEle;
   private ElementNode queryEle;
 
-  private Map<String, List<ElementNode>> identifierMap = sqlGenerator.getIdentifiers();
-  private Map<String, List<RelationNode>> queryTypeMap = sqlGenerator.getQueries();
-
   @Override
   public void startDocument() throws SAXException {
     logger.debug("Start Parsing {}", uriFilePath);
@@ -44,7 +41,6 @@ public class MybatisMapperHandler extends AbstractHandler {
     fileEle =
         new ElementNode(
             GraphUtil.nid(), Language.XML, type("file", true), "", name, uriFilePath, uri);
-    graph.addVertex(fileEle);
     GraphUtil.addNode(fileEle);
     super.startDocument();
   }
@@ -95,8 +91,6 @@ public class MybatisMapperHandler extends AbstractHandler {
             new ElementNode(
                 GraphUtil.nid(), Language.XML, type("mapper", true), "", qName, qName, mapperUri);
 
-        graph.addVertex(mapperEle);
-        graph.addEdge(fileEle, mapperEle, new Edge(GraphUtil.eid(), type("child")));
         GraphUtil.addNode(mapperEle);
         break;
       case "select":
@@ -138,10 +132,7 @@ public class MybatisMapperHandler extends AbstractHandler {
             new ElementNode(
                 GraphUtil.nid(), Language.XML, type("query", true), "", qName, qName, queryUri);
 
-        graph.addVertex(queryEle);
         GraphUtil.addNode(queryEle);
-        if (mapperEle != null)
-          graph.addEdge(mapperEle, queryEle, new Edge(GraphUtil.eid(), type("child")));
 
         currentEle =
             new MybatisElement(
@@ -204,7 +195,6 @@ public class MybatisMapperHandler extends AbstractHandler {
               attrVal,
               attrUri);
 
-      graph.addVertex(attrEle);
       GraphUtil.addNode(attrEle);
     }
     super.startElement(uri, localName, qName, attributes);
@@ -236,29 +226,21 @@ public class MybatisMapperHandler extends AbstractHandler {
           Graph<Node, Edge> graph =
               sqlGenerator.generate(
                   query, filePath, lang, idtf, currentEle.getNode().getUri(), currentId);
-          List<ElementNode> identifierById = identifierMap.get(currentId);
-          List<RelationNode> queryById = queryTypeMap.get(currentId);
+          List<ElementNode> identifierById = sqlGenerator.getIdentifiers().get(currentId);
+          List<RelationNode> queryById = sqlGenerator.getQueries().get(currentId);
           List<ElementNode> identifierInQuery = new ArrayList<>();
           int minLayerOfNode = 0;
           if (identifierById != null && !identifierById.isEmpty())
             minLayerOfNode =
                 getIdentifierSegmentCount(identifierById.get(0).getUri().getInlineIdentifier());
           if (identifierById != null) {
+            // TODO: check concurrency
             for (ElementNode node : identifierById) {
               String sqlId = ifInInclude(node);
               if (sqlId != null) {
                 node.getUri().setIdentifier("mapper/sql");
                 String lastToken = node.getUri().getSymbol();
                 node.getUri().setInlineIdentifier(lastToken);
-
-                if (!graph.containsVertex(sqlMap.get(uriFilePath).get(sqlId).getNode())) {
-                  logger.error("node not in graph");
-                }
-
-                graph.addEdge(
-                    sqlMap.get(uriFilePath).get(sqlId).getNode(),
-                    node,
-                    new Edge(GraphUtil.eid(), type("child")));
               } else {
                 identifierInQuery.add(node);
                 minLayerOfNode =
@@ -269,19 +251,6 @@ public class MybatisMapperHandler extends AbstractHandler {
 
               currentEle.addIdentifer(node.getUri());
               GraphUtil.addNode(node);
-            }
-          }
-
-          if (queryById != null && !queryById.isEmpty()) {
-            for (RelationNode rn : queryById) {
-              graph.addEdge(queryEle, rn, new Edge(GraphUtil.eid(), type("child")));
-            }
-          } else if (identifierById != null) {
-            for (ElementNode node : identifierInQuery) {
-              if (getIdentifierSegmentCount(node.getUri().getInlineIdentifier())
-                  == minLayerOfNode) {
-                graph.addEdge(queryEle, node, new Edge(GraphUtil.eid(), type("child")));
-              }
             }
           }
         }

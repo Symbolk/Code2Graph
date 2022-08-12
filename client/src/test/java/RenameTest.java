@@ -1,16 +1,17 @@
 import edu.pku.code2graph.client.model.RenameResult;
 import edu.pku.code2graph.client.model.RenameStatusCode;
 import edu.pku.code2graph.model.Range;
-import edu.pku.code2graph.model.URI;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
+import static edu.pku.code2graph.cache.CacheHandler.initCache;
 import static edu.pku.code2graph.client.Rename.calcRenameResult;
-import static edu.pku.code2graph.client.Rename.xmlFindRef;
 
+import static edu.pku.code2graph.client.Rename.updateCache;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class RenameTest {
@@ -24,29 +25,31 @@ public class RenameTest {
       System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
 
   @Test
-  public void testXmlInnerLink() throws IOException {
-    URI toMatchRef =
-        new URI(
-            "def://app/src/main/res/layout/icon_preference_item.xml[language=FILE]"
-                + "//RelativeLayout/ImageView/android:id[language=XML]//@+id\\/icon[language=ANY]");
-    List<Pair<URI, Range>> resRef = xmlFindRef(repoPath, toMatchRef, cachePath);
-    System.out.println(resRef);
-
-    URI toMatchInclude =
-        new URI(
-            "def://app/src/main/res/layout/activity_welcome.xml[language=FILE]//android.support.v4.widget.DrawerLayout"
-                + "/android.support.design.widget.NavigationView/android:id[language=XML]//@+id\\/toolbar_elevation[language=ANY]");
-    List<Pair<URI, Range>> resInclude = xmlFindRef(repoPath, toMatchInclude, cachePath);
-    System.out.println(resInclude);
+  public void testInit() throws IOException, ParserConfigurationException, SAXException {
+    initCache(framework, repoPath, cachePath);
   }
 
   @Test
-  public void testRename() {
+  public void testUpdate() throws IOException, ParserConfigurationException, SAXException {
+    updateCache(
+        repoPath,
+        repoPath
+            + "/app/src/main/java/de/robv/android/xposed/installer/DownloadDetailsActivity.java.csv",
+        cachePath);
+  }
+
+  @Test
+  public void testRename1() throws IOException, ParserConfigurationException, SAXException {
     repoName = "NewPipe";
     configPath =
         System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
     repoPath = System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
     cachePath = System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
+
+    File cacheDir = new File(cachePath);
+    if (!cacheDir.exists()) {
+      initCache(framework, repoPath, cachePath);
+    }
 
     Range range = new Range("73:20~73:45", "app/src/main/res/layout/list_stream_playlist_item.xml");
     RenameResult res =
@@ -62,19 +65,21 @@ public class RenameTest {
   }
 
   @Test
-  public void testRename1() {
+  public void testRename2() throws IOException, ParserConfigurationException, SAXException {
     repoName = "GSYVideoPlayer";
     configPath =
         System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
     repoPath = System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
     cachePath = System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
 
+    File cacheDir = new File(cachePath);
+    if (!cacheDir.exists()) {
+      initCache(framework, repoPath, cachePath);
+    }
+
     Range range =
         new Range(
-            "51:28~51:52",
-            "def://gsyVideoPlayer-java/src/main/res/layout/video_progress_dialog.xml" +
-                    "[language=FILE]//RelativeLayout/RelativeLayout/LinearLayout/ProgressBar/android:id[language=XML]" +
-                    "//@+id\\\\/duration_progressbar[language=ANY]");
+            "51:28~51:52", "gsyVideoPlayer-java/src/main/res/layout/video_progress_dialog.xml");
     RenameResult res =
         calcRenameResult(
             repoPath,
@@ -83,6 +88,27 @@ public class RenameTest {
             range,
             "@+id\\/duration_progress_bar",
             configPath);
+    assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
+    System.out.println(res.getRenameInfoList());
+  }
+
+  @Test
+  public void testRename3() throws IOException, ParserConfigurationException, SAXException {
+    repoName = "XposedInstaller";
+    configPath =
+        System.getProperty("user.dir") + "/src/main/resources/" + framework + "/config.yml";
+    repoPath = System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
+    cachePath = System.getProperty("user.home") + "/coding/xll/cache/" + framework + "/" + repoName;
+
+    File cacheDir = new File(cachePath);
+    if (!cacheDir.exists()) {
+      initCache(framework, repoPath, cachePath);
+    }
+
+    Range range = new Range("9:20~9:31", "app/src/main/res/layout/toolbar.xml");
+    RenameResult res =
+        calcRenameResult(
+            repoPath, cachePath, "@+id\\/toolbar", range, "@+id\\/tool_bar", configPath);
     assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
     System.out.println(res.getRenameInfoList());
   }

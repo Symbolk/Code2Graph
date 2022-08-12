@@ -17,6 +17,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   protected Logger logger = LoggerFactory.getLogger(AbstractJdtVisitor.class);
 
   // final constructed graph instance
+  @Deprecated
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 
   // temporarily keep the current cu and file path
@@ -53,7 +54,6 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
     callback.action(layer);
     ElementNode node =
         new ElementNode(GraphUtil.nid(), Language.JAVA, type, snippet, name, qname, uri);
-    graph.addVertex(node);
     defPool.put(qname, node);
     this.identifier = identifier;
     GraphUtil.addNode(node);
@@ -91,6 +91,7 @@ public abstract class AbstractJdtVisitor extends ASTVisitor {
   }
 
   /** Build edges with cached data pool */
+  @Deprecated
   public void buildEdges() {
     for (Triple<Node, Type, String> entry : usePool) {
       Node src = entry.getFirst();

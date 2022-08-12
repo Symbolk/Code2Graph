@@ -6,7 +6,7 @@ import java.util.List;
 public abstract class URIBase<T extends LayerBase> {
   public boolean isRef;
 
-  protected List<T> layers = new ArrayList<>();
+  public List<T> layers = new ArrayList<>();
 
   public int getLayerCount() {
     return layers.size();
@@ -14,6 +14,10 @@ public abstract class URIBase<T extends LayerBase> {
 
   public T getLayer(int index) {
     return layers.get(index);
+  }
+
+  public void setLayer(int index, T layer) {
+    layers.set(index, layer);
   }
 
   public void addLayer(T layer) {

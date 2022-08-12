@@ -1,3 +1,5 @@
+import edu.pku.code2graph.exception.InvalidRepoException;
+import edu.pku.code2graph.exception.NonexistPathException;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.util.GraphUtil;
@@ -9,8 +11,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
-import static edu.pku.code2graph.client.CacheHandler.*;
+import static edu.pku.code2graph.cache.CacheHandler.*;
+
 
 public class CacheTest {
   private static String framework = "android";
@@ -79,6 +83,28 @@ public class CacheTest {
     linker.link();
     System.out.println(linker.links);
     System.out.println(linker.context);
+  }
+
+  @Test
+  public void testSHA()
+      throws IOException, ParserConfigurationException, NoSuchAlgorithmException, SAXException {
+    setUp("android", "CloudReader");
+    cachePath =
+        System.getProperty("user.home") + "/coding/xll/sha-cache/" + framework + "/" + repoName;
+    initCache(framework, repoPath, cachePath, true);
+  }
+
+  @Test
+  public void testSHALoad()
+      throws ParserConfigurationException, NoSuchAlgorithmException, IOException, SAXException,
+          NonexistPathException, InvalidRepoException {
+    setUp("android", "CloudReader");
+    repoPath =
+        System.getProperty("user.dir") + "/src/main/resources/" + framework + "/repos/" + repoName;
+    cachePath =
+        System.getProperty("user.home") + "/coding/xll/sha-history/" + framework + "/" + repoName;
+    URITree tree = GraphUtil.getUriTree();
+    loadFor(framework, repoPath, cachePath, "2a0ac6cb6a9191992458d6b7ff9bba48244be085", tree);
   }
 
   @Test

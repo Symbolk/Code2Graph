@@ -5,9 +5,11 @@ include 'core',
         'dist',
         'client',
         'diff',
+        'cache',
         'gen.java',
         'gen.xml',
         'gen.kotlin',
         'gen.html',
-        'gen.sql'
+        'gen.sql',
+        'mining'
 

@@ -29,8 +29,7 @@ flowgraph:
     - r-layout
 #    - $
   r-xml-inner:
-    - r-id
-    - r-dataBinding
+    - $
   r-xml-include-inner:
     - r-include-id
   r-xml-include-inter:
@@ -61,25 +60,25 @@ rules:
     use:
       lang: JAVA
       file: '(&javaFile).java'
-      identifier: R.id.(name)
+      identifier: R.id.(name:snake)
     def:
       lang: XML
       file: (&layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@+id\/(name)'
+        identifier: '@+id\/(name:snake)'
 
   r-android-id:
     use:
       lang: JAVA
       file: '(&javaFile).java'
-      identifier: android.R.id.(name)
+      identifier: android.R.id.(name:snake)
     def:
       lang: XML
       file: (&layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@android:id\/(name)'
+        identifier: '@android:id\/(name:snake)'
 
   # <data class="bindingName"> <-> bindingName bindingVar
   r-dataBindingClass:
@@ -165,16 +164,16 @@ rules:
 #    hidden: true
     def:
       lang: XML
-      file: (&layoutName).xml
+      file: (layoutName).xml
       identifier: android:id
       inline:
-        identifier: '@+id\/(&name)'
+        identifier: '@+id\/(name)'
     use:
       lang: XML
-      file: (&layoutName).xml
+      file: (layoutName).xml
       identifier: "*to*"
       inline:
-        identifier: '*\/(&name)'
+        identifier: '*\/(name)'
   r-xml-include-inner:
     hidden: true
     def:

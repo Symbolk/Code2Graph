@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Pattern;
 
 /**
@@ -87,6 +89,42 @@ public class Generators extends Registry<String, Generator, Register> {
         continue;
       }
       generator.generateFrom().files(entry.getValue());
+    }
+
+    //    GraphVizExporter.printAsDot(graph);
+    return GraphUtil.getGraph();
+  }
+
+  public Graph<Node, Edge> generateFromFilesParallel(Map<String, List<String>> ext2FilePaths)
+      throws UnsupportedOperationException, IOException {
+    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
+    for (Map.Entry<String, List<String>> entry : ext2FilePaths.entrySet()) {
+      Generator generator = get(entry.getValue().get(0));
+      if (generator == null) {
+        // for now just skip the file that cannot handle
+        logger.warn("No generator found for file type:{}", entry.getKey());
+        continue;
+      }
+      for (String fileName : entry.getValue()) {
+        executor.submit(
+            () -> {
+              try {
+                generator.generateFrom().files(List.of(fileName));
+              } catch (IOException e) {
+                e.printStackTrace();
+              }
+            });
+      }
+    }
+
+    try {
+      while (!(executor.getCompletedTaskCount() == executor.getTaskCount())) {
+        Thread.sleep(100);
+      }
+      executor.shutdown();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      logger.error("thread sleep interrupted!");
     }
 
     //    GraphVizExporter.printAsDot(graph);

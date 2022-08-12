@@ -30,13 +30,8 @@ public class DocumentHandler extends AbstractHandler {
             ele.tagName(),
             ele.normalName(),
             uri);
-    graph.addVertex(en);
     stack.push(en);
     GraphUtil.addNode(en);
-
-    if (!stack.isEmpty()) {
-      graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), NodeType.CHILD));
-    }
 
     List<Attribute> attrs = ele.attributes().asList();
     attrs.forEach(
@@ -49,8 +44,6 @@ public class DocumentHandler extends AbstractHandler {
                   attr.getKey() + "=" + attr.getValue(),
                   attr.getKey());
           logger.debug("attr:" + attr.getKey() + "=" + attr.getValue());
-          graph.addVertex(rn);
-          graph.addEdge(en, rn, new Edge(GraphUtil.eid(), NodeType.ATTR));
         });
 
     Elements children = ele.children();

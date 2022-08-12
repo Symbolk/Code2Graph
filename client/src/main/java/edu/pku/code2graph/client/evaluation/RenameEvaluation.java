@@ -30,8 +30,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static edu.pku.code2graph.client.CacheHandler.initCache;
-import static edu.pku.code2graph.client.CacheHandler.loadCache;
+import static edu.pku.code2graph.cache.CacheHandler.initCache;
+import static edu.pku.code2graph.cache.CacheHandler.loadCache;
 
 class EvaluationResult {
   double precision;

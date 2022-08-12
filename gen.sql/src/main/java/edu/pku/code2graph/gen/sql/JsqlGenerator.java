@@ -19,16 +19,18 @@ import java.util.Map;
 public class JsqlGenerator extends Generator {
   private SqlParser parser = new SqlParser();
 
+  private StatementHandler hdl = null;
+
   @Override
   protected Graph<Node, Edge> generate(List<String> filePaths) {
     List<Statements> stmtsList = new ArrayList<>();
-    StatementHandler hdl = new StatementHandler();
+    hdl = new StatementHandler();
     filePaths.forEach(
         (filePath) -> {
           try {
             Statements stmts = parser.parseFile(filePath);
             hdl.setFilePath(FilenameUtils.separatorsToUnix(filePath));
-            if(stmts!=null){
+            if (stmts != null) {
               hdl.generateFrom(stmts, null);
               stmtsList.add(stmts);
             }
@@ -41,10 +43,15 @@ public class JsqlGenerator extends Generator {
 
   // queryId: for mybatis xml mapper, be null in other scene
   public Graph<Node, Edge> generate(
-      String query, String filepath, Language lang, String identifier, URI parentURI, String queryId) {
+      String query,
+      String filepath,
+      Language lang,
+      String identifier,
+      URI parentURI,
+      String queryId) {
     Graph<Node, Edge> graph = GraphUtil.getGraph();
     String newQuery = addQuotesToQuery(query);
-    StatementHandler hdl = new StatementHandler(true, lang, identifier, parentURI);
+    hdl = new StatementHandler(true, lang, identifier, parentURI);
     Statements stmt = parser.parseLines(newQuery);
     hdl.setFilePath(filepath);
     if (stmt != null) hdl.generateFrom(stmt, queryId);
@@ -64,19 +71,23 @@ public class JsqlGenerator extends Generator {
   }
 
   public Map<String, List<ElementNode>> getIdentifiers() {
-    return StatementHandler.idToIdentifierEn;
+    if (hdl == null) return null;
+    return hdl.idToIdentifierEn;
   }
 
   public void clearIdentifiers() {
-    StatementHandler.idToIdentifierEn.clear();
+    if (hdl == null) return;
+    hdl.idToIdentifierEn.clear();
   }
 
   public Map<String, List<RelationNode>> getQueries() {
-    return StatementHandler.idToQueryRn;
+    if (hdl == null) return null;
+    return hdl.idToQueryRn;
   }
 
   public void clearQueries() {
-    StatementHandler.idToQueryRn.clear();
+    if (hdl == null) return;
+    hdl.idToQueryRn.clear();
   }
 
   private List<String> paramMark = Arrays.asList("#{", "${");

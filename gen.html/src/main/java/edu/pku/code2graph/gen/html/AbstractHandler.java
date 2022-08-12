@@ -12,12 +12,14 @@ import java.util.Stack;
 public class AbstractHandler {
   protected Logger logger = LoggerFactory.getLogger(AbstractHandler.class);
 
+  @Deprecated
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 
   // temporarily save the current file path here
   protected String filePath;
   protected String uriFilePath;
 
+  @Deprecated
   protected Stack<ElementNode> stack = new Stack<>();
 
   public Graph<Node, Edge> getGraph() {

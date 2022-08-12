@@ -103,7 +103,6 @@ public class AndroidHandler extends AbstractHandler {
 
     ElementNode root =
         new ElementNode(GraphUtil.nid(), Language.XML, type("file", true), "", name, qName, uri);
-    graph.addVertex(root);
     stack.push(root);
     GraphUtil.addNode(root);
     logger.debug("Start Parsing {}", uriFilePath);
@@ -134,11 +133,6 @@ public class AndroidHandler extends AbstractHandler {
             locator.getLineNumber(),
             startElePosition.getStartColumn() - 1,
             locator.getColumnNumber() - 1));
-    graph.addVertex(en);
-    if (stack.size() > 0) {
-      // View is the child of ViewGroup
-      graph.addEdge(stack.peek(), en, new Edge(GraphUtil.eid(), CHILD));
-    }
     stack.push(en);
 
     int lineToStartSearch = startElePosition.getStartLine() - 1;
@@ -216,8 +210,6 @@ public class AndroidHandler extends AbstractHandler {
             rn.setUri(refURI);
             // TODO correctly set the start line with locator stack
             rn.setRange(new Range(valueLine, valueLine, valueColumn, endColumn));
-            graph.addVertex(rn);
-            graph.addEdge(en, rn, new Edge(GraphUtil.eid(), eType));
             GraphUtil.addNode(rn);
 
             // unified references (may should use regex for matching)

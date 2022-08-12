@@ -39,6 +39,7 @@ import static edu.pku.code2graph.model.TypeSet.type;
 public class StatementHandler {
   protected Logger logger = LoggerFactory.getLogger(StatementHandler.class);
 
+  @Deprecated
   protected Graph<Node, Edge> graph = GraphUtil.getGraph();
 
   private boolean isInline = false;
@@ -49,8 +50,8 @@ public class StatementHandler {
   protected String filePath;
   protected String uriFilePath;
 
-  public static Map<String, List<ElementNode>> idToIdentifierEn = new HashMap<>();
-  public static Map<String, List<RelationNode>> idToQueryRn = new HashMap<>();
+  public Map<String, List<ElementNode>> idToIdentifierEn = Collections.synchronizedMap(new HashMap<>());
+  public Map<String, List<RelationNode>> idToQueryRn = Collections.synchronizedMap(new HashMap<>());
   private String currentQueryId;
 
   // parent uri (mybatis xml element)
@@ -389,7 +390,6 @@ public class StatementHandler {
                       }
                       ElementNode en =
                           new ElementNode(GraphUtil.nid(), Language.SQL, type, name, name, name);
-                      graph.addVertex(en);
                       String idtf = "";
                       idtf =
                           idtf
@@ -404,11 +404,9 @@ public class StatementHandler {
                       }
                       uri.addLayer(idtf, Language.SQL);
                       en.setUri(uri);
-                      graph.addVertex(en);
                       if (currentQueryId == null) {
                         GraphUtil.addNode(en);
                       }
-                      graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
                       addToNodeMap(en);
                     });
@@ -424,7 +422,6 @@ public class StatementHandler {
             }
             ElementNode en =
                 new ElementNode(GraphUtil.nid(), Language.SQL, type, colName, colName, colName);
-            graph.addVertex(en);
             String idtf = "";
             idtf =
                 idtf
@@ -439,11 +436,9 @@ public class StatementHandler {
             }
             uri.addLayer(idtf, Language.SQL);
             en.setUri(uri);
-            graph.addVertex(en);
             if (currentQueryId == null) {
               GraphUtil.addNode(en);
             }
-            graph.addEdge(parent, en, new Edge(GraphUtil.eid(), CHILD));
 
             addToNodeMap(en);
           }
@@ -485,7 +480,6 @@ public class StatementHandler {
               addRelationNode(
                   el.toString(), NodeType.Binary, el.getStringExpression(), snode, setEdge);
           if (inClause) {
-            graph.addEdge(clauseNode, rn, new Edge(GraphUtil.eid(), CHILD));
             String idtf;
             idtf = identifierMap.get(clauseNode) + "/" + el.getStringExpression();
             identifierMap.put(rn, idtf);
@@ -571,7 +565,6 @@ public class StatementHandler {
       recur = (SimpleNode) recur.jjtGetParent();
     }
     rn.setRange(getRange(recur));
-    graph.addVertex(rn);
     rootNodePool.put(el, rn);
 
     addToNodeMap(rn);
@@ -584,7 +577,6 @@ public class StatementHandler {
   private RelationNode addRelationNode(
       String snippet, Type nodeType, String symbol, SimpleNode snode, boolean setEdge) {
     RelationNode rn = new RelationNode(GraphUtil.nid(), Language.SQL, nodeType, snippet, symbol);
-    graph.addVertex(rn);
     if (snode != null) {
       rn.setRange(getRange(snode));
       nodePool.put(snode, rn);
@@ -597,7 +589,6 @@ public class StatementHandler {
       String snippet, Type nodeType, String name, String qName, SimpleNode snode) {
     ElementNode en = new ElementNode(GraphUtil.nid(), Language.SQL, nodeType, snippet, name, qName);
     en.setRange(getRange(snode));
-    graph.addVertex(en);
     nodePool.put(snode, en);
     findParentEdge(snode, en);
 
@@ -609,7 +600,6 @@ public class StatementHandler {
     }
     uri.addLayer(identifierMap.get(en), Language.SQL);
     en.setUri(uri);
-    graph.addVertex(en);
     if (currentQueryId == null) {
       GraphUtil.addNode(en);
     }
@@ -629,7 +619,6 @@ public class StatementHandler {
     if (snode == null) {
       for (Map.Entry<Statement, Node> entry : rootNodePool.entrySet()) {
         Node node1 = entry.getValue();
-        graph.addEdge(node1, node, new Edge(GraphUtil.eid(), CHILD));
         idtf.insert(0, identifierMap.get(node1) + "/");
       }
       identifierMap.put(node, idtf.toString());
@@ -641,7 +630,6 @@ public class StatementHandler {
     while (parentNode != null) {
       Node pnode = nodePool.get(parentNode);
       if (pnode != null) {
-        graph.addEdge(pnode, node, new Edge(GraphUtil.eid(), CHILD));
         idtf.insert(0, identifierMap.get(pnode) + "/");
         found = true;
         break;
@@ -651,7 +639,6 @@ public class StatementHandler {
     if (!found) {
       for (Map.Entry<Statement, Node> entry : rootNodePool.entrySet()) {
         Node node1 = entry.getValue();
-        graph.addEdge(node1, node, new Edge(GraphUtil.eid(), CHILD));
         idtf.insert(0, identifierMap.get(node1) + "/");
       }
     }
@@ -675,6 +662,7 @@ public class StatementHandler {
     clauseNode = null;
   }
 
+  @Deprecated
   public Graph<Node, Edge> getGraph() {
     return graph;
   }
@@ -689,14 +677,14 @@ public class StatementHandler {
       ElementNode en = (ElementNode) node;
       if (currentQueryId != null) {
         if (!idToIdentifierEn.containsKey(currentQueryId))
-          idToIdentifierEn.put(currentQueryId, new ArrayList<>());
+          idToIdentifierEn.put(currentQueryId, Collections.synchronizedList(new ArrayList<>()));
         idToIdentifierEn.get(currentQueryId).add(en);
       }
     } else if (node instanceof RelationNode) {
       RelationNode rn = (RelationNode) node;
       if (currentQueryId != null) {
         if (!idToQueryRn.containsKey(currentQueryId))
-          idToQueryRn.put(currentQueryId, new ArrayList<>());
+          idToQueryRn.put(currentQueryId, Collections.synchronizedList(new ArrayList<>()));
         idToQueryRn.get(currentQueryId).add(rn);
       }
     }

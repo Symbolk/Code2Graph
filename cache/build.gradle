@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+group 'cn.edu.pku'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':xll')
+    implementation project(':diff')
+    implementation project(':gen.xml')
+    implementation 'net.sourceforge.javacsv:javacsv:2.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
