@@ -69,7 +69,7 @@ public class Project {
 
   private URI infer(URI oldUri, URI newUri, URI contra, URIPattern cis, URIPattern trans, Capture input) {
     Capture oldCap = cis.match(oldUri, input);
-    Capture newCap = cis.match(newUri, input);
+    Capture newCap = cis.match(newUri);
     Capture contraCap = trans.match(contra, input);
     if (newCap == null) return null;
     Capture output = input.clone();
@@ -89,17 +89,20 @@ public class Project {
   public void rename(URI oldUri, URI newUri, Map<URI, Set<URI>> changes) {
     if (!changes.computeIfAbsent(oldUri, k -> new HashSet<>()).add(newUri)) return;
     for (Link link : links) {
+      if (link.modified) continue;
       if (link.def.equals(oldUri)) {
         URI contra = link.use;
         URI result = infer(oldUri, newUri, contra, link.rule.def, link.rule.use, link.input);
         if (result == null) continue;
         link.use = result;
+        link.modified = true;
         rename(contra, result, changes);
       } else if (link.use.equals(oldUri)) {
         URI contra = link.def;
         URI result = infer(oldUri, newUri, contra, link.rule.use, link.rule.def, link.input);
         if (result == null) continue;
         link.def = result;
+        link.modified = true;
         rename(contra, result, changes);
       }
     }

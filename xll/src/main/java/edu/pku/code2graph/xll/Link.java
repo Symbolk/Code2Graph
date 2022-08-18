@@ -6,6 +6,7 @@ public final class Link extends LinkBase<URI> {
   public final Capture input;
   public final Capture output;
   public final Rule rule;
+  public boolean modified = false;
 
   public Link(final URI def, final URI use, final Rule rule, final Capture input, final Capture output) {
     super(def, use, rule.name, rule.hidden);

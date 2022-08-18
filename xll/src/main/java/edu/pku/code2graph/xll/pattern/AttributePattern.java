@@ -32,7 +32,7 @@ public abstract class AttributePattern implements Comparable<AttributePattern> {
    */
   public Capture match(String target, Capture variables) {
     Capture result = new Capture();
-    if (match(target, variables, result)) {
+    if (match(target, variables, result, false)) {
       return result;
     } else {
       return null;
@@ -46,7 +46,7 @@ public abstract class AttributePattern implements Comparable<AttributePattern> {
    * @param result result capture
    * @return boolean
    */
-  public abstract boolean match(String target, Capture variables, Capture result);
+  public abstract boolean match(String target, Capture variables, Capture result, boolean ignoreAnchors);
 
   public abstract String refactor(String target, Capture input, Capture output);
 
