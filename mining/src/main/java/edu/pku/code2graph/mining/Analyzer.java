@@ -46,13 +46,15 @@ public class Analyzer {
   public void collect(Collection<String> uris, String commit, String format) {
     // categorized by language
     // pay special attention to the file names
+    // - left: last segment
+    // - right: source URI
     Map<String, List<Pair<String, String>>> clusters = new HashMap<>();
     for (String source : uris) {
       URI uri = new URI(source);
       Layer last = uri.layers.get(uri.layers.size() - 1);
-      Pair<String, String> identifier = Confidence.splitLast(last.get("identifier"), '/');
+      Pair<String, String> identifier = Credit.splitLast(last.get("identifier"), '/');
       if (uri.layers.size() == 1) {
-        Pair<String, String> division = Confidence.splitLast(identifier.getRight(), '.');
+        Pair<String, String> division = Credit.splitLast(identifier.getRight(), '.');
         String extension = division.getRight().toUpperCase();
         List<Pair<String, String>> cluster = clusters.computeIfAbsent(extension, k -> new ArrayList<>());
         cluster.add(new ImmutablePair<>(division.getLeft(), source));
@@ -94,7 +96,7 @@ public class Analyzer {
         List<Pair<String, String>> cluster2 = clusters.get(languages[j]);
         for (Pair<String, String> entry1 : cluster1) {
           for (Pair<String, String> entry2 : cluster2) {
-            double similarity = Confidence.similarity(entry1.getLeft(), entry2.getLeft());
+            double similarity = Credit.similarity(entry1.getLeft(), entry2.getLeft());
             if (similarity == 0.) continue;
             String source1 = entry1.getRight();
             String source2 = entry2.getRight();

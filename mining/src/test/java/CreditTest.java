@@ -1,8 +1,7 @@
-import edu.pku.code2graph.mining.Confidence;
 import edu.pku.code2graph.mining.Credit;
 import org.junit.jupiter.api.Test;
 
-public class ConfidenceTest {
+public class CreditTest {
   @Test
   public void testConfidence() {
     assert Credit.add(0.5, 0.5) == 0.75;
@@ -16,11 +15,16 @@ public class ConfidenceTest {
 
   @Test
   public void testLCS() {
-    assert Confidence.lcs("abc", "abcd") == 3;
+    assert Credit.lcs("abc", "abcd") == 3;
+  }
+
+  @Test
+  public void testSplit() {
+    System.out.println(Credit.splitLast("@+id\\\\/container", '/'));
   }
 
   @Test
   public void testIntersects() {
-    System.out.println(Confidence.slices("SDCardDirUtil.java"));
+    System.out.println(Credit.similarity("mContainer", "@+id\\\\/container"));
   }
 }
