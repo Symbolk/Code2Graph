@@ -20,7 +20,7 @@ public class CreditTest {
 
   @Test
   public void testSplit() {
-    System.out.println(Credit.splitLast("@+id\\\\/container", '/'));
+    System.out.println(Credit.getLastSegment("fdsa/@+id\\\\/container"));
   }
 
   @Test

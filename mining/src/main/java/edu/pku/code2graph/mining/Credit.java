@@ -27,10 +27,23 @@ public class Credit {
     this.history.add(record);
   }
 
-  static public Pair<String, String> splitLast(String input, char delimiter) {
-    int index = input.lastIndexOf(delimiter);
+  static public Pair<String, String> splitExtension(String input) {
+    int index = input.lastIndexOf('.');
     if (index == -1) return new ImmutablePair<>(input, "");
     return new ImmutablePair<>(input.substring(0, index), input.substring(index + 1));
+  }
+
+  static public String getLastSegment(String input) {
+    int index, last = input.length() - 1;
+    do {
+      index = input.lastIndexOf('/', last);
+      if (index <= 0 || input.charAt(index - 1) != '\\') {
+        break;
+      } else {
+        last = index - 1;
+      }
+    } while (true);
+    return input.substring(index + 1);
   }
 
   static public Double similarity(String s1, String s2) {

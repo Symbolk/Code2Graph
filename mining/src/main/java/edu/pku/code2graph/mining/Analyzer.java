@@ -52,16 +52,16 @@ public class Analyzer {
     for (String source : uris) {
       URI uri = new URI(source);
       Layer last = uri.layers.get(uri.layers.size() - 1);
-      Pair<String, String> identifier = Credit.splitLast(last.get("identifier"), '/');
+      String identifier = Credit.getLastSegment(last.get("identifier"));
       if (uri.layers.size() == 1) {
-        Pair<String, String> division = Credit.splitLast(identifier.getRight(), '.');
+        Pair<String, String> division = Credit.splitExtension(identifier);
         String extension = division.getRight().toUpperCase();
         List<Pair<String, String>> cluster = clusters.computeIfAbsent(extension, k -> new ArrayList<>());
         cluster.add(new ImmutablePair<>(division.getLeft(), source));
       } else {
         String language = uri.layers.get(1).get("language");
         List<Pair<String, String>> cluster = clusters.computeIfAbsent(language, k -> new ArrayList<>());
-        cluster.add(new ImmutablePair<>(identifier.getRight(), source));
+        cluster.add(new ImmutablePair<>(identifier, source));
       }
     }
 
@@ -97,7 +97,7 @@ public class Analyzer {
         for (Pair<String, String> entry1 : cluster1) {
           for (Pair<String, String> entry2 : cluster2) {
             double similarity = Credit.similarity(entry1.getLeft(), entry2.getLeft());
-            if (similarity == 0.) continue;
+            if (similarity <= 0.5) continue;
             String source1 = entry1.getRight();
             String source2 = entry2.getRight();
             Candidate candidate = new Candidate(source1, source2);
