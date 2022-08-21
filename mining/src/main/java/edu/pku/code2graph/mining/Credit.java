@@ -47,12 +47,16 @@ public class Credit {
   public static class Record {
     public final double value;
     public final String commit;
+    public final String source1;
+    public final String source2;
     public final double similarity;
     public final double density;
 
-    public Record(String commit, double similarity, double density) {
+    public Record(String commit, String source1, String source2, double similarity, double density) {
       this.value = similarity / density;
       this.commit = commit;
+      this.source1 = source1;
+      this.source2 = source2;
       this.similarity = similarity;
       this.density = density;
     }

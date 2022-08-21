@@ -17,12 +17,12 @@ public class Analyzer {
   public int positive = 0;
   public int negative = 0;
   public int cochanges = 0;
-  public double densityCoefficient;
+  private double densityCoefficient;
   public URITree tree = new URITree();
   public ArrayList<Rule> rules = new ArrayList<>();
   public Map<Candidate, Credit> graph = new HashMap<>();
 
-  private HistoryLoader history;
+  public HistoryLoader history;
 
   public Analyzer(HistoryLoader history) {
     this.history = history;
@@ -99,7 +99,7 @@ public class Analyzer {
     System.out.println(builder.append(cochanges.size()).append(" collected"));
     for (Cochange cochange : cochanges) {
       double density = degrees.get(cochange.change1.source) * degrees.get(cochange.change2.source) * densityCoefficient;
-      Credit.Record record = new Credit.Record(commit, cochange.similarity, density);
+      Credit.Record record = new Credit.Record(commit, cochange.change1.source, cochange.change2.source, cochange.similarity, density);
       Credit credit = graph.computeIfAbsent(cochange.candidate, k -> new Credit());
       credit.add(record);
       sum = Credit.add(sum, record.value);
