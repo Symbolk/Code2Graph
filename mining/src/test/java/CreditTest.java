@@ -15,21 +15,16 @@ public class CreditTest {
 
   @Test
   public void testLCS() {
-    assert new Comparison("abc", "abcd").similarity == 0.;
-    System.out.println(new Comparison.Slice("Abc"));
-    System.out.println(new Comparison("abc", "Abc").similarity);
-    System.out.println(new Comparison("abcFoo", "qux_abc_bar").similarity);
-    System.out.println(new Comparison("abcFoo", "qux_abc_bar").getPattern1());
-    System.out.println(new Comparison("abcFoo", "qux_abc_bar").getPattern2());
+//    assert new Cochange("abc", "abcd").similarity == 0.;
+//    System.out.println(new Cochange.Slice("Abc"));
+//    System.out.println(new Cochange("abc", "Abc").similarity);
+//    System.out.println(new Cochange("abcFoo", "qux_abc_bar").similarity);
+//    System.out.println(new Cochange("abcFoo", "qux_abc_bar").getPattern1());
+//    System.out.println(new Cochange("abcFoo", "qux_abc_bar").getPattern2());
   }
 
   @Test
   public void testSplit() {
-    System.out.println(new Comparison.Slice("fdsa/@+id\\\\/container"));
-  }
-
-  @Test
-  public void testIntersects() {
-    System.out.println(new Comparison("mContainer", "@+id\\\\/container"));
+    System.out.println(new Cochange.Slice("fdsa/@+id\\\\/container"));
   }
 }

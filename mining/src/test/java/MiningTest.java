@@ -29,9 +29,9 @@ public class MiningTest {
       System.out.println("- " + entry.getKey().pattern1);
       System.out.println("- " + entry.getKey().pattern2);
       System.out.println("value: " + entry.getValue().value);
-      for (Credit.Record record : entry.getValue().history) {
-        System.out.println(record);
-      }
+//      for (Credit.Record record : entry.getValue().history) {
+//        System.out.println(record);
+//      }
     }
   }
 

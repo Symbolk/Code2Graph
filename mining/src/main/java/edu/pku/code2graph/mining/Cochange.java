@@ -1,11 +1,18 @@
 package edu.pku.code2graph.mining;
 
+import edu.pku.code2graph.model.Layer;
+import edu.pku.code2graph.model.URI;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Comparison {
+public class Cochange {
   public final double similarity;
+  public Candidate candidate;
+  public Change change1;
+  public Change change2;
   private Slice slice1;
   private Slice slice2;
   private int maxLength = 0;
@@ -13,9 +20,11 @@ public class Comparison {
   public int leftIndex = 0;
   public int rightIndex = 0;
 
-  public Comparison(String source1, String source2) {
-    slice1 = new Slice(source1);
-    slice2 = new Slice(source2);
+  public Cochange(Change change1, Change change2) {
+    this.change1 = change1;
+    this.change2 = change2;
+    this.slice1 = new Slice(change1.identifier);
+    this.slice2 = new Slice(change2.identifier);
     int[] dpCount = new int[slice2.size() + 1];
     int[] dpLength = new int[slice2.size() + 1];
     for (int i = 1; i <= slice1.size(); i++) {
@@ -40,12 +49,25 @@ public class Comparison {
     similarity = 2. * maxLength / (slice1.totalLength + slice2.totalLength);
   }
 
-  public String getPattern1() {
-    return slice1.interpolate(leftIndex, maxCount, "(name)");
+  public void draft() {
+    String pattern1 = pattern(change1.source, slice1.interpolate(leftIndex, maxCount, "(name)"));
+    String pattern2 = pattern(change2.source, slice2.interpolate(rightIndex, maxCount, "(name)"));
+    candidate = new Candidate(pattern1, pattern2);
   }
 
-  public String getPattern2() {
-    return slice2.interpolate(rightIndex, maxCount, "(name)");
+  private String pattern(String source, String identifier) {
+    URI uri = new URI(source);
+    for (int i = 0; i < uri.layers.size(); i++) {
+      Layer layer = uri.layers.get(i);
+      String value = i == uri.layers.size() - 1 ? identifier : "*";
+      if (i == 0) {
+        Pair<String, String> division = Credit.splitExtension(layer.get("identifier"));
+        layer.put("identifier", value + "." + division.getRight());
+      } else {
+        layer.put("identifier", value);
+      }
+    }
+    return uri.toString();
   }
 
   static public class Word {

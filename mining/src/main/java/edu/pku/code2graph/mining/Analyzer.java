@@ -5,7 +5,6 @@ import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.*;
@@ -18,6 +17,7 @@ public class Analyzer {
   public int positive = 0;
   public int negative = 0;
   public int cochanges = 0;
+  public double densityCoefficient;
   public URITree tree = new URITree();
   public ArrayList<Rule> rules = new ArrayList<>();
   public Map<Candidate, Credit> graph = new HashMap<>();
@@ -26,6 +26,7 @@ public class Analyzer {
 
   public Analyzer(HistoryLoader history) {
     this.history = history;
+    this.densityCoefficient = Math.log(history.commits.size()) / Math.log(2);
   }
 
   public void analyze(String hash) throws IOException {
@@ -48,19 +49,8 @@ public class Analyzer {
     // pay special attention to the file names
     Map<String, List<Change>> clusters = new HashMap<>();
     for (String source : uris) {
-      URI uri = new URI(source);
-      Layer last = uri.layers.get(uri.layers.size() - 1);
-      String identifier = Credit.getLastSegment(last.get("identifier"));
-      if (uri.layers.size() == 1) {
-        Pair<String, String> division = Credit.splitExtension(identifier);
-        String extension = division.getRight().toUpperCase();
-        List<Change> cluster = clusters.computeIfAbsent(extension, k -> new ArrayList<>());
-        cluster.add(new Change(division.getLeft(), source, uri));
-      } else {
-        String language = uri.layers.get(1).get("language");
-        List<Change> cluster = clusters.computeIfAbsent(language, k -> new ArrayList<>());
-        cluster.add(new Change(identifier, source, uri));
-      }
+      Change change = new Change(source);
+      clusters.computeIfAbsent(change.language, k -> new ArrayList<>()).add(change);
     }
 
     // estimate graph size
@@ -87,30 +77,30 @@ public class Analyzer {
     // build n-partite graph
     String[] languages = clusters.keySet().toArray(new String[0]);
     Map<String, Integer> degrees = new HashMap<>();
-    List<Candidate> entries = new ArrayList<>();
+    List<Cochange> cochanges = new ArrayList<>();
     for (int i = 0; i < languages.length - 1; ++i) {
       List<Change> cluster1 = clusters.get(languages[i]);
       for (int j = i + 1; j < languages.length; ++j) {
         List<Change> cluster2 = clusters.get(languages[j]);
         for (Change change1 : cluster1) {
           for (Change change2 : cluster2) {
-            Comparison comparison = new Comparison(change1.identifier, change2.identifier);
-            if (comparison.similarity <= MIN_SIMILARITY) continue;
-            Candidate candidate = new Candidate(change1, change2, comparison);
-            degrees.put(candidate.source1, degrees.computeIfAbsent(candidate.source1, k -> 0) + 1);
-            degrees.put(candidate.source2, degrees.computeIfAbsent(candidate.source2, k -> 0) + 1);
-            entries.add(candidate);
+            Cochange cochange = new Cochange(change1, change2);
+            if (cochange.similarity <= MIN_SIMILARITY) continue;
+            cochange.draft();
+            degrees.put(change1.source, degrees.computeIfAbsent(change1.source, k -> 0) + 1);
+            degrees.put(change2.source, degrees.computeIfAbsent(change2.source, k -> 0) + 1);
+            cochanges.add(cochange);
           }
         }
       }
     }
 
     // normalize the graph
-    System.out.println(builder.append(entries.size()).append(" collected"));
-    for (Candidate candidate : entries) {
-      int density = degrees.get(candidate.source1) * degrees.get(candidate.source2);
-      Credit.Record record = new Credit.Record(commit, candidate.similarity, density);
-      Credit credit = graph.computeIfAbsent(candidate, k -> new Credit());
+    System.out.println(builder.append(cochanges.size()).append(" collected"));
+    for (Cochange cochange : cochanges) {
+      double density = degrees.get(cochange.change1.source) * degrees.get(cochange.change2.source) * densityCoefficient;
+      Credit.Record record = new Credit.Record(commit, cochange.similarity, density);
+      Credit credit = graph.computeIfAbsent(cochange.candidate, k -> new Credit());
       credit.add(record);
       sum = Credit.add(sum, record.value);
     }
