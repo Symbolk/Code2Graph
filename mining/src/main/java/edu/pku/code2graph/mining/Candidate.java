@@ -1,22 +1,17 @@
 package edu.pku.code2graph.mining;
 
 public class Candidate {
-  public final String left;
-  public final String right;
+  public final String pattern1;
+  public final String pattern2;
 
-  public Candidate(String left, String right) {
-    if (left.compareTo(right) > 0) {
-      this.left = left;
-      this.right = right;
-    } else {
-      this.left = right;
-      this.right = left;
-    }
+  public Candidate(String pattern1, String pattern2) {
+    this.pattern1 = pattern1;
+    this.pattern2 = pattern2;
   }
 
   @Override
   public String toString() {
-    return left + "," + right;
+    return pattern1 + "," + pattern2;
   }
 
   @Override
