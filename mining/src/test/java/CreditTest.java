@@ -1,3 +1,4 @@
+import edu.pku.code2graph.mining.Candidate;
 import edu.pku.code2graph.mining.Credit;
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +26,6 @@ public class CreditTest {
 
   @Test
   public void testIntersects() {
-    System.out.println(Credit.similarity("mContainer", "@+id\\\\/container"));
+    System.out.println(Candidate.similarity("mContainer", "@+id\\\\/container"));
   }
 }

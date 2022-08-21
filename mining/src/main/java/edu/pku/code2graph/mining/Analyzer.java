@@ -46,9 +46,7 @@ public class Analyzer {
   public void collect(Collection<String> uris, String commit, String format) {
     // categorized by language
     // pay special attention to the file names
-    // - left: last segment
-    // - right: source URI
-    Map<String, List<Pair<String, String>>> clusters = new HashMap<>();
+    Map<String, List<Change>> clusters = new HashMap<>();
     for (String source : uris) {
       URI uri = new URI(source);
       Layer last = uri.layers.get(uri.layers.size() - 1);
@@ -56,12 +54,12 @@ public class Analyzer {
       if (uri.layers.size() == 1) {
         Pair<String, String> division = Credit.splitExtension(identifier);
         String extension = division.getRight().toUpperCase();
-        List<Pair<String, String>> cluster = clusters.computeIfAbsent(extension, k -> new ArrayList<>());
-        cluster.add(new ImmutablePair<>(division.getLeft(), source));
+        List<Change> cluster = clusters.computeIfAbsent(extension, k -> new ArrayList<>());
+        cluster.add(new Change(division.getLeft(), source, uri));
       } else {
         String language = uri.layers.get(1).get("language");
-        List<Pair<String, String>> cluster = clusters.computeIfAbsent(language, k -> new ArrayList<>());
-        cluster.add(new ImmutablePair<>(identifier, source));
+        List<Change> cluster = clusters.computeIfAbsent(language, k -> new ArrayList<>());
+        cluster.add(new Change(identifier, source, uri));
       }
     }
 
@@ -89,21 +87,20 @@ public class Analyzer {
     // build n-partite graph
     String[] languages = clusters.keySet().toArray(new String[0]);
     Map<String, Integer> degrees = new HashMap<>();
-    List<Pair<Candidate, Double>> entries = new ArrayList<>();
+    List<Candidate> entries = new ArrayList<>();
     for (int i = 0; i < languages.length - 1; ++i) {
-      List<Pair<String, String>> cluster1 = clusters.get(languages[i]);
+      List<Change> cluster1 = clusters.get(languages[i]);
       for (int j = i + 1; j < languages.length; ++j) {
-        List<Pair<String, String>> cluster2 = clusters.get(languages[j]);
-        for (Pair<String, String> entry1 : cluster1) {
-          for (Pair<String, String> entry2 : cluster2) {
-            double similarity = Credit.similarity(entry1.getLeft(), entry2.getLeft());
-            if (similarity <= 0.5) continue;
-            String source1 = entry1.getRight();
-            String source2 = entry2.getRight();
-            Candidate candidate = new Candidate(source1, source2);
+        List<Change> cluster2 = clusters.get(languages[j]);
+        for (Change entry1 : cluster1) {
+          for (Change entry2 : cluster2) {
+            Candidate candidate = new Candidate(entry1, entry2);
+            if (candidate.similarity <= 0.5) continue;
+            String source1 = entry1.source;
+            String source2 = entry2.source;
             degrees.put(source1, degrees.computeIfAbsent(source1, k -> 0) + 1);
             degrees.put(source2, degrees.computeIfAbsent(source2, k -> 0) + 1);
-            entries.add(new ImmutablePair<>(candidate, similarity));
+            entries.add(candidate);
           }
         }
       }
@@ -111,10 +108,9 @@ public class Analyzer {
 
     // normalize the graph
     System.out.println(builder.append(entries.size()).append(" collected"));
-    for (Pair<Candidate, Double> entry : entries) {
-      Candidate candidate = entry.getKey();
+    for (Candidate candidate : entries) {
       int density = degrees.get(candidate.left) * degrees.get(candidate.right);
-      Credit.Record record = new Credit.Record(commit, entry.getValue(), density);
+      Credit.Record record = new Credit.Record(commit, candidate.similarity, density);
       Credit credit = graph.computeIfAbsent(candidate, k -> new Credit());
       credit.add(record);
       sum = Credit.add(sum, record.value);
@@ -134,7 +130,7 @@ public class Analyzer {
   }
 
   public void generalize(URI left, URI right) {
-    double value = graph.get(new Candidate(left.toString(), right.toString())).value;
+    double value = 0; // graph.get(new Candidate(left.toString(), right.toString())).value;
     if (value <= 0) return;
     boolean flag = false;
     URIPattern patternL = new URIPattern(left);
@@ -181,7 +177,7 @@ public class Analyzer {
     for (Link link : linker.links) {
       URI left = link.def;
       URI right = link.use;
-      double value = graph.get(new Candidate(left.toString(), right.toString())).value;
+      double value = 0; // graph.get(new Candidate(left.toString(), right.toString())).value;
       sum = Credit.add(sum, value);
     }
     return sum;

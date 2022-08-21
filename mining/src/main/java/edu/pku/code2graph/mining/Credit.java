@@ -46,30 +46,6 @@ public class Credit {
     return input.substring(index + 1);
   }
 
-  static public Double similarity(String s1, String s2) {
-    Pair<Set<String>, Integer> slices1 = slices(s1);
-    Pair<Set<String>, Integer> slices2 = slices(s2);
-    int length = 0;
-    for (String word : slices1.getLeft()) {
-      if (!slices2.getLeft().contains(word)) continue;
-      length += word.length();
-    }
-    if (length == 0) return 0.;
-    return 2. * length / (slices1.getRight() + slices2.getRight());
-  }
-
-  static public Pair<Set<String>, Integer> slices(String input) {
-    Set<String> result = new HashSet<>();
-    int length = 0;
-    for (String word : input.split("[^0-9a-zA-Z]|(?<=[a-z])(?=[A-Z])|(?=[A-Z][a-z])|(?=[0-9]([a-z]|[A-Z]{2}))")) {
-      if (word.length() > 1) {
-        result.add(word.toLowerCase());
-        length += word.length();
-      }
-    }
-    return new ImmutablePair<>(result, length);
-  }
-
   static public int lcs(String s1, String s2) {
     int[] dp = new int[s2.length() + 1];
     int max = 0;
