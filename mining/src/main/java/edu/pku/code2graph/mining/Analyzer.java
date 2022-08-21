@@ -96,7 +96,7 @@ public class Analyzer {
           for (Change change2 : cluster2) {
             Comparison comparison = new Comparison(change1.identifier, change2.identifier);
             if (comparison.similarity <= MIN_SIMILARITY) continue;
-            Candidate candidate = new Candidate(change1, change2, comparison.similarity);
+            Candidate candidate = new Candidate(change1, change2, comparison);
             degrees.put(candidate.source1, degrees.computeIfAbsent(candidate.source1, k -> 0) + 1);
             degrees.put(candidate.source2, degrees.computeIfAbsent(candidate.source2, k -> 0) + 1);
             entries.add(candidate);

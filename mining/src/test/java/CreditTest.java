@@ -3,7 +3,7 @@ import org.junit.jupiter.api.Test;
 
 public class CreditTest {
   @Test
-  public void testConfidence() {
+  public void testCredit() {
     assert Credit.add(0.5, 0.5) == 0.75;
     assert Credit.add(0.5, 1) == 1;
     assert Credit.add(0.5, -0.5) == 0;
@@ -16,13 +16,16 @@ public class CreditTest {
   @Test
   public void testLCS() {
     assert new Comparison("abc", "abcd").similarity == 0.;
-    assert new Comparison("abc", "Abc").similarity == 1.;
-    assert new Comparison("abcFoo", "abc_bar").similarity == 0.5;
+    System.out.println(new Comparison.Slice("Abc"));
+    System.out.println(new Comparison("abc", "Abc").similarity);
+    System.out.println(new Comparison("abcFoo", "qux_abc_bar").similarity);
+    System.out.println(new Comparison("abcFoo", "qux_abc_bar").getPattern1());
+    System.out.println(new Comparison("abcFoo", "qux_abc_bar").getPattern2());
   }
 
   @Test
   public void testSplit() {
-    System.out.println(Credit.getLastSegment("fdsa/@+id\\\\/container"));
+    System.out.println(new Comparison.Slice("fdsa/@+id\\\\/container"));
   }
 
   @Test
