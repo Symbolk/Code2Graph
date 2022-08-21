@@ -26,8 +26,8 @@ public class MiningTest {
     for (int i = 0; i < 30; ++i) {
       if (!it.hasNext()) break;
       Map.Entry<Candidate, Credit> entry = it.next();
-      System.out.println("- " + entry.getKey().left);
-      System.out.println("- " + entry.getKey().right);
+      System.out.println("- " + entry.getKey().source1);
+      System.out.println("- " + entry.getKey().source2);
       System.out.println("value: " + entry.getValue().value);
       for (Credit.Record record : entry.getValue().history) {
         System.out.println(record);

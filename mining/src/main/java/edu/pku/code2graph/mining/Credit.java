@@ -4,9 +4,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Credit {
   public double value = 0.;
@@ -44,24 +42,6 @@ public class Credit {
       }
     } while (true);
     return input.substring(index + 1);
-  }
-
-  static public int lcs(String s1, String s2) {
-    int[] dp = new int[s2.length() + 1];
-    int max = 0;
-    for (int i = 1; i <= s1.length(); i++) {
-      char c1 = s1.charAt(i - 1);
-      for (int j = s2.length(); j > 0; j--) {
-        char c2 = s2.charAt(j - 1);
-        if (c1 == c2) {
-          dp[j] = dp[j - 1] + 1;
-          max = Math.max(max, dp[j]);
-        } else {
-          dp[j] = 0;
-        }
-      }
-    }
-    return max;
   }
 
   public static class Record {

@@ -1,5 +1,6 @@
 package edu.pku.code2graph.mining;
 
+import edu.pku.code2graph.model.URI;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -7,19 +8,23 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Candidate {
-  public final String left;
-  public final String right;
+  public final String source1;
+  public final String source2;
+  public final String pattern1;
+  public final String pattern2;
   public final double similarity;
 
-  public Candidate(Change left, Change right) {
-    this.left = left.source;
-    this.right = right.source;
-    this.similarity = similarity(this.left, this.right);
+  public Candidate(Change change1, Change change2, double similarity) {
+    this.source1 = change1.source;
+    this.source2 = change2.source;
+    this.pattern1 = pattern(change1.uri);
+    this.pattern2 = pattern(change2.uri);
+    this.similarity = similarity;
   }
 
   @Override
   public String toString() {
-    return left + "," + right;
+    return source1 + "," + source2;
   }
 
   @Override
@@ -34,27 +39,7 @@ public class Candidate {
     return toString().hashCode();
   }
 
-  static public Double similarity(String s1, String s2) {
-    Pair<Set<String>, Integer> slices1 = slices(s1);
-    Pair<Set<String>, Integer> slices2 = slices(s2);
-    int length = 0;
-    for (String word : slices1.getLeft()) {
-      if (!slices2.getLeft().contains(word)) continue;
-      length += word.length();
-    }
-    if (length == 0) return 0.;
-    return 2. * length / (slices1.getRight() + slices2.getRight());
-  }
-
-  static public Pair<Set<String>, Integer> slices(String input) {
-    Set<String> result = new HashSet<>();
-    int length = 0;
-    for (String word : input.split("[^0-9a-zA-Z]|(?<=[a-z])(?=[A-Z])|(?=[A-Z][a-z])|(?=[0-9]([a-z]|[A-Z]{2}))")) {
-      if (word.length() > 1) {
-        result.add(word.toLowerCase());
-        length += word.length();
-      }
-    }
-    return new ImmutablePair<>(result, length);
+  static public String pattern(URI uri) {
+    return "";
   }
 }

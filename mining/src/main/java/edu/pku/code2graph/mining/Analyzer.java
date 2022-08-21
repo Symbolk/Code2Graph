@@ -5,7 +5,6 @@ import edu.pku.code2graph.model.Layer;
 import edu.pku.code2graph.model.URI;
 import edu.pku.code2graph.model.URITree;
 import edu.pku.code2graph.xll.*;
-import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -13,6 +12,7 @@ import java.util.*;
 
 public class Analyzer {
   public static int MAX_COCHANGE_SIZE = 1000000;
+  public static double MIN_SIMILARITY = 0.5;
 
   public double sum = 0;
   public int positive = 0;
@@ -92,14 +92,13 @@ public class Analyzer {
       List<Change> cluster1 = clusters.get(languages[i]);
       for (int j = i + 1; j < languages.length; ++j) {
         List<Change> cluster2 = clusters.get(languages[j]);
-        for (Change entry1 : cluster1) {
-          for (Change entry2 : cluster2) {
-            Candidate candidate = new Candidate(entry1, entry2);
-            if (candidate.similarity <= 0.5) continue;
-            String source1 = entry1.source;
-            String source2 = entry2.source;
-            degrees.put(source1, degrees.computeIfAbsent(source1, k -> 0) + 1);
-            degrees.put(source2, degrees.computeIfAbsent(source2, k -> 0) + 1);
+        for (Change change1 : cluster1) {
+          for (Change change2 : cluster2) {
+            Comparison comparison = new Comparison(change1.identifier, change2.identifier);
+            if (comparison.similarity <= MIN_SIMILARITY) continue;
+            Candidate candidate = new Candidate(change1, change2, comparison.similarity);
+            degrees.put(candidate.source1, degrees.computeIfAbsent(candidate.source1, k -> 0) + 1);
+            degrees.put(candidate.source2, degrees.computeIfAbsent(candidate.source2, k -> 0) + 1);
             entries.add(candidate);
           }
         }
@@ -109,7 +108,7 @@ public class Analyzer {
     // normalize the graph
     System.out.println(builder.append(entries.size()).append(" collected"));
     for (Candidate candidate : entries) {
-      int density = degrees.get(candidate.left) * degrees.get(candidate.right);
+      int density = degrees.get(candidate.source1) * degrees.get(candidate.source2);
       Credit.Record record = new Credit.Record(commit, candidate.similarity, density);
       Credit credit = graph.computeIfAbsent(candidate, k -> new Credit());
       credit.add(record);

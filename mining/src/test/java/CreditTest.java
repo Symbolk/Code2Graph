@@ -1,5 +1,4 @@
-import edu.pku.code2graph.mining.Candidate;
-import edu.pku.code2graph.mining.Credit;
+import edu.pku.code2graph.mining.*;
 import org.junit.jupiter.api.Test;
 
 public class CreditTest {
@@ -16,7 +15,9 @@ public class CreditTest {
 
   @Test
   public void testLCS() {
-    assert Credit.lcs("abc", "abcd") == 3;
+    assert new Comparison("abc", "abcd").similarity == 0.;
+    assert new Comparison("abc", "Abc").similarity == 1.;
+    assert new Comparison("abcFoo", "abc_bar").similarity == 0.5;
   }
 
   @Test
@@ -26,6 +27,6 @@ public class CreditTest {
 
   @Test
   public void testIntersects() {
-    System.out.println(Candidate.similarity("mContainer", "@+id\\\\/container"));
+    System.out.println(new Comparison("mContainer", "@+id\\\\/container"));
   }
 }
