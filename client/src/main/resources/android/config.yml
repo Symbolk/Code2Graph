@@ -161,7 +161,7 @@ rules:
         identifier: '@+id\/(name:snake)'
 
   r-xml-inner:
-#    hidden: true
+    hidden: true
     def:
       lang: XML
       file: (layoutName).xml
