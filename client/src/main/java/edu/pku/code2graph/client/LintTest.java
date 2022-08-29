@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,7 +40,7 @@ public class LintTest {
 
   // common constants used across methods
   private static String framework = "android";
-  private static String repoName = "NewPipe";
+  private static String repoName = "XposedInstaller";
   private static String configPath =
       System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
   private static String repoPath = System.getProperty("user.home") + "/Downloads/lint/" + repoName;
@@ -83,6 +86,16 @@ public class LintTest {
     } else {
       Set<String> resLines = convertLinksToStrings(res);
       resLines.forEach(System.out::println);
+      File outFile =
+          new File(System.getProperty("user.home") + "/Downloads/lint/output/" + repoName + ".out");
+      if (!outFile.exists()) {
+        outFile.createNewFile();
+      }
+      BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+      for (String resStr : resLines) {
+        writer.write(resStr + "\n");
+      }
+      writer.close();
 
       int intersectionNum = MetricUtil.intersectSize(resLines, gtLines);
       double precision = MetricUtil.computeProportion(intersectionNum, resLines.size());
@@ -97,15 +110,11 @@ public class LintTest {
 
   private static Set<String> convertLinksToStrings(List<Link> links) {
     return links.stream()
+        .filter(link -> !link.hidden)
         .map(
             link -> {
-              return link.toString()
-                  .replaceFirst("\\(<", "")
-                  .replaceFirst(">\\)", "")
-                  .replace(">", "")
-                  .replace("<", "")
-                  .replace(", ", ",")
-                  .trim();
+              String linkStr = link.toString();
+              return linkStr.substring(1, linkStr.length() - 1).replace(", ", ",").trim();
             })
         .collect(Collectors.toSet());
   }
