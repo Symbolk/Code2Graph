@@ -18,15 +18,17 @@ public class Scanner {
 
   public final URIPattern pattern;
   public final Linker linker;
+  public final boolean isRef;
 
-  public Scanner(URIPattern pattern, Linker linker) {
+  public Scanner(URIPattern pattern, Linker linker, boolean isRef) {
     this.pattern = pattern;
     this.linker = linker;
+    this.isRef = isRef;
   }
 
   public void scan(URITree tree, int index, Capture current) {
     if (pattern.getLayerCount() == index) {
-      if (tree.uri != null && !linker.visited.contains(tree.uri)) {
+      if (tree.uri != null && !(isRef && linker.visited.contains(tree.uri))) {
         Capture key = current
             .project(linker.rule.def.symbols)
             .project(linker.rule.use.symbols);
