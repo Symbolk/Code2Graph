@@ -20,8 +20,8 @@ public class Linker {
   public Linker(URITree tree, Rule rule, Set<URI> visited) {
     this.rule = rule;
     this.tree = tree;
-    this.def = new Scanner(rule.def, this);
-    this.use = new Scanner(rule.use, this);
+    this.def = new Scanner(rule.def, this, false);
+    this.use = new Scanner(rule.use, this, true);
     this.visited = visited;
   }
 
