@@ -248,6 +248,29 @@ public class Code2Graph {
     }
   }
 
+  public Map<String, Set<URI>> generateXLLReturnUseSet(Graph<Node, Edge> graph) throws IOException {
+    Map<String, Set<URI>> useInRule = new HashMap<>();
+    if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
+      logger.info("start detecting xll");
+      Project project = Project.load(xllConfigPath);
+      URITree tree = GraphUtil.getUriTree();
+      project.setTree(tree);
+      List<Link> links = project.link(useInRule);
+      logger.info("- #xll = {}", links.size());
+      this.xllLinks = links;
+
+      Type xllType = type("xll");
+
+      int i = 0;
+      for (Link link : links) {
+        i += 1;
+        logger.debug("XLL#{}  {}, {}", i, link.def.toString(), link.use.toString());
+      }
+    }
+
+    return useInRule;
+  }
+
   public Map<Language, Set<URI>> crossLanguageRename(Language lang, URI uri) {
     // def --> uses
     // use --> def --> uses

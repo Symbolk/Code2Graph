@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class Linker {
-  private final static Logger logger = LoggerFactory.getLogger(Linker.class);
+  private static final Logger logger = LoggerFactory.getLogger(Linker.class);
 
   public final Rule rule;
   public final URITree tree;
@@ -29,19 +29,13 @@ public class Linker {
     this(tree, new Rule(def, use), new HashSet<>());
   }
 
-  /**
-   * matched links
-   */
+  /** matched links */
   public final List<Link> links = new ArrayList<>();
 
-  /**
-   * matched captured
-   */
+  /** matched captured */
   public final Set<Capture> context = new HashSet<>();
 
-  /**
-   * visited use uris
-   */
+  /** visited use uris */
   public final Set<URI> visited;
 
   private String formatUriList(Set<URI> list) {
@@ -50,12 +44,20 @@ public class Linker {
   }
 
   public void link() {
-    link(new Capture());
+    link(new Capture(), null);
   }
 
-  public void link(Capture input) {
+  public void link(Capture input, Set<URI> useSet) {
     // scan for use patterns
     Map<Capture, Map<URI, Capture>> useMap = this.use.scan(input);
+    if (useSet != null) {
+      useSet.addAll(
+              useMap.values().stream()
+                      .map(Map::keySet).reduce(new HashSet<>(), (keySet, newSet) -> {
+                        keySet.addAll(newSet);
+                        return keySet;
+                      }));
+    }
     if (useMap.size() == 0) return;
 
     // scan for def patterns
