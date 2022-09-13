@@ -1123,6 +1123,8 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
 
           root.setType(NodeType.METHOD_INVOCATION);
           root.setUri(createIdentifier(identifier));
+          URI uri = root.getUri();
+          uri.getLayer(uri.getLayerCount()-1).put("isFunc", "true");
           GraphUtil.addNode(root);
 
           pushScope(identifier);
