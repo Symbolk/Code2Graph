@@ -10,6 +10,7 @@ import edu.pku.code2graph.model.Edge;
 import edu.pku.code2graph.model.Language;
 import edu.pku.code2graph.model.Node;
 import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,8 +31,8 @@ import java.util.stream.Collectors;
 public class BrokenXLLDetector {
   private static Logger logger = LoggerFactory.getLogger(BrokenXLLDetector.class);
   private static final String framework = "android";
-  private static final String repoName = "CloudReader";
-  private static final String commitID = "91c8334";
+  private static final String repoName = "Timber";
+  //  private static final String commitID = "f82d7d73e9cb5f764b305008fea6cfcc47a21ac4";
   private static String repoPath =
       System.getProperty("user.home") + "/coding/xll/" + framework + "/" + repoName;
   private static String configPath =
@@ -40,23 +41,7 @@ public class BrokenXLLDetector {
           + framework
           + "/broken/config.yml";
   private static String otPath =
-      System.getProperty("user.dir")
-          + "/client/src/main/resources/"
-          + framework
-          + "/broken/"
-          + repoName
-          + ":"
-          + commitID
-          + ".csv";
-  private static String xllPath =
-      System.getProperty("user.dir")
-          + "/client/src/main/resources/"
-          + framework
-          + "/broken/XLL_"
-          + repoName
-          + ":"
-          + commitID
-          + ".out";
+      System.getProperty("user.home") + "/coding/broken/" + framework + "/" + repoName;
 
   private static GitService gitService;
 
@@ -90,50 +75,9 @@ public class BrokenXLLDetector {
           c2g.addSupportedLanguage(Language.JAVA);
       }
 
-      logger.info("Generating graph for repo {}:{}", repoName, gitService.getHEADCommitId());
+      logger.info("Detecting broken XLLs for repo {}", repoName);
 
-      if (framework.equals("mybatis")) {
-        MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
-      }
-
-      Graph<Node, Edge> graph = c2g.generateURIs();
-      Set<String> useSet = new HashSet<>();
-      Map<String, String> uriToRule = new HashMap<>();
-      Map<String, Set<URI>> useInRule = c2g.generateXLLReturnUseSet(GraphUtil.getGraph());
-      for (String ruleName : useInRule.keySet()) {
-        Set<URI> uses = useInRule.get(ruleName);
-        for (URI use : uses) {
-          String useURIStr = use.toString();
-          useSet.add(useURIStr);
-          if (!uriToRule.containsKey(useURIStr)) uriToRule.put(useURIStr, ruleName);
-          else {
-            String curRule = uriToRule.get(useURIStr);
-            uriToRule.put(useURIStr, curRule + "/" + ruleName);
-          }
-        }
-      }
-      //      Set<String> useSet =
-      //          c2g.generateXLLReturnUseSet(GraphUtil.getGraph()).values().stream()
-      //              .reduce(
-      //                  new HashSet<>(),
-      //                  (res, item) -> {
-      //                    res.addAll(item);
-      //                    return res;
-      //                  })
-      //              .stream()
-      //              .map(item -> item.toString())
-      //              .collect(Collectors.toSet());
-      xllLinks = c2g.getXllLinks();
-      Set<String> useInXLL =
-          xllLinks.stream().map(item -> item.use.toString()).collect(Collectors.toSet());
-
-      Set<String> intersection = new HashSet<>(useSet);
-      intersection.retainAll(useInXLL);
-      int interSize = intersection.size(), setSize = useSet.size(), inXLLSize = useInXLL.size();
-      useSet.removeAll(intersection);
-      logger.info("use missing def: {}", useSet);
-      exportResult(useSet, uriToRule, otPath);
-      exportXLL(xllPath);
+      detectForAllVersion();
     } catch (NonexistPathException
         | IOException
         | InvalidRepoException
@@ -141,6 +85,55 @@ public class BrokenXLLDetector {
         | SAXException e) {
       e.printStackTrace();
     }
+  }
+
+  private static void detectForAllVersion()
+      throws IOException, ParserConfigurationException, SAXException {
+    List<String> commits = gitService.getCommitHistory();
+    for (int i = 0; i < commits.size(); i++) {
+      detectFor(commits.get(i));
+    }
+  }
+
+  private static void detectFor(String commitID)
+      throws IOException, ParserConfigurationException, SAXException {
+    logger.info("Detecting  for repo {}", repoName);
+    gitService.checkoutByLongCommitID(commitID);
+    c2g.getXllLinks().clear();
+    GraphUtil.clearGraph();
+
+    if (framework.equals("mybatis")) {
+      MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+    }
+
+    Graph<Node, Edge> graph = c2g.generateURIs();
+    Set<String> useSet = new HashSet<>();
+    Map<String, String> uriToRule = new HashMap<>();
+    Map<String, Set<URI>> useInRule = c2g.generateXLLReturnUseSet(GraphUtil.getGraph());
+    for (String ruleName : useInRule.keySet()) {
+      Set<URI> uses = useInRule.get(ruleName);
+      for (URI use : uses) {
+        String useURIStr = use.toString();
+        useSet.add(useURIStr);
+        if (!uriToRule.containsKey(useURIStr)) uriToRule.put(useURIStr, ruleName);
+        else {
+          String curRule = uriToRule.get(useURIStr);
+          uriToRule.put(useURIStr, curRule + "/" + ruleName);
+        }
+      }
+    }
+
+    xllLinks = c2g.getXllLinks();
+    Set<String> useInXLL =
+        xllLinks.stream().map(item -> item.use.toString()).collect(Collectors.toSet());
+    Set<String> intersection = new HashSet<>(useSet);
+    intersection.retainAll(useInXLL);
+    int interSize = intersection.size(), setSize = useSet.size(), inXLLSize = useInXLL.size();
+    useSet.removeAll(intersection);
+    logger.info("use missing def: {}", useSet);
+    exportResult(useSet, uriToRule, otPath + "/" + commitID + ".csv");
+    logger.info("{} XLLs detected for commit {}", useSet.size(), commitID);
+    //    exportXLL(xllPath);
   }
 
   private static void exportXLL(String filePath) throws IOException {
@@ -157,8 +150,9 @@ public class BrokenXLLDetector {
 
   private static void exportResult(Set<String> uris, Map<String, String> uriToRule, String filePath)
       throws IOException {
+    if (uris.isEmpty()) return;
     File file = new File(filePath);
-    if (!file.exists()) file.createNewFile();
+    if (!file.exists()) FileUtil.createFile(filePath);
     CsvWriter writer = new CsvWriter(filePath, ',', StandardCharsets.UTF_8);
     String[] header = {"rule", "uri"};
     writer.writeRecord(header);

@@ -5,13 +5,17 @@ flowgraph:
     - $
   r-dataBindingClassLink:
     - $
+  r-viewBindingClassLink:
+    - $
   r-id:
     - r-layout
     - r-menu
     - r-dataBindingClassLink
     - $
-  r-dataBindingClass:
+  r-id-values:
     - $
+#  r-dataBindingClass:
+#    - $
   r-include-layout-dataBinding:
     - r-dataBindingClassLink
   r-include-layout-resource:
@@ -67,16 +71,18 @@ rules:
       inline:
         identifier: '@+id\/(name:snake)'
 
-  # <data class="bindingName"> <-> bindingName bindingVar
-  r-dataBindingClass:
-    hidden: true
+  # R.id.name <-> @id
+  r-id-values:
     use:
       lang: JAVA
-      file: '(javaFile).java'
-      identifier: (layoutName:pascal)Binding
+      file: '(&javaFile).java'
+      identifier: R.id.(name:snake)
     def:
       lang: XML
-      file: (layoutName:snake).xml
+      file: res/values/*.xml
+      identifier: item/name
+      inline:
+        identifier: '(name:snake)'
 
   # binding.setContentView(this, R.layout.layoutName) <-> layoutName.xml
   r-dataBindingLayout:
@@ -97,6 +103,18 @@ rules:
     def:
       lang: XML
       file: (layoutName:snake).xml
+  r-viewBindingClassLink:
+    hidden: true
+    use:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (bindingVar)
+      varType: ViewBinding
+    def:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (bindingVar)
+      varType: ViewBinding
 
   # binding.widgetId <-> @+id/widgetId
   r-dataBinding:
