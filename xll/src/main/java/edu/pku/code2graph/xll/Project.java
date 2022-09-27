@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Project {
-  private final static Logger logger = LoggerFactory.getLogger(Project.class);
+  private static final Logger logger = LoggerFactory.getLogger(Project.class);
 
   private final Map<String, Rule> rules = new LinkedHashMap<>();
 
@@ -25,7 +25,7 @@ public class Project {
 
   public Project() {}
 
-  static public Project load(String path) throws IOException {
+  public static Project load(String path) throws IOException {
     return new ConfigLoader(path).getProject();
   }
 
@@ -38,6 +38,10 @@ public class Project {
   }
 
   public List<Link> link() {
+    return link(null);
+  }
+
+  public List<Link> link(Map<String, Set<URI>> useInRule) {
     // create patterns and match
     for (Map.Entry<String, Rule> entry : rules.entrySet()) {
       String name = entry.getKey();
@@ -53,12 +57,14 @@ public class Project {
         }
       }
 
+      Set<URI> useSet = new LinkedHashSet<>();
       // link rule for each context
       logger.debug("Linking " + rule);
       Linker linker = new Linker(tree, rule, visited);
       for (Capture variables : localContext) {
-        linker.link(variables);
+        linker.link(variables, useSet);
       }
+      if (useInRule != null && !rule.hidden) useInRule.put(rule.name, useSet);
       links.addAll(linker.links);
       contexts.put(name, linker.context);
     }
@@ -67,7 +73,8 @@ public class Project {
     return links;
   }
 
-  private URI infer(URI oldUri, URI newUri, URI contra, URIPattern cis, URIPattern trans, Capture input) {
+  private URI infer(
+      URI oldUri, URI newUri, URI contra, URIPattern cis, URIPattern trans, Capture input) {
     Capture oldCap = cis.match(oldUri, input);
     Capture newCap = cis.match(newUri);
     Capture contraCap = trans.match(contra, input);

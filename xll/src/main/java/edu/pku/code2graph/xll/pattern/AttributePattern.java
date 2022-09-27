@@ -60,6 +60,7 @@ public abstract class AttributePattern implements Comparable<AttributePattern> {
       register("queryId", IdentifierPattern.class);
       register("resultType", IdentifierPattern.class);
       register("parameterType", IdentifierPattern.class);
+      register("isFunc", IdentifierPattern.class);
     } catch (Exception e) {
       e.printStackTrace();
     }

@@ -1,0 +1,257 @@
+flowgraph:
+  r-layout:
+    - $
+  r-menu:
+    - $
+  r-dataBindingClassLink:
+    - $
+  r-viewBindingClassLink:
+    - $
+  r-id:
+    - r-layout
+    - r-menu
+    - r-dataBindingClassLink
+    - $
+  r-id-values:
+    - $
+#  r-dataBindingClass:
+#    - $
+  r-include-layout-dataBinding:
+    - r-dataBindingClassLink
+  r-include-layout-resource:
+    - r-layout
+  r-include-id:
+    - r-include-layout-resource
+#  r-include-android-id:
+#    - r-include-layout-dataBinding
+  r-include-dataBinding-widget:
+    - r-include-layout-dataBinding
+  r-dataBinding:
+    - r-dataBindingClassLink
+#    - $
+  r-dataBinding-function:
+    - r-dataBindingClassLink
+  r-xml-inner:
+    - $
+  r-xml-include-inner:
+    - r-include-id
+  r-xml-include-inter:
+    - r-include-id
+
+rules:
+  # setContentView(R.layout.layoutName) <-> layoutName.xml
+  r-layout:
+    use:
+      lang: JAVA
+      file: '(javaFile).java'
+      identifier: R.layout.(layoutName)
+    def:
+      lang: XML
+      file: layout/(layoutName).xml
+
+  r-menu:
+    use:
+      lang: JAVA
+      file: '(javaFile).java'
+      identifier: R.menu.(layoutName)
+    def:
+      lang: XML
+      file: menu/(layoutName).xml
+
+  # R.id.name <-> @+id
+  r-id:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: R.id.(name:snake)
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name:snake)'
+
+  # R.id.name <-> @id
+  r-id-values:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: R.id.(name:snake)
+    def:
+      lang: XML
+      file: res/values/*.xml
+      identifier: item/name
+      inline:
+        identifier: '(name:snake)'
+
+  # binding.setContentView(this, R.layout.layoutName) <-> layoutName.xml
+  r-dataBindingLayout:
+    use:
+      lang: JAVA
+      file: '(javaFile).java'
+      identifier: "(bindingVar)/setContentView/R.layout.(layoutName)"
+    def:
+      lang: XML
+      file: '(layoutName).xml'
+
+  r-dataBindingClassLink:
+    use:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (bindingVar)
+      varType: (layoutName:pascal)Binding
+    def:
+      lang: XML
+      file: (layoutName:snake).xml
+  r-viewBindingClassLink:
+    hidden: true
+    use:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (bindingVar)
+      varType: ViewBinding
+    def:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: (bindingVar)
+      varType: ViewBinding
+
+  # binding.widgetId <-> @+id/widgetId
+  r-dataBinding:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: (&bindingVar).(name:camel)
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+
+  r-dataBinding-function:
+    hidden: true
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: (&bindingVar).*
+      isFunc: true
+    def:
+      lang: JAVA
+      file: (&javaFile).java
+      identifier: (&bindingVar)
+
+  r-include-layout-dataBinding:
+    use:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: include/layout
+      inline:
+        identifier: '@layout\/(includeLayout)'
+    def:
+      lang: XML
+      file: (includeLayout).xml
+
+  r-include-layout-resource:
+    use:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: include/layout
+      inline:
+        identifier: '@layout\/(includeLayout)'
+    def:
+      lang: XML
+      file: (includeLayout).xml
+
+  r-include-id:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: R.id.(name)
+    def:
+      lang: XML
+      file: (&includeLayout).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+
+#  r-include-dataBinding:
+#    use:
+#      lang: JAVA
+#      file: '(&javaFile).java'
+#      identifier: (&bindingVar).(name)
+#    def:
+#      lang: XML
+#      file: (&includeLayout).xml
+#      identifier: android:id
+#      inline:
+#        identifier: '@+id\/(name:snake)'
+
+#  r-include-android-id:
+#    hidden: true
+#    use:
+#      lang: XML
+#      file: (&layoutName).xml
+#      identifier: include/android:id
+#      inline:
+#        identifier: '@+id\/(includeId)'
+#    def:
+#      lang: XML
+#      file: (&layoutName).xml
+#      identifier: include/android:id
+#      inline:
+#        identifier: '@+id\/(includeId)'
+
+  r-include-dataBinding-widget:
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: (&bindingVar).(&includeId:camel).(name:camel)
+    def:
+      lang: XML
+      file: (&includeLayout).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name:snake)'
+
+
+  r-xml-inner:
+    hidden: true
+    def:
+      lang: XML
+      file: (layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+    use:
+      lang: XML
+      file: (layoutName).xml
+      identifier: "*to*"
+      inline:
+        identifier: '*\/(name)'
+  r-xml-include-inner:
+    hidden: true
+    def:
+      lang: XML
+      file: (&includeLayout).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+    use:
+      lang: XML
+      file: (&includeLayout).xml
+      inline:
+        identifier: '@id\/(&name)'
+  r-xml-include-inter:
+    hidden: true
+    def:
+      lang: XML
+      file: (&includeLayout).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+    use:
+      lang: XML
+      file: (&layoutName).xml
+      inline:
+        identifier: '*\/(&name)'

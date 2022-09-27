@@ -8,11 +8,21 @@ public final class Link extends LinkBase<URI> {
   public final Rule rule;
   public boolean modified = false;
 
-  public Link(final URI def, final URI use, final Rule rule, final Capture input, final Capture output) {
+  public Link(
+      final URI def, final URI use, final Rule rule, final Capture input, final Capture output) {
     super(def, use, rule.name, rule.hidden);
     this.rule = rule;
     this.input = input;
     this.output = output;
+  }
+
+  public Link(final URI def, final URI use) {
+    super(def, use, null);
+    this.def = def;
+    this.use = use;
+    this.input = null;
+    this.output = null;
+    this.rule = null;
   }
 
   @Override

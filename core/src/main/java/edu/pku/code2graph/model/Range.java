@@ -64,6 +64,10 @@ public class Range implements Serializable {
     return fileName;
   }
 
+  public void setFileName(String fileName) {
+    this.fileName = fileName;
+  }
+
   public void setEndColumn(int endColumn) {
     this.endColumn = endColumn;
   }
@@ -94,9 +98,9 @@ public class Range implements Serializable {
       return false;
     }
     return this.endLine == range.getEndLine()
-        && this.startLine == range.startLine
-        && this.endColumn >= range.endColumn
-        && this.startColumn <= range.startColumn;
+            && this.startLine == range.startLine
+            && this.endColumn >= range.endColumn
+            && this.startColumn <= range.startColumn;
   }
 
   public boolean isValid() {
