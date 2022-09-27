@@ -163,7 +163,6 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
           graph.addVertex(pn);
           defPool.put(para_qname, pn);
           GraphUtil.addNode(pn);
-          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
 
           MybatisParam param =
               new MybatisParam(false, split[0], uri, p.getType().toString(), p.toString());
@@ -190,7 +189,6 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
                   });
 
           node.setRange(computeRange(p));
-          graph.addEdge(node, pn, new Edge(GraphUtil.eid(), EdgeType.PARAMETER));
 
           URI uri = pn.getUri();
           MybatisParam param =
@@ -210,10 +208,7 @@ public class MybatisExpressionVisitor extends ExpressionVisitor {
     // TODO: process body here or else where?
     if (md.getBody() != null) {
       if (!md.getBody().statements().isEmpty()) {
-        parseBodyBlock(md.getBody(), md.getName().toString(), qname)
-            .ifPresent(
-                blockNode ->
-                    graph.addEdge(node, blockNode, new Edge(GraphUtil.eid(), EdgeType.BODY)));
+        parseBodyBlock(md.getBody(), md.getName().toString(), qname);
       }
     }
     return true;
