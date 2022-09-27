@@ -11,7 +11,6 @@ import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Link;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.jgrapht.Graph;
@@ -21,7 +20,6 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -29,42 +27,19 @@ import java.util.stream.Collectors;
 
 public class BrokenXLLDetector {
   private static Logger logger = LoggerFactory.getLogger(BrokenXLLDetector.class);
-  private static final String framework = "android";
-  private static final String repoName = "CloudReader";
-  //  private static final String commitID = "f82d7d73e9cb5f764b305008fea6cfcc47a21ac4";
-  private static String repoPath =
-          Path.of(System.getProperty("user.home"), "coding", "xll", framework, repoName).toString();
-  private static String configPath =
-          Path.of(System.getProperty("user.dir"), "client", "src", "main", "resources",
-                  framework, "broken", "config.yml").toString();
-  private static String otPath =
-          Path.of(System.getProperty("user.home"), "coding", "broken", framework, repoName).toString();
 
   private static GitService gitService;
 
   private static Code2Graph c2g;
   private static List<Link> xllLinks = new ArrayList<>();
 
-  public static void main(String[] args) {
-    BasicConfigurator.configure();
-    org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
-
-    try {
-      List<BrokenXLL> xlls = detectCurrent();
-    } catch (IOException
-            | ParserConfigurationException
-            | SAXException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private static void init() {
+  private static void init(String framework, String repoPath, String configPath) {
     BasicConfigurator.configure();
     org.apache.log4j.Logger.getRootLogger().setLevel(Level.INFO);
 
     try {
       gitService = new GitServiceCGit(repoPath);
-      c2g = new Code2Graph(repoName, repoPath, configPath);
+      c2g = new Code2Graph(repoPath, repoPath, configPath);
 
       switch (framework) {
         case "springmvc":
@@ -85,30 +60,26 @@ public class BrokenXLLDetector {
           c2g.addSupportedLanguage(Language.JAVA);
       }
 
-      logger.info("Detecting broken XLLs for repo {}", repoName);
-    } catch (NonexistPathException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (InvalidRepoException e) {
+      logger.info("Detecting broken XLLs for repo {}", repoPath);
+    } catch (NonexistPathException | InvalidRepoException | IOException e) {
       e.printStackTrace();
     }
   }
 
-  public static void detectForAllVersion()
+  public static void detectForAllVersion(String framework, String repoPath, String configPath, String otPath)
           throws IOException, ParserConfigurationException, SAXException {
-    init();
+    init(framework, repoPath, configPath);
 
     List<String> commits = gitService.getCommitHistory();
     for (int i = 0; i < commits.size(); i++) {
-      detectFor(commits.get(i));
+      detectFor(framework, repoPath, commits.get(i), otPath);
     }
   }
 
-  public static List<BrokenXLL> detectCurrent() throws ParserConfigurationException, IOException, SAXException {
-    init();
+  public static List<BrokenXLL> detectCurrent(String framework, String repoPath, String configPath) throws ParserConfigurationException, IOException, SAXException {
+    init(framework, repoPath, configPath);
 
-    Map<String, Set<URI>> useInRule = getUseInRule();
+    Map<String, Set<URI>> useInRule = getUseInRule(framework, repoPath);
 
     Set<URI> useSet = new HashSet<>();
     Map<URI, String> uriToRule = new HashMap<>();
@@ -149,7 +120,7 @@ public class BrokenXLLDetector {
     return brokenXLLs;
   }
 
-  private static Map<String, Set<URI>> getUseInRule() throws ParserConfigurationException, SAXException, IOException {
+  private static Map<String, Set<URI>> getUseInRule(String framework, String repoPath) throws ParserConfigurationException, SAXException, IOException {
     c2g.getXllLinks().clear();
     GraphUtil.clearGraph();
 
@@ -163,11 +134,11 @@ public class BrokenXLLDetector {
     return useInRule;
   }
 
-  private static void detectFor(String commitID)
+  private static void detectFor(String framework, String repoPath, String commitID, String otPath)
           throws IOException, ParserConfigurationException, SAXException {
     gitService.checkoutByLongCommitID(commitID);
 
-    Map<String, Set<URI>> useInRule = getUseInRule();
+    Map<String, Set<URI>> useInRule = getUseInRule(framework, repoPath);
     Set<String> useSet = new HashSet<>();
     Map<String, String> uriToRule = new HashMap<>();
     for (String ruleName : useInRule.keySet()) {
