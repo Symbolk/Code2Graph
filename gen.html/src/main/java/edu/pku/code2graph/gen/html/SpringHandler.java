@@ -78,10 +78,16 @@ public class SpringHandler extends AbstractHandler {
 
   public Node DialectNodeToGnode(DialectNode node, String attrName, String parentIdtf) {
     DialectNode current = node;
-    String curIdtf =
-        parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + URI.checkInvalidCh(current.getName());
+    String curIdtf = "";
     URI uri = new URI(true, uriFilePath);
-    if (attrName != null) uri.addLayer(getIdentifier(attrName), Language.HTML);
+    if (attrName != null) {
+      curIdtf =
+          parentIdtf + ((parentIdtf.isEmpty()) ? "" : "/") + URI.checkInvalidCh(current.getName());
+      uri.addLayer(getIdentifier(attrName), Language.HTML);
+    } else {
+      curIdtf = URI.checkInvalidCh(current.getName());
+      uri.addLayer(parentIdtf, Language.HTML);
+    }
     uri.addLayer(curIdtf, Language.ANY);
     ElementNode en =
         new ElementNode(

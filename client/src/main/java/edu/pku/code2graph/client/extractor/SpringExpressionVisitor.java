@@ -721,7 +721,7 @@ public class SpringExpressionVisitor extends ExpressionVisitor {
             String arg = mi.arguments().get(0).toString();
             URI uri = new URI(false, uriFilePath);
             uri.addLayer(identifier, Language.JAVA);
-            uri.addLayer(arg.substring(1, arg.length() - 1), Language.ANY);
+            uri.addLayer(URI.checkInvalidCh(arg.substring(1, arg.length() - 1)), Language.ANY);
             addViewPathReturn(uri);
           }
 
