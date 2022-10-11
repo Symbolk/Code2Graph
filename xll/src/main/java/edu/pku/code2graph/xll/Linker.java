@@ -47,16 +47,24 @@ public class Linker {
     link(new Capture(), null);
   }
 
+  public void link(Capture input) {
+    link(input, null);
+  }
+  ;
+
   public void link(Capture input, Set<URI> useSet) {
     // scan for use patterns
     Map<Capture, Map<URI, Capture>> useMap = this.use.scan(input);
     if (useSet != null) {
       useSet.addAll(
-              useMap.values().stream()
-                      .map(Map::keySet).reduce(new HashSet<>(), (keySet, newSet) -> {
-                        keySet.addAll(newSet);
-                        return keySet;
-                      }));
+          useMap.values().stream()
+              .map(Map::keySet)
+              .reduce(
+                  new HashSet<>(),
+                  (keySet, newSet) -> {
+                    keySet.addAll(newSet);
+                    return keySet;
+                  }));
     }
     if (useMap.size() == 0) return;
 
