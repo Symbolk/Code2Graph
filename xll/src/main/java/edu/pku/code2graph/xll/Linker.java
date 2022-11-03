@@ -44,15 +44,15 @@ public class Linker {
   }
 
   public void link() {
-    link(new Capture(), null);
+    link(new Capture(), null, null);
   }
 
   public void link(Capture input) {
-    link(input, null);
+    link(input, null, null);
   }
   ;
 
-  public void link(Capture input, Set<URI> useSet) {
+  public void link(Capture input, Set<URI> useSet, Set<URI> defSet) {
     // scan for use patterns
     Map<Capture, Map<URI, Capture>> useMap = this.use.scan(input);
     if (useSet != null) {
@@ -70,6 +70,17 @@ public class Linker {
 
     // scan for def patterns
     Map<Capture, Map<URI, Capture>> defMap = this.def.scan(input);
+    if (defSet != null) {
+      defSet.addAll(
+          defMap.values().stream()
+              .map(Map::keySet)
+              .reduce(
+                  new HashSet<>(),
+                  (keySet, newSet) -> {
+                    keySet.addAll(newSet);
+                    return keySet;
+                  }));
+    }
     for (Capture defCap : defMap.keySet()) {
       // def capture should match use capture
       for (Capture useCap : useMap.keySet()) {

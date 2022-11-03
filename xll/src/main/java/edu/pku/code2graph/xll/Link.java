@@ -10,7 +10,7 @@ public final class Link extends LinkBase<URI> {
 
   public Link(
       final URI def, final URI use, final Rule rule, final Capture input, final Capture output) {
-    super(def, use, rule.name, rule.hidden);
+    super(def, use, rule.name, rule.hidden, rule.brokenType);
     this.rule = rule;
     this.input = input;
     this.output = output;

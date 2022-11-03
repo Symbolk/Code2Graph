@@ -38,10 +38,10 @@ public class Project {
   }
 
   public List<Link> link() {
-    return link(null);
+    return link(null, null);
   }
 
-  public List<Link> link(Map<String, Set<URI>> useInRule) {
+  public List<Link> link(Map<String, Set<URI>> useInRule, Map<String, Set<URI>> defInRule) {
     // create patterns and match
     for (Map.Entry<String, Rule> entry : rules.entrySet()) {
       String name = entry.getKey();
@@ -57,14 +57,22 @@ public class Project {
         }
       }
 
-      Set<URI> useSet = new LinkedHashSet<>();
+      Set<URI> useSet = useInRule == null ? null : new LinkedHashSet<>();
+      Set<URI> defSet = defInRule == null ? null : new LinkedHashSet<>();
       // link rule for each context
       logger.debug("Linking " + rule);
       Linker linker = new Linker(tree, rule, visited);
       for (Capture variables : localContext) {
-        linker.link(variables, useSet);
+        linker.link(variables, useSet, defSet);
       }
-      if (useInRule != null && !rule.hidden) useInRule.put(rule.name, useSet);
+      if (useInRule != null
+          && !rule.hidden
+          && (rule.brokenType.equals("MissingDef") || rule.brokenType.equals("Either")))
+        useInRule.put(rule.name, useSet);
+      if (defInRule != null
+          && !rule.hidden
+          && (rule.brokenType.equals("MissingUse") || rule.brokenType.equals("Either")))
+        defInRule.put(rule.name, defSet);
       links.addAll(linker.links);
       contexts.put(name, linker.context);
     }
