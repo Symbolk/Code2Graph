@@ -3,10 +3,7 @@ package edu.pku.code2graph.client.extractor;
 import edu.pku.code2graph.gen.html.JsoupGenerator;
 import edu.pku.code2graph.gen.html.model.NodeType;
 import edu.pku.code2graph.gen.jdt.AbstractJdtVisitor;
-import edu.pku.code2graph.model.Edge;
-import edu.pku.code2graph.model.ElementNode;
-import edu.pku.code2graph.model.Node;
-import edu.pku.code2graph.model.URI;
+import edu.pku.code2graph.model.*;
 import edu.pku.code2graph.util.FileUtil;
 import edu.pku.code2graph.util.GraphUtil;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -40,7 +37,8 @@ public class SpringExtractor extends AbstractExtractor {
 
     JsoupGenerator generator = new JsoupGenerator();
     Graph<Node, Edge> graph = generator.generateFrom().files(filePaths);
-    for (Node node : graph.vertexSet()) {
+    URITree tree = GraphUtil.getUriTree();
+    for (Node node : tree.getAllNodes()) {
       if (node instanceof ElementNode
           && (node.getType().equals(NodeType.INLINE_VAR) || node.getType().equals(NodeType.FILE))) {
         System.out.println(((ElementNode) node).getName());
@@ -147,6 +145,9 @@ public class SpringExtractor extends AbstractExtractor {
 
     String sym = uri.getSymbol();
     sym = sym.substring(2, sym.length() - 1).trim();
+    if (sym.matches("[a-zA-Z_.0-9]+") && sym.contains(".")) {
+      sym = sym.split("\\.")[0];
+    }
     for (String key : javaURIS.keySet()) {
       String[] filePathSplit = fileWithoutExt.split("/");
       String fileNameWithoutExt = filePathSplit[filePathSplit.length - 1];

@@ -13,6 +13,7 @@ import edu.pku.code2graph.util.GraphUtil;
 import edu.pku.code2graph.xll.Project;
 import edu.pku.code2graph.xll.Link;
 import edu.pku.code2graph.xll.pattern.AttributePattern;
+import org.apache.commons.lang3.tuple.Pair;
 import org.atteo.classindex.ClassIndex;
 import org.jgrapht.Graph;
 import org.slf4j.Logger;
@@ -248,14 +249,16 @@ public class Code2Graph {
     }
   }
 
-  public Map<String, Set<URI>> generateXLLReturnUseSet(Graph<Node, Edge> graph) throws IOException {
+  public Pair<Map<String, Set<URI>>, Map<String, Set<URI>>> generateXLLReturnUseSet(
+      Graph<Node, Edge> graph) throws IOException {
     Map<String, Set<URI>> useInRule = new HashMap<>();
+    Map<String, Set<URI>> defInRule = new HashMap<>();
     if (null != xllConfigPath && !xllConfigPath.isEmpty()) {
       logger.info("start detecting xll");
       Project project = Project.load(xllConfigPath);
       URITree tree = GraphUtil.getUriTree();
       project.setTree(tree);
-      List<Link> links = project.link(useInRule);
+      List<Link> links = project.link(useInRule, defInRule);
       logger.info("- #xll = {}", links.size());
       this.xllLinks = links;
 
@@ -268,7 +271,7 @@ public class Code2Graph {
       }
     }
 
-    return useInRule;
+    return Pair.of(useInRule, defInRule);
   }
 
   public Map<Language, Set<URI>> crossLanguageRename(Language lang, URI uri) {
