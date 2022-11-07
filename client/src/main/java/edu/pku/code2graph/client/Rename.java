@@ -83,7 +83,7 @@ public class Rename {
       newURI.getLayer(newURI.getLayerCount() - 1).put("identifier", lastLayer);
       List<Pair<URI, URI>> renames = project.rename(renamedURI, newURI);
       Set<Pair<URI, URI>> renameSet = new HashSet<>(renames);
-      renameSet.add(Pair.of(renamedURI, newURI));
+      renameSet.remove(Pair.of(renamedURI, newURI));
 
       List<RenameInfo> renameInfo = renamePairToRenameInfo(uriTree, renameSet);
       result.setStatus(RenameStatusCode.SUCCESS);
