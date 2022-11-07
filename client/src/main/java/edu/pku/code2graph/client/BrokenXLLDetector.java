@@ -139,7 +139,8 @@ public class BrokenXLLDetector {
                 useURI,
                 language.equals("ANY")
                     ? useURI.getLayer(useURI.getLayerCount() - 2).get("language")
-                    : language);
+                    : language,
+                "Missing Def");
         brokenXLLs.add(broken);
       }
     }
@@ -160,7 +161,8 @@ public class BrokenXLLDetector {
                 defURI,
                 language.equals("ANY")
                     ? defURI.getLayer(defURI.getLayerCount() - 2).get("language")
-                    : language);
+                    : language,
+                "Missing Use");
         brokenXLLs.add(broken);
       }
     }
