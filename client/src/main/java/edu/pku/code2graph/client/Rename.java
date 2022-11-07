@@ -82,8 +82,10 @@ public class Rename {
       URI newURI = new URI(renamedURI.toString());
       newURI.getLayer(newURI.getLayerCount() - 1).put("identifier", lastLayer);
       List<Pair<URI, URI>> renames = project.rename(renamedURI, newURI);
+      Set<Pair<URI, URI>> renameSet = new HashSet<>(renames);
+      renameSet.add(Pair.of(renamedURI, newURI));
 
-      List<RenameInfo> renameInfo = renamePairToRenameInfo(uriTree, renames);
+      List<RenameInfo> renameInfo = renamePairToRenameInfo(uriTree, renameSet);
       result.setStatus(RenameStatusCode.SUCCESS);
       result.setRenameInfoList(renameInfo);
 
@@ -96,7 +98,7 @@ public class Rename {
   }
 
   private static List<RenameInfo> renamePairToRenameInfo(
-      URITree uriTree, List<Pair<URI, URI>> renamePairs) {
+      URITree uriTree, Set<Pair<URI, URI>> renamePairs) {
     List<RenameInfo> renameInfos = new ArrayList<>();
     for (Pair<URI, URI> renamePair : renamePairs) {
       URI oldURI = renamePair.getLeft();
