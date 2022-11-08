@@ -1,6 +1,7 @@
 import edu.pku.code2graph.client.model.RenameResult;
 import edu.pku.code2graph.client.model.RenameStatusCode;
 import edu.pku.code2graph.model.Range;
+import edu.pku.code2graph.util.GraphUtil;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
@@ -51,6 +52,8 @@ public class RenameTest {
       initCache(framework, repoPath, cachePath);
     }
 
+    GraphUtil.clearGraph();
+
     Range range = new Range("73:20~73:45", "app/src/main/res/layout/list_stream_playlist_item.xml");
     RenameResult res =
         calcRenameResult(
@@ -76,6 +79,8 @@ public class RenameTest {
     if (!cacheDir.exists()) {
       initCache(framework, repoPath, cachePath);
     }
+
+    GraphUtil.clearGraph();
 
     Range range =
         new Range(
@@ -104,6 +109,8 @@ public class RenameTest {
     if (!cacheDir.exists()) {
       initCache(framework, repoPath, cachePath);
     }
+
+    GraphUtil.clearGraph();
 
     Range range = new Range("9:20~9:31", "app/src/main/res/layout/toolbar.xml");
     RenameResult res =
