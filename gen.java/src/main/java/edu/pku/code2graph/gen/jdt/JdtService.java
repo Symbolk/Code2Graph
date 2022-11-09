@@ -122,11 +122,13 @@ public class JdtService {
         name = ((SingleVariableDeclaration) node).getName();
       } else if (node instanceof VariableDeclarationFragment) {
         name = ((VariableDeclarationFragment) node).getName();
-      }else if(node instanceof AnnotationTypeDeclaration) {
+      } else if (node instanceof AnnotationTypeDeclaration) {
         name = ((AnnotationTypeDeclaration) node).getName();
       }
       if (name != null) {
         list.add(name.getFullyQualifiedName());
+      } else if (node instanceof SimpleType) {
+        list.add(((SimpleType) node).getName().getFullyQualifiedName());
       }
       node = node.getParent();
     }

@@ -92,6 +92,22 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     return true;
   }
 
+  public boolean visit(SimpleType pt) {
+    try {
+      ElementNode node =
+          createElementNode(
+              NodeType.SIMPLE_TYPE,
+              pt.toString(),
+              pt.getName().toString(),
+              pt.getName().getFullyQualifiedName(),
+              JdtService.getIdentifier(pt));
+      node.setRange(computeRange(pt));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return true;
+  }
+
   public boolean visit(AnnotationTypeDeclaration atd) {
     ITypeBinding binding = atd.resolveBinding();
     String qname =
@@ -534,6 +550,16 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
     for (Object arg : arguments) {
       if (arg instanceof Expression) {
         parseExpression((Expression) arg);
+      }
+    }
+    return node;
+  }
+
+  protected RelationNode parseAnonymousClass(RelationNode node, AnonymousClassDeclaration acd) {
+    for (Object body : acd.bodyDeclarations()) {
+      if (body instanceof MethodDeclaration) visit((MethodDeclaration) body);
+      else {
+        System.out.println(body);
       }
     }
     return node;
@@ -1074,6 +1100,9 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           String identifier = cic.getType().toString();
           pushScope(identifier);
           parseArguments(root, cic.arguments());
+          if (cic.getAnonymousClassDeclaration() != null) {
+            parseAnonymousClass(root, cic.getAnonymousClassDeclaration());
+          }
           popScope();
           break;
         }
@@ -1124,7 +1153,7 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setType(NodeType.METHOD_INVOCATION);
           root.setUri(createIdentifier(identifier));
           URI uri = root.getUri();
-          uri.getLayer(uri.getLayerCount()-1).put("isFunc", "true");
+          uri.getLayer(uri.getLayerCount() - 1).put("isFunc", "true");
           GraphUtil.addNode(root);
 
           pushScope(identifier);
