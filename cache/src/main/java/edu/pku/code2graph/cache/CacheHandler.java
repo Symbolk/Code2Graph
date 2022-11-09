@@ -209,6 +209,7 @@ public class CacheHandler {
       for (File file : files) {
         if (file.isDirectory()) dirs.add(file);
         else {
+          if (!file.getName().endsWith(".csv")) continue;
           URI retURI =
               loadCacheFromEachFile(file.getAbsolutePath(), tree, renamedName, renamedRange);
           renamedURI = retURI == null ? renamedURI : retURI;
@@ -242,10 +243,7 @@ public class CacheHandler {
     return new MutablePair<>(tree, renamedURI);
   }
 
-  public static Collection<String> getCacheSHA(
-      String framework,
-      String projectDir,
-      String cacheDir)
+  public static Collection<String> getCacheSHA(String framework, String projectDir, String cacheDir)
       throws NoSuchAlgorithmException, IOException, ParserConfigurationException, SAXException {
     GraphUtil.clearGraph();
     switchFramework(framework, projectDir);
@@ -339,7 +337,7 @@ public class CacheHandler {
           && renamedRange != null
           && symbol != null
           && symbol.endsWith(renamedName)
-          && renamedRange.coversInSameLine(renamedRange)) {
+          && range.coversInSameLine(renamedRange)) {
         renamedURI = thisURI;
       }
     }
