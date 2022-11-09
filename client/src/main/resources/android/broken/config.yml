@@ -5,6 +5,10 @@ flowgraph:
     - $
   r-dataBindingClassLink:
     - $
+  r-dataBindingClassLinkFallBack1:
+    - $
+  r-dataBindingClassLinkFallBack2:
+    - $
   r-viewBindingClassLink:
     - $
   r-id:
@@ -12,6 +16,10 @@ flowgraph:
     - r-menu
     - r-dataBindingClassLink
     - $
+  r-id-fallBack1:
+    - r-dataBindingClassLinkFallBack1
+  r-id-fallBack2:
+    - r-dataBindingClassLinkFallBack2
   r-id-values:
     - $
 #  r-dataBindingClass:
@@ -29,9 +37,17 @@ flowgraph:
   r-dataBinding:
     - r-dataBindingClassLink
 #    - $
+  r-dataBindingFallBack1:
+    - r-dataBindingClassLinkFallBack1
+  r-dataBindingFallBack2:
+    - r-dataBindingClassLinkFallBack2
   r-dataBinding-function:
     - r-dataBindingClassLink
+    - r-dataBindingClassLinkFallBack1
+    - r-dataBindingClassLinkFallBack2
   r-xml-inner:
+    - $
+  r-xml-inner-plus:
     - $
   r-xml-include-inner:
     - r-include-id
@@ -67,6 +83,30 @@ rules:
       lang: JAVA
       file: '(&javaFile).java'
       identifier: R.id.(name:snake)
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name:snake)'
+  r-id-fallBack1:
+    brokenType: Either
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: (&class)/(&inner)/**/R.id.(name:snake)
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name:snake)'
+  r-id-fallBack2:
+    brokenType: Either
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: (&class)/**/R.id.(name:snake)
     def:
       lang: XML
       file: (&layoutName).xml
@@ -109,6 +149,24 @@ rules:
     def:
       lang: XML
       file: (layoutName:snake).xml
+  r-dataBindingClassLinkFallBack1:
+    hidden: true
+    use:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: '(class)/(inner)/**/(layoutName:pascal)Binding'
+    def:
+      lang: XML
+      file: (layoutName:snake).xml
+  r-dataBindingClassLinkFallBack2:
+    hidden: true
+    use:
+      lang: JAVA
+      file: (javaFile).java
+      identifier: '(class)/**/(layoutName:pascal)Binding'
+    def:
+      lang: XML
+      file: (layoutName:snake).xml
   r-viewBindingClassLink:
     hidden: true
     use:
@@ -129,6 +187,30 @@ rules:
       lang: JAVA
       file: '(&javaFile).java'
       identifier: (&bindingVar).(name:camel)
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+  r-dataBindingFallBack1:
+    hidden: true
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: '(&class)/(&inner)/**/*.(name:camel)'
+    def:
+      lang: XML
+      file: (&layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+  r-dataBindingFallBack2:
+    hidden: true
+    use:
+      lang: JAVA
+      file: '(&javaFile).java'
+      identifier: '(&class)/**/*.(name:camel)'
     def:
       lang: XML
       file: (&layoutName).xml
@@ -237,9 +319,23 @@ rules:
     use:
       lang: XML
       file: (layoutName).xml
-      identifier: "*to*"
+      identifier: '**'
       inline:
-        identifier: '*\/(name)'
+        identifier: '@id\/(name)'
+  r-xml-inner-plus:
+    hidden: true
+    def:
+      lang: XML
+      file: (layoutName).xml
+      identifier: android:id
+      inline:
+        identifier: '@+id\/(name)'
+    use:
+      lang: XML
+      file: (layoutName).xml
+      identifier: '*layout_*'
+      inline:
+        identifier: '@+id\/(name)'
   r-xml-include-inner:
     hidden: true
     def:
