@@ -13,6 +13,7 @@ public class NodeType {
   public static final Type INTERFACE_DECLARATION = type("interface_declaration", true);
   public static final Type ENUM_DECLARATION = type("enum_declaration", true);
   public static final Type ANNOTATION_DECLARATION = type("annotation_declaration");
+  public static final Type SIMPLE_TYPE = type("simple_type");
 
   // members
   public static final Type INIT_BLOCK_DECLARATION = type("init_block_declaration", true);
