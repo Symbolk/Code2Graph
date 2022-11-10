@@ -1233,6 +1233,57 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
           root.setArity(1);
 
           parseExpression(pex.getOperand());
+          break;
+        }
+      case ASTNode.CONDITIONAL_EXPRESSION:
+        {
+          ConditionalExpression cex = (ConditionalExpression) exp;
+          root.setType(NodeType.CONDITIONAL);
+          root.setSymbol("?:");
+          root.setArity(2);
+
+          if (cex.getExpression() != null) parseExpression(cex.getExpression());
+          if (cex.getThenExpression() != null) parseExpression(cex.getThenExpression());
+          if (cex.getElseExpression() != null) parseExpression(cex.getElseExpression());
+          break;
+        }
+      case ASTNode.ARRAY_INITIALIZER:
+        {
+          ArrayInitializer ai = (ArrayInitializer) exp;
+          root.setType(NodeType.ARRAY_INITIALIZER);
+          root.setSymbol("{}");
+          root.setArity(2);
+
+          if (ai.expressions() != null) {
+            for (Object element : ai.expressions()) {
+              parseExpression((Expression) element);
+            }
+          }
+          break;
+        }
+      case ASTNode.LAMBDA_EXPRESSION:
+        {
+          LambdaExpression le = (LambdaExpression) exp;
+          root.setType(NodeType.LAMBDA);
+          root.setSymbol("->");
+          root.setArity(2);
+
+          if (le.getBody() instanceof Block) {
+            parseBodyBlock((Block) le.getBody());
+          }
+          break;
+        }
+      case ASTNode.PARENTHESIZED_EXPRESSION:
+        {
+          ParenthesizedExpression pe = (ParenthesizedExpression) exp;
+          root.setType(NodeType.PARENTHESIZED);
+          root.setSymbol("()");
+          root.setArity(2);
+
+          if (pe.getExpression() != null) {
+            parseExpression(pe.getExpression());
+          }
+          break;
         }
     }
 
