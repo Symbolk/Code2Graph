@@ -36,6 +36,9 @@ public class NodeType {
   public static final Type INFIX = type("infix");
   public static final Type PREFIX = type("prefix");
   public static final Type POSTFIX = type("postfix");
+  public static final Type CONDITIONAL = type("conditional");
+  public static final Type LAMBDA = type("lambda");
+  public static final Type PARENTHESIZED = type("parenthesized");
 
   public static final Type FIELD_ACCESS = type("field_access");
   public static final Type SUPER_FIELD_ACCESS = type("super_field_access");
@@ -49,6 +52,7 @@ public class NodeType {
   public static final Type TYPE_INSTANTIATION = type("type_instantiation");
   public static final Type CAST_EXPRESSION = type("cast_expression");
   public static final Type SWITCH_CASE = type("switch_case");
+  public static final Type ARRAY_INITIALIZER = type("array_initializer");
 
   public static final Type CATCH_CLAUSE = type("catch_clause");
 
