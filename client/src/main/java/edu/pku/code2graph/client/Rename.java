@@ -64,6 +64,9 @@ public class Rename {
     cachePath = cacheDir;
     RenameResult result = new RenameResult();
     URITree uriTree = GraphUtil.getUriTree();
+
+    defName = URI.checkInvalidCh(defName);
+    newName = URI.checkInvalidCh(newName);
     try {
       Pair<URITree, URI> loadRet = CacheHandler.loadCache(cachePath, uriTree, defName, defRange);
       Project project = Project.load(configPath);
@@ -113,7 +116,7 @@ public class Rename {
           RenameInfo renameInfo =
               new RenameInfo(
                   range,
-                  symbol,
+                  URI.removeEscapeCh(symbol),
                   language.equals("ANY")
                       ? newURI.getLayer(newURI.getLayerCount() - 2).get("language")
                       : language);

@@ -59,9 +59,9 @@ public class RenameTest {
         calcRenameResult(
             repoPath,
             cachePath,
-            "@+id\\/itemAdditionalDetails",
+            "@+id/itemAdditionalDetails",
             range,
-            "@+id\\/itemAdditionalAny",
+            "@+id/itemAdditionalAny",
             configPath);
     assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
     System.out.println(res.getRenameInfoList());
@@ -89,9 +89,9 @@ public class RenameTest {
         calcRenameResult(
             repoPath,
             cachePath,
-            "@+id\\/duration_progressbar",
+            "@+id/duration_progressbar",
             range,
-            "@+id\\/duration_progress_bar",
+            "@+id/duration_progress_bar",
             configPath);
     assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
     System.out.println(res.getRenameInfoList());
@@ -115,7 +115,7 @@ public class RenameTest {
     Range range = new Range("9:20~9:31", "app/src/main/res/layout/toolbar.xml");
     RenameResult res =
         calcRenameResult(
-            repoPath, cachePath, "@+id\\/toolbar", range, "@+id\\/tool_bar", configPath);
+            repoPath, cachePath, "@+id/toolbar", range, "@+id/tool_bar", configPath);
     assertThat(res.getStatus()).isEqualTo(RenameStatusCode.SUCCESS);
     System.out.println(res.getRenameInfoList());
   }
