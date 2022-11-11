@@ -678,8 +678,6 @@ public class ExpressionVisitor extends AbstractJdtVisitor {
               if (fragment.getInitializer() != null) {
                 parseExpression(fragment.getInitializer());
               }
-
-              return Optional.of(node);
             }
           }
           break;
