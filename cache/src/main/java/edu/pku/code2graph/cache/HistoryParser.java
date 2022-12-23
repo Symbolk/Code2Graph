@@ -21,7 +21,6 @@ import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.List;
 
-import static edu.pku.code2graph.cache.CacheHandler.getCacheSHA;
 import static edu.pku.code2graph.cache.CacheHandler.initCache;
 
 public class HistoryParser {
@@ -45,6 +44,8 @@ public class HistoryParser {
 
   private static List<String> commits;
   private static BufferedWriter writer;
+
+  private static TextCacheHandler cache = new CacheHandler(framework, tmpPath, cacheDir, repoPath);
 
   public static void main(String[] args) {
     init();
@@ -113,7 +114,7 @@ public class HistoryParser {
             String fileContent = gitService.getFileAtCommit(pathA, commit);
             overwriteOrDelete(Paths.get(tmpPath, pathA).toString(), fileContent);
           }
-          CacheHandler.initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
+          initCache(framework, tmpPath, file.getARelativePath(), cacheDir, true);
         }
         if (!file.getBRelativePath().isEmpty()
             && !file.getBRelativePath().equals(file.getARelativePath())) {
@@ -122,13 +123,13 @@ public class HistoryParser {
             String fileContent = gitService.getFileAtCommit(pathB, commit);
             overwriteOrDelete(Paths.get(tmpPath, pathB).toString(), fileContent);
           }
-          CacheHandler.initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
+          initCache(framework, tmpPath, file.getBRelativePath(), cacheDir, true);
         }
       }
     }
 
     if (useCheckout) {
-      Collection<String> hashes = getCacheSHA(framework, repoPath, cacheDir);
+      Collection<String> hashes = cache.getCacheSHA();
       for (String hash : hashes) {
         writer.write("," + hash);
       }

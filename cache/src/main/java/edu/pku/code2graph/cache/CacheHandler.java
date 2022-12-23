@@ -32,18 +32,108 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CacheHandler {
-  private static final Logger logger = LoggerFactory.getLogger(CacheHandler.class);
-
-  private static String framework = "";
-  private static String defaultConfigPath =
-      System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
-
-  private static Set<Language> supportedLanguages = new HashSet<>();
-
-  private static final String[] headers = {"uri", "range"};
+public abstract class CacheHandler {
+  protected static final Logger logger = LoggerFactory.getLogger(CacheHandler.class);
 
   private static final Generators generator;
+
+  protected final Set<Language> supportedLanguages = new HashSet<>();
+  protected final String framework;
+  protected final String projectDir;
+  protected final String cacheDir;
+
+  abstract void writeCache(String file, List<Node> nodes);
+
+  CacheHandler(String framework, String projectDir, String cacheDir, String repoPath) throws ParserConfigurationException, SAXException {
+    this.framework = framework;
+    this.projectDir = projectDir;
+    this.cacheDir = cacheDir;
+    initLang(repoPath);
+  }
+
+  private void initLang(String repoPath)
+      throws ParserConfigurationException, SAXException {
+    switch (framework) {
+      case "springmvc":
+        supportedLanguages.add(Language.JAVA);
+        supportedLanguages.add(Language.HTML);
+        supportedLanguages.add(Language.JSP);
+        break;
+      case "android":
+        supportedLanguages.add(Language.JAVA);
+        supportedLanguages.add(Language.XML);
+        break;
+      case "mybatis":
+        supportedLanguages.add(Language.JAVA);
+        //        supportedLanguages.add(Language.XML);
+        //        supportedLanguages.add(Language.SQL);
+        MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
+      default:
+        logger.error("framework not valid");
+    }
+  }
+
+  Map<String, List<String>> prepareCache() throws IOException {
+    GraphUtil.clearGraph();
+    FileUtil.setRootPath(projectDir);
+
+    Map<String, List<String>> ext2FilePaths =
+        FileUtil.listFilePathsInLanguages(fileToParse, supportedLanguages);
+    generator.generateFromFiles(ext2FilePaths);
+    return ext2FilePaths;
+  }
+
+  Map<String, List<String>> prepareCache(List<String> modifiedFilePaths) throws IOException {
+    GraphUtil.clearGraph();
+    FileUtil.setRootPath(projectDir);
+
+    List<String> fileToParse = new ArrayList<>();
+    for (String modifiedFilePath : modifiedFilePaths) {
+      String fullPath = Paths.get(projectDir, modifiedFilePath).toString();
+      if (!new File(fullPath).exists()) {
+        File file = new File(cacheDir, modifiedFilePath + ".csv");
+        if (file.exists()) file.delete();
+        continue;
+      }
+      fileToParse.add(fullPath);
+    }
+    Map<String, List<String>> ext2FilePaths =
+        FileUtil.categorizeFilesByExtensionInLanguages(fileToParse, supportedLanguages);
+    generator.generateFromFiles(ext2FilePaths);
+    return ext2FilePaths;
+  }
+
+  int writeUrisToCache() {
+    AtomicInteger fileCount = new AtomicInteger();
+    URITree tree = GraphUtil.getUriTree();
+    Map<String, List<Node>> nodesOfFiles = getAllEleFromTree(tree);
+    nodesOfFiles.forEach((file, nodes) -> {
+      if (nodes.isEmpty()) return;
+      fileCount.getAndIncrement();
+      writeCache(file, nodes);
+    });
+
+    return fileCount.get();
+  }
+
+  private static Map<String, List<Node>> getAllEleFromTree(URITree tree) {
+    Map<String, List<Node>> res = new HashMap<>();
+    tree.children.forEach(
+        (key, value) -> {
+          if (key.getLanguage() == Language.FILE) {
+            assert (!res.containsKey(key.getIdentifier()));
+            res.put(key.getIdentifier(), getEleForEachFile(value));
+          } else {
+            getAllEleFromTree(value);
+          }
+        });
+
+    return res;
+  }
+
+  private static List<Node> getEleForEachFile(URITree fileTree) {
+    return fileTree.getAllNodes();
+  }
 
   static {
     initGenerators();
@@ -63,29 +153,18 @@ public class CacheHandler {
   public static void initCache(
       String framework, String projectDir, String cacheDir, boolean shaPath)
       throws IOException, ParserConfigurationException, SAXException, NoSuchAlgorithmException {
-    GraphUtil.clearGraph();
+//          getShaPath(
+//              ext2FilePaths.values().stream()
+//                  .reduce(
+//                      new ArrayList<>(),
+//                      (acc, list) -> {
+//                        acc.addAll(list);
+//                        return acc;
+//                      }));
 
-    switchFramework(framework, projectDir);
-
-    FileUtil.setRootPath(projectDir);
-    Map<String, List<String>> ext2FilePaths =
-        FileUtil.listFilePathsInLanguages(projectDir, supportedLanguages);
-
-    Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
-
-    Map<String, String> file2SHA = null;
-    if (shaPath)
-      file2SHA =
-          getShaPath(
-              ext2FilePaths.values().stream()
-                  .reduce(
-                      new ArrayList<>(),
-                      (acc, list) -> {
-                        acc.addAll(list);
-                        return acc;
-                      }));
-
-    writeUrisToCache(projectDir, cacheDir, file2SHA);
+    CacheHandler handler = new CsvCacheHandler(projectDir, cacheDir);
+    handler.prepareCache();
+    handler.writeUrisToCache();
   }
 
   public static void initCache(
@@ -104,43 +183,18 @@ public class CacheHandler {
       List<String> modifiedFilePaths,
       String cacheDir,
       boolean shaPath)
-      throws ParserConfigurationException, SAXException, NoSuchAlgorithmException, IOException {
-    GraphUtil.clearGraph();
-    switchFramework(framework, projectDir);
-    FileUtil.setRootPath(projectDir);
-
-    List<String> fileToParse = new ArrayList<>();
-    for (String modifiedFilePath : modifiedFilePaths) {
-      String fullPath = Paths.get(projectDir, modifiedFilePath).toString();
-      if (!new File(fullPath).exists()) {
-        File file = new File(cacheDir, modifiedFilePath + ".csv");
-        if (file.exists()) file.delete();
-        continue;
-      }
-      fileToParse.add(fullPath);
+      throws NoSuchAlgorithmException, IOException {
+    CacheHandler handler = new CsvCacheHandler(projectDir, cacheDir);
+    handler.prepareCache(modifiedFilePaths);
+    handler.writeUrisToCache();
+    Map<String, List<String>> ext2FilePaths = prepareCache(cacheDir, projectDir, modifiedFilePaths);
+    CacheHandler handler;
+    if (shaPath) {
+      handler = new TextCacheHandler(ext2FilePaths);
+    } else {
+      handler = new CsvCacheHandler(cacheDir);
     }
-    Map<String, List<String>> ext2FilePaths =
-        FileUtil.categorizeFilesByExtensionInLanguages(fileToParse, supportedLanguages);
-
-    if (ext2FilePaths.isEmpty()) {
-      return;
-    }
-
-    Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
-
-    Map<String, String> file2SHA = null;
-    if (shaPath)
-      file2SHA =
-          getShaPath(
-              ext2FilePaths.values().stream()
-                  .reduce(
-                      new ArrayList<>(),
-                      (acc, list) -> {
-                        acc.addAll(list);
-                        return acc;
-                      }));
-
-    writeUrisToCache(projectDir, cacheDir, file2SHA);
+    handler.writeUrisToCache();
   }
 
   public static void updateCache(
@@ -176,9 +230,9 @@ public class CacheHandler {
       return;
     }
 
-    Graph<Node, Edge> graph = generator.generateFromFiles(ext2FilePaths);
-
-    writeUrisToCache(projectDir, cacheDir, null);
+    generator.generateFromFiles(ext2FilePaths);
+    CacheDumper dumper = new CacheDumper.CsvCacheDumper(cacheDir);
+    dumper.writeUrisToCache();
   }
 
   public static Pair<URITree, URI> loadCache(String cacheDir, URITree tree) throws IOException {
@@ -352,134 +406,6 @@ public class CacheHandler {
               Register a = gen.getAnnotation(Register.class);
               if (a != null) Generators.getInstance().install(gen, a);
             });
-  }
-
-  private static Set<Language> initLang(String framework, String repoPath)
-      throws ParserConfigurationException, SAXException {
-    Set<Language> langs = new HashSet<>();
-    switch (framework) {
-      case "springmvc":
-        langs.add(Language.JAVA);
-        langs.add(Language.HTML);
-        langs.add(Language.JSP);
-        break;
-      case "android":
-        langs.add(Language.JAVA);
-        langs.add(Language.XML);
-        break;
-      case "mybatis":
-        langs.add(Language.JAVA);
-        //        langs.add(Language.XML);
-        //        langs.add(Language.SQL);
-        MybatisPreprocesser.preprocessMapperXmlFile(repoPath);
-      default:
-        logger.error("framework not valid");
-    }
-
-    return langs;
-  }
-
-  public static void switchFramework(String newFramework, String repoPath)
-      throws ParserConfigurationException, SAXException {
-    if (framework.equals(newFramework)) return;
-    framework = newFramework;
-    defaultConfigPath =
-        System.getProperty("user.dir") + "/client/src/main/resources/" + framework + "/config.yml";
-    supportedLanguages = initLang(newFramework, repoPath);
-  }
-
-  private static int writeUrisToCache(
-      String projectDir, String cacheDir, Map<String, String> file2SHA) {
-    AtomicInteger fileCount = new AtomicInteger();
-    URITree tree = GraphUtil.getUriTree();
-    Map<String, List<Node>> nodesOfFiles = getAllEleFromTree(tree);
-    nodesOfFiles.forEach(
-        (file, nodes) -> {
-          if (nodes.isEmpty()) return;
-          fileCount.getAndIncrement();
-          Path cachePath = Paths.get(cacheDir, file + ".csv");
-          if (file2SHA != null)
-            cachePath =
-                Paths.get(cacheDir, file2SHA.get(Paths.get(projectDir, file).toString()) + ".csv");
-
-          String cacheFile = new File(String.valueOf(cachePath)).toString();
-          try {
-            FileUtil.createFile(cacheFile);
-          } catch (IOException e) {
-            e.printStackTrace();
-            logger.warn("can't create file " + cacheFile);
-            return;
-          }
-          CsvWriter writer = new CsvWriter(cacheFile, ',', StandardCharsets.UTF_8);
-          try {
-            writer.writeRecord(headers);
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
-          nodes.forEach(
-              node -> {
-                if (node.getUri() != null) {
-                  String[] record = {
-                    node.getUri().toString(),
-                    node.getRange() == null ? "" : node.getRange().toString()
-                  };
-                  try {
-                    writer.writeRecord(record);
-                  } catch (IOException e) {
-                    e.printStackTrace();
-                  }
-                }
-              });
-          writer.close();
-        });
-
-    return fileCount.get();
-  }
-
-  private static Map<String, List<Node>> getAllEleFromTree(URITree tree) {
-    Map<String, List<Node>> res = new HashMap<>();
-    tree.children.forEach(
-        (key, value) -> {
-          if (key.getLanguage() == Language.FILE) {
-            assert (!res.containsKey(key.getIdentifier()));
-            res.put(key.getIdentifier(), getEleForEachFile(value));
-          } else {
-            getAllEleFromTree(value);
-          }
-        });
-
-    return res;
-  }
-
-  private static List<Node> getEleForEachFile(URITree fileTree) {
-    return fileTree.getAllNodes();
-  }
-
-  private static Map<String, String> getShaPath(List<String> filePaths)
-      throws NoSuchAlgorithmException, IOException {
-    Map<String, String> file2SHA = new HashMap<>();
-    for (String fileName : filePaths) {
-      byte[] buffer = new byte[8192];
-      int count;
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName));
-      while ((count = bis.read(buffer)) > 0) {
-        digest.update(buffer, 0, count);
-      }
-      digest.update(fileName.getBytes());
-      bis.close();
-
-      byte[] hash = digest.digest();
-      StringBuilder hexString = new StringBuilder();
-      for (byte b : hash) {
-        final String hex = Integer.toHexString(0xff & b);
-        if (hex.length() == 1) hexString.append('0');
-        hexString.append(hex);
-      }
-      file2SHA.put(fileName, hexString.toString());
-    }
-
-    return file2SHA;
   }
 
   public static String getSymbolOfURI(URI uri) {
